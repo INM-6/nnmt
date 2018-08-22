@@ -1,4 +1,4 @@
-"""analytics.py: Class in which all static and dynamical properties of 
+"""analytics.py: Class in which all static and dynamical properties of
 the circuit are calculated.
 
 Authors: Hannah Bos, Jannis Schuecker
@@ -36,14 +36,14 @@ class Analytics(object):
     def add_to_file(self, dic):
         '''Adds data to h5 file, with data and path specified in dict.'''
         self.file_base = os.getcwd()+'/'+self.params['datafile']
-        h5.add_to_h5(self.file_base, {self.param_hash: dic}, 
+        h5.save(self.file_base, {self.param_hash: dic},
                      'a', overwrite_dataset=True)
 
     def read_from_file(self, path):
         '''Reads data from h5 file at location path.'''
         self.file_base = os.getcwd()+'/'+self.params['datafile']
-        path_base = '/' + self.param_hash + '/' 
-        data = h5.load_h5(self.file_base, path_base + path)
+        path_base = '/' + self.param_hash + '/'
+        data = h5.load(self.file_base, path_base + path)
         return data
 
     def create_hash(self, dic):
@@ -56,10 +56,10 @@ class Analytics(object):
                 label += str(value)
         return hl.md5(label).hexdigest()
 
-    def get_mean(self, f): 
+    def get_mean(self, f):
         '''Returns vector of mean inputs to populations depending on
         the firing rates f of the populations.
-        Units as in Fourcoud & Brunel 2002, where current and potential 
+        Units as in Fourcoud & Brunel 2002, where current and potential
         have the same units, unit of output array: pA*Hz
         '''
         # contribution from within the network
@@ -69,10 +69,10 @@ class Analytics(object):
         m = m0+m_ext
         return m
 
-    def get_variance(self, f): 
-        '''Returns vector of variances of inputs to populations depending 
+    def get_variance(self, f):
+        '''Returns vector of variances of inputs to populations depending
         on the firing rates f of the populations.
-        Units as in Fourcoud & Brunel 2002, where current and potential 
+        Units as in Fourcoud & Brunel 2002, where current and potential
         have the same units, unit of output array: pA*Hz
         '''
         # contribution from within the network
@@ -87,9 +87,9 @@ class Analytics(object):
         print 'Calculate firing rates.'
         fac = 1 / (self.params['C'])
         # conversion from ms to s
-        taum = self.params['taum'] * 1e-3            
-        tauf = self.params['tauf'] * 1e-3           
-        taur = self.params['taur'] * 1e-3           
+        taum = self.params['taum'] * 1e-3
+        tauf = self.params['tauf'] * 1e-3
+        taur = self.params['taur'] * 1e-3
         dV =  self.params['Vth'] - self.params['V0']
         rate_function = lambda mu, sigma: siegert.nu0_fb433(
             taum, tauf, taur, dV, 0., mu, sigma)
@@ -97,8 +97,8 @@ class Analytics(object):
         def get_rate_difference(rates):
             mu = self.get_mean(rates)
             sigma = np.sqrt(self.get_variance(rates))
-            new_rates = np.array(map(rate_function, taum*fac*mu, 
-                                     np.sqrt(taum)*fac*sigma))          
+            new_rates = np.array(map(rate_function, taum*fac*mu,
+                                     np.sqrt(taum)*fac*sigma))
             return -rates + new_rates
 
         dt = 0.05
@@ -130,15 +130,15 @@ class Analytics(object):
         return rates
 
     def create_H_df(self, params=None, mode=None):
-        """Returns vector of instantaneous rate jumps, such that 
+        """Returns vector of instantaneous rate jumps, such that
         H(omega=0)/H_df = 1.
 
         Keyword arguments:
         params: dictionary specifying parameter of the transfer function
-                when approximated by an exponential (needs to be 
-                specified when tf_mode = 'empirical') 
-        mode: string specifying by which method the transfer function 
-              is calculated (needs to be specified if the function is 
+                when approximated by an exponential (needs to be
+                specified when tf_mode = 'empirical')
+        mode: string specifying by which method the transfer function
+              is calculated (needs to be specified if the function is
               called before tf_mode was set as class variable)
         """
         if mode is not None:
@@ -161,7 +161,7 @@ class Analytics(object):
         """Returns transfer functions for all populations."""
         trans_func = []
         for i in range(self.dimension):
-            mu = self.mu[i]*self.taum*1e-3/self.C 
+            mu = self.mu[i]*self.taum*1e-3/self.C
             sigma = np.sqrt(self.var[i]*self.taum*1e-3)/self.C
             label = str(mu)+str(sigma)
             label += str(self.fmin)+str(self.fmax)+str(self.df)
@@ -177,7 +177,7 @@ class Analytics(object):
                 tf_one_pop = self.calc_transfer_function(mu, sigma)
             if self.to_file == True:
                 if np.array(tf_one_pop).dtype.name == 'object':
-                    tf_one_pop = [complex(n.real,n.imag) 
+                    tf_one_pop = [complex(n.real,n.imag)
                                        for n in tf_one_pop]
                 dic = {'transfer_function':{label: tf_one_pop}}
                 self.add_to_file(dic)
@@ -215,16 +215,16 @@ class Analytics(object):
             return b0*b1
 
     def create_H(self, omega):
-        ''' Returns vector of the transfer function and 
+        ''' Returns vector of the transfer function and
         the instantaneous rate jumps at frequency omega.
         '''
-        # factor due to weight scaling of NEST in current equation 
+        # factor due to weight scaling of NEST in current equation
         # of 'iaf_psc_exp'-model
         fac = 2*self.tauf/self.C
         taum = 1e-3*self.taum
         tauf = 1e-3*self.tauf
         if self.tf_mode == 'analytical':
-            # find nearest omega, important when the transfer function is 
+            # find nearest omega, important when the transfer function is
             # read from file
             k = np.argmin(abs(self.omegas-np.abs(omega.real)))
             trans_func = np.transpose(self.trans_func)
@@ -242,11 +242,11 @@ class Analytics(object):
         H = self.create_H(omega)
         H = np.hstack([H for i in range(self.dimension)])
         H = np.transpose(H.reshape(self.dimension,self.dimension))
-        MH = H*self.M*Delay_dist 
+        MH = H*self.M*Delay_dist
         return MH
 
     def spec(self, omega):
-        '''Returns vector of power spectra for all populations at 
+        '''Returns vector of power spectra for all populations at
         frequency omega.
         '''
         MH_plus = self.create_MH(omega)
@@ -254,7 +254,7 @@ class Analytics(object):
         C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
         return np.power(abs(np.diag(C)),2)
 
-    def spec_approx(self, omega): 
+    def spec_approx(self, omega):
         '''Returns vector of power spectra approximation by the
         dominant eigenmode for all populations at frequency omega.
         '''
@@ -263,7 +263,7 @@ class Analytics(object):
         Up_inv = np.linalg.inv(Up)
         # find eigenvalue closest to one
         index = np.argmin(np.abs(ep-1))
-        # approximate effective connectiviy by outer product of 
+        # approximate effective connectiviy by outer product of
         # eigenvectors (corresponding to the dominant mode) weightes
         # by the eigenvalue
         MH_plus = ep[index]*np.outer(Up[:,index],Up_inv[index])
@@ -272,7 +272,7 @@ class Analytics(object):
         return np.power(abs(np.diag(C)),2)
 
     def eigs_evecs(self, matrix, omega):
-        """Returns eigenvalues and left and right eigenvectors 
+        """Returns eigenvalues and left and right eigenvectors
         of matrix at frequency omega.
 
         Arguments:
@@ -284,7 +284,7 @@ class Analytics(object):
             eig, vr = np.linalg.eig(MH)
             vl = np.linalg.inv(vr)
             return eig, np.transpose(vr), vl
-         
+
         Q = np.linalg.inv(np.identity(self.dimension) - MH(omega))
         P = np.dot(Q(omega), MH(omega))
         if matrix == 'prop':
@@ -292,5 +292,5 @@ class Analytics(object):
         elif matrix == 'prop_inv':
             eig, vr = np.linalg.eig(np.linalg.inv(P))
         vl = np.linalg.inv(vr)
- 
+
         return eig, np.transpose(vr), vl
