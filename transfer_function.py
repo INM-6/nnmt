@@ -125,7 +125,7 @@ def transfer_function_shift(omega, params, mu, sigma):
 #     value = complex(value.real, value.imag)
 #     return value
 
-def Phi_mpmath(z, x):
+def Phi(z, x):
     """
     Calculates Phi(a,x) = exp(x**2/4)*U(a,x), where U(a,x) is the
     parabolic cylinder function. Implementation uses the mpmath
