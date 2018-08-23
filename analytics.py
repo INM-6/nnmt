@@ -4,6 +4,7 @@ the circuit are calculated.
 Authors: Hannah Bos, Jannis Schuecker
 """
 
+from __future__ import print_function
 import numpy as np
 from scipy.special import erf
 import os
@@ -84,7 +85,7 @@ class Analytics(object):
 
     def firing_rates_integration(self):
         '''Returns vector of population firing rates in Hz.'''
-        print 'Calculate firing rates.'
+        print('Calculate firing rates.')
         fac = 1 / (self.params['C'])
         # conversion from ms to s
         taum = self.params['taum'] * 1e-3
@@ -119,7 +120,7 @@ class Analytics(object):
             try:
                 path = 'firing_rates'
                 rates = self.read_from_file(path)
-                print 'Read firing rates from file.'
+                print('Read firing rates from file.')
             except:
                 rates = self.firing_rates_integration()
         else:
@@ -151,7 +152,7 @@ class Analytics(object):
 
     def calc_transfer_function(self, mu, sigma):
         """Returns transfer function for one mean and variance."""
-        print 'Calculate transfer function.'
+        print('Calculate transfer function.')
         tf_one_pop = np.array([
             tf.transfer_function_taylor(
                 w, self.params, mu, sigma) for w in self.omegas])
@@ -170,7 +171,7 @@ class Analytics(object):
                 try:
                     path = 'transfer_function/' + label
                     tf_one_pop = self.read_from_file(path)
-                    print 'Read transfer function from file.'
+                    print('Read transfer function from file.')
                 except KeyError:
                     tf_one_pop = self.calc_transfer_function(mu, sigma)
             else:
