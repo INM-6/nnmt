@@ -1,12 +1,13 @@
 """siegert.py: Function calculating the firing rates of leaky
 integrate-and-fire neurons given their parameter and mean and variance
-of the input. Rates rates for delta shaped PSCs after Brunel & Hakim 1999. 
+of the input. Rates rates for delta shaped PSCs after Brunel & Hakim 1999.
 Rate of neuron with synaptic filtering with time constant tau_s after
 Fourcoud & Brunel 2002.
 
 Authors: Moritz Helias, Jannis Schuecker, Hannah Bos
 """
 
+from __future__ import print_function
 from scipy.integrate import quad
 from scipy.special import erf
 from scipy.special import zetac
@@ -32,24 +33,24 @@ def nu_0(tau_m, tau_r, V_th, V_r, mu, sigma):
         return siegert2(tau_m, tau_r, V_th, V_r, mu, sigma)
 
 def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
-    
+
     alpha = np.sqrt(2)*abs(zetac(0.5)+1)
-    # effective threshold    
+    # effective threshold
     V_th1 = V_th + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
-    # effective reset    
+    # effective reset
     V_r1 = V_r + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # use standard Siegert with modified threshold and reset
     return nu_0(tau_m, tau_r, V_th1, V_r1, mu, sigma)
 
 # stationary firing rate of neuron with synaptic low-pass filter
-# of time constant tau_s driven by Gaussian noise with mean mu and 
+# of time constant tau_s driven by Gaussian noise with mean mu and
 # standard deviation sigma, from Fourcaud & Brunel 2002
 def nu0_fb433(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """Calculates stationary firing rates for exponential PSCs using
     expression with taylor expansion in k = sqrt(tau_s/tau_m) (Eq. 433
     in Fourcoud & Brunel 2002)
     """
-    
+
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     x_th = np.sqrt(2.) * (V_th - mu) / sigma
     x_r = np.sqrt(2.) * (V_r - mu) / sigma
@@ -63,7 +64,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
         result = r - np.sqrt(tau_s / tau_m) * alpha / \
             (tau_m * np.sqrt(2)) * dPhi * (r * tau_m)**2
     if math.isnan(result):
-        print mu, sigma, x_th, x_r
+        print(mu, sigma, x_th, x_r)
     return result
 
 def Phi(s):
