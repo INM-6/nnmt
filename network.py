@@ -10,34 +10,34 @@ from analytics import Analytics
 
 
 class Circuit(object):
-    """Provides functions to calculate the stationary and dynamical 
+    """Provides functions to calculate the stationary and dynamical
     properties of a given circuit.
 
     Arguments:
     label: string specifying circuit, options: 'microcircuit'
 
     Keyword Arguments:
-    params: dictionary specifying parameter of the circuit, default 
+    params: dictionary specifying parameter of the circuit, default
             parameter given in params_circuit.py will be overwritten
     analysis_type: string specifying level of analysis that is requested
                    default: 'dynamical'
-                   options: 
-                   - None: only circuit and default analysis parameter 
+                   options:
+                   - None: only circuit and default analysis parameter
                      are set
                    - 'stationary': circuit and default analysis parameter
-                      are set, mean and variance of input to each 
+                      are set, mean and variance of input to each
                       populations as well as firing rates are calculated
                    - 'dynamical': circuit and default analysis parameter
-                      are set, mean and variance of input to each 
+                      are set, mean and variance of input to each
                       populations as well as firing rates are calculated,
-                      variables for calculation of spectra are calculated 
+                      variables for calculation of spectra are calculated
                       including the transfer function for all populations
     fmin: minimal frequency in Hz, default: 0.1 Hz
     fmax: maximal frequency in Hz, default: 150 Hz
     df: frequency spacing in Hz, default: 1.0/(2*np.pi) Hz
-    to_file: boolean specifying whether firing rates and transfer 
+    to_file: boolean specifying whether firing rates and transfer
              functions are written to file, default: True
-    from_file: boolean specifying whether firing rates and transfer 
+    from_file: boolean specifying whether firing rates and transfer
                functions are read from file, default: True
                if set to True and file is not found firing rates and
                transfer function are calculated
@@ -48,7 +48,7 @@ class Circuit(object):
         self.ana = Analytics()
         if 'analysis_type' in kwargs:
             self.analysis_type = kwargs['analysis_type']
-        else: 
+        else:
             self.analysis_type = 'dynamical'
         # set default analysis and circuit parameter
         self._set_up_circuit(params, kwargs)
@@ -98,12 +98,12 @@ class Circuit(object):
             self._set_up_for_stationary_analysis()
 
     def alter_params(self, params):
-        """Parameter specified in dictionary params are changed. 
+        """Parameter specified in dictionary params are changed.
         Changeable parameters are default analysis and circuit parameter,
         as well as label and analysis_type.
 
         Arguments:
-        params: dictionary, specifying new parameters 
+        params: dictionary, specifying new parameters
         """
         self.params.update(params)
         new_vars = self.setup.get_altered_circuit_params(self, self.label)
@@ -113,44 +113,44 @@ class Circuit(object):
         self._calc_variables()
 
     def create_power_spectra(self):
-        """Returns frequencies and power spectra. 
+        """Returns frequencies and power spectra.
         See: Eq. 9 in Bos et al. (2015)
         Shape of output: (len(self.populations), len(self.omegas))
 
         Output:
         freqs: vector of frequencies in Hz
-        power: power spectra for all populations, 
+        power: power spectra for all populations,
                dimension len(self.populations) x len(freqs)
         """
-        power = np.asarray(map(self.ana.spec, self.ana.omegas))
+        power = np.asarray(list(map(self.ana.spec, self.ana.omegas)))
         return self.ana.omegas/(2.0*np.pi), np.transpose(power)
 
     def create_power_spectra_approx(self):
-        """Returns frequencies and power spectra approximated by 
-        dominant eigenmode. 
+        """Returns frequencies and power spectra approximated by
+        dominant eigenmode.
         See: Eq. 15 in Bos et al. (2015)
         Shape of output: (len(self.populations), len(self.omegas))
 
         Output:
         freqs: vector of frequencies in Hz
-        power: power spectra for all populations, 
+        power: power spectra for all populations,
                dimension len(self.populations) x len(freqs)
         """
-        power = np.asarray(map(self.ana.spec_approx, self.ana.omegas))
+        power = np.asarray(list(map(self.ana.spec_approx, self.ana.omegas)))
         return self.ana.omegas/(2.0*np.pi), np.transpose(power)
-        
+
     def create_eigenvalue_spectra(self, matrix):
-        """Returns frequencies and frequency dependence of eigenvalues of 
+        """Returns frequencies and frequency dependence of eigenvalues of
         matrix.
 
         Arguments:
         matrix: string specifying the matrix, options are the effective
-                connectivity matrix ('MH'), the propagator ('prop') and 
+                connectivity matrix ('MH'), the propagator ('prop') and
                 the inverse of the propagator ('prop_inv')
 
         Output:
         freqs: vector of frequencies in Hz
-        eigs: spectra of all eigenvalues, 
+        eigs: spectra of all eigenvalues,
               dimension len(self.populations) x len(freqs)
         """
         eigs = [self.ana.eigs_evecs(matrix, w)[0] for w in self.ana.omegas]
@@ -158,24 +158,24 @@ class Circuit(object):
         return self.ana.omegas/(2.0*np.pi), eigs
 
     def create_eigenvector_spectra(self, matrix, label):
-        """Returns frequencies and frequency dependence of  
+        """Returns frequencies and frequency dependence of
         eigenvectors of matrix.
 
         Arguments:
         matrix: string specifying the matrix, options are the effective
-                connectivity matrix ('MH'), the propagator ('prop') and 
+                connectivity matrix ('MH'), the propagator ('prop') and
                 the inverse of the propagator ('prop_inv')
-        label: string specifying whether spectra of left or right 
-               eigenvectors are returned, options: 'left', 'right' 
+        label: string specifying whether spectra of left or right
+               eigenvectors are returned, options: 'left', 'right'
 
         Output:
         freqs: vector of frequencies in Hz
-        evecs: spectra of all eigenvectors, 
+        evecs: spectra of all eigenvectors,
                dimension len(self.populations) x len(freqs) x len(self.populations)
         """
-        # one list entry for every eigenvector, evecs[i][j][k] is the 
+        # one list entry for every eigenvector, evecs[i][j][k] is the
         # ith eigenvectors at the jth frequency for the kth component
-        evecs = [np.zeros((len(self.ana.omegas), self.ana.dimension), 
+        evecs = [np.zeros((len(self.ana.omegas), self.ana.dimension),
                           dtype=complex) for i in range(self.ana.dimension)]
         for i, w in enumerate(self.ana.omegas):
             eig, vr, vl = self.ana.eigs_evecs(matrix, w)
@@ -189,8 +189,8 @@ class Circuit(object):
         return self.ana.omegas/(2.0*np.pi), evecs
 
     def reduce_connectivity(self, M_red):
-        """Connectivity (indegree matrix) is reduced, while the working 
-        point is held constant. 
+        """Connectivity (indegree matrix) is reduced, while the working
+        point is held constant.
 
         Arguments:
         M_red: matrix, with each element specifying how the corresponding
@@ -209,7 +209,7 @@ class Circuit(object):
         self.M = self.M_full
         self.ana.update_variables({'M': self.M})
 
-    def get_effective_connectivity(self, freq): 
+    def get_effective_connectivity(self, freq):
         """Returns effective connectivity matrix.
 
         Arguments:
@@ -229,7 +229,7 @@ class Circuit(object):
                if set to None the dominant eigenmode is assumed
         """
         MH  = self.get_effective_connectivity(freq)
-        e, U = np.linalg.eig(MH)    
+        e, U = np.linalg.eig(MH)
         U_inv = np.linalg.inv(U)
         if index is None:
             # find eigenvalue closest to one
@@ -240,15 +240,13 @@ class Circuit(object):
         return T
 
     def get_transfer_function(self):
-        """Returns dynamical transfer function depending on frequency. 
+        """Returns dynamical transfer function depending on frequency.
         Shape of output: (len(self.populations), len(self.omegas))
 
         Output:
         freqs: vector of frequencies in Hz
-        dyn_trans_func: power spectra for all populations, 
+        dyn_trans_func: power spectra for all populations,
                         dimension len(self.populations) x len(freqs)
         """
-        dyn_trans_func = np.asarray(map(self.ana.create_H, self.ana.omegas))
+        dyn_trans_func = np.asarray(list(map(self.ana.create_H, self.ana.omegas)))
         return self.ana.omegas/(2.0*np.pi), np.transpose(dyn_trans_func)
-        
-        
