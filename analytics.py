@@ -98,8 +98,8 @@ class Analytics(object):
         def get_rate_difference(rates):
             mu = self.get_mean(rates)
             sigma = np.sqrt(self.get_variance(rates))
-            new_rates = np.array(map(rate_function, taum*fac*mu,
-                                     np.sqrt(taum)*fac*sigma))
+            new_rates = np.array(list(map(rate_function, taum*fac*mu,
+                                     np.sqrt(taum)*fac*sigma)))
             return -rates + new_rates
 
         dt = 0.05
