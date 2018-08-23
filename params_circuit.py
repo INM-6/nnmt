@@ -144,7 +144,7 @@ def create_hashes(params, param_keys):
     for key in param_keys:
         value = params[key]
         if isinstance(value, (np.ndarray, np.generic)):
-            label += value.tostring()
+            label += str(value)
         else:
             label += str(value)
-    return hl.md5(label).hexdigest()
+    return hl.md5(label.encode('utf-8')).hexdigest()
