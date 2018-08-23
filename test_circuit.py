@@ -4,7 +4,7 @@ Test data created using numpy 1.8.2.
 Authors: Hannah Bos, Jannis Schuecker
 """
 
-import circuit
+import network as circuit
 import numpy as np
 import h5py_wrapper.wrapper as h5
 import unittest
@@ -20,10 +20,10 @@ class TestCircuit(unittest.TestCase):
         self.net_init = circuit.Circuit('microcircuit', from_file=False)
 
     def setUp(self):
-        self.net_stat = circuit.Circuit('microcircuit', 
+        self.net_stat = circuit.Circuit('microcircuit',
                                         analysis_type='stationary')
         self.net = circuit.Circuit('microcircuit')
-   
+
     def testAlterParams(self):
         net = circuit.Circuit('microcircuit', analysis_type='stationary')
         # alteration of the membrane potential
@@ -34,14 +34,14 @@ class TestCircuit(unittest.TestCase):
         W_new = self.net_stat.params['W']
         W_new[2][3] *= 0.9
         self.net_stat.alter_params({'W': W_new})
-        assert(np.allclose(W_new,self.net_stat.params['W'], 
+        assert(np.allclose(W_new,self.net_stat.params['W'],
                            rtol=self.rtol, atol=self.atol))
-        assert(np.allclose(W_new, self.net_stat.ana.W, 
+        assert(np.allclose(W_new, self.net_stat.ana.W,
                            rtol=self.rtol, atol=self.atol))
 
     def testFiringRates(self):
         firing_rates = h5.load(self.test_data, 'firing_rates')
-        assert(np.allclose(firing_rates, self.net_stat.th_rates, 
+        assert(np.allclose(firing_rates, self.net_stat.th_rates,
                            rtol=self.rtol, atol=self.atol))
 
     def testTransferFunction(self):
@@ -75,7 +75,7 @@ class TestCircuit(unittest.TestCase):
 
     def testEmpiricalTransferFunction(self):
         params = {}
-        params['tf_mode'] = 'empirical' 
+        params['tf_mode'] = 'empirical'
         params['tau_impulse'] = np.array([8.555, 5.611, 4.167, 4.381, 4.131, 3.715, 4.538, 3.003])
         params['delta_f'] = np.array([0.0880, 0.458, 0.749, 0.884, 1.183, 1.671, 0.140, 1.710])/self.net.params['w']
         net = circuit.Circuit('microcircuit', params)
