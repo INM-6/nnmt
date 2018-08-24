@@ -43,9 +43,20 @@ class Circuit(object):
                transfer function are calculated
     """
     def __init__(self, label, params={}, **kwargs):
+        """Initiates circuit class:
+        Instantiates Setup and Analysis,
+        checks analysis type,
+        saves default for (arbitrary) analysis parameters (like minimum and maximum frequency
+        considered, or increment size) as attributes,
+        calculates and saves parameters that need to be calculated from analysis parameters,
+        calculates and saves parameters that need to be calculated using analysis.py (but thereto
+        uses instance of setup)"""
+        # specifies circuit, e.g. 'microcircuit'
         self.label = label
+        # instantiated Classes Setup and Analysis
         self.setup = Setup()
         self.ana = Analytics()
+        # check analysis type, default is 'dynamical'
         if 'analysis_type' in kwargs:
             self.analysis_type = kwargs['analysis_type']
         else:
@@ -62,6 +73,9 @@ class Circuit(object):
     # updates variables of Circuit() and Analysis() classes, new variables
     # are specified in the dictionary new_vars
     def _set_class_variables(self, new_vars):
+        """saves given new_vars as attributes of network class instance
+        AND as attributes of the instance variable self.ana, which is an istance
+        of the class Analytics itself. (two seperate places where variables are stored!)"""
         for key, value in new_vars.items():
             setattr(self, key, value)
         if 'params' in new_vars:
@@ -72,6 +86,9 @@ class Circuit(object):
     # updates class variables of variables of Circuit() and Analysis()
     # such that default analysis and circuit parameters are known
     def _set_up_circuit(self, params, args):
+        """gets default analysis parameters from setup.py (stored there)
+        and circuit parameters stored in params_circuit.py are collected using setup.py
+        and a hash is created via params_circuit.py and stored as Network instance variable"""
         # set default analysis parameter
         new_vars = self.setup.get_default_params(args)
         self._set_class_variables(new_vars)
@@ -81,16 +98,23 @@ class Circuit(object):
 
     # quantities required for stationary analysis are calculated
     def _set_up_for_stationary_analysis(self):
+        """calculates and saves working point values using setup.py, which itself
+        uses the instance of Analytics to calculate these values. """
         new_vars = self.setup.get_working_point(self)
         self._set_class_variables(new_vars)
 
     # quantities required for dynamical analysis are calculated
     def _set_up_for_dynamical_analysis(self):
+        """ calculates and saves the variables needed for the calculation of spectra
+        using setup.py, which itself uses the instance of Analytics to calculate these
+        valuse."""
         new_vars = self.setup.get_params_for_power_spectrum(self)
         self._set_class_variables(new_vars)
 
     # calculates quantities needed for analysis specified by analysis_type
     def _calc_variables(self):
+        """calculates the quantities needed for analysis using the functions
+        given above and ensures, that nothing unnecessary is calculated."""
         if self.analysis_type == 'dynamical':
             self._set_up_for_stationary_analysis()
             self._set_up_for_dynamical_analysis()
@@ -106,11 +130,17 @@ class Circuit(object):
         params: dictionary, specifying new parameters
         """
         self.params.update(params)
+        # calculate and change new parameters for circuit
         new_vars = self.setup.get_altered_circuit_params(self, self.label)
         self._set_class_variables(new_vars)
+        # use new circuit to calculate and save analysis parameters
         new_vars = self.setup.get_params_for_analysis(self)
         self._set_class_variables(new_vars)
+        # calculate needed quantities again
         self._calc_variables()
+
+#################################################################################################
+    """ Here the part with the functional methods beginns"""
 
     def create_power_spectra(self):
         """Returns frequencies and power spectra.
