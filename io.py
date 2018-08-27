@@ -11,6 +11,7 @@ Usage: io.py [options]
 Options:
     -h, --help       show extensive usage information
 '''
+
 from __future__ import print_function
 
 import docopt
@@ -18,10 +19,9 @@ import pprint
 
 import yaml
 from pint import UnitRegistry
-ureg = UnitRegistry()
+import hashlib as hl
 
-# read arguments from shell command
-args = docopt.docopt(__doc__)
+ureg = UnitRegistry()
 
 def load_network_params(file_path):
     """
@@ -49,7 +49,7 @@ def load_network_params(file_path):
         except yaml.YAMLError as exc:
             print(exc)
 
-    # convert physical to theoretical parameters
+    # convert parameters to quantities
     network_params_thy = {}
     for param, quantity in network_params_phys.items():
         # if quantity is given as dictionary specifying value and unit,
@@ -62,7 +62,7 @@ def load_network_params(file_path):
 
     # return converted network parameters
     return network_params_thy
-    
+
 
 def load_analysis_params(file_path):
     """
@@ -83,14 +83,26 @@ def load_analysis_params(file_path):
         dictionary containing all parameters
     """
 
-def create_hash(network_params):
+    # try to load yaml file
+    with open(file_path, 'r') as stream:
+        try:
+            analysis_params = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    return analysis_params
+
+
+def create_hash(params, param_keys):
     """
-    Create unique hash from given network parameters
+    Create unique hash from values of parameters specified in param_keys
 
     Parameters:
     -----------
-    network_params : dict
+    params : dict
         dictionary containing all network parameters
+    param_keys : list
+        list specifying which parameters should be reflected in hash
 
     Returns:
     --------
@@ -98,7 +110,15 @@ def create_hash(network_params):
         hash string
     """
 
-def save(data_dict, network_params, output_name=''):
+    label = ''
+    # add all param values to one string
+    for key in param_keys:
+        label += str(params[key])
+    # create and return hash (label must be encoded)
+    return hl.md5(label.encode('utf-8')).hexdigest()
+
+
+def save(data_dict, network_params, param_keys=[], output_name=''):
     """
     Save data and given paramters in h5 file
 
