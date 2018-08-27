@@ -20,6 +20,7 @@ import pprint
 import yaml
 from pint import UnitRegistry
 import hashlib as hl
+import h5py_wrapper.wrapper as h5
 
 ureg = UnitRegistry()
 
@@ -49,16 +50,24 @@ def load_network_params(file_path):
         except yaml.YAMLError as exc:
             print(exc)
 
+    print(network_params_phys)
     # convert parameters to quantities
     network_params_thy = {}
     for param, quantity in network_params_phys.items():
         # if quantity is given as dictionary specifying value and unit,
         # convert them to quantity
-        if 'val' in quantity and 'unit' in quantity:
+        if 'unit' in quantity:
             network_params_thy[param] = (quantity['val']
             * ureg.parse_expression(quantity['unit']))
         else:
-            network_params_thy[param] = quantity
+            # check that parameters are given in correct format
+            try:
+                network_params_thy[param] = ureg.Quantity(quantity['val'])
+            except TypeError as error:
+                raise KeyError(('Check that value of parameter in {} is given '
+                               + 'as value belonging to key "var" (syntax: '
+                               + '"var: <value>")').format(file_path))
+
 
     # return converted network parameters
     return network_params_thy
@@ -131,3 +140,18 @@ def save(data_dict, network_params, param_keys=[], output_name=''):
     output_name : str
         optional string specifying output file name (default: <label>_<hash>.h5)
     """
+
+    # is user did not specify output name
+    if not output_name:
+        # if user did not specify which parameters to use for hash
+        if not param_keys:
+            # take all parameters sorted alphabetically
+            param_keys = sorted(list(network_params.keys()))
+        # crate hash from param_keys
+        hash = create_hash(network_params, param_keys)
+        # default output name
+        output_name = network_params['label'] + str(hash) + '.h5'
+
+    # back convert quantities to dict with value and unit pairs
+    data_converted = {}
+    for parameter, quantity in network_params.items():
