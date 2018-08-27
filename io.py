@@ -16,6 +16,10 @@ from __future__ import print_function
 import docopt
 import pprint
 
+import yaml
+from pint import UnitRegistry
+ureg = UnitRegistry()
+
 # read arguments from shell command
 args = docopt.docopt(__doc__)
 
@@ -37,6 +41,28 @@ def load_network_params(file_path):
     dict
         dictionary containing all converted parameters
     """
+
+    # try to load yaml file
+    with open(file_path, 'r') as stream:
+        try:
+            network_params_phys = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    # convert physical to theoretical parameters
+    network_params_thy = {}
+    for param, quantity in network_params_phys.items():
+        # if quantity is given as dictionary specifying value and unit,
+        # convert them to quantity
+        if 'val' in quantity and 'unit' in quantity:
+            network_params_thy[param] = (quantity['val']
+            * ureg.parse_expression(quantity['unit']))
+        else:
+            network_params_thy[param] = quantity
+
+    # return converted network parameters
+    return network_params_thy
+    
 
 def load_analysis_params(file_path):
     """
