@@ -90,8 +90,8 @@ def quantities_to_val_unit(dict_of_quantities):
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
-        # as label is a string, which can't be represented as a quantity,
-        # it needs to be treated seperately
+        # as strings can't be represented as a quantities,
+        # they needs to be treated seperately
         if isinstance(quantity, str):
             converted_dict[quantity_key] = quantity
         else:
