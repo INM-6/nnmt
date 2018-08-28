@@ -17,6 +17,8 @@ from __future__ import print_function
 import docopt
 import pprint
 
+import numpy as np
+
 import yaml
 from pint import UnitRegistry
 import hashlib as hl
@@ -50,7 +52,6 @@ def load_network_params(file_path):
         except yaml.YAMLError as exc:
             print(exc)
 
-    print(network_params_phys)
     # convert parameters to quantities
     network_params_thy = {}
     for param, quantity in network_params_phys.items():
@@ -59,14 +60,16 @@ def load_network_params(file_path):
         if 'unit' in quantity:
             network_params_thy[param] = (quantity['val']
             * ureg.parse_expression(quantity['unit']))
+        elif param == 'label':
+            network_params_thy[param] = quantity
         else:
             # check that parameters are given in correct format
             try:
                 network_params_thy[param] = ureg.Quantity(quantity['val'])
             except TypeError as error:
                 raise KeyError(('Check that value of parameter in {} is given '
-                               + 'as value belonging to key "var" (syntax: '
-                               + '"var: <value>")').format(file_path))
+                               + 'as value belonging to key "val" (syntax: '
+                               + '"val: <value>")').format(file_path))
 
 
     # return converted network parameters
@@ -154,4 +157,39 @@ def save(data_dict, network_params, param_keys=[], output_name=''):
 
     # back convert quantities to dict with value and unit pairs
     data_converted = {}
-    for parameter, quantity in network_params.items():
+
+    def quantity_back_conversion(quantities_dict):
+        """
+        Convert a dictionary of quantities to a dictionary of val-unit pairs
+
+        Split up value and unit of each quantiy and save them in a dictionary
+        of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
+
+        Parameters:
+        -----------
+        quantities_dict: dict
+            dictionary containing only quantities (pint package)
+
+        Returns:
+        --------
+        dict
+            converted dictionary
+        """
+
+        for quantity_name, quantity in quantities_dict.items():
+            converted_dict[quantity_name] = {}
+            # label is special because it is the only string value
+            if quantity_name == 'label':
+                data_converted[quantity_name] = quantity
+            else:
+                data_converted[quantity_name]['val'] = quantity.magnitude
+                data_converted[quantity_name]['unit'] = str(quantity.units)
+
+        return data_converted
+
+    # convert data and network params into format usable in h5 files
+    data = quantity_back_conversion(data_dict)
+    network_params = quantity_back_conversion(network_params)
+    output = dict(network_params=network_params, data=data)
+    # save output
+    h5.save(output_name, output, overwrite_dataset=True)
