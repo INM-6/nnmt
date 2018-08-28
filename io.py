@@ -52,10 +52,10 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
         if 'unit' in val_unit_dict:
             converted_dict[quantity_key] = (val_unit_dict['val']
             * ureg.parse_expression(val_unit_dict['unit']))
-        # as label is a string, which can't be represented as a quantity,
-        # it needs to be treated seperately
-        elif quantity_key == 'label':
-            converted_dict[quantity_key] = val_unit_dict
+        # as strings can't be represented as a quantities,
+        # they needs to be treated seperately
+        elif isinstance(val_unit_dict['val'], str):
+            converted_dict[quantity_key] = val_unit_dict['val']
         else:
             # check that parameters are specified in correct format
             try:
@@ -92,7 +92,7 @@ def quantities_to_val_unit(dict_of_quantities):
         converted_dict[quantity_key] = {}
         # as label is a string, which can't be represented as a quantity,
         # it needs to be treated seperately
-        if quantity_key == 'label':
+        if isinstance(quantity, str):
             converted_dict[quantity_key] = quantity
         else:
             converted_dict[quantity_key]['val'] = quantity.magnitude
@@ -219,3 +219,8 @@ def save(data_dict, network_params, param_keys=[], output_name=''):
     output = dict(network_params=network_params, data=data)
     # save output
     h5.save(output_name, output, overwrite_dataset=True)
+
+# if __name__ == '__main__':
+#     params = load_network_params('network_params_microcircuit.yaml')
+#     print(params)
+#     save(params,params)
