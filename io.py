@@ -26,6 +26,81 @@ import h5py_wrapper.wrapper as h5
 
 ureg = UnitRegistry()
 
+def val_unit_to_quantities(dict_of_val_unit_dicts):
+    """
+    Convert a dictionary of value-unit pairs to a dictionary of quantities
+
+    Combine value and unit of each quantity and save them in a dictionary
+    of the structure: {'<quantity_key1>':<quantity1>, ...}
+
+    Parameters:
+    -----------
+    dict_of_val_unit_dicts: dict
+        dictionary of format {'<quantity_key1>':{'val':<value1>,
+                                                 'unit':<unit1>},
+                                                 ...}
+
+    Returns:
+    --------
+    dict
+        converted dictionary of format
+    """
+
+    converted_dict = {}
+    for quantity_key, val_unit_dict in dict_of_val_unit_dicts.items():
+        # if unit is specified, convert value unit pair to quantity
+        if 'unit' in val_unit_dict:
+            converted_dict[quantity_key] = (val_unit_dict['val']
+            * ureg.parse_expression(val_unit_dict['unit']))
+        # as label is a string, which can't be represented as a quantity,
+        # it needs to be treated seperately
+        elif quantity_key == 'label':
+            converted_dict[quantity_key] = val_unit_dict
+        else:
+            # check that parameters are specified in correct format
+            try:
+                converted_dict[quantity_key] = ureg.Quantity(val_unit_dict['val'])
+            except TypeError as error:
+                raise KeyError(('Check that value of parameter in {} is given '
+                + 'as value belonging to key "val" (syntax: '
+                + '"val: <value>")').format(file_path))
+
+    return converted_dict
+
+
+def quantities_to_val_unit(dict_of_quantities):
+    """
+    Convert a dictionary of quantities to a dictionary of val-unit pairs
+
+    Split up value and unit of each quantiy and save them in a dictionary
+    of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
+
+    Parameters:
+    -----------
+    dict_containing_quantities: dict
+        dictionary containing only quantities (pint package) of format
+        {'<quantity_key1>':<quantity1>, ...}
+
+    Returns:
+    --------
+    dict
+        converted dictionary
+    """
+
+    converted_dict = {}
+    for quantity_key, quantity in dict_of_quantities.items():
+        converted_dict[quantity_key] = {}
+        # as label is a string, which can't be represented as a quantity,
+        # it needs to be treated seperately
+        if quantity_key == 'label':
+            converted_dict[quantity_key] = quantity
+        else:
+            converted_dict[quantity_key]['val'] = quantity.magnitude
+            converted_dict[quantity_key]['unit'] = str(quantity.units)
+
+    return converted_dict
+
+
 def load_network_params(file_path):
     """
     Load and convert parameters from yaml file
@@ -53,24 +128,7 @@ def load_network_params(file_path):
             print(exc)
 
     # convert parameters to quantities
-    network_params_thy = {}
-    for param, quantity in network_params_phys.items():
-        # if quantity is given as dictionary specifying value and unit,
-        # convert them to quantity
-        if 'unit' in quantity:
-            network_params_thy[param] = (quantity['val']
-            * ureg.parse_expression(quantity['unit']))
-        elif param == 'label':
-            network_params_thy[param] = quantity
-        else:
-            # check that parameters are given in correct format
-            try:
-                network_params_thy[param] = ureg.Quantity(quantity['val'])
-            except TypeError as error:
-                raise KeyError(('Check that value of parameter in {} is given '
-                               + 'as value belonging to key "val" (syntax: '
-                               + '"val: <value>")').format(file_path))
-
+    network_params_thy = val_unit_to_quantities(network_params_phys)
 
     # return converted network parameters
     return network_params_thy
@@ -153,43 +211,11 @@ def save(data_dict, network_params, param_keys=[], output_name=''):
         # crate hash from param_keys
         hash = create_hash(network_params, param_keys)
         # default output name
-        output_name = network_params['label'] + str(hash) + '.h5'
-
-    # back convert quantities to dict with value and unit pairs
-    data_converted = {}
-
-    def quantity_back_conversion(quantities_dict):
-        """
-        Convert a dictionary of quantities to a dictionary of val-unit pairs
-
-        Split up value and unit of each quantiy and save them in a dictionary
-        of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
-
-        Parameters:
-        -----------
-        quantities_dict: dict
-            dictionary containing only quantities (pint package)
-
-        Returns:
-        --------
-        dict
-            converted dictionary
-        """
-
-        for quantity_name, quantity in quantities_dict.items():
-            converted_dict[quantity_name] = {}
-            # label is special because it is the only string value
-            if quantity_name == 'label':
-                data_converted[quantity_name] = quantity
-            else:
-                data_converted[quantity_name]['val'] = quantity.magnitude
-                data_converted[quantity_name]['unit'] = str(quantity.units)
-
-        return data_converted
+        output_name = '{}_{}.h5'.format(network_params['label'], str(hash))
 
     # convert data and network params into format usable in h5 files
-    data = quantity_back_conversion(data_dict)
-    network_params = quantity_back_conversion(network_params)
+    data = quantities_to_val_unit(data_dict)
+    network_params = quantities_to_val_unit(network_params)
     output = dict(network_params=network_params, data=data)
     # save output
     h5.save(output_name, output, overwrite_dataset=True)
