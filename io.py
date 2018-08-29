@@ -48,6 +48,12 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     converted_dict = {}
     for quantity_key, val_unit_dict in dict_of_val_unit_dicts.items():
+        # if value is given as nested list, convert to numpy array
+        if isinstance(val_unit_dict['val'], list):
+            if any(isinstance(part, list) for part in val_unit_dict['val']):
+                print(val_unit_dict['val'])
+                print(np.array(val_unit_dict['val']))
+
         # if unit is specified, convert value unit pair to quantity
         if 'unit' in val_unit_dict:
             converted_dict[quantity_key] = (val_unit_dict['val']
@@ -101,66 +107,72 @@ def quantities_to_val_unit(dict_of_quantities):
     return converted_dict
 
 
-def load_network_params(file_path):
+def load_params(file_path):
     """
     Load and convert parameters from yaml file
 
-    Load network parameters from yaml file and convert them from physical
-    paramters (used in yaml file) to theoretical parameters (used in
-    implementation of functions in meanfield_calcs.py).
+    Load parameters from yaml file and convert them from value unit dictionaries
+    (used in yaml file) to quantities (used in implementation of functions in
+    meanfield_calcs.py).
 
     Parameters:
     -----------
     file_path : str
-        string specifying path to yaml file containing network parameters
+        string specifying path to yaml file containing parameters in format
+        <parameter1>:
+            val: <value1>
+            unit: <unit1>
+        ...
 
     Returns:
     --------
     dict
-        dictionary containing all converted parameters
+        dictionary containing all converted parameters as quantities
     """
 
     # try to load yaml file
     with open(file_path, 'r') as stream:
         try:
-            network_params_phys = yaml.safe_load(stream)
+            params = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
     # convert parameters to quantities
-    network_params_thy = val_unit_to_quantities(network_params_phys)
+    params_converted = val_unit_to_quantities(params)
 
     # return converted network parameters
-    return network_params_thy
+    return params_converted
 
 
-def load_analysis_params(file_path):
-    """
-    Load analysis paramters from yaml file
-
-    Load parameters needed to define calculations done within meanfield_calcs.py
-    like for example the minimum and maximum frequency considered, or the
-    increment width.
-
-    Parameters:
-    -----------
-    file_path : str
-        string specifying path to yaml file containing analysis paramters
-
-    Returns:
-    --------
-    dict
-        dictionary containing all parameters
-    """
-
-    # try to load yaml file
-    with open(file_path, 'r') as stream:
-        try:
-            analysis_params = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-
-    return analysis_params
+# def load_analysis_params(file_path):
+#     """
+#     Load analysis paramters from yaml file
+#
+#     Load parameters needed to define calculations done within meanfield_calcs.py
+#     like for example the minimum and maximum frequency considered, or the
+#     increment width.
+#
+#     Parameters:
+#     -----------
+#     file_path : str
+#         string specifying path to yaml file containing analysis paramters
+#
+#     Returns:
+#     --------
+#     dict
+#         dictionary containing all parameters
+#     """
+#
+#     # try to load yaml file
+#     with open(file_path, 'r') as stream:
+#         try:
+#             analysis_params = yaml.safe_load(stream)
+#         except yaml.YAMLError as exc:
+#             print(exc)
+#
+#     analysis_params
+#
+#     return analysis_params
 
 
 def create_hash(params, param_keys):
@@ -220,7 +232,7 @@ def save(data_dict, network_params, param_keys=[], output_name=''):
     # save output
     h5.save(output_name, output, overwrite_dataset=True)
 
-# if __name__ == '__main__':
-#     params = load_network_params('network_params_microcircuit.yaml')
-#     print(params)
-#     save(params,params)
+if __name__ == '__main__':
+    params = load_network_params('network_params_microcircuit.yaml')
+    print(params)
+    save(params,params)
