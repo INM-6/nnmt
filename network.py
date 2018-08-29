@@ -1,3 +1,61 @@
+"""
+network.py: Main class providing functions to calculate the stationary and
+dynamical properties of a given circuit.
+
+Authors: Hannah Bos, Jannis Schuecker
+"""
+
+import io
+
+class Network(object):
+    """
+    Network with given parameters. The class provides methods for calculating
+    stationary and dynamical properties of the defined network.
+
+    Parameters:
+    -----------
+    network_params: str
+        specifies path to yaml file containing network parameters
+    analysis_params: str
+        specifies path to yaml file containing analysis parameters
+    new_network_params: dict
+        dictionary specifying network parameters from yaml file that should be
+        overwritten. Format:
+        {'<param1>:{'val':<value1>, 'unit':<unit1>},...}
+    new_analysis_params: dict
+        dictionary specifying analysis parameters from yaml file that should be
+        overwritten. Format:
+        {'<param1>:{'val':<value1>, 'unit':<unit1>},...}
+    """
+
+    def __init__(self, network_params, analysis_params, new_network_params={},
+                 new_analysis_params={}):
+        """
+        Initiate Network class.
+
+        Load parameters from given yaml files using input output handling
+        implemented in io.py and store them as instance variables.
+        Overwrite parameters specified in new_network_parms and
+        new_analysis_params.
+        Calculate parameters which are derived from given parameters.
+        """
+
+        # load network params (read from yaml and convert to quantities)
+        self.network_params = io.load_params(network_params)
+        # load analysis params (read from yaml and convert to quantities)
+        self.analysis_params = io.load_params(analysis_params)
+
+        # convert new params to quantities
+        new_network_params_converted = io.val_unit_to_quantities(
+                                                            new_network_params)
+        new_analysis_params_converted = io.val_unit_to_quantities(
+                                                            new_analysis_params)
+        # update network parameters
+        self.network_params.update(new_network_params_converted)
+        # update analysis parameters
+        self.analysis_params.update(new_analysis_params_converted)
+
+
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
 
