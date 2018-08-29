@@ -55,6 +55,39 @@ class Network(object):
         # update analysis parameters
         self.analysis_params.update(new_analysis_params_converted)
 
+    def _calculate_dependent_network_parameters(self):
+        """
+        Calculate all network parameters derived from parameters in yaml file
+        """
+        self.network_params['de_sd'] = self.network_params['de']*0.5
+        # standard deviation of delay of inhibitory connections in ms
+        self.network_params['di_sd'] = self.network_params['di']*0.5
+
+        # weight matrix
+        W = np.ones((8,8))*self.network_params['w']
+        W[1:8:2] *= -self.network_params['g']
+        W = np.transpose(W)
+        # larger weight for L4E->L23E connections
+        W[0][2] *= 2.0
+        self.network_params['W'] = W
+
+        # delay matrix
+        D = np.ones((8,8))*self.network_params['de']
+        D[1:8:2] = np.ones(8)*self.network_params['di']
+        D = np.transpose(D)
+        self.network_params['Delay'] = D
+
+        # delay standard deviation matrix
+        D = np.ones((8,8))*self.network_params['de_sd']
+        D[1:8:2] = np.ones(8)*self.network_params['di_sd']
+        D = np.transpose(D)
+        self.network_params['Delay_sd'] = D
+
+    def _calculate_dependent_analysis_parameters(self):
+        """
+        Calculate all analysis parameters derived from parameters in yaml file
+        """
+
 
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
