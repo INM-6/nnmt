@@ -186,7 +186,7 @@ def load_results_from_h5(network_params, network_params_keys):
     try:
         output_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
     except OSError:
-        return None
+        return {}
     results = output_file['results']
     results = val_unit_to_quantities(results)
     return results
