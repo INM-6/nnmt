@@ -1,3 +1,4 @@
+---
 f_min:
   val: 0.1
   unit: Hz
@@ -11,7 +12,7 @@ df:
   val: 0.15915494309189535
   unit: Hz
 
-  
+
 ### neural response
 # Transfer function is either calculated analytically ('analytical')
 # or approximated by an exponential ('empirical'). In the latter case
@@ -48,3 +49,4 @@ tf_mode:
 # number of modes used when fast response time constants are calculated
 num_modes:
   val: 1
+...
