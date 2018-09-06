@@ -38,7 +38,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     Strings and lists of strings are not converted to quantities, because they
     cannot handle strings as values. They are stored as strings and lists of
-    strings: {'<str_key>':<str>, '<list_of_str_key>':<list_of_str>}
+    strings: {'<str_key>':<str>, '<list_of_str_key>':<list_of_str>, ...}
 
     Parameters:
     -----------
@@ -93,7 +93,7 @@ def quantities_to_val_unit(dict_of_quantities):
 
     Strings and lists of strings are handled seperately, but are stored under
     'val' keys as well.
-    
+
     Parameters:
     -----------
     dict_containing_quantities: dict
