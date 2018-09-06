@@ -55,6 +55,10 @@ class Network(object):
         # update analysis parameters
         self.analysis_params.update(new_analysis_params_converted)
 
+        # load already existing results
+        self.results = io.load_results_from_h5(self.network_params,
+                                               self.network_params.keys())
+
 
     def _calculate_dependent_network_parameters(self):
         """
