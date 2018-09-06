@@ -33,6 +33,13 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     Combine value and unit of each quantity and save them in a dictionary
     of the structure: {'<quantity_key1>':<quantity1>, ...}
 
+    Nested lists of numericals are converted to numpy arrays and then converted
+    to quantities.
+
+    Strings and lists of strings are not converted to quantities, because they
+    cannot handle strings as values. They are stored as strings and lists of
+    strings: {'<str_key>':<str>, '<list_of_str_key>':<list_of_str>}
+
     Parameters:
     -----------
     dict_of_val_unit_dicts: dict
@@ -84,6 +91,9 @@ def quantities_to_val_unit(dict_of_quantities):
     Split up value and unit of each quantiy and save them in a dictionary
     of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
 
+    Strings and lists of strings are handled seperately, but are stored under
+    'val' keys as well.
+    
     Parameters:
     -----------
     dict_containing_quantities: dict
@@ -279,6 +289,6 @@ if __name__ == '__main__':
     print(params)
     save(params,params, params)
     print("SAVED")
-    results = load_results_from_h5(params, params.keys())
+    results = load_results_from_h5(params, ['label', 'populations'])
     print("RELOADED")
     print(results)
