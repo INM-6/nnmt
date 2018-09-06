@@ -51,9 +51,8 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
         # if value is given as nested list, convert to numpy array
         if isinstance(val_unit_dict['val'], list):
             if any(isinstance(part, list) for part in val_unit_dict['val']):
-                print(val_unit_dict['val'])
-                print(np.array(val_unit_dict['val']))
-
+                val_unit_dict['val'] = np.array(val_unit_dict['val'])
+                
         # if unit is specified, convert value unit pair to quantity
         if 'unit' in val_unit_dict:
             converted_dict[quantity_key] = (val_unit_dict['val']
@@ -99,7 +98,7 @@ def quantities_to_val_unit(dict_of_quantities):
         # as strings can't be represented as a quantities,
         # they needs to be treated seperately
         if isinstance(quantity, str):
-            converted_dict[quantity_key] = quantity
+            converted_dict[quantity_key]['val'] = quantity
         else:
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
@@ -166,11 +165,13 @@ def load_results_from_h5(network_params, network_params_keys):
     hash = create_hash(network_params, network_params_keys)
 
     # try to load file with standard name
-
-    results = h5.load('{}_{}.h5'.format(network_params['label'], hash))
-    print(results)
-
-
+    try:
+        output_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
+    except OSError:
+        return None
+    results = output_file['results']
+    results = val_unit_to_quantities(results)
+    return results
 
 
 
@@ -259,6 +260,7 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     results = quantities_to_val_unit(results_dict)
     network_params = quantities_to_val_unit(network_params)
     analysis_params = quantities_to_val_unit(analysis_params)
+    print(results)
 
     output = dict(analysis_params=analysis_params, network_params=network_params, results=results)
     # save output
@@ -266,7 +268,10 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
 
 if __name__ == '__main__':
     params = load_params('network_params_microcircuit.yaml')
+    print("LOADED")
     print(params)
     save(params,params, params)
     print("SAVED")
-    load_results_from_h5(params, params.keys())
+    results = load_results_from_h5(params, params.keys())
+    print("RELOADED")
+    print(results)
