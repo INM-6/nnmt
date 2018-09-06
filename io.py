@@ -200,7 +200,7 @@ def create_hash(params, param_keys):
     return hl.md5(label.encode('utf-8')).hexdigest()
 
 
-def save(data_dict, network_params, param_keys=[], output_name=''):
+def save(results_dict, network_params, param_keys=[], output_name=''):
     """
     Save data and given paramters in h5 file
 
@@ -226,9 +226,9 @@ def save(data_dict, network_params, param_keys=[], output_name=''):
         output_name = '{}_{}.h5'.format(network_params['label'], str(hash))
 
     # convert data and network params into format usable in h5 files
-    data = quantities_to_val_unit(data_dict)
+    results = quantities_to_val_unit(results_dict)
     network_params = quantities_to_val_unit(network_params)
-    output = dict(network_params=network_params, data=data)
+    output = dict(network_params=network_params, results=results)
     # save output
     h5.save(output_name, output, overwrite_dataset=True)
 
