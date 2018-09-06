@@ -33,39 +33,39 @@ C:
   unit: pF
 
 # membrane time constant
-taum:
+tau_m:
   val: 10.0
   unit: ms
 
 # refractory time
-taur:
+tau_r:
   val: 2.0
   unit: ms
 
 # reset potential
-V0:
+V_0:
   val: -65.0
   unit: mV
 
 # threshold of membrane potential
-Vth:
+V_th:
   val: -50.0
   unit: mV
 
 
 ### synapses
 # synaptic time constant
-tauf:
+tau_f:
   val: 0.5
   unit: ms
 
 # delay of excitatory connections
-de:
+d_e:
   val: 1.5
   unit: ms
 
 # delay of inhibitory connections
-di:
+d_i:
   val: 0.75
   unit: ms
 
@@ -77,11 +77,11 @@ delay_dist:
 
 # PSC amplitude
 w:
-  val: 43.9
+  val: 87.8
   unit: pA
 
 # indegrees
-I:
+K:
   val:
     - - 2199.86486
       - 1079.32007
@@ -151,12 +151,13 @@ g:
   val: 4.0
 
 ### external input
-v_ext:
+# firing rate of external input
+nu_ext:
   val: 8.0
   unit: Hz
 
 # number of external neurons
-Next:
+K_ext:
   val:
     - 1600
     - 1500
@@ -168,42 +169,7 @@ Next:
     - 2100
 
 
-### neural response
-# Transfer function is either calculated analytically ('analytical')
-# or approximated by an exponential ('empirical'). In the latter case
-# the time constants in response to an incoming impulse ('tau_impulse'),
-# as well as the instantaneous rate jumps ('delta_f') have to be
-# specified.
-tf_mode:
-  val: analytical
-# val: empirical
-# tau_impulse:
-#   val:
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#   unit: ms
-#
-# delta_f:
-#   val:
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#     - 0.0
-#   unit: ms
 
-# number of modes used when fast response time constants are calculated
-num_modes:
-  val: 1
 
 
 ...
