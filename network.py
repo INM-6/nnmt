@@ -55,6 +55,7 @@ class Network(object):
         # update analysis parameters
         self.analysis_params.update(new_analysis_params_converted)
 
+
     def _calculate_dependent_network_parameters(self):
         """
         Calculate all network parameters derived from parameters in yaml file
@@ -83,10 +84,31 @@ class Network(object):
         D = np.transpose(D)
         self.network_params['Delay_sd'] = D
 
+        # # params for power spectrum
+        # new_vars = {}
+        # if circ.params['tf_mode'] == 'analytical':
+        #     new_vars['M'] = circ.params['I']*circ.params['W']
+        #     new_vars['trans_func'] = circ.ana.create_transfer_function()
+        # else:
+        #     for key in ['tau_impulse', 'delta_f']:
+        #         new_vars[key] = circ.params[key]
+        #     new_vars['H_df'] = circ.ana.create_H_df(new_vars, 'empirical')
+        #     new_vars['M'] = circ.params['I']*circ.params['W']
+        #
+        # # copy of full connectivity (needed when connectivity is reduced)
+        # new_vars['M_full'] = new_vars['M']
+
+
     def _calculate_dependent_analysis_parameters(self):
         """
         Calculate all analysis parameters derived from parameters in yaml file
         """
+
+        new_vars = {}
+        w_min = 2*np.pi*circ.fmin
+        w_max = 2*np.pi*circ.fmax
+        dw = 2*np.pi*circ.df
+        new_vars['omegas'] = np.arange(w_min, w_max, dw)
 
 
 """circuit.py: Main class providing functions to calculate the stationary
