@@ -52,7 +52,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
         if isinstance(val_unit_dict['val'], list):
             if any(isinstance(part, list) for part in val_unit_dict['val']):
                 val_unit_dict['val'] = np.array(val_unit_dict['val'])
-                
+
         # if unit is specified, convert value unit pair to quantity
         if 'unit' in val_unit_dict:
             converted_dict[quantity_key] = (val_unit_dict['val']
@@ -61,6 +61,10 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
         # they needs to be treated seperately
         elif isinstance(val_unit_dict['val'], str):
             converted_dict[quantity_key] = val_unit_dict['val']
+        # list of strings need to be treated seperately as well
+        elif isinstance(val_unit_dict['val'], list):
+            if any(isinstance(part, str) for part in val_unit_dict['val']):
+                converted_dict[quantity_key] = val_unit_dict['val']
         else:
             # check that parameters are specified in correct format
             try:
@@ -99,6 +103,10 @@ def quantities_to_val_unit(dict_of_quantities):
         # they needs to be treated seperately
         if isinstance(quantity, str):
             converted_dict[quantity_key]['val'] = quantity
+        # lists of strings need to be treated seperately as well
+        elif isinstance(quantity, list):
+            if any(isinstance(part, str) for part in quantity):
+                converted_dict[quantity_key]['val'] = quantity
         else:
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
@@ -260,7 +268,6 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     results = quantities_to_val_unit(results_dict)
     network_params = quantities_to_val_unit(network_params)
     analysis_params = quantities_to_val_unit(analysis_params)
-    print(results)
 
     output = dict(analysis_params=analysis_params, network_params=network_params, results=results)
     # save output
