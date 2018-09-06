@@ -38,6 +38,7 @@ class Network(object):
         Overwrite parameters specified in new_network_parms and
         new_analysis_params.
         Calculate parameters which are derived from given parameters.
+        Try to load existing results.
         """
 
         # load network params (read from yaml and convert to quantities)
@@ -58,7 +59,7 @@ class Network(object):
         # load already existing results
         self.results = io.load_results_from_h5(self.network_params,
                                                self.network_params.keys())
-
+        
 
     def _calculate_dependent_network_parameters(self):
         """

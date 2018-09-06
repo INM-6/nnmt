@@ -161,38 +161,6 @@ def load_params(file_path):
     return params_converted
 
 
-def load_results_from_h5(network_params, network_params_keys):
-    """
-    Load existing results for given parametesr from h5 file
-
-    Loads results from h5 files named with the standard format
-    <label>_<hash>.h5, if this file already exists.
-
-    Parameters:
-    -----------
-    network_params : dict
-        dictionary containing network parameters as quantities
-
-    Returns:
-    --------
-    dict
-        dictionary containing all found results
-    """
-
-    # create hash from given parameters
-    hash = create_hash(network_params, network_params_keys)
-
-    # try to load file with standard name
-    try:
-        output_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
-    except OSError:
-        return {}
-    results = output_file['results']
-    results = val_unit_to_quantities(results)
-    return results
-
-
-
 # def load_analysis_params(file_path):
 #     """
 #     Load analysis paramters from yaml file
@@ -282,6 +250,43 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     output = dict(analysis_params=analysis_params, network_params=network_params, results=results)
     # save output
     h5.save(output_name, output, overwrite_dataset=True)
+
+
+def load_results_from_h5(network_params, network_params_keys):
+    """
+    Load existing results for given parametesr from h5 file
+
+    Loads results from h5 files named with the standard format
+    <label>_<hash>.h5, if this file already exists.
+
+    Parameters:
+    -----------
+    network_params : dict
+        dictionary containing network parameters as quantities
+
+    Returns:
+    --------
+    dict
+        dictionary containing all found results
+    """
+
+    # create hash from given parameters
+    hash = create_hash(network_params, network_params_keys)
+
+    # try to load file with standard name
+    try:
+        output_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
+    # if not existing OSError is raised by h5py_wrapper, then return empty dict
+    except OSError:
+        return {}
+
+    # only want results to be returned
+    results = output_file['results']
+
+    # convert results to quantitites
+    results = val_unit_to_quantities(results)
+
+    return results
 
 if __name__ == '__main__':
     params = load_params('network_params_microcircuit.yaml')
