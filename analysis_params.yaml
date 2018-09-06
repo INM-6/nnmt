@@ -1,0 +1,50 @@
+f_min:
+  val: 0.1
+  unit: Hz
+
+f_max:
+  val: 150.
+  unit: Hz
+
+df:
+  # 1/(2*pi)
+  val: 0.15915494309189535
+  unit: Hz
+
+  
+### neural response
+# Transfer function is either calculated analytically ('analytical')
+# or approximated by an exponential ('empirical'). In the latter case
+# the time constants in response to an incoming impulse ('tau_impulse'),
+# as well as the instantaneous rate jumps ('delta_f') have to be
+# specified.
+tf_mode:
+  val: analytical
+# val: empirical
+# tau_impulse:
+#   val:
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#   unit: ms
+#
+# delta_f:
+#   val:
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#   unit: ms
+
+# number of modes used when fast response time constants are calculated
+num_modes:
+  val: 1
