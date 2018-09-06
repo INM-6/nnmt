@@ -144,6 +144,36 @@ def load_params(file_path):
     return params_converted
 
 
+def load_results_from_h5(network_params, network_params_keys):
+    """
+    Load existing results for given parametesr from h5 file
+
+    Loads results from h5 files named with the standard format
+    <label>_<hash>.h5, if this file already exists.
+
+    Parameters:
+    -----------
+    network_params : dict
+        dictionary containing network parameters as quantities
+
+    Returns:
+    --------
+    dict
+        dictionary containing all found results
+    """
+
+    # create hash from given parameters
+    hash = create_hash(network_params, network_params_keys)
+
+    # try to load file with standard name
+
+    results = h5.load('{}_{}.h5'.format(network_params['label'], hash))
+    print(results)
+
+
+
+
+
 # def load_analysis_params(file_path):
 #     """
 #     Load analysis paramters from yaml file
@@ -194,7 +224,7 @@ def create_hash(params, param_keys):
 
     label = ''
     # add all param values to one string
-    for key in param_keys:
+    for key in sorted(list(param_keys)):
         label += str(params[key])
     # create and return hash (label must be encoded)
     return hl.md5(label.encode('utf-8')).hexdigest()
@@ -228,11 +258,15 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     # convert data and network params into format usable in h5 files
     results = quantities_to_val_unit(results_dict)
     network_params = quantities_to_val_unit(network_params)
+    analysis_params = quantities_to_val_unit(analysis_params)
+
     output = dict(analysis_params=analysis_params, network_params=network_params, results=results)
     # save output
     h5.save(output_name, output, overwrite_dataset=True)
 
 if __name__ == '__main__':
-    params = load_network_params('network_params_microcircuit.yaml')
+    params = load_params('network_params_microcircuit.yaml')
     print(params)
-    save(params,params)
+    save(params,params, params)
+    print("SAVED")
+    load_results_from_h5(params, params.keys())
