@@ -107,13 +107,22 @@ class Network(object):
     def _calculate_dependent_analysis_parameters(self):
         """
         Calculate all analysis parameters derived from parameters in yaml file
+
+        Returns:
+        --------
+        dict
+            dictionary containing derived parameters
         """
 
-        new_vars = {}
-        w_min = 2*np.pi*circ.fmin
-        w_max = 2*np.pi*circ.fmax
-        dw = 2*np.pi*circ.df
-        new_vars['omegas'] = np.arange(w_min, w_max, dw)
+        derived_params = {}
+        
+        w_min = 2*np.pi*self.analysis_params['f_min']
+        w_max = 2*np.pi*self.analysis_params['f_max']
+        dw = 2*np.pi*self.analysis_params['df']
+        derived_params['omegas'] = np.arange(w_min, w_max, dw)
+
+        return derived_params
+
 
     def save(self, param_keys={}, output_name=''):
         """
