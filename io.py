@@ -161,37 +161,6 @@ def load_params(file_path):
     return params_converted
 
 
-# def load_analysis_params(file_path):
-#     """
-#     Load analysis paramters from yaml file
-#
-#     Load parameters needed to define calculations done within meanfield_calcs.py
-#     like for example the minimum and maximum frequency considered, or the
-#     increment width.
-#
-#     Parameters:
-#     -----------
-#     file_path : str
-#         string specifying path to yaml file containing analysis paramters
-#
-#     Returns:
-#     --------
-#     dict
-#         dictionary containing all parameters
-#     """
-#
-#     # try to load yaml file
-#     with open(file_path, 'r') as stream:
-#         try:
-#             analysis_params = yaml.safe_load(stream)
-#         except yaml.YAMLError as exc:
-#             print(exc)
-#
-#     analysis_params
-#
-#     return analysis_params
-
-
 def create_hash(params, param_keys):
     """
     Create unique hash from values of parameters specified in param_keys
@@ -254,7 +223,7 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
 
 def load_results_from_h5(network_params, network_params_keys):
     """
-    Load existing results for given parametesr from h5 file
+    Load existing results for given parameters from h5 file
 
     Loads results from h5 files named with the standard format
     <label>_<hash>.h5, if this file already exists.
