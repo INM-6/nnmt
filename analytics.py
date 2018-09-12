@@ -57,6 +57,8 @@ class Analytics(object):
                 label += str(value)
         return hl.md5(label).hexdigest()
 
+
+    # TODO: Check that converted mean is used
     def get_mean(self, f):
         '''Returns vector of mean inputs to populations depending on
         the firing rates f of the populations.
@@ -70,6 +72,7 @@ class Analytics(object):
         m = m0+m_ext
         return m
 
+    # TODO: Check that converted mean is used
     def get_variance(self, f):
         '''Returns vector of variances of inputs to populations depending
         on the firing rates f of the populations.
