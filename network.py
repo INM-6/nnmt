@@ -59,9 +59,13 @@ class Network(object):
         # update analysis parameters
         self.analysis_params.update(new_analysis_params_converted)
 
-        # calculate dependend analysis parameters
-        self.analysis_params.update(_calculate_dependent_analysis_parameters())
+        # calculate dependend network parameters
+        derived_network_params = self._calculate_dependent_network_parameters()
+        self.network_params.update(derived_network_params)
 
+        # calculate dependend analysis parameters
+        derived_analysis_params = self._calculate_dependent_analysis_parameters()
+        self.analysis_params.update(derived_analysis_params)
         # load already existing results
         self.results = io.load_results_from_h5(self.network_params,
                                                self.network_params.keys())
@@ -70,31 +74,52 @@ class Network(object):
     def _calculate_dependent_network_parameters(self):
         """
         Calculate all network parameters derived from parameters in yaml file
+
+        Returns:
+        --------
+        dict
+            dictionary containing all derived network parameters
         """
-        self.network_params['de_sd'] = self.network_params['de']*0.5
-        # standard deviation of delay of inhibitory connections in ms
-        self.network_params['di_sd'] = self.network_params['di']*0.5
+
+        derived_params = {}
+
+        # convert weights in pA to weights in mV
+        derived_params['J'] = (self.network_params['tau_f']
+                              * self.network_params['w']
+                              / self.network_params['C']).to(ureg.mV)
+
+        # reset reference potential to 0
+        derived_params['V_0'] = 0
+        derived_params['V_th'] = (self.network_params['V_th']
+                                 - self.network_params['V_0'])
+
+        # standard deviation of delay of excitatory connections
+        derived_params['d_e_sd'] = self.network_params['d_e']*0.5
+        # standard deviation of delay of inhibitory connections
+        derived_params['d_i_sd'] = self.network_params['d_i']*0.5
 
         # weight matrix
+        # TODO: check whether w must be replaced by J
         W = np.ones((8,8))*self.network_params['w']
         W[1:8:2] *= -self.network_params['g']
         W = np.transpose(W)
         # larger weight for L4E->L23E connections
         W[0][2] *= 2.0
-        self.network_params['W'] = W
+        derived_params['W'] = W
 
         # delay matrix
-        D = np.ones((8,8))*self.network_params['de']
-        D[1:8:2] = np.ones(8)*self.network_params['di']
+        D = np.ones((8,8))*self.network_params['d_e']
+        D[1:8:2] = np.ones(8)*self.network_params['d_i']
         D = np.transpose(D)
-        self.network_params['Delay'] = D
+        derived_params['Delay'] = D
 
         # delay standard deviation matrix
-        D = np.ones((8,8))*self.network_params['de_sd']
-        D[1:8:2] = np.ones(8)*self.network_params['di_sd']
+        D = np.ones((8,8))*derived_params['d_e_sd']
+        D[1:8:2] = np.ones(8)*derived_params['d_i_sd']
         D = np.transpose(D)
-        self.network_params['Delay_sd'] = D
+        derived_params['Delay_sd'] = D
 
+        return derived_params
         # # params for power spectrum
         # new_vars = {}
         # if circ.params['tf_mode'] == 'analytical':
@@ -137,9 +162,6 @@ class Network(object):
 
         return derived_params
 
-if __name__ == '__main__':
-    netw = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
-    print(netw._calculate_dependent_analysis_parameters())
 
     def save(self, param_keys={}, output_name=''):
         """
