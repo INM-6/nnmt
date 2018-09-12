@@ -5,7 +5,10 @@ dynamical properties of a given circuit.
 Authors: Hannah Bos, Jannis Schuecker
 """
 
-import io
+import numpy as np
+
+import my_io as io
+ureg = io.ureg
 
 class Network(object):
     """
@@ -55,6 +58,9 @@ class Network(object):
         self.network_params.update(new_network_params_converted)
         # update analysis parameters
         self.analysis_params.update(new_analysis_params_converted)
+
+        # calculate dependend analysis parameters
+        self.analysis_params.update(_calculate_dependent_analysis_parameters())
 
         # load already existing results
         self.results = io.load_results_from_h5(self.network_params,
@@ -115,14 +121,25 @@ class Network(object):
         """
 
         derived_params = {}
-        
+
+        # convert regular to angular frequencies
         w_min = 2*np.pi*self.analysis_params['f_min']
         w_max = 2*np.pi*self.analysis_params['f_max']
         dw = 2*np.pi*self.analysis_params['df']
-        derived_params['omegas'] = np.arange(w_min, w_max, dw)
+
+        # enable usage of quantities
+        @ureg.wraps(ureg.Hz, (ureg.Hz, ureg.Hz, ureg.Hz))
+        def calc_evaluated_omegas(w_min, w_max, dw):
+            """ Calculates omegas at which functions are to be evaluated """
+            return np.arange(w_min, w_max, dw)
+
+        derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
 
         return derived_params
 
+if __name__ == '__main__':
+    netw = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
+    print(netw._calculate_dependent_analysis_parameters())
 
     def save(self, param_keys={}, output_name=''):
         """
