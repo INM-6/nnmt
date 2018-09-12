@@ -183,6 +183,9 @@ class Network(object):
                 param_keys, output_name)
 
 
+    def show(self):
+        """ returns which results have already been calculated """
+        return self.results.keys()
 
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
