@@ -59,7 +59,7 @@ class Network(object):
         # load already existing results
         self.results = io.load_results_from_h5(self.network_params,
                                                self.network_params.keys())
-        
+
 
     def _calculate_dependent_network_parameters(self):
         """
@@ -114,6 +114,26 @@ class Network(object):
         w_max = 2*np.pi*circ.fmax
         dw = 2*np.pi*circ.df
         new_vars['omegas'] = np.arange(w_min, w_max, dw)
+
+    def save(self, param_keys={}, output_name=''):
+        """
+        Saves results and parameters to h5 file
+
+        Parameters:
+        -----------
+        param_keys: dict
+            specifies which parameters are used in hash for output name
+        output_name: str
+            if given, this is used as output file name
+
+        Returns:
+        --------
+        None
+        """
+
+        io.save(self.results, self.network_params, self.analysis_params,
+                param_keys, output_name)
+
 
 
 """circuit.py: Main class providing functions to calculate the stationary
