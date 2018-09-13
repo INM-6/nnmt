@@ -164,7 +164,7 @@ class Network(object):
         return derived_params
 
 
-    def _check_and_save_results(result_key):
+    def _check_and_store_results(result_key):
         """
         Decorator function that checks whether result are already existing
 
@@ -172,7 +172,7 @@ class Network(object):
         quantities which are to be stored in self.results. First it checks,
         whether the result already has been stored in self.results. If this is
         the case, it returns that result. If not, the calculation is executed,
-        the result is saved to self.results and the result is returned.
+        the result is stored in self.results and the result is returned.
 
         Parameters:
         -----------
@@ -205,6 +205,7 @@ class Network(object):
                     return new_result[result_key]
             return wrapper_check_results
         return decorator_check_results
+
 
     def save(self, param_keys={}, output_name=''):
         """
@@ -247,7 +248,7 @@ class Network(object):
 
         return working_point
 
-#     @_check_and_save_results('hallo')
+#     @_check_and_store_results('hallo')
 #     def calc_test(self):
 #         return 'berechnet'
 #
