@@ -233,27 +233,39 @@ class Network(object):
         return self.results.keys()
 
 
-    @_check_and_store_results('th_rates')
-    def firing_rates(self):
-        """ Calculates firing rates """
-        return meanfield_calcs.firing_rates()
+    # @_check_and_store_results('th_rates')
+    # def firing_rates(self):
+    #     """ Calculates firing rates """
+    #     return meanfield_calcs.firing_rates(tau_m=self.network_params['tau_m'],
+    #                                         tau_f=self.network_params['tau_f'],
+    #                                         tau_r=self.network_params['tau_r'],
+    #                                         dV=self.network_params['V_th'])
 
+    def firing_rates(self):
+        return meanfield_calcs.firing_rates()
 
     @_check_and_store_results('mu')
     def mean(self):
         """ Calculates mean """
         nu = self.firing_rates()
-        return meanfield_calcs.mean(nu=nu,
-                                    K=self.network_params['K'],
-                                    W=self.network_params['W'],
-                                    J=self.network_params['J'],
-                                    nu_ext=self.network_params['nu_ext'],
-                                    K_ext=self.network_params['K_ext'])
+        return meanfield_calcs.mean(nu,
+                                    self.network_params['K'],
+                                    self.network_params['W'],
+                                    self.network_params['J'],
+                                    self.network_params['nu_ext'],
+                                    self.network_params['K_ext'])
 
     @_check_and_store_results('var')
-    def variance(self, firing_rates):
+    def variance(self):
         """ Calculates variance """
-        return meanfield_calcs.variance(firing_rates)
+        nu = self.firing_rates()
+
+        return meanfield_calcs.variance(nu,
+                                        self.network_params['K'],
+                                        self.network_params['W'],
+                                        self.network_params['J'],
+                                        self.network_params['nu_ext'],
+                                        self.network_params['K_ext'])
 
 
     def working_point(self):
@@ -283,7 +295,16 @@ class Network(object):
 if __name__ == '__main__':
     net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
     print(net.mean())
+    print(net.variance())
     print(net.results)
+    # @ureg.wraps(ureg.Hz, (ureg.s, ureg.dimensionless, ureg.dimensionless,
+    #                       ureg.dimensionless, ureg.dimensionless,
+    #                       ureg.dimensionless))
+    # def test(a, b, c, d, e, f):
+    #     return b/a * c * d * e * f
+    # print(test(net.network_params['tau_m'], 4*ureg.dimensionless,
+    #            3 * ureg.dimensionless, 3*ureg.dimensionless,
+    #            3 * ureg.dimensionless, 3*ureg.dimensionless))
 
 
 """circuit.py: Main class providing functions to calculate the stationary
