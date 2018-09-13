@@ -10,6 +10,7 @@ import functools
 
 import my_io as io
 ureg = io.ureg
+import meanfield_calcs
 
 class Network(object):
     """
@@ -90,7 +91,7 @@ class Network(object):
                               / self.network_params['C']).to(ureg.mV)
 
         # reset reference potential to 0
-        derived_params['V_0'] = 0
+        derived_params['V_0'] = 0 * ureg.mV
         derived_params['V_th'] = (self.network_params['V_th']
                                  - self.network_params['V_0'])
 
@@ -231,19 +232,40 @@ class Network(object):
         """ Returns which results have already been calculated """
         return self.results.keys()
 
+
+    @_check_and_store_results('th_rates')
+    def firing_rates(self):
+        """ Calculates firing rates """
+        return meanfield_calcs.firing_rates()
+
+
+    @_check_and_store_results('mu')
+    def mean(self, firing_rates):
+        """ Calculates mean """
+        return meanfield_calcs.mean(firing_rates)
+
+
+    @_check_and_store_results('var')
+    def variance(self, firing_rates):
+        """ Calculates variance """
+        return meanfield_calcs.variance(firing_rates)
+
     def working_point(self):
         """
-        Returns stationary working point of the network
+        Calculates stationary working point of the network
 
         Returns:
         dict
             dictionary specifying mean, variance and firing rates
         """
 
+        # first define functions that keep track of already existing results
+
+        # then do calculations
         working_point = {}
-        firing_rates = meanfield_calcs.firing_rates()
-        working_point['mu'] = meanfield_calcs.mean(firing_rates)
-        working_point['var'] = meanfield_calcs.variance(firing_rates)
+        firing_rates = self.firing_rates()
+        working_point['mu'] = self.mean(firing_rates)
+        working_point['var'] = self.variance(firing_rates)
         working_point['th_rates'] = firing_rates
 
         return working_point
@@ -254,10 +276,11 @@ class Network(object):
 #
 # if __name__ == '__main__':
 #     net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
-#     net.results['test'] = 'schon berechnet'
-#     net.calc_test()
-#     print(net.calc_test())
-#     print(net.results['hallo'])
+#     print(net.working_point())
+#     print(net.show())
+#     print(net.results)
+#     net.save()
+
 
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
