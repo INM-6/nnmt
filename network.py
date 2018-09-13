@@ -6,6 +6,7 @@ Authors: Hannah Bos, Jannis Schuecker
 """
 
 import numpy as np
+import functools
 
 import my_io as io
 ureg = io.ureg
@@ -163,6 +164,48 @@ class Network(object):
         return derived_params
 
 
+    def _check_and_save_results(result_key):
+        """
+        Decorator function that checks whether result are already existing
+
+        This decorator serves as a wrapper for functions that calculate
+        quantities which are to be stored in self.results. First it checks,
+        whether the result already has been stored in self.results. If this is
+        the case, it returns that result. If not, the calculation is executed,
+        the result is saved to self.results and the result is returned.
+
+        Parameters:
+        -----------
+        result_key: str
+            specifies under which key the result should be stored
+
+        Returns:
+        --------
+        func
+            decorator function
+        """
+        def decorator_check_results(func):
+            # enable accessing attributes of original function
+            @functools.wraps(func)
+            def wrapper_check_results(self, *args, **kwargs):
+                # collect results
+                results = getattr(self, 'results')
+                # check if new result is already stored in self.results
+                if result_key in results.keys():
+                    # if so, return already calcualted result
+                    return results[result_key]
+                else:
+                    new_result = {}
+                    # if not, calculate new result
+                    new_result[result_key] = func(self, *args, **kwargs)
+                    # update self.results
+                    results.update(new_result)
+                    setattr(self, 'results', results)
+                    # return new_result
+                    return new_result[result_key]
+            return wrapper_check_results
+        return decorator_check_results
+
     def save(self, param_keys={}, output_name=''):
         """
         Saves results and parameters to h5 file
@@ -184,8 +227,36 @@ class Network(object):
 
 
     def show(self):
-        """ returns which results have already been calculated """
+        """ Returns which results have already been calculated """
         return self.results.keys()
+
+    def working_point(self):
+        """
+        Returns stationary working point of the network
+
+        Returns:
+        dict
+            dictionary specifying mean, variance and firing rates
+        """
+
+        working_point = {}
+        firing_rates = meanfield_calcs.firing_rates()
+        working_point['mu'] = meanfield_calcs.mean(firing_rates)
+        working_point['var'] = meanfield_calcs.variance(firing_rates)
+        working_point['th_rates'] = firing_rates
+
+        return working_point
+
+#     @_check_and_save_results('hallo')
+#     def calc_test(self):
+#         return 'berechnet'
+#
+# if __name__ == '__main__':
+#     net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
+#     net.results['test'] = 'schon berechnet'
+#     net.calc_test()
+#     print(net.calc_test())
+#     print(net.results['hallo'])
 
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
