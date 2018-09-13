@@ -102,7 +102,7 @@ class Network(object):
 
         # weight matrix
         # TODO: check whether w must be replaced by J
-        W = np.ones((8,8))*self.network_params['w']
+        W = np.ones((8,8))*derived_params['J']
         W[1:8:2] *= -self.network_params['g']
         W = np.transpose(W)
         # larger weight for L4E->L23E connections
@@ -240,15 +240,21 @@ class Network(object):
 
 
     @_check_and_store_results('mu')
-    def mean(self, firing_rates):
+    def mean(self):
         """ Calculates mean """
-        return meanfield_calcs.mean(firing_rates)
-
+        nu = self.firing_rates()
+        return meanfield_calcs.mean(nu=nu,
+                                    K=self.network_params['K'],
+                                    W=self.network_params['W'],
+                                    J=self.network_params['J'],
+                                    nu_ext=self.network_params['nu_ext'],
+                                    K_ext=self.network_params['K_ext'])
 
     @_check_and_store_results('var')
     def variance(self, firing_rates):
         """ Calculates variance """
         return meanfield_calcs.variance(firing_rates)
+
 
     def working_point(self):
         """
@@ -274,12 +280,10 @@ class Network(object):
 #     def calc_test(self):
 #         return 'berechnet'
 #
-# if __name__ == '__main__':
-#     net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
-#     print(net.working_point())
-#     print(net.show())
-#     print(net.results)
-#     net.save()
+if __name__ == '__main__':
+    net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
+    print(net.mean())
+    print(net.results)
 
 
 """circuit.py: Main class providing functions to calculate the stationary
