@@ -33,8 +33,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     Combine value and unit of each quantity and save them in a dictionary
     of the structure: {'<quantity_key1>':<quantity1>, ...}
 
-    Nested lists of numericals are converted to numpy arrays and then converted
-    to quantities.
+    Lists are converted to numpy arrays and then converted to quantities.
 
     Strings and lists of strings are not converted to quantities, because they
     cannot handle strings as values. They are stored as strings and lists of
@@ -55,10 +54,9 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     converted_dict = {}
     for quantity_key, val_unit_dict in dict_of_val_unit_dicts.items():
-        # if value is given as nested list, convert to numpy array
+        # if value is given as list, convert to numpy array
         if isinstance(val_unit_dict['val'], list):
-            if any(isinstance(part, list) for part in val_unit_dict['val']):
-                val_unit_dict['val'] = np.array(val_unit_dict['val'])
+            val_unit_dict['val'] = np.array(val_unit_dict['val'])
 
         # if unit is specified, convert value unit pair to quantity
         if 'unit' in val_unit_dict:
@@ -257,12 +255,12 @@ def load_results_from_h5(network_params, network_params_keys):
 
     return results
 
-if __name__ == '__main__':
-    params = load_params('network_params_microcircuit.yaml')
-    print("LOADED")
-    print(params)
-    save(params,params, params)
-    print("SAVED")
-    results = load_results_from_h5(params, ['label', 'populations'])
-    print("RELOADED")
-    print(results)
+# if __name__ == '__main__':
+#     params = load_params('network_params_microcircuit.yaml')
+#     print("LOADED")
+#     print(params)
+#     save(params,params, params)
+#     print("SAVED")
+#     results = load_results_from_h5(params, ['label', 'populations'])
+#     print("RELOADED")
+#     print(results)
