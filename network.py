@@ -86,7 +86,7 @@ class Network(object):
         derived_params = {}
 
         # convert weights in pA to weights in mV
-        derived_params['J'] = (self.network_params['tau_f']
+        derived_params['j'] = (self.network_params['tau_s']
                               * self.network_params['w']
                               / self.network_params['C']).to(ureg.mV)
 
@@ -101,13 +101,12 @@ class Network(object):
         derived_params['d_i_sd'] = self.network_params['d_i']*0.5
 
         # weight matrix
-        # TODO: check whether w must be replaced by J
-        W = np.ones((8,8))*derived_params['J']
-        W[1:8:2] *= -self.network_params['g']
-        W = np.transpose(W)
+        J = np.ones((8,8))*derived_params['j']
+        J[1:8:2] *= -self.network_params['g']
+        J = np.transpose(J)
         # larger weight for L4E->L23E connections
-        W[0][2] *= 2.0
-        derived_params['W'] = W
+        J[0][2] *= 2.0
+        derived_params['J'] = J
 
         # delay matrix
         D = np.ones((8,8))*self.network_params['d_e']
@@ -120,6 +119,10 @@ class Network(object):
         D[1:8:2] = np.ones(8)*derived_params['d_i_sd']
         D = np.transpose(D)
         derived_params['Delay_sd'] = D
+
+        # calculate dimension of system
+        derived_params['dimension'] = (len(self.network_params['populations'])
+                                       * ureg.dimensionless)
 
         return derived_params
         # # params for power spectrum
@@ -230,19 +233,25 @@ class Network(object):
 
     def show(self):
         """ Returns which results have already been calculated """
-        return self.results.keys()
+        return sorted(list(self.results.keys()))
 
 
-    # @_check_and_store_results('th_rates')
-    # def firing_rates(self):
-    #     """ Calculates firing rates """
-    #     return meanfield_calcs.firing_rates(tau_m=self.network_params['tau_m'],
-    #                                         tau_f=self.network_params['tau_f'],
-    #                                         tau_r=self.network_params['tau_r'],
-    #                                         dV=self.network_params['V_th'])
-
+    @_check_and_store_results('th_rates')
     def firing_rates(self):
-        return meanfield_calcs.firing_rates()
+        """ Calculates firing rates """
+        return meanfield_calcs.firing_rates(self.network_params['dimension'],
+                                            self.network_params['tau_m'],
+                                            self.network_params['tau_s'],
+                                            self.network_params['tau_r'],
+                                            self.network_params['V_th'],
+                                            self.network_params['K'],
+                                            self.network_params['J'],
+                                            self.network_params['j'],
+                                            self.network_params['nu_ext'],
+                                            self.network_params['K_ext'])
+
+    # def firing_rates(self):
+    #     return meanfield_calcs.firing_rates()
 
     @_check_and_store_results('mu')
     def mean(self):
@@ -250,8 +259,8 @@ class Network(object):
         nu = self.firing_rates()
         return meanfield_calcs.mean(nu,
                                     self.network_params['K'],
-                                    self.network_params['W'],
                                     self.network_params['J'],
+                                    self.network_params['j'],
                                     self.network_params['nu_ext'],
                                     self.network_params['K_ext'])
 
@@ -259,11 +268,10 @@ class Network(object):
     def variance(self):
         """ Calculates variance """
         nu = self.firing_rates()
-
         return meanfield_calcs.variance(nu,
                                         self.network_params['K'],
-                                        self.network_params['W'],
                                         self.network_params['J'],
+                                        self.network_params['j'],
                                         self.network_params['nu_ext'],
                                         self.network_params['K_ext'])
 
@@ -294,9 +302,9 @@ class Network(object):
 #
 if __name__ == '__main__':
     net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
-    print(net.mean())
-    print(net.variance())
-    print(net.results)
+    net.firing_rates()
+    # print(net.variance())
+    print(net.show())
     # @ureg.wraps(ureg.Hz, (ureg.s, ureg.dimensionless, ureg.dimensionless,
     #                       ureg.dimensionless, ureg.dimensionless,
     #                       ureg.dimensionless))
