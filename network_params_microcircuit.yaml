@@ -42,13 +42,13 @@ tau_r:
   val: 2.0
   unit: ms
 
-# reset potential
-V_0:
+# absolute reset potential
+V_0_abs:
   val: -65.0
   unit: mV
 
-# threshold of membrane potential
-V_th:
+# absolute threshold of membrane potential
+V_th_abs:
   val: -50.0
   unit: mV
 

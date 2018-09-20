@@ -12,11 +12,12 @@ import aux_calcs
 # @ureg.wraps(ureg.Hz, (ureg.dimensionless, ureg.ms, ureg.ms, ureg.ms, ureg.mV,
 #                       ureg.dimensionless, ureg.mV, ureg.mV, ureg.Hz,
 #                       ureg.dimensionless))
-def firing_rates(dimension, tau_m, tau_s, tau_r, dV, K, J, j, nu_ext, K_ext):
+def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
+                 nu_ext, K_ext):
     '''Returns vector of population firing rates in Hz.'''
     rate_function = lambda mu, sigma: aux_calcs.nu0_fb433(tau_m, tau_s, tau_r,
-                                                          dV, 0.*ureg.mV , mu,
-                                                          sigma)
+                                                          V_th_rel, V_0_rel ,
+                                                          mu, sigma)
 
     def get_rate_difference(nu):
         mu = mean(nu, K, J, j, nu_ext, K_ext)

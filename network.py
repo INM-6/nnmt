@@ -93,9 +93,9 @@ class Network(object):
                                   / self.network_params['C']).to(ureg.mV)
 
             # reset reference potential to 0
-            derived_params['V_0'] = 0 * ureg.mV
-            derived_params['V_th'] = (self.network_params['V_th']
-                                     - self.network_params['V_0'])
+            derived_params['V_0_rel'] = 0 * ureg.mV
+            derived_params['V_th_rel'] = (self.network_params['V_th_abs']
+                                     - self.network_params['V_0_abs'])
 
             # standard deviation of delay of excitatory connections
             derived_params['d_e_sd'] = self.network_params['d_e']*0.5
@@ -238,14 +238,14 @@ class Network(object):
         return sorted(list(self.results.keys()))
 
 
-    @_check_and_store_results('th_rates')
+    @_check_and_store_results('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
                                             self.network_params['tau_m'],
                                             self.network_params['tau_s'],
                                             self.network_params['tau_r'],
-                                            self.network_params['V_th'],
+                                            self.network_params['V_th_rel'],
                                             self.network_params['K'],
                                             self.network_params['J'],
                                             self.network_params['j'],
@@ -294,7 +294,7 @@ class Network(object):
         firing_rates = self.firing_rates()
         working_point['mu'] = self.mean(firing_rates)
         working_point['var'] = self.variance(firing_rates)
-        working_point['th_rates'] = firing_rates
+        working_point['firing_rates'] = firing_rates
 
         return working_point
 
