@@ -6,15 +6,41 @@ import pint
 from input_output import ureg
 import aux_calcs
 
-# def firing_rates():
-#     return np.arange(8) * ureg.Hz
-
-# @ureg.wraps(ureg.Hz, (ureg.dimensionless, ureg.ms, ureg.ms, ureg.ms, ureg.mV,
-#                       ureg.dimensionless, ureg.mV, ureg.mV, ureg.Hz,
-#                       ureg.dimensionless))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                  nu_ext, K_ext):
-    '''Returns vector of population firing rates in Hz.'''
+    '''
+    Returns vector of population firing rates in Hz.
+
+    Parameters:
+    -----------
+    dimension: Quantity(int, 'dimensionless')
+        number of populations
+    tau_m: Quantity(float, 'millisecond')
+        membrane time constant
+    tau_s: Quantity(float, 'millisecond')
+        synaptic time constant
+    tau_r: Quantity(float, 'millisecond')
+        refractory time
+    V_0_rel: Quantity(float, 'millivolt')
+        relative reset potential
+    V_th_rel: Quantity(float, 'millivolt')
+        relative threshold potential
+    K: Quantity(np.ndarray, 'dimensionless')
+        indegree matrix
+    J: Quantity(np.ndarray, 'millivolt')
+        effective connectivity matrix
+    j: Quantity(float, 'millivolt')
+        effective connectivity weight
+    nu_ext: Quantity(float, 'hertz')
+        firing rate of external input
+    K_ext: Quantity(np.ndarray, 'dimensionless')
+        numbers of external input neurons to each population
+
+    Returns:
+    --------
+    Quantity(np.ndarray, 'hertz')
+        array of firing rates of each population in hertz
+    '''
     rate_function = lambda mu, sigma: aux_calcs.nu0_fb433(tau_m, tau_s, tau_r,
                                                           V_th_rel, V_0_rel ,
                                                           mu, sigma)
