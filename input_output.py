@@ -188,6 +188,11 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     """
     Save data and given paramters in h5 file
 
+    By default the output name will be <label>_<hash>.h5, where the hash is
+    created using network_params and analysis_params. But you can either specify
+    an ouput_name yourself, or specify which param_keys should be reflected in
+    the hash.
+
     Parameters:
     -----------
     data : dict
@@ -196,16 +201,24 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
         dictionary containing all network parameters
     output_name : str
         optional string specifying output file name (default: <label>_<hash>.h5)
+
+    Returns:
+    --------
+    None
     """
 
     # is user did not specify output name
     if not output_name:
+        # collect all parameters reflected by hash in one dictionary
+        hash_params = {}
+        hash_params.update(network_params)
+        hash_params.update(analysis_params)
         # if user did not specify which parameters to use for hash
         if not param_keys:
             # take all parameters sorted alphabetically
-            param_keys = sorted(list(network_params.keys()))
+            param_keys = sorted(list(hash_params.keys()))
         # crate hash from param_keys
-        hash = create_hash(network_params, param_keys)
+        hash = create_hash(hash_params, param_keys)
         # default output name
         output_name = '{}_{}.h5'.format(network_params['label'], str(hash))
 
