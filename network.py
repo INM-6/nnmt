@@ -8,7 +8,7 @@ Authors: Hannah Bos, Jannis Schuecker
 import numpy as np
 import functools
 
-import my_io as io
+import input_output as io
 ureg = io.ureg
 import meanfield_calcs
 
@@ -245,6 +245,7 @@ class Network(object):
                                             self.network_params['tau_m'],
                                             self.network_params['tau_s'],
                                             self.network_params['tau_r'],
+                                            self.network_params['V_0_rel'],
                                             self.network_params['V_th_rel'],
                                             self.network_params['K'],
                                             self.network_params['J'],
@@ -263,19 +264,21 @@ class Network(object):
                                     self.network_params['K'],
                                     self.network_params['J'],
                                     self.network_params['j'],
+                                    self.network_params['tau_m'],
                                     self.network_params['nu_ext'],
                                     self.network_params['K_ext'])
 
     @_check_and_store_results('var')
-    def variance(self):
+    def standard_deviation(self):
         """ Calculates variance """
         nu = self.firing_rates()
-        return meanfield_calcs.variance(nu,
-                                        self.network_params['K'],
-                                        self.network_params['J'],
-                                        self.network_params['j'],
-                                        self.network_params['nu_ext'],
-                                        self.network_params['K_ext'])
+        return meanfield_calcs.standard_deviation(nu,
+                                                  self.network_params['K'],
+                                                  self.network_params['J'],
+                                                  self.network_params['j'],
+                                                  self.network_params['tau_m'],
+                                                  self.network_params['nu_ext'],
+                                                  self.network_params['K_ext'])
 
 
     def working_point(self):
@@ -291,30 +294,11 @@ class Network(object):
 
         # then do calculations
         working_point = {}
-        firing_rates = self.firing_rates()
-        working_point['mu'] = self.mean(firing_rates)
-        working_point['var'] = self.variance(firing_rates)
-        working_point['firing_rates'] = firing_rates
+        working_point['firing_rates'] = self.firing_rates()
+        working_point['mu'] = self.mean()
+        working_point['sigma'] = self.standard_deviation()
 
         return working_point
-
-#     @_check_and_store_results('hallo')
-#     def calc_test(self):
-#         return 'berechnet'
-#
-if __name__ == '__main__':
-    net = Network('network_params_microcircuit.yaml', 'analysis_params.yaml')
-    net.firing_rates()
-    # print(net.variance())
-    print(net.show())
-    # @ureg.wraps(ureg.Hz, (ureg.s, ureg.dimensionless, ureg.dimensionless,
-    #                       ureg.dimensionless, ureg.dimensionless,
-    #                       ureg.dimensionless))
-    # def test(a, b, c, d, e, f):
-    #     return b/a * c * d * e * f
-    # print(test(net.network_params['tau_m'], 4*ureg.dimensionless,
-    #            3 * ureg.dimensionless, 3*ureg.dimensionless,
-    #            3 * ureg.dimensionless, 3*ureg.dimensionless))
 
 
 """circuit.py: Main class providing functions to calculate the stationary
