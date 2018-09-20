@@ -55,7 +55,7 @@ V_th:
 
 ### synapses
 # synaptic time constant
-tau_f:
+tau_s:
   val: 0.5
   unit: ms
 
