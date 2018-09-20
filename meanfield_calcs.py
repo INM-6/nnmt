@@ -42,9 +42,10 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         array of firing rates of each population in hertz
     '''
 
-    rate_function = lambda mu, sigma: aux_calcs.nu0_fb433(tau_m, tau_s, tau_r,
-                                                          V_th_rel, V_0_rel ,
-                                                          mu, sigma)
+    def rate_function(mu, sigma):
+        """ calculates stationary firing rate with given parameters """
+        return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                   sigma)
 
     def get_rate_difference(nu):
         """ calculate difference between new iteration step and previous one """
@@ -54,6 +55,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                                                          sigma))])*ureg.Hz
         return -nu + new_nu
 
+    # do iteration procedure, until stationary firing rates are found
     dt = 0.05
     y = np.zeros((2, int(dimension))) * ureg.Hz
     eps = 1.0
