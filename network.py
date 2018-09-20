@@ -4,7 +4,7 @@ dynamical properties of a given circuit.
 
 Authors: Hannah Bos, Jannis Schuecker
 """
-
+from __future__ import print_function
 import numpy as np
 import functools
 
@@ -268,7 +268,7 @@ class Network(object):
                                     self.network_params['nu_ext'],
                                     self.network_params['K_ext'])
 
-    @_check_and_store_results('var')
+    @_check_and_store_results('sigma')
     def standard_deviation(self):
         """ Calculates variance """
         nu = self.firing_rates()
