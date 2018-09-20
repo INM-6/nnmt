@@ -3,7 +3,7 @@ from __future__ import print_function
 import numpy as np
 import pint
 
-from my_io import ureg
+from input_output import ureg
 import aux_calcs
 
 # def firing_rates():
@@ -20,14 +20,10 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                                                           mu, sigma)
 
     def get_rate_difference(nu):
-        mu = mean(nu, K, J, j, nu_ext, K_ext)
-        sigma = np.sqrt(variance(nu, K, J, j, nu_ext, K_ext))
-        print(mu)
-        print(sigma)
-        print('rate function')
-        print(list(map(rate_function, mu, sigma)))
-        print('hello')
-        new_nu = np.array(list(map(rate_function, mu, sigma)))
+        mu = mean(nu, K, J, j, tau_m, nu_ext, K_ext)
+        sigma = standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext)
+        new_nu = np.array([x.magnitude for x in list(map(rate_function, mu,
+                                                         sigma))])*ureg.Hz
         return -nu + new_nu
 
     dt = 0.05
@@ -37,14 +33,14 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         delta_y = get_rate_difference(y[0])
         y[1] = y[0] + delta_y*dt
         epsilon = (y[1] - y[0])
-        eps = max(np.abs(epsilon))
+        eps = max(np.abs(epsilon.magnitude))
         y[0] = y[1]
 
     return y[1]
 
-@ureg.wraps(ureg.mV/ureg.s, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV,
-                             ureg.Hz, ureg.dimensionless))
-def mean(nu, K, J, j, nu_ext, K_ext):
+@ureg.wraps(ureg.mV, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV,
+                      ureg.s, ureg.Hz, ureg.dimensionless))
+def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     '''Returns vector of mean inputs to populations depending on
     the firing rates nu of the populations.
 
@@ -52,25 +48,26 @@ def mean(nu, K, J, j, nu_ext, K_ext):
     have the same units, unit of output array: pA*Hz
     '''
     # contribution from within the network
-    m0 = np.dot(K * J, nu)
+    m0 = np.dot(K * J, nu) * tau_m
     # contribution from external sources
-    m_ext = j*K_ext*nu_ext
+    m_ext = j * K_ext * nu_ext * tau_m
     m = m0 + m_ext
     return m
 
 
-@ureg.wraps(ureg.mV**2/ureg.s, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV,
-                                ureg.Hz, ureg.dimensionless))
-def variance(nu, K, J, j, nu_ext, K_ext):
-    '''Returns vector of variances of inputs to populations depending
+@ureg.wraps(ureg.mV, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV, ureg.s,
+                      ureg.Hz, ureg.dimensionless))
+def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
+    '''Returns vector of standard_deviations of inputs to populations depending
     on the firing rates f of the populations.
     Units as in Fourcoud & Brunel 2002, where current and potential
     have the same units, unit of output array: pA*Hz
     '''
     # contribution from within the network
-    var0 = np.dot(K * J**2, nu)
+    var0 = np.dot(K * J**2, nu) * tau_m
     # contribution from external sources
-    var_ext = j**2 * K_ext * nu_ext
+    var_ext = j**2 * K_ext * nu_ext * tau_m
     var = var0 + var_ext
-
-    return var
+    # standard deviation is square root of variance
+    std = np.sqrt(var)
+    return std
