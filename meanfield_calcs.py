@@ -147,3 +147,41 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     # standard deviation is square root of variance
     std = np.sqrt(var)
     return std
+
+@ureg.wraps(ureg.dimensionless, (ureg.Hz, ureg.dimensionless, ureg.s, ureg.s,
+                                 ureg.dimensionless))
+def delay_dist_matrix(omega, ,dimension, Delay, Delay_sd, delay_dist):
+    '''Returns matrix of delay distribution specific pre-factors at
+    frequency omega.
+    Assumes lower boundary for truncated Gaussian distributed delays
+    to be zero (exact would be dt, the minimal time step).
+    '''
+
+    mu = Delay
+    sigma = Delay_sd
+    D = np.ones((dimension,dimension))
+
+    if delay_dist == 'none':
+        return D*np.exp(-complex(0,omega)*mu)
+
+    elif delay_dist == 'truncated_gaussian':
+        a0 = aux_calcs.Phi(-mu/sigma+1j*omega*sigma)
+        a1 = aux_calcs.Phi(-mu/sigma)
+        b0 = np.exp(-0.5*np.power(sigma*omega,2))
+        b1 = np.exp(-complex(0,omega)*mu)
+        return (1.0-a0)/(1.0-a1)*b0*b1
+
+    elif delay_dist == 'gaussian':
+        b0 = np.exp(-0.5*np.power(sigma*omega,2))
+        b1 = np.exp(-complex(0,omega)*mu)
+        return b0*b1
+
+def power_spectra(firing_rates, dimension, N, omegas):
+    """
+    """
+    D = np.diag(np.ones(dimension)) * firing_rates / N
+
+    # MH_plus = self.create_MH(omega)
+    # Q_plus = np.linalg.inv(np.identity(self.dimension)-MH_plus)
+    # C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
+    # return np.power(abs(np.diag(C)),2)
