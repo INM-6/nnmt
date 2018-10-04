@@ -148,20 +148,42 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     std = np.sqrt(var)
     return std
 
-@ureg.wraps(ureg.dimensionless, (ureg.Hz, ureg.dimensionless, ureg.s, ureg.s,
-                                 ureg.dimensionless))
-def delay_dist_matrix(omega, ,dimension, Delay, Delay_sd, delay_dist):
-    '''Returns matrix of delay distribution specific pre-factors at
-    frequency omega.
-    Assumes lower boundary for truncated Gaussian distributed delays
-    to be zero (exact would be dt, the minimal time step).
+
+@ureg.wraps(ureg.dimensionless, (ureg.dimensionless, ureg.s, ureg.s,
+                                 ureg.dimensionless, ureg.Hz), strict=False)
+def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
+    '''
+    Calcs matrix of delay distribution specific pre-factors at frequency omega.
+
+    ???
+    Assumes lower boundary for truncated Gaussian distributed delays to be zero
+    (exact would be dt, the minimal time step).
+
+    Parameters:
+    -----------
+    dimension: Quantity(int, 'dimensionless')
+        Dimension of the system / number of populations'
+    Delay: Quantity(np.ndarray, 's')
+        Delay matrix.
+    Delay_sd: Quantity(np.ndarray, 's')
+        Delay standard deviation matrix.
+    delay_dist: str
+        String specifying delay distribution.
+    omega: float
+        Frequency.
+
+    Returns:
+    --------
+    Quantity(nd.array, 'dimensionless')
+        Matrix of delay distribution specific pre-factors at frequency omega.
     '''
 
     mu = Delay
     sigma = Delay_sd
-    D = np.ones((dimension,dimension))
+    D = np.ones((int(dimension),int(dimension)))
 
     if delay_dist == 'none':
+        print(-complex(0,1)*omega*mu)
         return D*np.exp(-complex(0,omega)*mu)
 
     elif delay_dist == 'truncated_gaussian':
