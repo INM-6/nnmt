@@ -259,8 +259,7 @@ class Network(object):
     @_check_and_store_results('mu')
     def mean(self):
         """ Calculates mean """
-        nu = self.firing_rates()
-        return meanfield_calcs.mean(nu,
+        return meanfield_calcs.mean(self.firing_rates(),
                                     self.network_params['K'],
                                     self.network_params['J'],
                                     self.network_params['j'],
@@ -271,8 +270,7 @@ class Network(object):
     @_check_and_store_results('sigma')
     def standard_deviation(self):
         """ Calculates variance """
-        nu = self.firing_rates()
-        return meanfield_calcs.standard_deviation(nu,
+        return meanfield_calcs.standard_deviation(self.firing_rates(),
                                                   self.network_params['K'],
                                                   self.network_params['J'],
                                                   self.network_params['j'],
@@ -299,6 +297,19 @@ class Network(object):
         working_point['sigma'] = self.standard_deviation()
 
         return working_point
+
+
+    @_check_and_store_results('power_spectra')
+    def power_spectra(self):
+        """
+        Calculates power spectra
+
+        Returns:
+        """
+        return meanfield_calcs.power_spectra(self.firing_rates(),
+                                             self.network_params['dimension'],
+                                             self.network_params['N'],
+                                             self.analysis_params['omegas'])
 
 
 """circuit.py: Main class providing functions to calculate the stationary
