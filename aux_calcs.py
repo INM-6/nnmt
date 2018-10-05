@@ -10,8 +10,6 @@ import mpmath
 from input_output import ureg
 
 
-@ureg.wraps(ureg.Hz, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV,
-                      ureg.mV), strict=False)
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs
@@ -207,7 +205,6 @@ def Phi_prime_mu(s, sigma):
     + np.sqrt(2) / np.sqrt(np.pi))
 
 
-@ureg.wraps(ureg.Hz*ureg.mV, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV), strict=False)
 def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     where does this come from and what does it do???
@@ -280,14 +277,12 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
                * (1 + erf(y_r))))
 
 
-@ureg.wraps(None, (ureg.dimensionless, ureg.dimensionless), strict=False)
 def Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
     """
     return np.exp(0.25*x**2) * complex(mpmath.pcfu(z, -x))
 
-@ureg.wraps(None, (ureg.dimensionless, ureg.dimensionless), strict=False)
 def d_Psi(z, x):
     """
     First derivative of Psi using recurrence relations.
@@ -296,7 +291,6 @@ def d_Psi(z, x):
     """
     return (1. / 2. + z) * Psi(z + 1, x)
 
-@ureg.wraps(None, (ureg.dimensionless, ureg.dimensionless), strict=False)
 def d_2_Psi(z, x):
     """
     Second derivative of Psi using recurrence relations.
@@ -305,17 +299,14 @@ def d_2_Psi(z, x):
     """
     return (1. / 2. + z) * (3. / 2. + z) * Psi(z + 2, x)
 
-@ureg.wraps(None, (ureg.dimensionless, ureg.dimensionless, ureg.dimensionless), strict=False)
 def Psi_x_r(z, x, y):
     """Difference of Psi for same first argument z."""
     return Psi(z, x) - Psi(z, y)
 
-@ureg.wraps(None, (ureg.dimensionless, ureg.dimensionless, ureg.dimensionless), strict=False)
 def dPsi_x_r(z, x, y):
     """Difference of derivatives of Psi for same first argument z."""
     return d_Psi(z, x) - d_Psi(z, y)
 
-@ureg.wraps(None, (ureg.dimensionless, ureg.dimensionless, ureg.dimensionless), strict=False)
 def d2Psi_x_r(z, x, y):
     """Difference of second derivatives of Psi for same first argument z."""
     return d_2_Psi(z, x) - d_2_Psi(z, y)
