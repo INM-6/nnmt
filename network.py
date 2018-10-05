@@ -241,7 +241,9 @@ class Network(object):
     @_check_and_store_results('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
-        return meanfield_calcs.firing_rates(self.network_params['dimension'],
+        return meanfield_calcs.firing_rates(self.mean(),
+                                            self.standard_deviation(),
+                                            self.network_params['dimension'],
                                             self.network_params['tau_m'],
                                             self.network_params['tau_s'],
                                             self.network_params['tau_r'],

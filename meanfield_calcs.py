@@ -8,40 +8,47 @@ from input_output import ureg
 import aux_calcs
 
 
-def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext):
+@ureg.wraps(ureg.Hz, (ureg.mV, ureg.mV, ureg.dimensionless, ureg.s, ureg.s,
+                      ureg.s, ureg.mV, ureg.mV, ureg.dimensionless, ureg.mV,
+                      ureg.mV, ureg.Hz, ureg.dimensionless))
+def firing_rates(mu, sigma, dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
+                 K, J, j, nu_ext, K_ext):
     '''
     Returns vector of population firing rates in Hz.
 
     Parameters:
     -----------
+    mu: Quantity(float, 'millivolt')
+        Mean neuron activity in mV.
+    sigma: Quantity(float, 'millivolt')
+        Standard deviation of neuron activity in mV.
     dimension: Quantity(int, 'dimensionless')
-        number of populations
+        Number of populations.
     tau_m: Quantity(float, 'millisecond')
-        membrane time constant
+        Membrane time constant.
     tau_s: Quantity(float, 'millisecond')
-        synaptic time constant
+        Synaptic time constant.
     tau_r: Quantity(float, 'millisecond')
-        refractory time
+        Refractory time.
     V_0_rel: Quantity(float, 'millivolt')
-        relative reset potential
+        Relative reset potential.
     V_th_rel: Quantity(float, 'millivolt')
-        relative threshold potential
+        Relative threshold potential.
     K: Quantity(np.ndarray, 'dimensionless')
-        indegree matrix
+        Indegree matrix.
     J: Quantity(np.ndarray, 'millivolt')
-        effective connectivity matrix
+        Effective connectivity matrix.
     j: Quantity(float, 'millivolt')
-        effective connectivity weight
+        Effective connectivity weight.
     nu_ext: Quantity(float, 'hertz')
-        firing rate of external input
+        Firing rate of external input.
     K_ext: Quantity(np.ndarray, 'dimensionless')
-        numbers of external input neurons to each population
+        Numbers of external input neurons to each population.
 
     Returns:
     --------
     Quantity(np.ndarray, 'hertz')
-        array of firing rates of each population in hertz
+        Array of firing rates of each population in hertz.
     '''
 
     def rate_function(mu, sigma):
@@ -51,8 +58,6 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
 
     def get_rate_difference(nu):
         """ calculate difference between new iteration step and previous one """
-        mu = mean(nu, K, J, j, tau_m, nu_ext, K_ext)
-        sigma = standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext)
         new_nu = np.array([x.magnitude for x in list(map(rate_function, mu,
                                                          sigma))])*ureg.Hz
         return -nu + new_nu
