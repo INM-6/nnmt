@@ -6,7 +6,6 @@ import numpy as np
 import math
 import mpmath
 
-
 from input_output import ureg
 
 
@@ -33,7 +32,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Relative reset potential in mV.
     mu: float
         Mean neuron activity in mV.
-    sigma:
+    sigma: float
         Standard deviation of neuron activity in mV.
 
     Returns:
@@ -283,6 +282,7 @@ def Psi(z, x):
     """
     return np.exp(0.25*x**2) * complex(mpmath.pcfu(z, -x))
 
+
 def d_Psi(z, x):
     """
     First derivative of Psi using recurrence relations.
@@ -290,6 +290,7 @@ def d_Psi(z, x):
     (Eq.: 12.8.9 in http://dlmf.nist.gov/12.8)
     """
     return (1. / 2. + z) * Psi(z + 1, x)
+
 
 def d_2_Psi(z, x):
     """
@@ -299,13 +300,16 @@ def d_2_Psi(z, x):
     """
     return (1. / 2. + z) * (3. / 2. + z) * Psi(z + 2, x)
 
+
 def Psi_x_r(z, x, y):
     """Difference of Psi for same first argument z."""
     return Psi(z, x) - Psi(z, y)
 
+
 def dPsi_x_r(z, x, y):
     """Difference of derivatives of Psi for same first argument z."""
     return d_Psi(z, x) - d_Psi(z, y)
+
 
 def d2Psi_x_r(z, x, y):
     """Difference of second derivatives of Psi for same first argument z."""
