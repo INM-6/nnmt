@@ -7,6 +7,7 @@ from scipy.special import zetac
 from input_output import ureg
 import aux_calcs
 
+
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                  nu_ext, K_ext):
     '''
@@ -201,7 +202,8 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                               ureg.mV, ureg.mV, ureg.Hz))
-def transfer_function_1p(mu, sigma, tau_m, tau_s, tau_r, V_th_abs, V_0_abs, omega):
+def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_abs,
+                                V_0_abs, omega):
     """
     Calculates transfer function according to Eq. 93 in [2]. The
     results in [3] were obtained with this expression and it is
@@ -236,8 +238,8 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_abs, V_0_abs,
                       dimension, omega):
     """Returns transfer functions for all populations."""
 
-    trans_func = [transfer_function_1p(mu[i], sigma[i], tau_m, tau_s, tau_r,
-                                         V_th_abs, V_0_abs, omega)
+    trans_func = [transfer_function_1p_taylor(mu[i], sigma[i], tau_m, tau_s,
+                                              tau_r, V_th_abs, V_0_abs, omega)
                   for i in range(dimension.magnitude)]
     return trans_func
 
