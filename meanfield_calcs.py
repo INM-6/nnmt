@@ -202,8 +202,8 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                               ureg.mV, ureg.mV, ureg.Hz))
-def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_abs,
-                                V_0_abs, omega):
+def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                                V_0_rel, omega):
     """
     Calculates transfer function according to Eq. 93 in [2]. The
     results in [3] were obtained with this expression and it is
@@ -211,17 +211,15 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_abs,
 
     """
 
-    # convert mu to absolute values (not relative to reset)
-    mu += V_0_abs
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
-    if np.abs(omega.magnitude - 0.) < 1e-15:
+    if np.abs(omega- 0.) < 1e-15:
         return aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_abs, V_0_abs,
-                                         mu, sigma)
+                                         mu, sigma).magnitude
     else:
         nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_abs, V_0_abs, mu, sigma)
         nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_abs, V_0_abs, mu,
-                                     sigma)
+                                     sigma).magnitude
         x_t = np.sqrt(2.) * (V_th_abs - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_abs - mu) / sigma
         z = complex(-0.5, complex(omega * tau_m))
@@ -234,12 +232,12 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_abs,
         result = (np.sqrt(2.) / sigma * nu0_fb / complex(1., omega * tau_m)* (a1 + a3))
         return result
 
-def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_abs, V_0_abs,
+def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omega):
     """Returns transfer functions for all populations."""
 
     trans_func = [transfer_function_1p_taylor(mu[i], sigma[i], tau_m, tau_s,
-                                              tau_r, V_th_abs, V_0_abs, omega)
+                                              tau_r, V_th_rel, V_0_rel, omega)
                   for i in range(dimension.magnitude)]
     return trans_func
 

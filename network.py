@@ -337,20 +337,24 @@ class Network(object):
         """
         Calc transfer function
         """
-
+        # define transfer function with given parameters and variable omega
         def transfer_function(omega):
             return meanfield_calcs.transfer_function(self.mean(),
                                                      self.standard_deviation(),
                                                      self.network_params['tau_m'],
                                                      self.network_params['tau_s'],
                                                      self.network_params['tau_r'],
-                                                     self.network_params['V_th_abs'],
-                                                     self.network_params['V_0_abs'],
+                                                     self.network_params['V_th_rel'],
+                                                     self.network_params['V_0_rel'],
                                                      self.network_params['dimension'],
                                                      omega)
 
-        transfer_function = list(map(transfer_function, self.analysis_params['omegas'][:2]))
-        tf_magnitude = [[tf.magnitude for tf in transfer_function] for transfer_function in transfer_function]
+        # calculate transfer function for all omegas
+        transfer_function = list(map(transfer_function,
+                                     self.analysis_params['omegas'][:2]))
+        # convert list of quantities to quantity containing np.ndarray
+        tf_magnitude = [[tf.magnitude for tf in transfer_function]
+                        for transfer_function in transfer_function]
         tf_unit = transfer_function[0][0].units
         return np.array(tf_magnitude) * tf_unit
 
