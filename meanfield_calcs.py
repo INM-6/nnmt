@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import numpy as np
 import pint
+from scipy.special import zetac
 
 from input_output import ureg
 import aux_calcs
@@ -198,12 +199,90 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
         b1 = np.exp(-complex(0,omega)*mu)
         return b0*b1
 
-def power_spectra(firing_rates, dimension, N, omegas):
+@ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
+                              ureg.mV, ureg.mV, ureg.Hz))
+def transfer_function_1p(mu, sigma, tau_m, tau_s, tau_r, V_th_abs, V_0_abs, omega):
     """
-    """
-    D = np.diag(np.ones(dimension)) * firing_rates / N
+    Calculates transfer function according to Eq. 93 in [2]. The
+    results in [3] were obtained with this expression and it is
+    used throughout this package
 
-    # MH_plus = self.create_MH(omega)
-    # Q_plus = np.linalg.inv(np.identity(self.dimension)-MH_plus)
-    # C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
-    # return np.power(abs(np.diag(C)),2)
+    """
+
+    # convert mu to absolute values (not relative to reset)
+    mu += V_0_abs
+    # for frequency zero the exact expression is given by the derivative of
+    # f-I-curve
+    if np.abs(omega.magnitude - 0.) < 1e-15:
+        return aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_abs, V_0_abs,
+                                         mu, sigma)
+    else:
+        nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_abs, V_0_abs, mu, sigma)
+        nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_abs, V_0_abs, mu,
+                                     sigma)
+        x_t = np.sqrt(2.) * (V_th_abs - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_abs - mu) / sigma
+        z = complex(-0.5, complex(omega * tau_m))
+        alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
+        k = np.sqrt(tau_s / tau_m)
+        A = alpha * tau_m * nu0 * k / np.sqrt(2)
+        a0 = aux_calcs.Psi_x_r(z, x_t, x_r)
+        a1 = aux_calcs.dPsi_x_r(z, x_t, x_r) / a0
+        a3 = A / tau_m / nu0_fb * (-a1**2 + aux_calcs.d2Psi_x_r(z, x_t, x_r)/a0)
+        result = (np.sqrt(2.) / sigma * nu0_fb / complex(1., omega * tau_m)* (a1 + a3))
+        return result
+
+def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_abs, V_0_abs,
+                      dimension, omega):
+    """Returns transfer functions for all populations."""
+
+    trans_func = [transfer_function_1p(mu[i], sigma[i], tau_m, tau_s, tau_r,
+                                         V_th_abs, V_0_abs, omega)
+                  for i in range(dimension.magnitude)]
+    return trans_func
+
+# def create_H(self, omega):
+#     ''' Returns vector of the transfer function and
+#     the instantaneous rate jumps at frequency omega.
+#     '''
+#     # factor due to weight scaling of NEST in current equation
+#     # of 'iaf_psc_exp'-model
+#     fac = 2*self.tau_s/self.C
+#     if self.tf_mode == 'analytical':
+#         # find nearest omega, important when the transfer function is
+#         # read from file
+#         k = np.argmin(abs(self.omegas-np.abs(omega.real)))
+#         trans_func = np.transpose(self.trans_func)
+#         if omega < 0:
+#             trans_func = np.conjugate(trans_func)
+#         H = taum*fac*trans_func[k]/complex(1,omega*tauf)
+#     else:
+#         tau = self.tau_impulse*0.001
+#         H = self.H_df/(1.0+complex(0,omega)*tau)
+#     return H
+#
+# def power_spectra(tf_mode, omegas, firing_rates, dimension, N, omega):
+#     """
+#     """
+#     Delay_dist = delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega)
+#
+#     if tf_mode == 'analytical':
+#         # find nearest omega, important when the transfer function is
+#         # read from file
+#         k = np.argmin(abs(omegas-np.abs(omega.real)))
+#         trans_func = np.transpose(trans_func)
+#         if omega < 0:
+#             trans_func = np.conjugate(trans_func)
+#         H = taum*fac*trans_func[k]/complex(1,omega*tauf)
+#     else:
+#         tau = self.tau_impulse*0.001
+#         H = self.H_df/(1.0+complex(0,omega)*tau)
+#     MH_plus = self.create_MH(omega)
+#     Q_plus = np.linalg.inv(np.identity(self.dimension)-MH_plus)
+#     C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
+#     D = np.diag(np.ones(dimension)) * firing_rates / N
+#
+#     # MH_plus = self.create_MH(omega)
+#     # Q_plus = np.linalg.inv(np.identity(self.dimension)-MH_plus)
+#     # C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
+#     # return np.power(abs(np.diag(C)),2)
