@@ -70,7 +70,7 @@ class Network(object):
         self.analysis_params.update(derived_analysis_params)
         # load already existing results
         self.results = io.load_results_from_h5(self.network_params,
-                                               self.network_params.keys())
+                                               self.analysis_params)
 
 
     def _calculate_dependent_network_parameters(self):
