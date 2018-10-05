@@ -161,19 +161,19 @@ def load_params(file_path):
 
 def create_hash(params, param_keys):
     """
-    Create unique hash from values of parameters specified in param_keys
+    Create unique hash from values of parameters specified in param_keys.
 
     Parameters:
     -----------
     params : dict
-        dictionary containing all network parameters
+        Dictionary containing all network parameters.
     param_keys : list
-        list specifying which parameters should be reflected in hash
+        List specifying which parameters should be reflected in hash.
 
     Returns:
     --------
     str
-        hash string
+        Hash string.
     """
 
     label = ''
@@ -186,7 +186,7 @@ def create_hash(params, param_keys):
 
 def save(results_dict, network_params, analysis_params, param_keys=[], output_name=''):
     """
-    Save data and given paramters in h5 file
+    Save data and given paramters in h5 file.
 
     By default the output name will be <label>_<hash>.h5, where the hash is
     created using network_params and analysis_params. But you can either specify
@@ -195,12 +195,16 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
 
     Parameters:
     -----------
-    data : dict
-        dictionary containing all calculated data
-    network_params: dict
-        dictionary containing all network parameters
-    output_name : str
-        optional string specifying output file name (default: <label>_<hash>.h5)
+    results_dict : dict
+        Dictionary containing all calculated results.
+    network_params : dict
+        Dictionary containing network parameters as quantities.
+    analysis_params: dict
+        Dictionary containing analysis parameters as quantities.
+    param_keys: list
+        List of parameters used in file hash.
+    output_name: str
+        Optional string specifying output file name.
 
     Returns:
     --------
@@ -232,36 +236,58 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     h5.save(output_name, output, overwrite_dataset=True)
 
 
-def load_results_from_h5(network_params, network_params_keys):
+def load_results_from_h5(network_params, analysis_params, param_keys=[],
+                         input_name=''):
     """
-    Load existing results for given parameters from h5 file
+    Load existing results for given parameters from h5 file.
 
     Loads results from h5 files named with the standard format
-    <label>_<hash>.h5, if this file already exists.
+    <label>_<hash>.h5, if this file already exists. Or uses given list of
+    parameters to create hash to find file. Or reads from file specified in
+    input_name.
 
     Parameters:
     -----------
     network_params : dict
-        dictionary containing network parameters as quantities
+        Dictionary containing network parameters as quantities.
+    analysis_params: dict
+        Dictionary containing analysis parameters as quantities.
+    param_keys: list
+        List of parameters used in file hash.
+    input_name: str
+        optional string specifying input file name (default: <label>_<hash>.h5).
 
     Returns:
     --------
     dict
-        dictionary containing all found results
+        Dictionary containing all found results.
     """
 
-    # create hash from given parameters
-    hash = create_hash(network_params, network_params_keys)
+    # if no input file name is specified
+    if not input_name:
+        # create hash from given parameters
+        # collect all parameters reflected by hash in one dictionary
+        hash_params = {}
+        hash_params.update(network_params)
+        hash_params.update(analysis_params)
+        # if user did not specify which parameters to use for hash
+        if not param_keys:
+            # take all parameters sorted alphabetically
+            param_keys = sorted(list(hash_params.keys()))
+        # crate hash from param_keys
+        hash = create_hash(hash_params, param_keys)
+        # default input name
+        input_name = '{}_{}.h5'.format(network_params['label'], str(hash))
 
     # try to load file with standard name
     try:
-        output_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
+        input_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
     except OSError:
         return {}
 
     # only want results to be returned
-    results = output_file['results']
+    results = input_file['results']
 
     # convert results to quantitites
     results = val_unit_to_quantities(results)
