@@ -214,14 +214,14 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega- 0.) < 1e-15:
-        return aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_abs, V_0_abs,
+        return aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                                          mu, sigma).magnitude
     else:
-        nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_abs, V_0_abs, mu, sigma)
-        nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_abs, V_0_abs, mu,
+        nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                      sigma).magnitude
-        x_t = np.sqrt(2.) * (V_th_abs - mu) / sigma
-        x_r = np.sqrt(2.) * (V_0_abs - mu) / sigma
+        x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
         z = complex(-0.5, complex(omega * tau_m))
         alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
         k = np.sqrt(tau_s / tau_m)
