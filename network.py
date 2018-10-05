@@ -305,12 +305,54 @@ class Network(object):
         Calculates power spectra
 
         Returns:
+        Quantity(np.ndarray, '???')
         """
         return meanfield_calcs.power_spectra(self.firing_rates(),
                                              self.network_params['dimension'],
                                              self.network_params['N'],
                                              self.analysis_params['omegas'])
 
+    @_check_and_store_results('delay_dist')
+    def delay_dist_matrix(self):
+        """
+        Calculates delay distribution matrix
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless'):
+            Delay distribution matrix.
+        """
+        def delay_dist_matrix(omega):
+            return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
+                                                     self.network_params['Delay'],
+                                                     self.network_params['Delay_sd'],
+                                                     self.network_params['delay_dist'],
+                                                     omega)
+
+        return np.array(list(map(delay_dist_matrix, self.analysis_params['omegas'])))
+
+
+    @_check_and_store_results('transfer_function')
+    def transfer_function(self):
+        """
+        Calc transfer function
+        """
+
+        def transfer_function(omega):
+            return meanfield_calcs.transfer_function(self.mean(),
+                                                     self.standard_deviation(),
+                                                     self.network_params['tau_m'],
+                                                     self.network_params['tau_s'],
+                                                     self.network_params['tau_r'],
+                                                     self.network_params['V_th_abs'],
+                                                     self.network_params['V_0_abs'],
+                                                     self.network_params['dimension'],
+                                                     omega)
+
+        transfer_function = list(map(transfer_function, self.analysis_params['omegas'][:2]))
+        tf_magnitude = [[tf.magnitude for tf in transfer_function] for transfer_function in transfer_function]
+        tf_unit = transfer_function[0][0].units
+        return np.array(tf_magnitude) * tf_unit
 
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
