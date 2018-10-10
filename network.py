@@ -352,8 +352,10 @@ class Network(object):
                                                      omega)
 
         # calculate transfer function for all omegas
+        # TODO remove [:2] which was just introduced to accelerate testing
         transfer_function = list(map(transfer_function,
                                      self.analysis_params['omegas'][:2]))
+
         # convert list of quantities to quantity containing np.ndarray
         tf_magnitude = [[tf.magnitude for tf in transfer_function]
                         for transfer_function in transfer_function]
