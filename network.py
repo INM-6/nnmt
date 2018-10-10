@@ -241,9 +241,7 @@ class Network(object):
     @_check_and_store_results('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
-        return meanfield_calcs.firing_rates(self.mean(),
-                                            self.standard_deviation(),
-                                            self.network_params['dimension'],
+        return meanfield_calcs.firing_rates(self.network_params['dimension'],
                                             self.network_params['tau_m'],
                                             self.network_params['tau_s'],
                                             self.network_params['tau_r'],
@@ -283,7 +281,7 @@ class Network(object):
 
     def working_point(self):
         """
-        Calculates stationary working point of the network
+        Calculates stationary working point of the network.
 
         Returns:
         dict
@@ -304,7 +302,7 @@ class Network(object):
     @_check_and_store_results('power_spectra')
     def power_spectra(self):
         """
-        Calculates power spectra
+        Calculates power spectra.
 
         Returns:
         Quantity(np.ndarray, '???')
@@ -317,7 +315,7 @@ class Network(object):
     @_check_and_store_results('delay_dist')
     def delay_dist_matrix(self):
         """
-        Calculates delay distribution matrix
+        Calculates delay distribution matrix.
 
         Returns:
         --------
@@ -337,30 +335,28 @@ class Network(object):
     @_check_and_store_results('transfer_function')
     def transfer_function(self):
         """
-        Calc transfer function
+        Calculates transfer function for each population.
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless'):
+            Transfer functions for all populations evaluated at specified
+            omegas.
         """
-        # define transfer function with given parameters and variable omega
-        def transfer_function(omega):
-            return meanfield_calcs.transfer_function(self.mean(),
-                                                     self.standard_deviation(),
-                                                     self.network_params['tau_m'],
-                                                     self.network_params['tau_s'],
-                                                     self.network_params['tau_r'],
-                                                     self.network_params['V_th_rel'],
-                                                     self.network_params['V_0_rel'],
-                                                     self.network_params['dimension'],
-                                                     omega)
 
-        # calculate transfer function for all omegas
-        # TODO remove [:2] which was just introduced to accelerate testing
-        transfer_function = list(map(transfer_function,
-                                     self.analysis_params['omegas'][:2]))
+        transfer_functions = meanfield_calcs.transfer_function(self.mean(),
+                                                 self.standard_deviation(),
+                                                 self.network_params['tau_m'],
+                                                 self.network_params['tau_s'],
+                                                 self.network_params['tau_r'],
+                                                 self.network_params['V_th_rel'],
+                                                 self.network_params['V_0_rel'],
+                                                 self.network_params['dimension'],
+                                                 self.analysis_params['omegas'][:3])
 
-        # convert list of quantities to quantity containing np.ndarray
-        tf_magnitude = [[tf.magnitude for tf in transfer_function]
-                        for transfer_function in transfer_function]
-        tf_unit = transfer_function[0][0].units
-        return np.array(tf_magnitude) * tf_unit
+        return transfer_functions
+
+
 
 """circuit.py: Main class providing functions to calculate the stationary
 and dynamical properties of a given circuit.
