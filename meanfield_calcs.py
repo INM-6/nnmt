@@ -205,6 +205,7 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
         b1 = np.exp(-complex(0,omega)*mu)
         return b0*b1
 
+
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                               ureg.mV, ureg.mV, ureg.Hz))
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -238,14 +239,50 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         return result
 
 
+@ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
+                              ureg.mV, ureg.mV, ureg.Hz))
+def transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                            omega):
+    """
+    Calculates transfer function according to $\tilde{n}$ in [1]. The
+    expression is to first order equivalent to
+    `transfer_function_taylor`. Since the underlying theory is
+    correct to first order, the two expressions are exchangeable.
+    We add it here for completeness, but it is not used in this package.
+    """
+
+    # effective threshold and reset
+    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
+    V_th_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    V_0_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    # for frequency zero the exact expression is given by the derivative of
+    # f-I-curve
+    if np.abs(omega - 0.) < 1e-15:
+        return aux_calcs.d_nu_d_mu(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                   sigma)
+    else:
+        nu = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+        x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
+        z = complex(-0.5, complex(omega * tau_m))
+
+        frac = aux_calcs.dPsi_x_r(z, x_t, x_r) / aux_calcs.Psi_x_r(z, x_t, x_r)
+
+        return (np.sqrt(2.) / sigma * nu
+                / (1. + complex(0., complex(omega*tau_m))) * frac)
+
+
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omega):
     """Returns transfer functions for all populations."""
 
-    trans_func = [transfer_function_1p_taylor(mu[i], sigma[i], tau_m, tau_s,
-                                              tau_r, V_th_rel, V_0_rel, omega)
-                  for i in range(dimension.magnitude)]
-    return trans_func
+    trans_func_shift = [transfer_function_shift(mu[i], sigma[i], tau_m, tau_s,
+                                                tau_r, V_th_rel, V_0_rel, omega)
+                        for i in range(dimension.magnitude)]
+
+    return trans_func_shift
 
 # def create_H(self, omega):
 #     ''' Returns vector of the transfer function and
