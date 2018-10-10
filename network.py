@@ -352,7 +352,7 @@ class Network(object):
                                                  self.network_params['V_th_rel'],
                                                  self.network_params['V_0_rel'],
                                                  self.network_params['dimension'],
-                                                 self.analysis_params['omegas'][:3])
+                                                 self.analysis_params['omegas'])
 
         return transfer_functions
 
