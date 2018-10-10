@@ -8,27 +8,23 @@ from input_output import ureg
 import aux_calcs
 
 
-@ureg.wraps(ureg.Hz, (ureg.mV, ureg.mV, ureg.dimensionless, ureg.s, ureg.s,
+@ureg.wraps(ureg.Hz, (ureg.dimensionless, ureg.s, ureg.s,
                       ureg.s, ureg.mV, ureg.mV, ureg.dimensionless, ureg.mV,
                       ureg.mV, ureg.Hz, ureg.dimensionless))
-def firing_rates(mu, sigma, dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
-                 K, J, j, nu_ext, K_ext):
+def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
+                 nu_ext, K_ext):
     '''
     Returns vector of population firing rates in Hz.
 
     Parameters:
     -----------
-    mu: Quantity(float, 'millivolt')
-        Mean neuron activity in mV.
-    sigma: Quantity(float, 'millivolt')
-        Standard deviation of neuron activity in mV.
     dimension: Quantity(int, 'dimensionless')
         Number of populations.
-    tau_m: Quantity(float, 'millisecond')
+    tau_m: Quantity(float, 'second')
         Membrane time constant.
-    tau_s: Quantity(float, 'millisecond')
+    tau_s: Quantity(float, 'second')
         Synaptic time constant.
-    tau_r: Quantity(float, 'millisecond')
+    tau_r: Quantity(float, 'second')
         Refractory time.
     V_0_rel: Quantity(float, 'millivolt')
         Relative reset potential.
@@ -58,25 +54,43 @@ def firing_rates(mu, sigma, dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
 
     def get_rate_difference(nu):
         """ calculate difference between new iteration step and previous one """
-        new_nu = np.array([x.magnitude for x in list(map(rate_function, mu,
-                                                         sigma))])*ureg.Hz
+        ### new mean
+        # contribution from within the network
+        m0 = np.dot(K * J, nu) * tau_m
+        # contribution from external sources
+        m_ext = j * K_ext * nu_ext * tau_m
+        # add them up
+        mu = m0 + m_ext
+
+        ### new std
+        # contribution from within the network to variance
+        var0 = np.dot(K * J**2, nu) * tau_m
+        # contribution from external sources to variance
+        var_ext = j**2 * K_ext * nu_ext * tau_m
+        # add them up
+        var = var0 + var_ext
+        # standard deviation is square root of variance
+        sigma = np.sqrt(var)
+
+        new_nu = np.array([x for x in list(map(rate_function, mu, sigma))])
+
         return -nu + new_nu
 
     # do iteration procedure, until stationary firing rates are found
     dt = 0.05
-    y = np.zeros((2, int(dimension))) * ureg.Hz
+    y = np.zeros((2, int(dimension)))
     eps = 1.0
     while eps >= 1e-5:
         delta_y = get_rate_difference(y[0])
         y[1] = y[0] + delta_y*dt
         epsilon = (y[1] - y[0])
-        eps = max(np.abs(epsilon.magnitude))
+        eps = max(np.abs(epsilon))
         y[0] = y[1]
 
     return y[1]
 
-@ureg.wraps(ureg.mV, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV,
-                      ureg.s, ureg.Hz, ureg.dimensionless))
+@ureg.wraps(ureg.mV, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV, ureg.s,
+                      ureg.Hz, ureg.dimensionless))
 def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     '''
     Calc mean inputs to populations as function of firing rates of populations
@@ -112,6 +126,7 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     m_ext = j * K_ext * nu_ext * tau_m
     # add them up
     m = m0 + m_ext
+
     return m
 
 
@@ -153,6 +168,7 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     var = var0 + var_ext
     # standard deviation is square root of variance
     std = np.sqrt(var)
+
     return std
 
 
@@ -211,10 +227,32 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                 V_0_rel, omega):
     """
-    Calculates transfer function according to Eq. 93 in [2]. The
-    results in [3] were obtained with this expression and it is
-    used throughout this package
+    Calcs value of transfer func for one population at given frequency omega.
 
+    The calculation is done according to Eq. 93 in Schuecker et al (2014).
+
+    Parameters:
+    -----------
+    mu: Quantity(float, 'millivolt')
+        Mean neuron activity of one population in mV.
+    sigma: Quantity(float, 'millivolt')
+        Standard deviation of neuron activity of one population in mV.
+    tau_m: Quantity(float, 'millisecond')
+        Membrane time constant.
+    tau_s: Quantity(float, 'millisecond')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'millisecond')
+        Refractory time.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    omega: Quantity(flaot, 'hertz')
+        Input frequency to population.
+
+    Returns:
+    --------
+    Quantity(float, 'hertz/millivolt')
     """
 
     # for frequency zero the exact expression is given by the derivative of
@@ -241,14 +279,38 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                               ureg.mV, ureg.mV, ureg.Hz))
-def transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                            omega):
+def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                               V_0_rel, omega):
     """
-    Calculates transfer function according to $\tilde{n}$ in [1]. The
-    expression is to first order equivalent to
-    `transfer_function_taylor`. Since the underlying theory is
-    correct to first order, the two expressions are exchangeable.
-    We add it here for completeness, but it is not used in this package.
+    Calcs value of transfer func for one population at given frequency omega.
+
+    Calculates transfer function according to $\tilde{n}$ in Schuecker et al.
+    (2015). The expression is to first order equivalent to
+    `transfer_function_1p_taylor`. Since the underlying theory is correct to
+    first order, the two expressions are exchangeable.
+
+    Parameters:
+    -----------
+    mu: Quantity(float, 'millivolt')
+        Mean neuron activity of one population in mV.
+    sigma: Quantity(float, 'millivolt')
+        Standard deviation of neuron activity of one population in mV.
+    tau_m: Quantity(float, 'millisecond')
+        Membrane time constant.
+    tau_s: Quantity(float, 'millisecond')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'millisecond')
+        Refractory time.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    omega: Quantity(flaot, 'hertz')
+        Input frequency to population.
+
+    Returns:
+    --------
+    Quantity(float, 'hertz/millivolt')
     """
 
     # effective threshold and reset
@@ -275,14 +337,49 @@ def transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
 
 
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                      dimension, omega):
-    """Returns transfer functions for all populations."""
+                      dimension, omegas):
+    """
+    Returns transfer functions for all populations.
 
-    trans_func_shift = [transfer_function_shift(mu[i], sigma[i], tau_m, tau_s,
-                                                tau_r, V_th_rel, V_0_rel, omega)
-                        for i in range(dimension.magnitude)]
+    Parameters:
+    -----------
+    mu: Quantity(float, 'millivolt')
+        Mean neuron activity of one population in mV.
+    sigma: Quantity(float, 'millivolt')
+        Standard deviation of neuron activity of one population in mV.
+    tau_m: Quantity(float, 'millisecond')
+        Membrane time constant.
+    tau_s: Quantity(float, 'millisecond')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'millisecond')
+        Refractory time.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    omegas: Quantity(np.ndarray, 'hertz')
+        Input frequencies to population.
 
-    return trans_func_shift
+    Returns:
+    --------
+    list of Quantities(np.nd.array, 'hertz/millivolt'):
+        Returns one array for each population collected in a list. The arrays
+        contain the values of the transfer function corresponding to the
+        given omegas.
+    """
+
+    transfer_functions = [[transfer_function_1p_shift(mu[i], sigma[i], tau_m,
+                                                      tau_s, tau_r, V_th_rel,
+                                                      V_0_rel, omega)
+                           for omega in omegas]
+                          for i in range(dimension.magnitude)]
+
+    # convert list of list of quantities to list of quantities containing np.ndarray
+    tf_magnitudes = [np.array([tf.magnitude for tf in tf_population])
+                     for tf_population in transfer_functions]
+    tf_unit = transfer_functions[0][0].units
+
+    return tf_magnitudes * tf_unit
 
 # def create_H(self, omega):
 #     ''' Returns vector of the transfer function and
