@@ -220,11 +220,11 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     # f-I-curve
     if np.abs(omega- 0.) < 1e-15:
         return aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                                         mu, sigma).magnitude
+                                         mu, sigma)
     else:
         nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
         nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                     sigma).magnitude
+                                     sigma)
         x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
         z = complex(-0.5, complex(omega * tau_m))
@@ -236,6 +236,7 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         a3 = A / tau_m / nu0_fb * (-a1**2 + aux_calcs.d2Psi_x_r(z, x_t, x_r)/a0)
         result = (np.sqrt(2.) / sigma * nu0_fb / complex(1., omega * tau_m)* (a1 + a3))
         return result
+
 
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omega):
