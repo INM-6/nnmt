@@ -322,14 +322,12 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless'):
             Delay distribution matrix.
         """
-        def delay_dist_matrix(omega):
-            return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
-                                                     self.network_params['Delay'],
-                                                     self.network_params['Delay_sd'],
-                                                     self.network_params['delay_dist'],
-                                                     omega)
 
-        return np.array(list(map(delay_dist_matrix, self.analysis_params['omegas'])))
+        return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
+                                                 self.network_params['Delay'],
+                                                 self.network_params['Delay_sd'],
+                                                 self.network_params['delay_dist'],
+                                                 self.analysis_params['omegas'])
 
 
     @_check_and_store_results('transfer_function')
@@ -356,6 +354,23 @@ class Network(object):
 
         return transfer_functions
 
+
+    @_check_and_store_results('sensitivity_measure')
+    def sensitivity_measure(self, freq):
+        omega = freq* 2*np.pi * ureg.Hz
+        k = np.argmin(abs(self.analysis_params['omegas']-np.abs(omega.real)))
+        transfer_function = self.transfer_function().T[k]
+        if omega.magnitude < 0:
+            transfer_function = np.conjugate(transfer_function)
+        delay_dist_matrix = self.delay_dist_matrix()[k]
+        return meanfield_calcs.sensitivity_measure(transfer_function,
+                                                   delay_dist_matrix,
+                                                   self.network_params['J'],
+                                                   self.network_params['tau_m'],
+                                                   self.network_params['tau_s'],
+                                                   self.network_params['dimension'],
+                                                   self.analysis_params['omegas'],
+                                                   omega)
 
 
 """circuit.py: Main class providing functions to calculate the stationary
