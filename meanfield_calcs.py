@@ -172,56 +172,6 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     return std
 
 
-@ureg.wraps(ureg.dimensionless, (ureg.dimensionless, ureg.s, ureg.s,
-                                 ureg.dimensionless, ureg.Hz), strict=False)
-def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
-    '''
-    Calcs matrix of delay distribution specific pre-factors at frequency omega.
-
-    ???
-    Assumes lower boundary for truncated Gaussian distributed delays to be zero
-    (exact would be dt, the minimal time step).
-
-    Parameters:
-    -----------
-    dimension: Quantity(int, 'dimensionless')
-        Dimension of the system / number of populations'
-    Delay: Quantity(np.ndarray, 's')
-        Delay matrix.
-    Delay_sd: Quantity(np.ndarray, 's')
-        Delay standard deviation matrix.
-    delay_dist: str
-        String specifying delay distribution.
-    omega: float
-        Frequency.
-
-    Returns:
-    --------
-    Quantity(nd.array, 'dimensionless')
-        Matrix of delay distribution specific pre-factors at frequency omega.
-    '''
-
-    mu = Delay
-    sigma = Delay_sd
-    D = np.ones((int(dimension),int(dimension)))
-
-    if delay_dist == 'none':
-        print(-complex(0,1)*omega*mu)
-        return D*np.exp(-complex(0,omega)*mu)
-
-    elif delay_dist == 'truncated_gaussian':
-        a0 = aux_calcs.Phi(-mu/sigma+1j*omega*sigma)
-        a1 = aux_calcs.Phi(-mu/sigma)
-        b0 = np.exp(-0.5*np.power(sigma*omega,2))
-        b1 = np.exp(-complex(0,omega)*mu)
-        return (1.0-a0)/(1.0-a1)*b0*b1
-
-    elif delay_dist == 'gaussian':
-        b0 = np.exp(-0.5*np.power(sigma*omega,2))
-        b1 = np.exp(-complex(0,omega)*mu)
-        return b0*b1
-
-
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                               ureg.mV, ureg.mV, ureg.Hz))
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -381,48 +331,136 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
 
     return tf_magnitudes * tf_unit
 
-# def create_H(self, omega):
-#     ''' Returns vector of the transfer function and
-#     the instantaneous rate jumps at frequency omega.
-#     '''
-#     # factor due to weight scaling of NEST in current equation
-#     # of 'iaf_psc_exp'-model
-#     fac = 2*self.tau_s/self.C
-#     if self.tf_mode == 'analytical':
-#         # find nearest omega, important when the transfer function is
-#         # read from file
-#         k = np.argmin(abs(self.omegas-np.abs(omega.real)))
-#         trans_func = np.transpose(self.trans_func)
-#         if omega < 0:
-#             trans_func = np.conjugate(trans_func)
-#         H = taum*fac*trans_func[k]/complex(1,omega*tauf)
-#     else:
-#         tau = self.tau_impulse*0.001
-#         H = self.H_df/(1.0+complex(0,omega)*tau)
-#     return H
-#
-# def power_spectra(tf_mode, omegas, firing_rates, dimension, N, omega):
-#     """
-#     """
-#     Delay_dist = delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega)
-#
-#     if tf_mode == 'analytical':
-#         # find nearest omega, important when the transfer function is
-#         # read from file
-#         k = np.argmin(abs(omegas-np.abs(omega.real)))
-#         trans_func = np.transpose(trans_func)
-#         if omega < 0:
-#             trans_func = np.conjugate(trans_func)
-#         H = taum*fac*trans_func[k]/complex(1,omega*tauf)
-#     else:
-#         tau = self.tau_impulse*0.001
-#         H = self.H_df/(1.0+complex(0,omega)*tau)
-#     MH_plus = self.create_MH(omega)
-#     Q_plus = np.linalg.inv(np.identity(self.dimension)-MH_plus)
-#     C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
-#     D = np.diag(np.ones(dimension)) * firing_rates / N
-#
-#     # MH_plus = self.create_MH(omega)
-#     # Q_plus = np.linalg.inv(np.identity(self.dimension)-MH_plus)
-#     # C = np.dot(Q_plus,np.dot(self.D,np.transpose(np.conjugate(Q_plus))))
-#     # return np.power(abs(np.diag(C)),2)
+
+def delay_dist_matrix_one_freq(dimension, Delay, Delay_sd, delay_dist, omega):
+    '''
+    Calcs matrix of delay distribution specific pre-factors at frequency omega.
+
+    ???
+    Assumes lower boundary for truncated Gaussian distributed delays to be zero
+    (exact would be dt, the minimal time step).
+
+    We had to define the subfunctions ddm_none, ddm_tg and ddm_g, because one
+    cannot pass a string to a function decorated with ureg.wraps. So, that is
+    how we bypass this issue. It is not very elegant though.
+
+    Parameters:
+    -----------
+    dimension: Quantity(int, 'dimensionless')
+        Dimension of the system / number of populations'
+    Delay: Quantity(np.ndarray, 's')
+        Delay matrix.
+    Delay_sd: Quantity(np.ndarray, 's')
+        Delay standard deviation matrix.
+    delay_dist: str
+        String specifying delay distribution.
+    omega: float
+        Frequency.
+
+    Returns:
+    --------
+    Quantity(nd.array, 'dimensionless')
+        Matrix of delay distribution specific pre-factors at frequency omega.
+    '''
+
+    if delay_dist == 'none':
+        @ureg.wraps(ureg.dimensionless, (ureg.Hz, ureg.s, ureg.dimensionless))
+        def ddm_none(omega, Delay, dimension):
+            D = np.ones((int(dimension),int(dimension)))
+            return D*np.exp(-complex(0,omega)*Delay)
+        return ddm_none(omega, Delay, dimension)
+
+    elif delay_dist == 'truncated_gaussian':
+        @ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz))
+        def ddm_tg(Delay, Delay_sd, omega):
+            a0 = aux_calcs.Phi(-Delay/Delay_sd+1j*omega*Delay_sd)
+            a1 = aux_calcs.Phi(-Delay/Delay_sd)
+            b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
+            b1 = np.exp(-complex(0,omega)*Delay)
+            return (1.0-a0)/(1.0-a1)*b0*b1
+        return ddm_tg(Delay, Delay_sd, omega)
+
+    elif delay_dist == 'gaussian':
+        @ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz))
+        def ddm_g(Delay, Delay_sd, omega):
+            b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
+            b1 = np.exp(-complex(0,omega)*Delay)
+            return b0*b1
+        return ddm_g(Delay, Delay_sd, omega)
+
+
+def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
+    '''
+    Calcs matrix of delay distribution specific pre-factors at frequency omega.
+
+    ???
+    Assumes lower boundary for truncated Gaussian distributed delays to be zero
+    (exact would be dt, the minimal time step).
+
+    We had to define the subfunctions ddm_none, ddm_tg and ddm_g, because one
+    cannot pass a string to a function decorated with ureg.wraps. So, that is
+    how we bypass this issue. It is not very elegant though.
+
+    Parameters:
+    -----------
+    dimension: Quantity(int, 'dimensionless')
+        Dimension of the system / number of populations'
+    Delay: Quantity(np.ndarray, 's')
+        Delay matrix.
+    Delay_sd: Quantity(np.ndarray, 's')
+        Delay standard deviation matrix.
+    delay_dist: str
+        String specifying delay distribution.
+    omega: float
+        Frequency.
+
+    Returns:
+    --------
+    Quantity(nd.array, 'dimensionless')
+        Matrix of delay distribution specific pre-factors at frequency omega.
+    '''
+
+    delay_dist_matrices = [delay_dist_matrix_one_freq(dimension, Delay,
+                                                      Delay_sd, delay_dist,
+                                                      omega)
+                           for omega in omegas]
+
+    return delay_dist_matrices
+
+
+@ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
+                                 ureg.s, ureg.s, ureg.dimensionless, ureg.Hz,
+                                 ureg.Hz))
+def sensitivity_measure(transfer_function, delay_distr_matrix, J, tau_m, tau_s,
+                        dimension, omegas, omega):
+    """
+    Calculates sensitivity measure as in Eq. 21 in Bos et al. (2015).
+
+    Parameters:
+    -----------
+    # freq: frequency in Hz
+    # Keyword arguments:
+    # index: specifies index of eigenmode, default: None
+    #        if set to None the dominant eigenmode is assumed
+
+    Returns:
+    --------
+
+    """
+
+    H = tau_m * transfer_function / complex(1, omega*tau_s)
+    H = np.hstack([H for i in range(int(dimension))])
+    H = np.transpose(H.reshape(int(dimension),int(dimension)))
+    MH = H*J*delay_distr_matrix
+
+    e, U = np.linalg.eig(MH)
+    U_inv = np.linalg.inv(U)
+    index = None
+    if index is None:
+        # find eigenvalue closest to one
+        index = np.argmin(np.abs(e-1))
+    T = np.outer(U_inv[index],U[:,index])
+    T /= np.dot(U_inv[index],U[:,index])
+    T *= MH
+
+    return T
