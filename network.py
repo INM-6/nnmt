@@ -357,19 +357,32 @@ class Network(object):
 
     @_check_and_store_results('sensitivity_measure')
     def sensitivity_measure(self, freq):
-        omega = freq* 2*np.pi * ureg.Hz
-        k = np.argmin(abs(self.analysis_params['omegas']-np.abs(omega.real)))
-        transfer_function = self.transfer_function().T[k]
+        omega = freq * 2 * np.pi * ureg.Hz
+
+        transfer_function = meanfield_calcs.transfer_function(self.mean(),
+                                                 self.standard_deviation(),
+                                                 self.network_params['tau_m'],
+                                                 self.network_params['tau_s'],
+                                                 self.network_params['tau_r'],
+                                                 self.network_params['V_th_rel'],
+                                                 self.network_params['V_0_rel'],
+                                                 self.network_params['dimension'],
+                                                 [omega]).T
         if omega.magnitude < 0:
             transfer_function = np.conjugate(transfer_function)
-        delay_dist_matrix = self.delay_dist_matrix()[k]
+
+        delay_dist_matrix = meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
+                                                              self.network_params['Delay'],
+                                                              self.network_params['Delay_sd'],
+                                                              self.network_params['delay_dist'],
+                                                              omega)
+
         return meanfield_calcs.sensitivity_measure(transfer_function,
                                                    delay_dist_matrix,
                                                    self.network_params['J'],
                                                    self.network_params['tau_m'],
                                                    self.network_params['tau_s'],
                                                    self.network_params['dimension'],
-                                                   self.analysis_params['omegas'],
                                                    omega)
 
 

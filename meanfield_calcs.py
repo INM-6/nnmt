@@ -332,7 +332,7 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     return tf_magnitudes * tf_unit
 
 
-def delay_dist_matrix_one_freq(dimension, Delay, Delay_sd, delay_dist, omega):
+def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
     Calcs matrix of delay distribution specific pre-factors at frequency omega.
 
@@ -389,50 +389,10 @@ def delay_dist_matrix_one_freq(dimension, Delay, Delay_sd, delay_dist, omega):
         return ddm_g(Delay, Delay_sd, omega)
 
 
-def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
-    '''
-    Calcs matrix of delay distribution specific pre-factors at frequency omega.
-
-    ???
-    Assumes lower boundary for truncated Gaussian distributed delays to be zero
-    (exact would be dt, the minimal time step).
-
-    We had to define the subfunctions ddm_none, ddm_tg and ddm_g, because one
-    cannot pass a string to a function decorated with ureg.wraps. So, that is
-    how we bypass this issue. It is not very elegant though.
-
-    Parameters:
-    -----------
-    dimension: Quantity(int, 'dimensionless')
-        Dimension of the system / number of populations'
-    Delay: Quantity(np.ndarray, 's')
-        Delay matrix.
-    Delay_sd: Quantity(np.ndarray, 's')
-        Delay standard deviation matrix.
-    delay_dist: str
-        String specifying delay distribution.
-    omega: float
-        Frequency.
-
-    Returns:
-    --------
-    Quantity(nd.array, 'dimensionless')
-        Matrix of delay distribution specific pre-factors at frequency omega.
-    '''
-
-    delay_dist_matrices = [delay_dist_matrix_one_freq(dimension, Delay,
-                                                      Delay_sd, delay_dist,
-                                                      omega)
-                           for omega in omegas]
-
-    return delay_dist_matrices
-
-
 @ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
-                                 ureg.s, ureg.s, ureg.dimensionless, ureg.Hz,
-                                 ureg.Hz))
+                                 ureg.s, ureg.s, ureg.dimensionless, ureg.Hz))
 def sensitivity_measure(transfer_function, delay_distr_matrix, J, tau_m, tau_s,
-                        dimension, omegas, omega):
+                        dimension, omega):
     """
     Calculates sensitivity measure as in Eq. 21 in Bos et al. (2015).
 
