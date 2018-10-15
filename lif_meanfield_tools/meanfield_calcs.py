@@ -4,8 +4,8 @@ import numpy as np
 import pint
 from scipy.special import zetac
 
-from input_output import ureg
-import aux_calcs
+from lif_meanfield_tools.input_output import ureg # TODO
+import lif_meanfield_tools.aux_calcs as aux_calcs
 
 
 @ureg.wraps(ureg.Hz, (ureg.dimensionless, ureg.s, ureg.s,

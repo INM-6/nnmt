@@ -6,7 +6,7 @@ import numpy as np
 import math
 import mpmath
 
-from input_output import ureg
+from lif_meanfield_tools.input_output import ureg # TODO
 
 
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
