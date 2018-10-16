@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# encoding:utf8
 '''
 Handles reading-in yaml files and converting the physical parameters, specified
 in yaml files, to theoretical parameters, needed for usage of given implemented
@@ -14,17 +12,12 @@ Options:
 
 from __future__ import print_function
 
-import docopt
-import pprint
-
 import numpy as np
-
 import yaml
-from pint import UnitRegistry
 import hashlib as hl
 import h5py_wrapper.wrapper as h5
 
-ureg = UnitRegistry()
+from .__init__ import ureg
 
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """
