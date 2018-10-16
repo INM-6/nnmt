@@ -8,9 +8,9 @@ from .__init__ import ureg
 from . import aux_calcs
 
 
-@ureg.wraps(ureg.Hz, (ureg.dimensionless, ureg.s, ureg.s,
-                      ureg.s, ureg.mV, ureg.mV, ureg.dimensionless, ureg.mV,
-                      ureg.mV, ureg.Hz, ureg.dimensionless))
+@ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s,
+                      ureg.s, ureg.mV, ureg.mV, None, ureg.mV,
+                      ureg.mV, ureg.Hz, None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                  nu_ext, K_ext):
     '''
@@ -89,8 +89,8 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
 
     return y[1]
 
-@ureg.wraps(ureg.mV, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV, ureg.s,
-                      ureg.Hz, ureg.dimensionless))
+@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s,
+                      ureg.Hz, None))
 def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     '''
     Calc mean inputs to populations as function of firing rates of populations
@@ -130,8 +130,8 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     return m
 
 
-@ureg.wraps(ureg.mV, (ureg.Hz, ureg.dimensionless, ureg.mV, ureg.mV, ureg.s,
-                      ureg.Hz, ureg.dimensionless))
+@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s,
+                      ureg.Hz, None))
 def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     '''
     Calc standard devs of inputs to populations as function of firing rates
@@ -322,7 +322,7 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                                                       tau_s, tau_r, V_th_rel,
                                                       V_0_rel, omega)
                            for omega in omegas]
-                          for i in range(dimension.magnitude)]
+                          for i in range(dimension)]
 
     # convert list of list of quantities to list of quantities containing np.ndarray
     tf_magnitudes = [np.array([tf.magnitude for tf in tf_population])
@@ -364,7 +364,7 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
 
     if delay_dist == 'none':
-        @ureg.wraps(ureg.dimensionless, (ureg.Hz, ureg.s, ureg.dimensionless))
+        @ureg.wraps(ureg.dimensionless, (ureg.Hz, ureg.s, None))
         def ddm_none(omega, Delay, dimension):
             D = np.ones((int(dimension),int(dimension)))
             return D*np.exp(-complex(0,omega)*Delay)
@@ -390,7 +390,7 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
 
 
 @ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
-                                 ureg.s, ureg.s, ureg.dimensionless, ureg.Hz))
+                                 ureg.s, ureg.s, None, ureg.Hz))
 def sensitivity_measure(transfer_function, delay_distr_matrix, J, tau_m, tau_s,
                         dimension, omega):
     """

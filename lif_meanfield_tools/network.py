@@ -125,8 +125,7 @@ class Network(object):
             derived_params['Delay_sd'] = D
 
             # calculate dimension of system
-            derived_params['dimension'] = (len(self.network_params['populations'])
-                                           * ureg.dimensionless)
+            derived_params['dimension'] = len(self.network_params['populations'])
 
         return derived_params
         # # params for power spectrum

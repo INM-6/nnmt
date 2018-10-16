@@ -44,29 +44,24 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     dict
         converted dictionary of format
     """
-
+    import numbers
     converted_dict = {}
     for quantity_key, val_unit_dict in dict_of_val_unit_dicts.items():
         # if value is given as list, convert to numpy array
-        if isinstance(val_unit_dict['val'], list):
+        if isinstance(val_unit_dict, list):
+            val_unit_dict = np.array(val_unit_dict)
+        elif isinstance(val_unit_dict['val'], list):
             val_unit_dict['val'] = np.array(val_unit_dict['val'])
 
         # if unit is specified, convert value unit pair to quantity
         if 'unit' in val_unit_dict:
             converted_dict[quantity_key] = (val_unit_dict['val']
             * ureg.parse_expression(val_unit_dict['unit']))
-        # as strings can't be represented as a quantities,
-        # they needs to be treated seperately
-        elif isinstance(val_unit_dict['val'], str):
-            converted_dict[quantity_key] = val_unit_dict['val']
-        # list of strings need to be treated seperately as well
-        elif isinstance(val_unit_dict['val'], list):
-            if any(isinstance(part, str) for part in val_unit_dict['val']):
-                converted_dict[quantity_key] = val_unit_dict['val']
+        
         else:
             # check that parameters are specified in correct format
             try:
-                converted_dict[quantity_key] = ureg.Quantity(val_unit_dict['val'])
+                converted_dict[quantity_key] = val_unit_dict['val']
             except TypeError as error:
                 raise KeyError(('Check that value of parameter in {} is given '
                 + 'as value belonging to key "val" (syntax: '
@@ -96,7 +91,6 @@ def quantities_to_val_unit(dict_of_quantities):
     dict
         converted dictionary
     """
-
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
@@ -111,10 +105,11 @@ def quantities_to_val_unit(dict_of_quantities):
             elif any(isinstance(part, ureg.Quantity) for part in quantity):
                 converted_dict[quantity_key]['val'] = np.stack([array.magnitude for array in quantity])
                 converted_dict[quantity_key]['unit'] = str(quantity[0].units)
-        else:
+        elif isinstance(quantity, ureg.Quantity):
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
-
+        else:
+            converted_dict[quantity_key]['val'] = quantity
     return converted_dict
 
 
