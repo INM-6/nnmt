@@ -185,9 +185,8 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     Save data and given paramters in h5 file.
 
     By default the output name will be <label>_<hash>.h5, where the hash is
-    created using network_params and analysis_params. But you can either specify
-    an ouput_name yourself, or specify which param_keys should be reflected in
-    the hash.
+    created using network_params. But you can either specify an ouput_name
+    yourself, or specify which param_keys should be reflected in the hash.
 
     Parameters:
     -----------
@@ -212,7 +211,6 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
         # collect all parameters reflected by hash in one dictionary
         hash_params = {}
         hash_params.update(network_params)
-        hash_params.update(analysis_params)
         # if user did not specify which parameters to use for hash
         if not param_keys:
             # take all parameters sorted alphabetically
@@ -232,10 +230,9 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
     h5.save(output_name, output, overwrite_dataset=True)
 
 
-def load_results_from_h5(network_params, analysis_params, param_keys=[],
-                         input_name=''):
+def load_from_h5(network_params, param_keys=[], input_name=''):
     """
-    Load existing results for given parameters from h5 file.
+    Load existing results and analysis_params for given parameters from h5 file.
 
     Loads results from h5 files named with the standard format
     <label>_<hash>.h5, if this file already exists. Or uses given list of
@@ -246,8 +243,6 @@ def load_results_from_h5(network_params, analysis_params, param_keys=[],
     -----------
     network_params : dict
         Dictionary containing network parameters as quantities.
-    analysis_params: dict
-        Dictionary containing analysis parameters as quantities.
     param_keys: list
         List of parameters used in file hash.
     input_name: str
@@ -255,7 +250,9 @@ def load_results_from_h5(network_params, analysis_params, param_keys=[],
 
     Returns:
     --------
-    dict
+    analysis_params: dict
+        Dictionary containing all found analysis_params.
+    results: dict
         Dictionary containing all found results.
     """
 
@@ -265,7 +262,6 @@ def load_results_from_h5(network_params, analysis_params, param_keys=[],
         # collect all parameters reflected by hash in one dictionary
         hash_params = {}
         hash_params.update(network_params)
-        hash_params.update(analysis_params)
         # if user did not specify which parameters to use for hash
         if not param_keys:
             # take all parameters sorted alphabetically
@@ -280,16 +276,17 @@ def load_results_from_h5(network_params, analysis_params, param_keys=[],
         input_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
     except OSError:
-        return {}
+        return {}, {}
 
-    # only want results to be returned
+    # read in whats already stored
+    analysis_params = input_file['analysis_params']
     results = input_file['results']
-    print(results)
 
     # convert results to quantitites
+    analysis_params = val_unit_to_quantities(analysis_params)
     results = val_unit_to_quantities(results)
 
-    return results
+    return analysis_params, results
 
 # if __name__ == '__main__':
 #     params = load_params('network_params_microcircuit.yaml')
