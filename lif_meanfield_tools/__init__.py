@@ -1,3 +1,6 @@
+from pint import UnitRegistry
+ureg = UnitRegistry()
+
 from . import (input_output,
                meanfield_calcs,
                aux_calcs)
