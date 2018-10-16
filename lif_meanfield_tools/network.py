@@ -8,9 +8,10 @@ from __future__ import print_function
 import numpy as np
 import functools
 
-import lif_meanfield_tools.input_output as io
-ureg = io.ureg
-import lif_meanfield_tools.meanfield_calcs as meanfield_calcs
+# import lif_meanfield_tools.input_output as io
+from . import input_output as io
+from . import meanfield_calcs 
+from .__init__ import ureg
 
 class Network(object):
     """
