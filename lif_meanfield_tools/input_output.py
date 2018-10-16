@@ -108,6 +108,9 @@ def quantities_to_val_unit(dict_of_quantities):
         elif isinstance(quantity, list):
             if any(isinstance(part, str) for part in quantity):
                 converted_dict[quantity_key]['val'] = quantity
+            elif any(isinstance(part, ureg.Quantity) for part in quantity):
+                converted_dict[quantity_key]['val'] = np.stack([array.magnitude for array in quantity])
+                converted_dict[quantity_key]['unit'] = str(quantity[0].units)
         else:
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
@@ -281,6 +284,7 @@ def load_results_from_h5(network_params, analysis_params, param_keys=[],
 
     # only want results to be returned
     results = input_file['results']
+    print(results)
 
     # convert results to quantitites
     results = val_unit_to_quantities(results)

@@ -7,10 +7,11 @@ Authors: Hannah Bos, Jannis Schuecker
 from __future__ import print_function
 import numpy as np
 import functools
+from decorator import decorator
 
 # import lif_meanfield_tools.input_output as io
 from . import input_output as io
-from . import meanfield_calcs 
+from . import meanfield_calcs
 from .__init__ import ureg
 
 class Network(object):
@@ -171,125 +172,184 @@ class Network(object):
         return derived_params
 
 
-    def _check_and_store_results(result_key, analysis_key=None):
-        """
-        Decorator function that checks whether result are already existing
+    # def _check_and_store_results(result_key, analysis_key=None):
+    #     """
+    #     Decorator function that checks whether result are already existing
+    #
+    #     This decorator serves as a wrapper for functions that calculate
+    #     quantities which are to be stored in self.results. First it checks,
+    #     whether the result already has been stored in self.results. If this is
+    #     the case, it returns that result. If not, the calculation is executed,
+    #     the result is stored in self.results and the result is returned.
+    #
+    #     Parameters:
+    #     -----------
+    #     result_key: str
+    #         specifies under which key the result should be stored
+    #
+    #     Returns:
+    #     --------
+    #     func
+    #         decorator function
+    #     """
+    #     def decorator_check_results(func):
+    #         # enable accessing attributes of original function
+    #         @functools.wraps(func)
+    #         def wrapper_check_results(self, *args, **kwargs):
+    #
+    #             # collect results
+    #             results = getattr(self, 'results')
+    #
+    #             # if analysis_key is passed
+    #             if analysis_key:
+    #                 # collect analysis parameters
+    #                 analysis_params = getattr(self, 'analysis_params')
+    #
+    #                 # if analysis_key is alredy stored in analysis parameters
+    #                 if analysis_key in analysis_params.keys():
+    #                     # check whether args or kwargs are passed
+    #                     if args:
+    #                         # if this specific analysis param is already stored
+    #                         if args[0] in analysis_params[analysis_key]:
+    #                             # get index of result
+    #                             result_index = analysis_params[analysis_key].index(args[0])
+    #                             print('Key yes, value yes')
+    #                         else:
+    #                             # add analysis param
+    #                             analysis_params[analysis_key] = np.append(analysis_params[analysis_key], args[0]) * args[0].units
+    #                             setattr(self, 'analysis_params', analysis_params)
+    #
+    #                             # calculate and add result
+    #                             result = func(self, *args, **kwargs)
+    #                             results[result_key] = np.stack((results[result_key], result)) * result.units
+    #                             setattr(self, 'results', results)
+    #                             print('Key yes, value no')
+    #
+    #                             return results[result_key][-1]
+    #
+    #                     elif kwargs:
+    #                         # if this specific analysis param is already stored
+    #                         if list(kwargs.values())[0] == analysis_params.keys():
+    #                             # get index of result
+    #                             result_index = analysis_params[analysis_key].index(list(kwargs.values())[0])
+    #                         else:
+    #                             # add analysis param
+    #                             analysis_params[analysis_key].magnitude.append(list(kwargs.values())[0])
+    #                             setattr(self, 'analysis_params', analysis_params)
+    #
+    #                             # calculate and add result
+    #                             results[result_key].magnitude.append(func(self, *args, **kwargs))
+    #                             # set new results
+    #                             setattr(self, 'results', results)
+    #                             return results[result_key][-1]
+    #                     else:
+    #                         raise RuntimeError('No parameters passed, that do correspond to given analysis_key')
+    #
+    #                     # return already calculated result
+    #                     return results[result_key][result_index]
+    #
+    #                 # if analysis_key is not existing yet
+    #                 else:
+    #                     # store new analysis parameter
+    #                     if args:
+    #                         analysis_params[analysis_key] = [args[0].magnitude] * args[0].units
+    #                     elif kwargs:
+    #                         analysis_params[analysis_key] = list(kwargs.values())[0]
+    #                     else:
+    #                         raise RuntimeError('No parameters passed, that could correspond to given analysis_key')
+    #                     setattr(self, 'analysis_params', analysis_params)
+    #                     print('key no, value no')
+    #                     new_result = {}
+    #                     # if not, calculate new result
+    #                     result = func(self, *args, **kwargs)
+    #                     new_result[result_key] = result
+    #                     # update self.results
+    #                     results.update(new_result)
+    #                     setattr(self, 'results', results)
+    #                     # return new_result
+    #                     return result
+    #
+    #             # if no analysis_key is passed
+    #             else:
+    #                 # check if new result is already stored in self.results
+    #                 if result_key in results.keys():
+    #                     # if so, return already calcualted result
+    #                     return results[result_key]
+    #                 else:
+    #                     new_result = {}
+    #                     # if not, calculate new result
+    #                     new_result[result_key] = func(self, *args, **kwargs)
+    #                     # update self.results
+    #                     results.update(new_result)
+    #                     setattr(self, 'results', results)
+    #                     # return new_result
+    #                     return new_result[result_key]
+    #         return wrapper_check_results
+    #     return decorator_check_results
 
-        This decorator serves as a wrapper for functions that calculate
-        quantities which are to be stored in self.results. First it checks,
-        whether the result already has been stored in self.results. If this is
-        the case, it returns that result. If not, the calculation is executed,
-        the result is stored in self.results and the result is returned.
+    def _check_and_store(result_key, analysis_key=''):
 
-        Parameters:
-        -----------
-        result_key: str
-            specifies under which key the result should be stored
+        @decorator
+        def decorator_check_and_store(func, self, *args, **kwargs):
+            # # enable accessing attributes of original function
+            # @functools.wraps(func)
+            # def wrapper_check_and_store(self, *args, **kwargs):
 
-        Returns:
-        --------
-        func
-            decorator function
-        """
-        def decorator_check_results(func):
-            # enable accessing attributes of original function
-            @functools.wraps(func)
-            def wrapper_check_results(self, *args, **kwargs):
-                # if analysis_key given
-                    # yes: check whether given analysis params have been used before
-                        # yes: return corresponding results
-                        # no: add param to analysis_params and calc result
-                    # no: old routine
+            # collect analysis_params
+            analysis_params = getattr(self, 'analysis_params')
+            # collect results
+            results = getattr(self, 'results')
 
-                # collect results
-                results = getattr(self, 'results')
-
-                # if analysis_key is passed
-                if analysis_key:
-                    # collect analysis parameters
-                    analysis_params = getattr(self, 'analysis_params')
-
-                    # if analysis_key is alredy stored in analysis parameters
-                    if analysis_key in analysis_params.keys():
-                        # check whether args or kwargs are passed
-                        if args:
-                            # if this specific analysis param is already stored
-                            if args[0] in analysis_params[analysis_key]:
-                                # get index of result
-                                result_index = analysis_params[analysis_key].index(args[0])
-                                print('Key yes, value yes')
-                            else:
-                                # add analysis param
-                                analysis_params[analysis_key] = np.append(analysis_params[analysis_key], args[0]) * args[0].units
-                                setattr(self, 'analysis_params', analysis_params)
-
-                                # calculate and add result
-                                result = func(self, *args, **kwargs)
-                                results[result_key] = np.stack((results[result_key], result)) * result.units
-                                setattr(self, 'results', results)
-                                print('Key yes, value no')
-
-                                return results[result_key][-1]
-
-                        elif kwargs:
-                            # if this specific analysis param is already stored
-                            if list(kwargs.values())[0] == analysis_params.keys():
-                                # get index of result
-                                result_index = analysis_params[analysis_key].index(list(kwargs.values())[0])
-                            else:
-                                # add analysis param
-                                analysis_params[analysis_key].magnitude.append(list(kwargs.values())[0])
-                                setattr(self, 'analysis_params', analysis_params)
-
-                                # calculate and add result
-                                results[result_key].magnitude.append(func(self, *args, **kwargs))
-                                # set new results
-                                setattr(self, 'results', results)
-                                return results[result_key][-1]
-                        else:
-                            raise RuntimeError('No parameters passed, that do correspond to given analysis_key')
-
-                        # return already calculated result
-                        return results[result_key][result_index]
-
-                    # if analysis_key is not existing yet
+            if analysis_key:
+                # collect input
+                analysis_param = args[0]
+                # are analysis_keys and analysis_params already existing?
+                if analysis_key in analysis_params.keys():
+                    if analysis_param in analysis_params[analysis_key]:
+                        # get index of analysis_key
+                        index = list(analysis_params[analysis_key]).index(analysis_param)
+                        # return corresponding result
+                        return results[result_key][index]
                     else:
-                        # store new analysis parameter
-                        if args:
-                            analysis_params[analysis_key] = [args[0].magnitude] * args[0].units
-                        elif kwargs:
-                            analysis_params[analysis_key] = list(kwargs.values())[0]
-                        else:
-                            raise RuntimeError('No parameters passed, that could correspond to given analysis_key')
+                        # store analysis_param in corresponding list
+                        analysis_params[analysis_key] = np.append(analysis_params[analysis_key].magnitude, analysis_param.magnitude) * analysis_param.units
                         setattr(self, 'analysis_params', analysis_params)
-                        print('key no, value no')
-                        new_result = {}
-                        # if not, calculate new result
-                        result = func(self, *args, **kwargs)
-                        new_result[result_key] = result
-                        # update self.results
-                        results.update(new_result)
+                        # calculate new results
+                        new_result = func(self, *args, **kwargs)
+                        # print(results[result_key])
+                        results[result_key].append(new_result)
+                        # save new results
                         setattr(self, 'results', results)
-                        # return new_result
-                        return result
+                        # return new result
+                        return new_result
 
-                # if no analysis_key is passed
                 else:
-                    # check if new result is already stored in self.results
-                    if result_key in results.keys():
-                        # if so, return already calcualted result
-                        return results[result_key]
-                    else:
-                        new_result = {}
-                        # if not, calculate new result
-                        new_result[result_key] = func(self, *args, **kwargs)
-                        # update self.results
-                        results.update(new_result)
-                        setattr(self, 'results', results)
-                        # return new_result
-                        return new_result[result_key]
-            return wrapper_check_results
-        return decorator_check_results
+                    # store analysis_params
+                    analysis_params[analysis_key] = np.array([analysis_param.magnitude]) * analysis_param.units
+                    setattr(self, 'analysis_params', analysis_params)
+                    # calculate new results
+                    new_result = func(self, *args, **kwargs)
+                    results[result_key] = [new_result]
+                    # save new results
+                    setattr(self, 'results', results)
+                    # return new result
+                    return new_result
+
+            else:
+                # check if new result is already stored in self.results
+                if result_key in results.keys():
+                    # if so, return already calcualted result
+                    return results[result_key]
+                else:
+                    # if not, calculate new result
+                    results[result_key] = func(self, *args, **kwargs)
+                    # update self.results
+                    setattr(self, 'results', results)
+                    # return new_result
+                    return results[result_key]
+
+            # return wrapper_check_and_store
+        return decorator_check_and_store
 
 
     def save(self, param_keys={}, output_name=''):
@@ -317,7 +377,7 @@ class Network(object):
         return sorted(list(self.results.keys()))
 
 
-    @_check_and_store_results('firing_rates')
+    @_check_and_store('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
@@ -335,7 +395,7 @@ class Network(object):
     # def firing_rates(self):
     #     return meanfield_calcs.firing_rates()
 
-    @_check_and_store_results('mu')
+    @_check_and_store('mu')
     def mean(self):
         """ Calculates mean """
         return meanfield_calcs.mean(self.firing_rates(),
@@ -346,7 +406,7 @@ class Network(object):
                                     self.network_params['nu_ext'],
                                     self.network_params['K_ext'])
 
-    @_check_and_store_results('sigma')
+    @_check_and_store('sigma')
     def standard_deviation(self):
         """ Calculates variance """
         return meanfield_calcs.standard_deviation(self.firing_rates(),
@@ -378,7 +438,7 @@ class Network(object):
         return working_point
 
 
-    @_check_and_store_results('power_spectra')
+    @_check_and_store('power_spectra')
     def power_spectra(self):
         """
         Calculates power spectra.
@@ -391,7 +451,7 @@ class Network(object):
                                              self.network_params['N'],
                                              self.analysis_params['omegas'])
 
-    @_check_and_store_results('delay_dist')
+    @_check_and_store('delay_dist')
     def delay_dist_matrix(self):
         """
         Calculates delay distribution matrix.
@@ -409,7 +469,7 @@ class Network(object):
                                                  self.analysis_params['omegas'])
 
 
-    @_check_and_store_results('transfer_function')
+    @_check_and_store('transfer_function')
     def transfer_function(self):
         """
         Calculates transfer function for each population.
@@ -434,7 +494,7 @@ class Network(object):
         return transfer_functions
 
 
-    @_check_and_store_results('sensitivity_measure', 'sensitivity_frequencies')
+    @_check_and_store('sensitivity_measure', 'sensitivity_frequencies')
     def sensitivity_measure(self, freq):
         omega = freq * 2 * np.pi
 
