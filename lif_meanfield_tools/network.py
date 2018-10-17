@@ -302,8 +302,6 @@ class Network(object):
                                             self.network_params['nu_ext'],
                                             self.network_params['K_ext'])
 
-    # def firing_rates(self):
-    #     return meanfield_calcs.firing_rates()
 
     @_check_and_store('mu')
     def mean(self):
@@ -381,6 +379,23 @@ class Network(object):
 
 
     def transfer_function(self, freq=None):
+        """
+        Calculates transfer function either for all frequencies or given one.
+
+        Paramters:
+        ----------
+        freq: Quantity(float, 'Hertz')
+            Optional paramter. If given, transfer function is only calculated
+            for this frequency.
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'Hz/mV')
+            Transfer function, either as an array with shape(dimension,) for a
+            given frequency, or shape(dimension, len(omegas)) for no specified 
+            frequency.
+        """
+
         if freq == None:
             return self.transfer_function_multi()
         else:
