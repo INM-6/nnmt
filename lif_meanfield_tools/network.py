@@ -173,13 +173,19 @@ class Network(object):
 
     def _check_and_store(result_key, analysis_key=''):
         """
-        Decorator function that checks whether result are already existing
+        Decorator function that checks whether result are already existing.
 
         This decorator serves as a wrapper for functions that calculate
         quantities which are to be stored in self.results. First it checks,
         whether the result already has been stored in self.results. If this is
         the case, it returns that result. If not, the calculation is executed,
         the result is stored in self.results and the result is returned.
+
+        If the wrapped function gets additional parameters passed, one should
+        also include an analysis key, under which the new analysis parameters
+        should be stored in the dictionary self.analysis_params. Then, the
+        decorator first checks, whether the given parameters have been used
+        before and returns the corresponding results.
 
         Parameters:
         -----------
@@ -195,6 +201,7 @@ class Network(object):
         """
         @decorator
         def decorator_check_and_store(func, self, *args, **kwargs):
+            """ Decorator with given parameters, returns expected results. """
             # collect analysis_params
             analysis_params = getattr(self, 'analysis_params')
             # collect results
@@ -212,7 +219,9 @@ class Network(object):
                         return results[result_key][index]
                     else:
                         # store analysis_param in corresponding list
-                        analysis_params[analysis_key] = np.append(analysis_params[analysis_key].magnitude, analysis_param.magnitude) * analysis_param.units
+                        analysis_params[analysis_key] = (np.append(analysis_params[analysis_key].magnitude,
+                                                                  analysis_param.magnitude)
+                                                         * analysis_param.units)
                         setattr(self, 'analysis_params', analysis_params)
                         # calculate new results
                         new_result = func(self, *args, **kwargs)
@@ -225,7 +234,8 @@ class Network(object):
 
                 else:
                     # store analysis_params
-                    analysis_params[analysis_key] = np.array([analysis_param.magnitude]) * analysis_param.units
+                    analysis_params[analysis_key] = (np.array([analysis_param.magnitude])
+                                                     * analysis_param.units)
                     setattr(self, 'analysis_params', analysis_params)
                     # calculate new results
                     new_result = func(self, *args, **kwargs)
