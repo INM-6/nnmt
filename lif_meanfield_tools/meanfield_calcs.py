@@ -327,14 +327,14 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                           for i in range(dimension)]
 
     # convert list of list of quantities to list of quantities containing np.ndarray
-    tf_magnitudes = [np.array([tf.magnitude for tf in tf_population])
-                     for tf_population in transfer_functions]
+    tf_magnitudes = np.array([np.array([tf.magnitude for tf in tf_population])
+                     for tf_population in transfer_functions])
     tf_unit = transfer_functions[0][0].units
 
     return tf_magnitudes * tf_unit
 
 @ureg.wraps(ureg.dimensionless, (None, ureg.s, ureg.s, None, ureg.Hz))
-def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
+def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
     Calcs matrix of delay distribution specific pre-factors at frequency omega.
 
@@ -367,19 +367,32 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
 
     if delay_dist == 'none':
         D = np.ones((int(dimension),int(dimension)))
-        return D*np.exp(-complex(0,omega)*Delay)
+        return D*np.exp(-np.complex(0,omega)*Delay)
 
     elif delay_dist == 'truncated_gaussian':
         a0 = aux_calcs.Phi(-Delay/Delay_sd+1j*omega*Delay_sd)
         a1 = aux_calcs.Phi(-Delay/Delay_sd)
         b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
-        b1 = np.exp(-complex(0,omega)*Delay)
+        b1 = np.exp(-np.complex(0,omega)*Delay)
         return (1.0-a0)/(1.0-a1)*b0*b1
 
     elif delay_dist == 'gaussian':
         b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
-        b1 = np.exp(-complex(0,omega)*Delay)
+        b1 = np.exp(-np.complex(0,omega)*Delay)
         return b0*b1
+
+def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
+    # calculate delay distribution matrices for all omegas
+    ddms = [delay_dist_matrix_single(dimension, Delay, Delay_sd,
+                                             delay_dist, omega)
+                           for omega in omegas]
+
+    # convert list of list of quantities to list of quantities containing np.ndarray
+    delay_dist_matrices = np.array([ddm.magnitude for ddm in ddms])
+    ddm_unit = ddms[0].units
+
+    return delay_dist_matrices * ddm_unit
+
 
 
 @ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,

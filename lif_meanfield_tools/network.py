@@ -359,10 +359,35 @@ class Network(object):
                                              self.network_params['N'],
                                              self.analysis_params['omegas'])
 
-    @_check_and_store('delay_dist')
-    def delay_dist_matrix(self):
+
+    def delay_dist_matrix(self, freq=None):
         """
-        Calculates delay distribution matrix.
+        Calculates delay dist matrix either for all frequencies or given one.
+
+        Paramters:
+        ----------
+        freq: Quantity(float, 'Hertz')
+            Optional paramter. If given, delay dist matrix is only calculated
+            for this frequency.
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'Hz/mV')
+            Delay dist matrix, either as an array with shape(dimension,
+            dimension) for a given frequency, or shape(dimension, dimension,
+            len(omegas)) for no specified frequency.
+        """
+
+        if freq == None:
+            return self.delay_dist_matrix_multi()
+        else:
+            return self.delay_dist_matrix_single(freq)
+
+
+    @_check_and_store('delay_dist')
+    def delay_dist_matrix_multi(self):
+        """
+        Calculates delay distribution matrix for all omegas.
 
         Returns:
         --------
@@ -375,6 +400,27 @@ class Network(object):
                                                  self.network_params['Delay_sd'],
                                                  self.network_params['delay_dist'],
                                                  self.analysis_params['omegas'])
+
+    @_check_and_store('delay_dist_single', 'delay_dist_freqs')
+    def delay_dist_matrix_single(self, omega):
+        """
+        Calculates delay distribution matrix for one omega.
+
+        Parameters:
+        -----------
+        omega: Quantity(float, 'Hertz')
+            Frequency for which delay distribution matrix should be calculated.
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless'):
+            Delay distribution matrix.
+        """
+
+        return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
+                                                 self.network_params['Delay'],
+                                                 self.network_params['Delay_sd'],
+                                                 self.network_params['delay_dist'],
+                                                 [omega])[0]
 
 
 
@@ -392,7 +438,7 @@ class Network(object):
         --------
         Quantity(np.ndarray, 'Hz/mV')
             Transfer function, either as an array with shape(dimension,) for a
-            given frequency, or shape(dimension, len(omegas)) for no specified 
+            given frequency, or shape(dimension, len(omegas)) for no specified
             frequency.
         """
 
@@ -428,7 +474,7 @@ class Network(object):
 
 
 
-    @_check_and_store('transfer_function_single', 'transfer_frequencies')
+    @_check_and_store('transfer_function_single', 'transfer_freqs')
     def transfer_function_single(self, freq):
         """
         Calculates transfer function for each population.
@@ -455,7 +501,7 @@ class Network(object):
         return transfer_functions
 
 
-    @_check_and_store('sensitivity_measure', 'sensitivity_frequencies')
+    @_check_and_store('sensitivity_measure', 'sensitivity_freqs')
     def sensitivity_measure(self, freq):
         omega = freq * 2 * np.pi
 
