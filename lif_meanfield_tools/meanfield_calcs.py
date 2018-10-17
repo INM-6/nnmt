@@ -18,7 +18,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
 
     Parameters:
     -----------
-    dimension: Quantity(int, 'dimensionless')
+    dimension: int
         Number of populations.
     tau_m: Quantity(float, 'second')
         Membrane time constant.
@@ -30,7 +30,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         Relative reset potential.
     V_th_rel: Quantity(float, 'millivolt')
         Relative threshold potential.
-    K: Quantity(np.ndarray, 'dimensionless')
+    K: np.ndarray
         Indegree matrix.
     J: Quantity(np.ndarray, 'millivolt')
         Effective connectivity matrix.
@@ -38,7 +38,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         Effective connectivity weight.
     nu_ext: Quantity(float, 'hertz')
         Firing rate of external input.
-    K_ext: Quantity(np.ndarray, 'dimensionless')
+    K_ext: np.ndarray
         Numbers of external input neurons to each population.
 
     Returns:
@@ -101,7 +101,7 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     -----------
     nu: Quantity(np.ndarray, 'hertz')
         firing rates of populations
-    K: Quantity(np.ndarray, 'dimensionless')
+    K: np.ndarray
         indegree matrix
     J: Quantity(np.ndarray, 'millivolt')
         effective connectivity matrix
@@ -111,7 +111,7 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
         membrane time constant
     nu_ext: Quantity(float, 'hertz')
         firing rate of external input
-    K_ext: Quantity(np.ndarray, 'dimensionless')
+    K_ext: np.ndarray
         numbers of external input neurons to each population
 
     Returns:
@@ -142,7 +142,7 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     -----------
     nu: Quantity(np.ndarray, 'hertz')
         firing rates of populations
-    K: Quantity(np.ndarray, 'dimensionless')
+    K: np.ndarray
         indegree matrix
     J: Quantity(np.ndarray, 'millivolt')
         effective connectivity matrix
@@ -152,7 +152,7 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
         membrane time constant
     nu_ext: Quantity(float, 'hertz')
         firing rate of external input
-    K_ext: Quantity(np.ndarray, 'dimensionless')
+    K_ext: np.ndarray
         numbers of external input neurons to each population
 
     Returns:
@@ -227,8 +227,8 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         return result
 
 
-@ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
-                              ureg.mV, ureg.mV, ureg.Hz))
+@ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV,
+                              ureg.mV, ureg.Hz))
 def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                V_0_rel, omega):
     """
@@ -255,7 +255,7 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Relative threshold potential.
     V_0_rel: Quantity(float, 'millivolt')
         Relative reset potential.
-    omega: Quantity(flaot, 'hertz')
+    omega: Quantity(float, 'hertz')
         Input frequency to population.
 
     Returns:
@@ -307,6 +307,8 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
         Relative threshold potential.
     V_0_rel: Quantity(float, 'millivolt')
         Relative reset potential.
+    dimension: int
+        Number of populations.
     omegas: Quantity(np.ndarray, 'hertz')
         Input frequencies to population.
 
@@ -331,7 +333,7 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
 
     return tf_magnitudes * tf_unit
 
-
+@ureg.wraps(ureg.dimensionless, (None, ureg.s, ureg.s, None, ureg.Hz))
 def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
     Calcs matrix of delay distribution specific pre-factors at frequency omega.
@@ -364,29 +366,20 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
 
     if delay_dist == 'none':
-        @ureg.wraps(ureg.dimensionless, (ureg.Hz, ureg.s, None))
-        def ddm_none(omega, Delay, dimension):
-            D = np.ones((int(dimension),int(dimension)))
-            return D*np.exp(-complex(0,omega)*Delay)
-        return ddm_none(omega, Delay, dimension)
+        D = np.ones((int(dimension),int(dimension)))
+        return D*np.exp(-complex(0,omega)*Delay)
 
     elif delay_dist == 'truncated_gaussian':
-        @ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz))
-        def ddm_tg(Delay, Delay_sd, omega):
-            a0 = aux_calcs.Phi(-Delay/Delay_sd+1j*omega*Delay_sd)
-            a1 = aux_calcs.Phi(-Delay/Delay_sd)
-            b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
-            b1 = np.exp(-complex(0,omega)*Delay)
-            return (1.0-a0)/(1.0-a1)*b0*b1
-        return ddm_tg(Delay, Delay_sd, omega)
+        a0 = aux_calcs.Phi(-Delay/Delay_sd+1j*omega*Delay_sd)
+        a1 = aux_calcs.Phi(-Delay/Delay_sd)
+        b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
+        b1 = np.exp(-complex(0,omega)*Delay)
+        return (1.0-a0)/(1.0-a1)*b0*b1
 
     elif delay_dist == 'gaussian':
-        @ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz))
-        def ddm_g(Delay, Delay_sd, omega):
-            b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
-            b1 = np.exp(-complex(0,omega)*Delay)
-            return b0*b1
-        return ddm_g(Delay, Delay_sd, omega)
+        b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
+        b1 = np.exp(-complex(0,omega)*Delay)
+        return b0*b1
 
 
 @ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
