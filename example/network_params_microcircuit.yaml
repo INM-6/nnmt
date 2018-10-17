@@ -70,7 +70,7 @@ d_i:
   unit: ms
 
 # delay distribution, options: none, gaussian (standard deviation is defined
-# above), truncated gaussian (standard deviation is defined above, truncation
+# above), truncated_gaussian (standard deviation is defined above, truncation
 # at zero)
 delay_dist:
   val: none
