@@ -323,8 +323,8 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     transfer_functions = [[transfer_function_1p_shift(mu[i], sigma[i], tau_m,
                                                       tau_s, tau_r, V_th_rel,
                                                       V_0_rel, omega)
-                           for omega in omegas]
-                          for i in range(dimension)]
+                           for i in range(dimension)]
+                          for omega in omegas]
 
     # convert list of list of quantities to list of quantities containing np.ndarray
     tf_magnitudes = np.array([np.array([tf.magnitude for tf in tf_population])
@@ -366,7 +366,7 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
 
     if delay_dist == 'none':
-        D = np.ones((int(dimension),int(dimension)))
+        D = np.ones((int(dimension), int(dimension)))
         return D*np.exp(-np.complex(0,omega)*Delay)
 
     elif delay_dist == 'truncated_gaussian':
@@ -397,7 +397,7 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
 
 @ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
                                  ureg.s, ureg.s, None, ureg.Hz))
-def sensitivity_measure(transfer_function, delay_distr_matrix, J, tau_m, tau_s,
+def sensitivity_measure(transfer_function, delay_dist_matrix, J, tau_m, tau_s,
                         dimension, omega):
     """
     Calculates sensitivity measure as in Eq. 21 in Bos et al. (2015).
@@ -414,10 +414,12 @@ def sensitivity_measure(transfer_function, delay_distr_matrix, J, tau_m, tau_s,
 
     """
 
-    H = tau_m * transfer_function / complex(1, omega*tau_s)
-    H = np.hstack([H for i in range(int(dimension))])
-    H = np.transpose(H.reshape(int(dimension),int(dimension)))
-    MH = H*J*delay_distr_matrix
+    if omega < 0:
+        transfer_function = np.conjugate(transfer_function)
+    H = tau_m * transfer_function.T / complex(1, omega*tau_s)
+    H = np.hstack([H for i in range(dimension)])
+    H = np.transpose(H.reshape(dimension,dimension))
+    MH = H*J*delay_dist_matrix
 
     e, U = np.linalg.eig(MH)
     U_inv = np.linalg.inv(U)
@@ -430,3 +432,46 @@ def sensitivity_measure(transfer_function, delay_distr_matrix, J, tau_m, tau_s,
     T *= MH
 
     return T
+
+@ureg.wraps(ureg.Hz*ureg.Hz, (ureg.s, ureg.s, None, ureg.mV, None, ureg.dimensionless, None,
+                   ureg.Hz, ureg.Hz/ureg.mV, ureg.Hz))
+def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
+                  firing_rates, transfer_function, omegas):
+    '''Returns vector of power spectra for all populations at
+    frequency omega.
+    '''
+
+    """Returns frequencies and power spectra.
+    See: Eq. 9 in Bos et al. (2015)
+    Shape of output: (len(self.populations), len(self.omegas))
+
+    Output:
+    freqs: vector of frequencies in Hz
+    power: power spectra for all populations,
+    dimension len(self.populations) x len(freqs)
+    """
+    # calc effective connectivity matrix
+    def power_spectra_single_freq(tau_m, tau_s, transfer_function, dimension,
+                                  J, K, delay_dist_matrix, firing_rates, N,
+                                  omega):
+
+        if omega < 0:
+            transfer_function = np.conjugate(transfer_function)
+        H = tau_m * transfer_function.T / complex(1, omega*tau_s)
+        H = np.hstack([H for i in range(dimension)])
+        H = np.transpose(H.reshape(dimension,dimension))
+        MH = H*J*K*delay_dist_matrix
+
+        Q = np.linalg.inv(np.identity(dimension)-MH)
+        D = (np.diag(np.ones(dimension)) * firing_rates / N)
+        C = np.dot(Q, np.dot(D, np.transpose(np.conjugate(Q))))
+        spec = np.power(np.absolute(np.diag(C)),2)
+        return spec
+
+    power = np.array([power_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                       dimension, J, K, delay_dist_matrix[i],
+                                       firing_rates, N, omega)
+             for i,omega in enumerate(omegas)])
+
+
+    return np.transpose(power)
