@@ -56,8 +56,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
         # if unit is specified, convert value unit pair to quantity
         if 'unit' in val_unit_dict:
             converted_dict[quantity_key] = (val_unit_dict['val']
-            * ureg.parse_expression(val_unit_dict['unit']))
-            
+                                            * ureg.parse_expression(val_unit_dict['unit']))
         else:
             # check that parameters are specified in correct format
             try:
