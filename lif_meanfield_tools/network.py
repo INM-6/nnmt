@@ -48,20 +48,24 @@ class Network(object):
         Try to load existing results.
         """
 
+        # store yaml file names
+        self.network_params_yaml = network_params
+        self.analysis_params_yaml = analysis_params
+
         # load network params (read from yaml and convert to quantities)
         self.network_params = io.load_params(network_params)
         # load analysis params (read from yaml and convert to quantities)
         self.analysis_params = io.load_params(analysis_params)
 
-        # convert new params to quantities
-        new_network_params_converted = io.val_unit_to_quantities(
-                                                            new_network_params)
-        new_analysis_params_converted = io.val_unit_to_quantities(
-                                                            new_analysis_params)
+        # # convert new params to quantities
+        # new_network_params_converted = io.val_unit_to_quantities(
+        #                                                     new_network_params)
+        # new_analysis_params_converted = io.val_unit_to_quantities(
+        #                                                     new_analysis_params)
         # update network parameters
-        self.network_params.update(new_network_params_converted)
+        self.network_params.update(new_network_params)
         # update analysis parameters
-        self.analysis_params.update(new_analysis_params_converted)
+        self.analysis_params.update(new_analysis_params)
 
         # calculate dependend network parameters
         derived_network_params = self._calculate_dependent_network_parameters()
@@ -128,19 +132,6 @@ class Network(object):
             derived_params['dimension'] = len(self.network_params['populations'])
 
         return derived_params
-        # # params for power spectrum
-        # new_vars = {}
-        # if circ.params['tf_mode'] == 'analytical':
-        #     new_vars['M'] = circ.params['I']*circ.params['W']
-        #     new_vars['trans_func'] = circ.ana.create_transfer_function()
-        # else:
-        #     for key in ['tau_impulse', 'delta_f']:
-        #         new_vars[key] = circ.params[key]
-        #     new_vars['H_df'] = circ.ana.create_H_df(new_vars, 'empirical')
-        #     new_vars['M'] = circ.params['I']*circ.params['W']
-        #
-        # # copy of full connectivity (needed when connectivity is reduced)
-        # new_vars['M_full'] = new_vars['M']
 
 
     def _calculate_dependent_analysis_parameters(self):
@@ -293,6 +284,30 @@ class Network(object):
     def show(self):
         """ Returns which results have already been calculated """
         return sorted(list(self.results.keys()))
+
+
+    def change_parameters(self, changed_network_params={},
+                          changed_analysis_params={}):
+        """
+        Change parameters and return new network with specified parameters.
+
+        Parameters:
+        -----------
+        new_network_parameters: dict
+            Dictionary specifying which parameters should be altered.
+
+        Returns:
+        Network object
+            New network with specified parameters.
+        """
+
+        new_network_params = self.network_params
+        new_network_params.update(changed_network_params)
+        new_analysis_params = self.analysis_params
+        new_analysis_params.update(changed_analysis_params)
+
+        return Network(self.network_params_yaml, self.analysis_params_yaml,
+                       new_network_params, new_analysis_params)
 
 
     @_check_and_store('firing_rates')
