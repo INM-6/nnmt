@@ -219,9 +219,14 @@ class Network(object):
                         return results[result_key][index]
                     else:
                         # store analysis_param in corresponding list
-                        analysis_params[analysis_key] = (np.append(analysis_params[analysis_key].magnitude,
-                                                                  analysis_param.magnitude)
-                                                         * analysis_param.units)
+                        if isinstance(analysis_param, ureg.Quantity):
+                            analysis_params[analysis_key] = (np.append(analysis_params[analysis_key].magnitude,
+                                                                       analysis_param.magnitude)
+                                                             * analysis_param.units)
+                        else:
+                            analysis_params[analysis_key] = (np.append(analysis_params[analysis_key],
+                                                                       analysis_param))
+
                         setattr(self, 'analysis_params', analysis_params)
                         # calculate new results
                         new_result = func(self, *args, **kwargs)
@@ -234,8 +239,11 @@ class Network(object):
 
                 else:
                     # store analysis_params
-                    analysis_params[analysis_key] = (np.array([analysis_param.magnitude])
-                                                     * analysis_param.units)
+                    if isinstance(analysis_param, ureg.Quantity):
+                        analysis_params[analysis_key] = (np.array([analysis_param.magnitude])
+                                                         * analysis_param.units)
+                    else:
+                        analysis_params[analysis_key] = np.array([analysis_param])
                     setattr(self, 'analysis_params', analysis_params)
                     # calculate new results
                     new_result = func(self, *args, **kwargs)
@@ -331,6 +339,7 @@ class Network(object):
         Calculates stationary working point of the network.
 
         Returns:
+        --------
         dict
             dictionary specifying mean, variance and firing rates
         """
@@ -490,8 +499,26 @@ class Network(object):
 
     @_check_and_store('sensitivity_measure', 'sensitivity_freqs')
     def sensitivity_measure(self, freq):
+        """
+        Calculates the sensitivity measure for the given frequency.
+
+        Following Eq. 21 in Bos et al. (2015).
+
+        Parameters:
+        -----------
+        freq: Quantity(float, 'hertz')
+            Regular frequency at which sensitivity measure is evaluated.
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless')
+            Sensitivity measure.
+        """
+
+        # convert regular frequency to angular frequeny
         omega = freq * 2 * np.pi
 
+        # calculate needed transfer_function
         transfer_function = meanfield_calcs.transfer_function(self.mean(),
                                                  self.standard_deviation(),
                                                  self.network_params['tau_m'],
@@ -504,6 +531,7 @@ class Network(object):
         if omega.magnitude < 0:
             transfer_function = np.conjugate(transfer_function)
 
+        # calculate needed delay distribution matrix
         delay_dist_matrix = meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
                                                               self.network_params['Delay'],
                                                               self.network_params['Delay_sd'],
@@ -518,14 +546,13 @@ class Network(object):
                                                    self.network_params['dimension'],
                                                    omega)
 
+
     @_check_and_store('power_spectra')
     def power_spectra(self):
         """
         Calculates power spectra.
-
-        Returns:
-        Quantity(np.ndarray, '???')
         """
+
         return meanfield_calcs.power_spectra(self.network_params['tau_m'],
                                              self.network_params['tau_s'],
                                              self.network_params['dimension'],
@@ -536,6 +563,93 @@ class Network(object):
                                              self.firing_rates(),
                                              self.transfer_function(),
                                              self.analysis_params['omegas'])
+
+
+
+    @_check_and_store('eigenvalue_spectra', 'eigenvalue_matrix')
+    def eigenvalue_spectra(self, matrix):
+        """
+        Calculates the eigenvalues of the specified matrix at given frequency.
+
+        Paramters:
+        ----------
+        matrix: str
+            Specifying matrix which is analysed. Options are the effective
+            connectivity matrix ('MH'), the propagator ('prop') and
+            the inverse of the propagator ('prop_inv').
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless')
+            Eigenvalues.
+        """
+
+        return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
+                                                   self.network_params['tau_s'],
+                                                   self.transfer_function(),
+                                                   self.network_params['dimension'],
+                                                   self.delay_dist_matrix(),
+                                                   self.network_params['J'],
+                                                   self.analysis_params['omegas'],
+                                                   'eigvals',
+                                                   matrix)
+
+    @_check_and_store('r_eigenvec_spectra', 'r_eigenvec_matrix')
+    def r_eigenvec_spectra(self, matrix):
+        """
+        Calculates the right eigenvecs of the specified matrix at given freq.
+
+        Paramters:
+        ----------
+        matrix: str
+            Specifying matrix which is analysed. Options are the effective
+            connectivity matrix ('MH'), the propagator ('prop') and
+            the inverse of the propagator ('prop_inv').
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless')
+            Right eigenvectors.
+        """
+        return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
+                                                   self.network_params['tau_s'],
+                                                   self.transfer_function(),
+                                                   self.network_params['dimension'],
+                                                   self.delay_dist_matrix(),
+                                                   self.network_params['J'],
+                                                   self.analysis_params['omegas'],
+                                                   'reigvecs',
+                                                   matrix)
+
+
+
+    @_check_and_store('l_eigenvec_spectra', 'l_eigenvec_matrix')
+    def l_eigenvec_spectra(self, matrix):
+        """
+        Calculates the left eigenvecs of the specified matrix at given freq.
+
+        Paramters:
+        ----------
+        matrix: str
+            Specifying matrix which is analysed. Options are the effective
+            connectivity matrix ('MH'), the propagator ('prop') and
+            the inverse of the propagator ('prop_inv').
+
+        Returns:
+        --------
+        Quantity(np.ndarray, 'dimensionless')
+            Left eigenvectors.
+        """
+        return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
+                                                   self.network_params['tau_s'],
+                                                   self.transfer_function(),
+                                                   self.network_params['dimension'],
+                                                   self.delay_dist_matrix(),
+                                                   self.network_params['J'],
+                                                   self.analysis_params['omegas'],
+                                                   'leigvecs',
+                                                   matrix)
+
 
 
 """circuit.py: Main class providing functions to calculate the stationary
