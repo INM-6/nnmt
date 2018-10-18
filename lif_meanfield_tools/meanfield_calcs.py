@@ -1,3 +1,24 @@
+"""
+In this module all the mean-field calculations are defined.
+
+This module is called by network.py each time, a calculation is
+executed.
+
+Functions:
+----------
+firing_rates
+mean
+standard_deviation
+transfer_function_1p_taylor
+transfer_function_1p_shift
+transfer_function
+delay_dist_matrix
+delay_dist_matrix_single
+sensitivity_measure
+power_spectra
+eigen_spectra
+"""
+
 from __future__ import print_function
 
 import numpy as np

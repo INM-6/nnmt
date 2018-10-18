@@ -1,3 +1,23 @@
+"""
+This module contains lots of auxiliary calculations. It is sometimes called by meanfield_calcs.
+
+Functions:
+nu0_fb433
+nu_0
+siegert1
+siegert2
+Phi
+Phi_prime_mu
+d_nu_d_mu_fb433
+d_nu_d_mu
+Psi
+d_Psi
+d_2_Psi
+Psi_x_r
+dPsi_x_r
+d2Psi_x_r
+"""
+
 from __future__ import print_function
 from scipy.integrate import quad
 from scipy.special import erf

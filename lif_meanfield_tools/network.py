@@ -1,9 +1,40 @@
 """
-network.py: Main class providing functions to calculate the stationary and
-dynamical properties of a given circuit.
+Main class providing functions to calculate the stationary and
+dynamical properties of a given network.
 
 Authors: 2016: Hannah Bos, Jannis Schuecker
          2018: Moritz Layer, Johanna Senk, Karolina Korvasova
+
+Classes:
+--------
+Network
+    Object for storing network and analysis parameters. It has lots of
+    different methods for calculating properties of the network.
+
+Network Methods:
+----------------
+__init__
+_calculate_dependent_network_parameters
+_calculate_dependent_analysis_parameters
+_check_and_store
+save
+show
+change_parameters
+firing_rates
+mean
+standard_deviation
+working_point
+delay_dist_matrix
+delay_dist_matrix_multi
+delay_dist_matrix_single
+transfer_function
+transfer_function_multi
+transfer_function_single
+sensitivity_measure
+power_spectra
+eigenvalue_spectra
+r_eigenvec_spectra
+l_eigenvec_spectra
 """
 
 from __future__ import print_function
@@ -11,10 +42,10 @@ import numpy as np
 import functools
 from decorator import decorator
 
-# import lif_meanfield_tools.input_output as io
 from . import input_output as io
 from . import meanfield_calcs
 from .__init__ import ureg
+
 
 class Network(object):
     """
