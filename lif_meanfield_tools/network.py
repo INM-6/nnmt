@@ -343,6 +343,21 @@ class Network(object):
                        new_network_params, new_analysis_params)
 
 
+
+    def extend_analysis_frequencies(self, f_min, f_max):
+        """
+        Extend analysis frequencies and calculate all results for new ranges.
+
+        Paramters:
+        ----------
+        f_min: Quantity(float, 'Hz')
+            Minimal frequency analysed.
+        f_max: Quantity(float, 'Hz')
+            Maximal frequency analysed.
+        """
+
+
+
     @_check_and_store('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
@@ -370,8 +385,8 @@ class Network(object):
                                     self.network_params['nu_ext'],
                                     self.network_params['K_ext'])
 
-    @_check_and_store('standard_deviation_input')
-    def standard_deviation_input(self):
+    @_check_and_store('std_input')
+    def std_input(self):
         """ Calculates variance """
         return meanfield_calcs.standard_deviation(self.firing_rates(),
                                                   self.network_params['K'],
@@ -398,7 +413,7 @@ class Network(object):
         working_point = {}
         working_point['firing_rates'] = self.firing_rates()
         working_point['mean_input'] = self.mean_input()
-        working_point['standard_deviation_input'] = self.standard_deviation_input()
+        working_point['std_input'] = self.std_input()
 
         return working_point
 
@@ -505,7 +520,7 @@ class Network(object):
         """
 
         transfer_functions = meanfield_calcs.transfer_function(self.mean_input(),
-                                                 self.standard_deviation_input(),
+                                                 self.std_input(),
                                                  self.network_params['tau_m'],
                                                  self.network_params['tau_s'],
                                                  self.network_params['tau_r'],
@@ -533,7 +548,7 @@ class Network(object):
         omega = freq * 2 * np.pi
 
         transfer_functions = meanfield_calcs.transfer_function(self.mean_input(),
-                                                 self.standard_deviation_input(),
+                                                 self.std_input(),
                                                  self.network_params['tau_m'],
                                                  self.network_params['tau_s'],
                                                  self.network_params['tau_r'],
@@ -568,7 +583,7 @@ class Network(object):
 
         # calculate needed transfer_function
         transfer_function = meanfield_calcs.transfer_function(self.mean_input(),
-                                                              self.standard_deviation_input(),
+                                                              self.std_input(),
                                                               self.network_params['tau_m'],
                                                               self.network_params['tau_s'],
                                                               self.network_params['tau_r'],
