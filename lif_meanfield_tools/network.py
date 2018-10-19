@@ -359,8 +359,8 @@ class Network(object):
                                             self.network_params['K_ext'])
 
 
-    @_check_and_store('mu')
-    def mean(self):
+    @_check_and_store('mean_input')
+    def mean_input(self):
         """ Calculates mean """
         return meanfield_calcs.mean(self.firing_rates(),
                                     self.network_params['K'],
@@ -370,8 +370,8 @@ class Network(object):
                                     self.network_params['nu_ext'],
                                     self.network_params['K_ext'])
 
-    @_check_and_store('sigma')
-    def standard_deviation(self):
+    @_check_and_store('standard_deviation_input')
+    def standard_deviation_input(self):
         """ Calculates variance """
         return meanfield_calcs.standard_deviation(self.firing_rates(),
                                                   self.network_params['K'],
@@ -397,8 +397,8 @@ class Network(object):
         # then do calculations
         working_point = {}
         working_point['firing_rates'] = self.firing_rates()
-        working_point['mu'] = self.mean()
-        working_point['sigma'] = self.standard_deviation()
+        working_point['mean_input'] = self.mean_input()
+        working_point['standard_deviation_input'] = self.standard_deviation_input()
 
         return working_point
 
@@ -459,7 +459,7 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless'):
             Delay distribution matrix.
         """
-
+        print(omega)
         return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
                                                  self.network_params['Delay'],
                                                  self.network_params['Delay_sd'],
@@ -504,8 +504,8 @@ class Network(object):
             omegas.
         """
 
-        transfer_functions = meanfield_calcs.transfer_function(self.mean(),
-                                                 self.standard_deviation(),
+        transfer_functions = meanfield_calcs.transfer_function(self.mean_input(),
+                                                 self.standard_deviation_input(),
                                                  self.network_params['tau_m'],
                                                  self.network_params['tau_s'],
                                                  self.network_params['tau_r'],
@@ -532,8 +532,8 @@ class Network(object):
 
         omega = freq * 2 * np.pi
 
-        transfer_functions = meanfield_calcs.transfer_function(self.mean(),
-                                                 self.standard_deviation(),
+        transfer_functions = meanfield_calcs.transfer_function(self.mean_input(),
+                                                 self.standard_deviation_input(),
                                                  self.network_params['tau_m'],
                                                  self.network_params['tau_s'],
                                                  self.network_params['tau_r'],
@@ -567,24 +567,20 @@ class Network(object):
         omega = freq * 2 * np.pi
 
         # calculate needed transfer_function
-        transfer_function = meanfield_calcs.transfer_function(self.mean(),
-                                                 self.standard_deviation(),
-                                                 self.network_params['tau_m'],
-                                                 self.network_params['tau_s'],
-                                                 self.network_params['tau_r'],
-                                                 self.network_params['V_th_rel'],
-                                                 self.network_params['V_0_rel'],
-                                                 self.network_params['dimension'],
-                                                 [omega])
+        transfer_function = meanfield_calcs.transfer_function(self.mean_input(),
+                                                              self.standard_deviation_input(),
+                                                              self.network_params['tau_m'],
+                                                              self.network_params['tau_s'],
+                                                              self.network_params['tau_r'],
+                                                              self.network_params['V_th_rel'],
+                                                              self.network_params['V_0_rel'],
+                                                              self.network_params['dimension'],
+                                                              [omega])
         if omega.magnitude < 0:
             transfer_function = np.conjugate(transfer_function)
 
         # calculate needed delay distribution matrix
-        delay_dist_matrix = meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
-                                                              self.network_params['Delay'],
-                                                              self.network_params['Delay_sd'],
-                                                              self.network_params['delay_dist'],
-                                                              omega)
+        delay_dist_matrix = self.delay_dist_matrix(omega)
 
         return meanfield_calcs.sensitivity_measure(transfer_function,
                                                    delay_dist_matrix,
@@ -608,6 +604,7 @@ class Network(object):
                                              self.network_params['K'],
                                              self.delay_dist_matrix(),
                                              self.network_params['N'],
+                                             self.network_params['C'],
                                              self.firing_rates(),
                                              self.transfer_function(),
                                              self.analysis_params['omegas'])
