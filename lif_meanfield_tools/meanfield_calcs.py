@@ -29,9 +29,8 @@ from .__init__ import ureg
 from . import aux_calcs
 
 
-@ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s,
-                      ureg.s, ureg.mV, ureg.mV, None, ureg.mV,
-                      ureg.mV, ureg.Hz, None))
+@ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
+                      ureg.mV, ureg.mV, ureg.Hz, None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                  nu_ext, K_ext):
     '''
@@ -110,8 +109,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
 
     return y[1]
 
-@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s,
-                      ureg.Hz, None))
+@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None))
 def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     '''
     Calc mean inputs to populations as function of firing rates of populations
@@ -151,8 +149,7 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
     return m
 
 
-@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s,
-                      ureg.Hz, None))
+@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None))
 def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
     '''
     Calc standard devs of inputs to populations as function of firing rates
