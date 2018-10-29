@@ -619,7 +619,6 @@ class Network(object):
                                              self.network_params['K'],
                                              self.delay_dist_matrix(),
                                              self.network_params['N'],
-                                             self.network_params['C'],
                                              self.firing_rates(),
                                              self.transfer_function(),
                                              self.analysis_params['omegas'])
