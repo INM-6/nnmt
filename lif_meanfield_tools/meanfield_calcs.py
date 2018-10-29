@@ -465,14 +465,14 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, tau_m, tau_s,
 
     return T
 
-@ureg.wraps(ureg.Hz*ureg.Hz, (ureg.s, ureg.s, None, ureg.mV, None, ureg.dimensionless, None,
+@ureg.wraps(ureg.Hz, (ureg.s, ureg.s, None, ureg.mV, None, ureg.dimensionless, None,
                    ureg.Hz, ureg.Hz/ureg.mV, ureg.Hz))
 def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
                   firing_rates, transfer_function, omegas):
     """
     Calculates vector of power spectra for all populations at given frequencies.
 
-    See: Eq. 9 in Bos et al. (2015)
+    See: Eq. 18 in Bos et al. (2016)
     Shape of output: (len(populations), len(omegas))
 
     Parameters:
@@ -518,7 +518,7 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
         Q = np.linalg.inv(np.identity(dimension)-MH)
         D = (np.diag(np.ones(dimension)) * firing_rates / N)
         C = np.dot(Q, np.dot(D, np.transpose(np.conjugate(Q))))
-        spec = np.power(np.absolute(np.diag(C)),2)
+        spec = np.absolute(np.diag(C))
         return spec
 
     power = np.array([power_spectra_single_freq(tau_m, tau_s, transfer_function[i],
