@@ -50,21 +50,18 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
         # if value is given as list, convert to numpy array
         if isinstance(val_unit_dict, list):
             val_unit_dict = np.array(val_unit_dict)
-        elif isinstance(val_unit_dict['val'], list):
-            val_unit_dict['val'] = np.array(val_unit_dict['val'])
+        elif isinstance(val_unit_dict, dict):
+            if isinstance(val_unit_dict['val'], list):
+                val_unit_dict['val'] = np.array(val_unit_dict['val'])
 
         # if unit is specified, convert value unit pair to quantity
-        if 'unit' in val_unit_dict:
+        if isinstance(val_unit_dict, dict):
             converted_dict[quantity_key] = (val_unit_dict['val']
                                             * ureg.parse_expression(val_unit_dict['unit']))
         else:
-            # check that parameters are specified in correct format
-            try:
-                converted_dict[quantity_key] = val_unit_dict['val']
-            except TypeError as error:
-                raise KeyError(('Check that value of parameter in {} is given '
-                + 'as value belonging to key "val" (syntax: '
-                + '"val: <value>")').format(file_path))
+            # save quantities without units as they are
+            converted_dict[quantity_key] = val_unit_dict
+
 
     return converted_dict
 

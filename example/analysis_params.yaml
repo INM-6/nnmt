@@ -19,8 +19,7 @@ df:
 # the time constants in response to an incoming impulse ('tau_impulse'),
 # as well as the instantaneous rate jumps ('delta_f') have to be
 # specified.
-tf_mode:
-  val: analytical
+tf_mode: analytical
 # val: empirical
 # tau_impulse:
 #   val:
@@ -47,6 +46,5 @@ tf_mode:
 #   unit: ms
 
 # number of modes used when fast response time constants are calculated
-num_modes:
-  val: 1
+num_modes: 1
 ...
