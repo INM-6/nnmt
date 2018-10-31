@@ -24,25 +24,24 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     Convert a dictionary of value-unit pairs to a dictionary of quantities
 
     Combine value and unit of each quantity and save them in a dictionary
-    of the structure: {'<quantity_key1>':<quantity1>, ...}
+    of the structure: {'<quantity_key1>':<quantity1>, ...}.
 
     Lists are converted to numpy arrays and then converted to quantities.
 
-    Strings and lists of strings are not converted to quantities, because they
-    cannot handle strings as values. They are stored as strings and lists of
-    strings: {'<str_key>':<str>, '<list_of_str_key>':<list_of_str>, ...}
+    Quantities without units or names are just stored the way they are.
 
     Parameters:
     -----------
     dict_of_val_unit_dicts: dict
         dictionary of format {'<quantity_key1>':{'val':<value1>,
                                                  'unit':<unit1>},
+                              '<quantity_key2>':<value2>,
                                                  ...}
 
     Returns:
     --------
     dict
-        converted dictionary of format
+        Converted dictionary of format explained above.
     """
     import numbers
     converted_dict = {}
