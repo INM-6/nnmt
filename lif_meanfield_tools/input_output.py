@@ -17,7 +17,7 @@ import yaml
 import hashlib as hl
 import h5py_wrapper.wrapper as h5
 
-from .__init__ import ureg
+from . import ureg
 
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """

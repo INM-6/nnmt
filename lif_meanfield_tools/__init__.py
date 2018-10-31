@@ -1,5 +1,5 @@
-from pint import UnitRegistry
-ureg = UnitRegistry()
+import pint as _pint
+ureg = _pint.UnitRegistry()
 
 from . import (input_output,
                meanfield_calcs,
