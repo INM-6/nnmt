@@ -72,8 +72,8 @@ def quantities_to_val_unit(dict_of_quantities):
     Split up value and unit of each quantiy and save them in a dictionary
     of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
 
-    Strings and lists of strings are handled seperately, but are stored under
-    'val' keys as well.
+    Lists of quantities are handled seperately. Anything else but quantities, is
+    stored just the way it is given. 
 
     Parameters:
     -----------
@@ -89,22 +89,21 @@ def quantities_to_val_unit(dict_of_quantities):
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
-        # as strings can't be represented as a quantities,
-        # they needs to be treated seperately
-        if isinstance(quantity, str):
-            converted_dict[quantity_key]['val'] = quantity
-        # lists of strings need to be treated seperately as well
-        elif isinstance(quantity, list):
+
+        # lists of strings need to be treated seperately
+        if isinstance(quantity, list):
             if any(isinstance(part, str) for part in quantity):
-                converted_dict[quantity_key]['val'] = quantity
+                converted_dict[quantity_key] = quantity
             elif any(isinstance(part, ureg.Quantity) for part in quantity):
                 converted_dict[quantity_key]['val'] = np.stack([array.magnitude for array in quantity])
                 converted_dict[quantity_key]['unit'] = str(quantity[0].units)
+        # quantities are converted to val unit dictionary
         elif isinstance(quantity, ureg.Quantity):
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
+        # anything else is stored the way it is
         else:
-            converted_dict[quantity_key]['val'] = quantity
+            converted_dict[quantity_key] = quantity
     return converted_dict
 
 
@@ -277,13 +276,3 @@ def load_from_h5(network_params, param_keys=[], input_name=''):
     results = val_unit_to_quantities(results)
 
     return analysis_params, results
-
-# if __name__ == '__main__':
-#     params = load_params('network_params_microcircuit.yaml')
-#     print("LOADED")
-#     print(params)
-#     save(params,params, params)
-#     print("SAVED")
-#     results = load_results_from_h5(params, ['label', 'populations'])
-#     print("RELOADED")
-#     print(results)
