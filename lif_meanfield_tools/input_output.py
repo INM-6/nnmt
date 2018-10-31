@@ -28,7 +28,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     Lists are converted to numpy arrays and then converted to quantities.
 
-    Quantities without units or names are just stored the way they are.
+    Quantities or names without units, are just stored the way they are.
 
     Parameters:
     -----------
