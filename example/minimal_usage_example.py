@@ -12,8 +12,8 @@ working_point = network.working_point()
 
 #print results
 print('Working point:')
-print('mean: {}'.format(working_point['mu']))
-print('std: {}'.format(working_point['sigma']))
+print('mean input: {}'.format(working_point['mean_input']))
+print('std input: {}'.format(working_point['std_input']))
 print('firing rates: {}'.format(working_point['firing_rates']))
 
 # print(network.transfer_function())
