@@ -1,7 +1,7 @@
 # Minimal working example
 
 import lif_meanfield_tools as lmt
-from lif_meanfield_tools.__init__ import ureg
+ureg = lmt.ureg
 
 # instantiate network
 network = lmt.Network(network_params='network_params_microcircuit.yaml',

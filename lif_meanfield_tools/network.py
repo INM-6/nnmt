@@ -42,9 +42,9 @@ import numpy as np
 import functools
 from decorator import decorator
 
+from . import ureg
 from . import input_output as io
 from . import meanfield_calcs
-from .__init__ import ureg
 
 
 class Network(object):
