@@ -25,9 +25,8 @@ import numpy as np
 import pint
 from scipy.special import zetac
 
-from .__init__ import ureg
+from . import ureg
 from . import aux_calcs
-
 
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
                       ureg.mV, ureg.mV, ureg.Hz, None))

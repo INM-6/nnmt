@@ -17,7 +17,7 @@ import yaml
 import hashlib as hl
 import h5py_wrapper.wrapper as h5
 
-from .__init__ import ureg
+from . import ureg
 
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """
@@ -43,25 +43,20 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     dict
         Converted dictionary of format explained above.
     """
-    import numbers
-    converted_dict = {}
-    for quantity_key, val_unit_dict in dict_of_val_unit_dicts.items():
-        # if value is given as list, convert to numpy array
-        if isinstance(val_unit_dict, list):
-            val_unit_dict = np.array(val_unit_dict)
-        elif isinstance(val_unit_dict, dict):
-            if isinstance(val_unit_dict['val'], list):
-                val_unit_dict['val'] = np.array(val_unit_dict['val'])
-
-        # if unit is specified, convert value unit pair to quantity
-        if isinstance(val_unit_dict, dict):
-            converted_dict[quantity_key] = (val_unit_dict['val']
-                                            * ureg.parse_expression(val_unit_dict['unit']))
+    def formatval(val):
+        """ If argument is of type list, convert to np.array. """
+        if isinstance(val, list):
+            return np.array(val)
         else:
-            # save quantities without units as they are
-            converted_dict[quantity_key] = val_unit_dict
+            return val
 
-
+    converted_dict = {}
+    for key, value in dict_of_val_unit_dicts.items():
+        # if dictionary with keys val and unit, convert to quantity
+        if isinstance(value, dict) and set(('val', 'unit')) == value.keys():
+            converted_dict[key] = (formatval(value['val']) * ureg.parse_expression(value['unit']))
+        else:
+            converted_dict[key] = formatval(value)
     return converted_dict
 
 
