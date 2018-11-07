@@ -42,9 +42,9 @@ import numpy as np
 import functools
 from decorator import decorator
 
+from . import ureg
 from . import input_output as io
 from . import meanfield_calcs
-from .__init__ import ureg
 
 
 class Network(object):
@@ -144,7 +144,7 @@ class Network(object):
         derived_params['W'] = W
 
         # weight matrix in mV (voltage)
-        derived_params['J'] = tau_s_div_C * derived_params['W']
+        derived_params['J'] = (tau_s_div_C * derived_params['W']).to(ureg.mV)
 
         # delay matrix
         D = np.ones((dim,dim))*self.network_params['d_e']
