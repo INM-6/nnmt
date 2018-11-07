@@ -124,45 +124,44 @@ class Network(object):
 
         derived_params = {}
 
+        # calculate dimension of system
+        dim = len(self.network_params['populations'])
+        derived_params['dimension'] = dim
+
+        # reset reference potential to 0
+        derived_params['V_0_rel'] = 0 * ureg.mV
+        derived_params['V_th_rel'] = (self.network_params['V_th_abs']
+                                      - self.network_params['V_0_abs'])
+
+        # convert weights in pA (current) to weights in mV (voltage)
+        tau_s_div_C = self.network_params['tau_s'] / self.network_params['C']
+        derived_params['j'] = (tau_s_div_C * self.network_params['w']).to(ureg.mV)
+
+        # weight matrix in pA (current)
+        W = np.ones((dim,dim))*self.network_params['w']
+        W[1:dim:2] *= -self.network_params['g']
+        W = np.transpose(W)
+        derived_params['W'] = W
+
+        # weight matrix in mV (voltage)
+        derived_params['J'] = tau_s_div_C * derived_params['W']
+
+        # delay matrix
+        D = np.ones((dim,dim))*self.network_params['d_e']
+        D[1:dim:2] = np.ones(dim)*self.network_params['d_i']
+        D = np.transpose(D)
+        derived_params['Delay'] = D
+
+        # delay standard deviation matrix
+        D = np.ones((dim,dim))*self.network_params['d_e_sd']
+        D[1:dim:2] = np.ones(dim)*self.network_params['d_i_sd']
+        D = np.transpose(D)
+        derived_params['Delay_sd'] = D
+
         if self.network_params['label'] == 'microcircuit':
-
-            # convert weights in pA to weights in mV
-            derived_params['j'] = (self.network_params['tau_s']
-                                  * self.network_params['w']
-                                  / self.network_params['C']).to(ureg.mV)
-
-            # reset reference potential to 0
-            derived_params['V_0_rel'] = 0 * ureg.mV
-            derived_params['V_th_rel'] = (self.network_params['V_th_abs']
-                                     - self.network_params['V_0_abs'])
-
-            # standard deviation of delay of excitatory connections
-            derived_params['d_e_sd'] = self.network_params['d_e']*0.5
-            # standard deviation of delay of inhibitory connections
-            derived_params['d_i_sd'] = self.network_params['d_i']*0.5
-
-            # weight matrix
-            J = np.ones((8,8))*derived_params['j']
-            J[1:8:2] *= -self.network_params['g']
-            J = np.transpose(J)
             # larger weight for L4E->L23E connections
-            J[0][2] *= 2.0
-            derived_params['J'] = J
-
-            # delay matrix
-            D = np.ones((8,8))*self.network_params['d_e']
-            D[1:8:2] = np.ones(8)*self.network_params['d_i']
-            D = np.transpose(D)
-            derived_params['Delay'] = D
-
-            # delay standard deviation matrix
-            D = np.ones((8,8))*derived_params['d_e_sd']
-            D[1:8:2] = np.ones(8)*derived_params['d_i_sd']
-            D = np.transpose(D)
-            derived_params['Delay_sd'] = D
-
-            # calculate dimension of system
-            derived_params['dimension'] = len(self.network_params['populations'])
+            derived_params['W'][0][2] *= 2.0
+            derived_params['J'][0][2] *= 2.0
 
         return derived_params
 
