@@ -68,7 +68,7 @@ def quantities_to_val_unit(dict_of_quantities):
     of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
 
     Lists of quantities are handled seperately. Anything else but quantities, is
-    stored just the way it is given. 
+    stored just the way it is given.
 
     Parameters:
     -----------
@@ -166,7 +166,7 @@ def create_hash(params, param_keys):
 
 def save(results_dict, network_params, analysis_params, param_keys=[], output_name=''):
     """
-    Save data and given paramters in h5 file.
+    Save data and given parameters in h5 file.
 
     By default the output name will be <label>_<hash>.h5, where the hash is
     created using network_params. But you can either specify an ouput_name
