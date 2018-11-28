@@ -121,7 +121,8 @@ What we ended up with is the package that you are currently interested in. It co
 several tools for analyzing neuronal networks. And it is very simple to use. 
 
 # Structure
-[structure plot] 
+
+![structure](structure_new.pdf)
 
 lif_meanfield_tools consists of four modules:
 
