@@ -122,7 +122,7 @@ several tools for analyzing neuronal networks. And it is very simple to use.
 
 # Structure
 
-![structure](structure_new.pdf)
+<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/structure_new.png" width="400">        
 
 lif_meanfield_tools consists of four modules:
 
