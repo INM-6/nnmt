@@ -126,18 +126,18 @@ several tools for analyzing neuronal networks. And it is very simple to use.
 
 lif_meanfield_tools consists of four modules:
 
-- The central module is network.py. It defines a class 'Network' which is a container for network 
+- The central module is **network.py**. It defines a class 'Network' which is a container for network 
 parameters, analysis parameters and calculated results. Network comes with all the methods that 
 can be used to calculate network properties, like for example firing rates or power spectra. 
 Additionally, there are some 'administrative' methods for changing parameters or saving. 
 
-- input_output.py is called by network.py for everything that is related to input or output. 
+- **input_output.py** is called by network.py for everything that is related to input or output. 
 Here we defined saving and loading routines, quantity format conversions and hash creation.
 
-- meanfield_calcs.py is the module which is called everytime a method of Network is called. Here
+- **meanfield_calcs.py** is the module which is called everytime a method of Network is called. Here
 we put all the mathematical details of the mean-field theory. 
 
-- aux_calcs.py is a module where auxiliary calculations that are needed in meanfield_calcs.py are 
+- **aux_calcs.py** is a module where auxiliary calculations that are needed in meanfield_calcs.py are 
 defined. It is difficult to draw a line between the calculations that belong to menafield_calcs 
 and the ones that belong to aux_calcs. We mainly introduced this module to be able to keep 
 as much of the former code's structure as possible. 
