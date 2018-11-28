@@ -66,6 +66,16 @@ d_i:
   val: 0.75
   unit: ms
 
+# standard deviation of delay of excitatory connections
+d_e_sd:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of inhibitory connections
+d_i_sd:
+  val: 0.375
+  unit: ms
+
 # delay distribution, options: none, gaussian (standard deviation is defined
 # above), truncated_gaussian (standard deviation is defined above, truncation
 # at zero)
