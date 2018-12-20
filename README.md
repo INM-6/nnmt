@@ -25,7 +25,7 @@ pip install .
 
 # How to use this package
 In order to give you a quick and simple start, we wrote a little example script: 
-`example/iminimal_usage_example.py`. First of all, you should have a look at this file. 
+`example/minimal_usage_example.py`. First of all, you should have a look at this file. 
 Actually, we hope that the usage might be self-explanatory, once you have seen
 an example. But, if you need a little more hints, just continue reading.
 
@@ -59,7 +59,7 @@ whether this quantity has been calculated before. If so, it returns the stored v
 If not, it does the calculations, stores the results, and returns them.
 
 Sometimes, you might want to know a property for some specific parameter, like for 
-example the `ower_spectra` at a certain frequency. Then, you need to pass the parameter
+example the `power_spectra` at a certain frequency. Then, you need to pass the parameter
 including it's unit to the method, e.g.
 ```	
 	network.property(10 * ureg.Hz)
