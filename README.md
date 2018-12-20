@@ -17,18 +17,11 @@ further analyses. We are always happy about feedback. So please do not hesitate
 to contact us, if you think that we could improve you life (or workflow). 
 
 # How to get started / Installation
-Not sure.
-
-Install h5py wrapper:
-pip install git+https://github.com/INM-6/h5py_wrapper.git
-
-Install pint
-pip install pint
 
 Install lif_meanfield_tools:
-pip install git+https://github.com/INM-6/lif_meanfield_tools.git
-
-python3 setup.py install
+```
+pip install .
+```
 
 # How to use this package
 In order to give you a quick and simple start, we wrote a little example script, 
