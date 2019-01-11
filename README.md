@@ -121,9 +121,9 @@ running a single (often very time consuming) simulation.
 At our institute, the INM-6 at the Research Center Juelich, we, among other things, investigate 
 and develop such mean-field tools. Over the years, more and more of the tools, developed by 
 ourselves and other researchers, have been implemented. In particular, this primary work has 
-been done by Hannah Bos, Jannis Schuecker and Moritz Helias. The corresponding publications 
-can be found at the end of this chapter. But, this code never was intended for a wider user
-base. For this reason, the code was a little cumbersome and the usage was not very intuitive. 
+been done by Hannah Bos, Jannis Schuecker and Moritz Helias. Here we extend the work published in 
+the repository [https://github.com/INM-6/neural_network_meanfield] and make it available to a wider 
+audience.  
 
 However, we wanted to use the convenient tools, that were kind of concealed by the 
 complexity of the code as it was at that time. Hence, we decided to restructure and rewrite
