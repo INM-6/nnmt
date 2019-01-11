@@ -14,25 +14,18 @@ change in order to achieve the desired behaviour.
 We are always trying to improve and simplify the usage of this package. Therefore, 
 it is easy to store (and in the future, to plot) your results and reuse them for 
 further analyses. We are always happy about feedback. So please do not hesitate
-to contact us, if you think that we could improve you life (or workflow). 
+to contact us, if you think that we could improve your life (or workflow). 
 
 # How to get started / Installation
-Not sure.
-
-Install h5py wrapper:
-pip install git+https://github.com/INM-6/h5py_wrapper.git
-
-Install pint
-pip install pint
 
 Install lif_meanfield_tools:
-pip install git+https://github.com/INM-6/lif_meanfield_tools.git
-
-python3 setup.py install
+```
+pip install .
+```
 
 # How to use this package
-In order to give you a quick and simple start, we wrote a little example script, 
-which you can find on github. First of all, you should have a look at this file. 
+In order to give you a quick and simple start, we wrote a little example script: 
+`example/minimal_usage_example.py`. First of all, you should have a look at this file. 
 Actually, we hope that the usage might be self-explanatory, once you have seen
 an example. But, if you need a little more hints, just continue reading.
 
@@ -56,25 +49,25 @@ results are stored withing the Network object as well.
 
 A Network object has the ability to tell you about it's properties, simply by calling
 the corresponding method as
-
+```
 	network.property()
-
-Here, 'property' can be replaced by lots of stuff, like for example, 'firing_rates', 
-'transfer_function', or 'power_spectra'. You can find the complete list of Network
+```
+Here, `property` can be replaced by lots of stuff, like for example, `firing_rates`, 
+`transfer_function`, or `power_spectra`. You can find the complete list of Network
 methods at the end of this chapter. When such a method is called, the network first checks, 
 whether this quantity has been calculated before. If so, it returns the stored value. 
 If not, it does the calculations, stores the results, and returns them.
 
 Sometimes, you might want to know a property for some specific parameter, like for 
-example the power_spectra at a certain frequency. Then, you need to pass the parameter
+example the `power_spectra` at a certain frequency. Then, you need to pass the parameter
 including it's unit to the method, e.g.
-	
+```	
 	network.property(10 * ureg.Hz)
-
+```
 If you want to save your results, you can simply call 
-
+```
 	network.save()
-
+```
 and the calculated results, together with the corresponding paramters, will be stored
 inside a h5 file, whose name contains a hash, which reflects the used network parameters. 
 
