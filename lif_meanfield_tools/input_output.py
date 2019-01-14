@@ -164,7 +164,7 @@ def create_hash(params, param_keys):
     return hl.md5(label.encode('utf-8')).hexdigest()
 
 
-def save(results_dict, network_params, analysis_params, param_keys=[], output_name=''):
+def save(output_key, output, file_name):
     """
     Save data and given parameters in h5 file.
 
@@ -180,38 +180,21 @@ def save(results_dict, network_params, analysis_params, param_keys=[], output_na
         Dictionary containing network parameters as quantities.
     analysis_params: dict
         Dictionary containing analysis parameters as quantities.
-    param_keys: list
-        List of parameters used in file hash.
-    output_name: str
-        Optional string specifying output file name.
+    file_name: str
+        String specifying output file name.
 
     Returns:
     --------
     None
     """
 
-    # is user did not specify output name
-    if not output_name:
-        # collect all parameters reflected by hash in one dictionary
-        hash_params = {}
-        hash_params.update(network_params)
-        # if user did not specify which parameters to use for hash
-        if not param_keys:
-            # take all parameters sorted alphabetically
-            param_keys = sorted(list(hash_params.keys()))
-        # crate hash from param_keys
-        hash = create_hash(hash_params, param_keys)
-        # default output name
-        output_name = '{}_{}.h5'.format(network_params['label'], str(hash))
+    # convert data into format usable in h5 file
+    output = quantities_to_val_unit(output)
+    output_dict = {}
+    output_dict[output_key] = output
 
-    # convert data and network params into format usable in h5 files
-    results = quantities_to_val_unit(results_dict)
-    network_params = quantities_to_val_unit(network_params)
-    analysis_params = quantities_to_val_unit(analysis_params)
-
-    output = dict(analysis_params=analysis_params, network_params=network_params, results=results)
     # save output
-    h5.save(output_name, output, overwrite_dataset=True)
+    h5.save(file_name, output_dict, overwrite_dataset=True)
 
 
 def load_from_h5(network_params, param_keys=[], input_name=''):

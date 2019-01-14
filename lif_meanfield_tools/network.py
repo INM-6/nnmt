@@ -111,6 +111,10 @@ class Network(object):
         stored_analysis_params, self.results = io.load_from_h5(self.network_params)
         self.analysis_params.update(stored_analysis_params)
 
+        # calc hash
+        self.hash = io.create_hash(self.network_params,
+                                   self.network_params.keys())
+
 
     def _calculate_dependent_network_parameters(self):
         """
@@ -293,15 +297,18 @@ class Network(object):
         return decorator_check_and_store
 
 
-    def save(self, param_keys={}, output_name=''):
+    def save(self, output_key='', output={}, file_name=''):
         """
-        Saves results and parameters to h5 file
+        Saves results and parameters to h5 file. If output is specified, this is
+        saved to h5 file.
 
         Parameters:
         -----------
-        param_keys: dict
-            specifies which parameters are used in hash for output name
-        output_name: str
+        output_key: str
+            if specified, save output_dict under key output name in h5 file
+        output: dict
+            data that is stored in h5 file
+        file_name: str
             if given, this is used as output file name
 
         Returns:
@@ -309,8 +316,20 @@ class Network(object):
         None
         """
 
-        io.save(self.results, self.network_params, self.analysis_params,
-                param_keys, output_name)
+        # if no file name is specified use standard version
+        if not file_name:
+            file_name = '{}_{}.h5'.format(self.network_params['label'],
+                                          str(self.hash))
+
+        # if output is given, save it to h5 file
+        if output_key:
+            io.save(output_key, output, file_name)
+
+        # else save results and parameters to h5 file
+        else:
+            io.save('results', self.results, file_name)
+            io.save('network_params', self.network_params, file_name)
+            io.save('analysis_params', self.analysis_params, file_name)
 
 
     def show(self):
