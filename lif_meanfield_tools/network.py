@@ -35,6 +35,7 @@ power_spectra
 eigenvalue_spectra
 r_eigenvec_spectra
 l_eigenvec_spectra
+additional_rates_for_fixed_input
 """
 
 from __future__ import print_function
@@ -735,3 +736,40 @@ class Network(object):
                                                    self.analysis_params['omegas'],
                                                    'leigvecs',
                                                    matrix)
+
+
+    def additional_rates_for_fixed_input(self, mean_input_set, std_input_set):
+        """
+        Calculate additional external excitatory and inhibitory Poisson input
+        rates such that the input prescribed by the mean and standard deviation
+        is attained.
+
+        Parameters:
+        -----------
+        mean_input_set: Quantity(np.ndarray, 'mV')
+            prescribed mean input for each population
+        std_input_set: Quantity(np.ndarray, 'mV')
+            prescribed standard deviation of input for each population
+
+        Returns:
+        --------
+        nu_e_ext: Quantity(np.ndarray, 'hertz')
+            additional external excitatory rate needed for fixed input
+        nu_i_i: Quantity(np.ndarray, 'hertz')
+            additional external inhibitory rate needed for fixed input
+        """
+        nu_e_ext, nu_i_ext = \
+            meanfield_calcs.additional_rates_for_fixed_input( \
+                mean_input_set, std_input_set,
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_0_rel'],
+                self.network_params['V_th_rel'],
+                self.network_params['K'],
+                self.network_params['J'],
+                self.network_params['j'],
+                self.network_params['nu_ext'],
+                self.network_params['K_ext'],
+                self.network_params['g'])
+        return nu_e_ext, nu_i_ext

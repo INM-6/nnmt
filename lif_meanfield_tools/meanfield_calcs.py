@@ -1,4 +1,5 @@
-"""
+
+""""
 In this module all the mean-field calculations are defined.
 
 This module is called by network.py each time, a calculation is
@@ -17,9 +18,10 @@ delay_dist_matrix_single
 sensitivity_measure
 power_spectra
 eigen_spectra
+additional_rates_for_fixed_input
 """
-
 from __future__ import print_function
+import warnings
 import numpy as np
 import pint
 from scipy.special import zetac
@@ -101,6 +103,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         y[0] = y[1]
 
     return y[1]
+
 
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
                       None, ureg.Hz, ureg.Hz))
@@ -625,3 +628,83 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
                           for i,omega in enumerate(omegas)]
 
     return eig
+
+
+@ureg.wraps((ureg.Hz, ureg.Hz), (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
+                                 ureg.mV, ureg.mV,
+                                 None, ureg.mV, ureg.mV, ureg.Hz, None, None))
+def additional_rates_for_fixed_input(mu_set, sigma_set,
+                                     tau_m, tau_s, tau_r,
+                                     V_0_rel, V_th_rel,
+                                     K, J, j, nu_ext, K_ext, g):
+    """
+    Calculate additional external excitatory and inhibitory Poisson input
+    rates such that the input fixed by the mean and standard deviation
+    is attained.
+    Compare with equation E1 of:
+    Helias M, Tetzlaff T, Diesmann M. Echoes in correlated neural systems.
+    New J Phys. 2013;15(2):023002. doi:10.1088/1367-2630/15/2/023002.
+
+    Parameters:
+    -----------
+    mean_input_set: Quantity(np.ndarray, 'mV')
+        prescribed mean input for each population
+    std_input_set: Quantity(np.ndarray, 'mV')
+        prescribed standard deviation of input for each population
+    tau_m: Quantity(float, 'second')
+        Membrane time constant.
+    tau_s: Quantity(float, 'second')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'second')
+        Refractory time.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    K: np.ndarray
+        Indegree matrix.
+    J: Quantity(np.ndarray, 'millivolt')
+        Effective connectivity matrix.
+    j: Quantity(float, 'millivolt')
+        Effective connectivity weight.
+    nu_ext: Quantity(float, 'hertz')
+        Firing rate of external input.
+    K_ext: np.ndarray
+        Numbers of external input neurons to each population.
+    g: float
+
+    Returns:
+    --------
+    nu_e_ext: Quantity(np.ndarray, 'hertz')
+        additional external excitatory rate needed for fixed input
+    nu_i_i: Quantity(np.ndarray, 'hertz')
+        additional external inhibitory rate needed for fixed input
+    """
+    target_rates = np.zeros(len(mu_set))
+    for i in np.arange(len(mu_set)):
+        # target rates for set mean and standard deviation of input
+        target_rates[i] = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r,
+                                              V_th_rel, V_0_rel,
+                                              mu_set[i], sigma_set[i])
+
+    # additional external rates set to 0 for local-only contributions
+    mu_loc =_mean(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
+                  nu_ext=nu_ext, K_ext=K_ext,
+                  g=g, nu_e_ext=0., nu_i_ext=0.)
+    sigma_loc = _standard_deviation(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
+                                    nu_ext=nu_ext, K_ext=K_ext,
+                                    g=g, nu_e_ext=0., nu_i_ext=0.)
+
+    nu_e_ext_0 = (mu_set - mu_loc) / (tau_m * j)
+
+    nu_bal = (sigma_set**2 - sigma_loc**2 - tau_m * j**2 * nu_e_ext_0) \
+             / (tau_m * j**2 * (1. + g**2))
+
+    nu_e_ext = nu_e_ext_0 + nu_bal
+    nu_i_ext = nu_bal / g
+
+    if np.any(np.array([nu_e_ext, nu_i_ext]) < 0):
+        warn = 'Negative rate detected:\n\tnu_e_ext=' + str(nu_e_ext) + '\n\tnu_i_ext=' + str(nu_i_ext)
+        warnings.warn(warn)
+
+    return nu_e_ext, nu_i_ext
