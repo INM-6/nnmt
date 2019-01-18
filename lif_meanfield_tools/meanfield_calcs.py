@@ -20,7 +20,6 @@ eigen_spectra
 """
 
 from __future__ import print_function
-
 import numpy as np
 import pint
 from scipy.special import zetac
@@ -29,9 +28,9 @@ from . import ureg
 from . import aux_calcs
 
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
-                      ureg.mV, ureg.mV, ureg.Hz, None))
+                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -59,6 +58,12 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         Firing rate of external input.
     K_ext: np.ndarray
         Numbers of external input neurons to each population.
+    g: float
+        relative inhibitory weight
+    nu_e_ext: Quantity(float, 'hertz')
+        firing rate of additional external excitatory Poisson input
+    nu_i_ext: Quantity(float, 'hertz')
+        firing rate of additional external inhibitory Poisson input
 
     Returns:
     --------
@@ -67,29 +72,18 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     '''
 
     def rate_function(mu, sigma):
-        """ calculates stationary firing rate with given parameters """
+        """ calculate stationary firing rate with given parameters """
         return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                    sigma)
 
     def get_rate_difference(nu):
         """ calculate difference between new iteration step and previous one """
         ### new mean
-        # contribution from within the network
-        m0 = np.dot(K * J, nu) * tau_m
-        # contribution from external sources
-        m_ext = j * K_ext * nu_ext * tau_m
-        # add them up
-        mu = m0 + m_ext
+        mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
 
         ### new std
-        # contribution from within the network to variance
-        var0 = np.dot(K * J**2, nu) * tau_m
-        # contribution from external sources to variance
-        var_ext = j**2 * K_ext * nu_ext * tau_m
-        # add them up
-        var = var0 + var_ext
-        # standard deviation is square root of variance
-        sigma = np.sqrt(var)
+        sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
+                                    g, nu_e_ext, nu_i_ext)
 
         new_nu = np.array([x for x in list(map(rate_function, mu, sigma))])
 
@@ -108,8 +102,9 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
 
     return y[1]
 
-@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None))
-def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
+@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
+                      None, ureg.Hz, ureg.Hz))
+def mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     '''
     Calc mean inputs to populations as function of firing rates of populations
 
@@ -131,25 +126,37 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext):
         firing rate of external input
     K_ext: np.ndarray
         numbers of external input neurons to each population
+    g: float
+        relative inhibitory weight
+    nu_e_ext: Quantity(float, 'hertz')
+        firing rate of additional external excitatory Poisson input
+    nu_i_ext: Quantity(float, 'hertz')
+        firing rate of additional external inhibitory Poisson input
 
     Returns:
     --------
     Quantity(np.ndarray, 'millivolt')
         array of mean inputs to each population in millivolt
     '''
+    return _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
 
+
+def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+    """ Compute mean() without quantities. """
     # contribution from within the network
     m0 = np.dot(K * J, nu) * tau_m
     # contribution from external sources
     m_ext = j * K_ext * nu_ext * tau_m
+    # contribution from additional excitatory and inhibitory Poisson input
+    m_ext_add = (nu_e_ext - g * nu_i_ext) * j * tau_m
     # add them up
-    m = m0 + m_ext
-
+    m = m0 + m_ext + m_ext_add
     return m
 
 
-@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None))
-def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
+@ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
+                      None, ureg.Hz, ureg.Hz))
+def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     '''
     Calc standard devs of inputs to populations as function of firing rates
 
@@ -171,22 +178,35 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext):
         firing rate of external input
     K_ext: np.ndarray
         numbers of external input neurons to each population
+    g: float
+        relative inhibitory weight
+    nu_e_ext: Quantity(float, 'hertz')
+        firing rate of additional external excitatory Poisson input
+    nu_i_ext: Quantity(float, 'hertz')
+        firing rate of additional external inhibitory Poisson input
 
     Returns:
     --------
     Quantity(np.ndarray, 'millivolt')
         array of standard dev of inputs to each population in millivolt
     '''
+    return _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
+                               g, nu_e_ext, nu_i_ext)
+
+
+def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+    """ Compute standard_deviation() without quantities. """
     # contribution from within the network to variance
     var0 = np.dot(K * J**2, nu) * tau_m
     # contribution from external sources to variance
     var_ext = j**2 * K_ext * nu_ext * tau_m
+    # contribution from additional excitatory and inhibitory Poisson input
+    var_ext_add = (nu_e_ext - g**2 * nu_i_ext) * j**2 * tau_m
     # add them up
-    var = var0 + var_ext
+    var = var0 + var_ext + var_ext_add
     # standard deviation is square root of variance
-    std = np.sqrt(var)
-
-    return std
+    sigma = np.sqrt(var)
+    return sigma
 
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,

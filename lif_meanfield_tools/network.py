@@ -389,7 +389,10 @@ class Network(object):
                                             self.network_params['J'],
                                             self.network_params['j'],
                                             self.network_params['nu_ext'],
-                                            self.network_params['K_ext'])
+                                            self.network_params['K_ext'],
+                                            self.network_params['g'],
+                                            self.network_params['nu_e_ext'],
+                                            self.network_params['nu_i_ext'])
 
 
     @_check_and_store('mean_input')
@@ -401,7 +404,10 @@ class Network(object):
                                     self.network_params['j'],
                                     self.network_params['tau_m'],
                                     self.network_params['nu_ext'],
-                                    self.network_params['K_ext'])
+                                    self.network_params['K_ext'],
+                                    self.network_params['g'],
+                                    self.network_params['nu_e_ext'],
+                                    self.network_params['nu_i_ext'])
 
     @_check_and_store('std_input')
     def std_input(self):
@@ -412,7 +418,10 @@ class Network(object):
                                                   self.network_params['j'],
                                                   self.network_params['tau_m'],
                                                   self.network_params['nu_ext'],
-                                                  self.network_params['K_ext'])
+                                                  self.network_params['K_ext'],
+                                                  self.network_params['g'],
+                                                  self.network_params['nu_e_ext'],
+                                                  self.network_params['nu_i_ext'])
 
 
     def working_point(self):
