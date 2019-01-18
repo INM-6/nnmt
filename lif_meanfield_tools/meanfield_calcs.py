@@ -1,5 +1,4 @@
-
-""""
+"""
 In this module all the mean-field calculations are defined.
 
 This module is called by network.py each time, a calculation is

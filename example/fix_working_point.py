@@ -41,3 +41,5 @@ print('Working point of network with new parameters:')
 print('mean input: {}'.format(working_point['mean_input']))
 print('std input: {}'.format(working_point['std_input']))
 print('firing rates: {}'.format(working_point['firing_rates']))
+
+new_nw.save()
