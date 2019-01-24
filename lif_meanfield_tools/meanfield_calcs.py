@@ -20,6 +20,7 @@ eigen_spectra
 additional_rates_for_fixed_input
 """
 from __future__ import print_function
+import ipdb
 import warnings
 import numpy as np
 import pint
@@ -71,7 +72,6 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     Quantity(np.ndarray, 'hertz')
         Array of firing rates of each population in hertz.
     '''
-
     def rate_function(mu, sigma):
         """ calculate stationary firing rate with given parameters """
         return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
@@ -153,6 +153,7 @@ def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     m_ext_add = (nu_e_ext - g * nu_i_ext) * j * tau_m
     # add them up
     m = m0 + m_ext + m_ext_add
+
     return m
 
 
@@ -203,7 +204,7 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext
     # contribution from external sources to variance
     var_ext = j**2 * K_ext * nu_ext * tau_m
     # contribution from additional excitatory and inhibitory Poisson input
-    var_ext_add = (nu_e_ext - g**2 * nu_i_ext) * j**2 * tau_m
+    var_ext_add = (nu_e_ext + g**3 * nu_i_ext) * j**2 * tau_m
     # add them up
     var = var0 + var_ext + var_ext_add
     # standard deviation is square root of variance
