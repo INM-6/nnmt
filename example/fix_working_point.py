@@ -23,8 +23,14 @@ print('')
 mu_set = working_point['mean_input']
 mu_set[0] *= 0.9 # modification to one population
 sigma_set = working_point['std_input']
+sigma_set[0] *= 1.001
 new_nu_e_ext, new_nu_i_ext = \
     default_nw.additional_rates_for_fixed_input(mu_set, sigma_set)
+
+print('Set values:')
+print('mu_set: {}'.format(mu_set))
+print('sigma_set: {}'.format(sigma_set))
+print('')
 
 print('New additional external rates:')
 print('new_nu_e_ext: {}'.format(new_nu_e_ext))
