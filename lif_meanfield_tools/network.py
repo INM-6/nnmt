@@ -773,3 +773,80 @@ class Network(object):
                 self.network_params['K_ext'],
                 self.network_params['g'])
         return nu_e_ext, nu_i_ext
+
+
+    def fit_transfer_function(self):
+        """
+        Fit the absolute value of the LIF transfer function to the one of a
+        first-order low-pass filter. Compute the time constants and weight matrices
+        for an equivalent rate model. Compute the effective coupling strength
+        for comparison.
+
+        Returns:
+        --------
+        tau_rate: Quantity(np.ndarray, 'second')
+            Time constants for rate model obtained from fit.
+        W_rate: np.ndarray
+            Weights for rate model obtained from fit.
+        W_rate_sim: np.ndarray
+            Weights for rate model obtained from fit divided by indegrees,
+            to be used in simulation.
+        fit_tf: Quantity(np.ndarray, 'hertz/millivolt')
+            Fitted transfer function.
+        tf0_ecs: Quantity(np.ndarray, 'hertz/millivolt')
+            Effective coupling strength scaled to transfer function.
+        """
+        tau_rate, W_rate, W_rate_sim, fit_tf = \
+            meanfield_calcs.fit_transfer_function(self.transfer_function(),
+                                                  self.analysis_params['omegas'],
+                                                  self.network_params['tau_m'],
+                                                  self.network_params['J'],
+                                                  self.network_params['K'])
+
+        w_ecs = meanfield_calcs.effective_coupling_strength( \
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.network_params['tau_r'],
+            self.network_params['V_0_rel'],
+            self.network_params['V_th_rel'],
+            self.network_params['J'],
+            self.mean_input(),
+            self.std_input())
+
+        # scale to transfer function and adapt unit
+        tf0_ecs = (w_ecs / (self.network_params['J'] \
+            * self.network_params['tau_m'])).to(ureg.Hz / ureg.mV)
+
+        return tau_rate, W_rate, W_rate_sim, fit_tf, tf0_ecs
+
+
+    def scan_fit_transfer_function_mean_std_input(self, mean_inputs, std_inputs):
+        """
+        Scan all combinations of mean_inputs and std_inputs: Compute and fit the
+        transfer function for each case and return the relative fit errors on
+        tau and h0.
+        
+        Parameters:
+        -----------
+        mean_inputs: Quantity(np.ndarray, 'mV')
+            List of mean inputs to scan.
+        std_inputs: Quantity(np.ndarray, 'mV')
+            List of standard deviation of inputs to scan.
+
+        Returns:
+        --------
+        errs_tau: np.ndarray
+            Relative error on fitted tau for each combination of mean and std of input.
+        errs_h0: np.ndarray
+            Relative error on fitted h0 for each combination of mean and std of input.
+        """
+        errs_tau, errs_h0 = \
+            meanfield_calcs.scan_fit_transfer_function_mean_std_input( \
+                mean_inputs, std_inputs,
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_0_rel'],
+                self.network_params['V_th_rel'],
+                self.analysis_params['omegas'])
+        return errs_tau, errs_h0

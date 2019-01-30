@@ -24,6 +24,7 @@ import ipdb
 import warnings
 import numpy as np
 import pint
+import scipy.optimize as sopt
 from scipy.special import zetac
 
 from . import ureg
@@ -146,11 +147,11 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
 def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     """ Compute mean() without quantities. """
     # contribution from within the network
-    m0 = np.dot(K * J, nu) * tau_m
+    m0 = tau_m * np.dot(K * J, nu)
     # contribution from external sources
-    m_ext = j * K_ext * nu_ext * tau_m
+    m_ext = tau_m * j * K_ext * nu_ext
     # contribution from additional excitatory and inhibitory Poisson input
-    m_ext_add = (nu_e_ext - g * nu_i_ext) * j * tau_m
+    m_ext_add =  tau_m * j * (nu_e_ext - g * nu_i_ext)
     # add them up
     m = m0 + m_ext + m_ext_add
 
@@ -200,11 +201,11 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
 def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     """ Compute standard_deviation() without quantities. """
     # contribution from within the network to variance
-    var0 = np.dot(K * J**2, nu) * tau_m
+    var0 = tau_m * np.dot(K * J**2, nu)
     # contribution from external sources to variance
-    var_ext = j**2 * K_ext * nu_ext * tau_m
+    var_ext = tau_m * j**2 * K_ext * nu_ext
     # contribution from additional excitatory and inhibitory Poisson input
-    var_ext_add = (nu_e_ext + g**3 * nu_i_ext) * j**2 * tau_m
+    var_ext_add =  tau_m * j**2 * (nu_e_ext + g**2 * nu_i_ext)
     # add them up
     var = var0 + var_ext + var_ext_add
     # standard deviation is square root of variance
@@ -641,7 +642,7 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     Calculate additional external excitatory and inhibitory Poisson input
     rates such that the input fixed by the mean and standard deviation
     is attained.
-    Compare with equation E1 of:
+    Correction of equation E1 of:
     Helias M, Tetzlaff T, Diesmann M. Echoes in correlated neural systems.
     New J Phys. 2013;15(2):023002. doi:10.1088/1367-2630/15/2/023002.
 
@@ -677,7 +678,7 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     --------
     nu_e_ext: Quantity(np.ndarray, 'hertz')
         additional external excitatory rate needed for fixed input
-    nu_i_i: Quantity(np.ndarray, 'hertz')
+    nu_i_ext: Quantity(np.ndarray, 'hertz')
         additional external inhibitory rate needed for fixed input
     """
     target_rates = np.zeros(len(mu_set))
@@ -695,16 +696,213 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
                                     nu_ext=nu_ext, K_ext=K_ext,
                                     g=g, nu_e_ext=0., nu_i_ext=0.)
 
-    nu_e_ext_0 = (mu_set - mu_loc) / (tau_m * j)
+    mu_temp = (mu_set - mu_loc) / (tau_m * j)
+    sigma_temp_2 = (sigma_set**2 - sigma_loc**2) / (tau_m * j**2)
 
-    nu_bal = (sigma_set**2 - sigma_loc**2 - tau_m * j**2 * nu_e_ext_0) \
-             / (tau_m * j**2 * (1. + g**2))
-
-    nu_e_ext = nu_e_ext_0 + nu_bal
-    nu_i_ext = nu_bal / g
+    nu_e_ext = (sigma_temp_2 + g * mu_temp) / (1. + g)
+    nu_i_ext = (sigma_temp_2 - mu_temp) / (g * (1. + g))
 
     if np.any(np.array([nu_e_ext, nu_i_ext]) < 0):
         warn = 'Negative rate detected:\n\tnu_e_ext=' + str(nu_e_ext) + '\n\tnu_i_ext=' + str(nu_i_ext)
         warnings.warn(warn)
 
     return nu_e_ext, nu_i_ext
+
+
+@ureg.wraps((ureg.s, None, None, ureg.Hz/ureg.mV),
+            (ureg.Hz/ureg.mV, ureg.Hz, ureg.s, ureg.mV, None))
+def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
+    """
+    Fit the absolute value of the LIF transfer function to the one of a
+    first-order low-pass filter. Compute the time constants and weight matrices
+    for an equivalent rate model.
+
+    Parameters:
+    -----------
+    transfer_function: Quantity(np.ndarray, 'hertz/mV')
+        Transfer_function for given frequencies omegas.
+    omegas: Quantity(np.ndarray, 'hertz')
+        Input frequencies to population.
+    tau_m: Quantity(float, 'second')
+        Membrane time constant.
+    J: Quantity(np.ndarray, 'millivolt')
+        Effective connectivity matrix.
+    K: np.ndarray
+        Indegree matrix.
+
+    Returns:
+    --------
+    tau_rate: Quantity(np.ndarray, 's')
+        time constants from fit
+    W_rate: np.ndarray
+        weight matrix from fit
+    W_rate_sim: np.ndarray
+        weight matrix from fit divided by indegrees
+    tf_fit: np.ndarray
+        fitted transfer function (columns = populations)
+    """
+    fit_tf, tau_rate, h0, err_tau, err_h0 = \
+        _fit_transfer_function(transfer_function, omegas)
+
+    W_rate_sim = h0 * tau_m * J
+    W_rate = np.multiply(W_rate_sim, K)
+
+    return tau_rate, W_rate, W_rate_sim, fit_tf
+
+
+def _fit_transfer_function(transfer_function, omegas):
+    """
+    Fit transfer function.
+
+    Parameters:
+    -----------
+    transfer_function: np.ndarray
+        Transfer_function for given frequencies omegas.
+    omegas: np.ndarray
+        Frequencies in Hz.
+
+    Reutrns:
+    --------
+    fit_tf: np.ndarray
+        Fitted transfer function.
+    tau_rate: np.ndarray
+        Time constant from fit in s.
+    h0: np.ndarray
+        Offset of transfer function from fit in Hz/mV.
+    err_tau: np.ndarray
+        Relative fit error on time constant.
+    err_h0: np.ndarray
+        Relative fit error on offset.
+    """
+    def func(omega, tau, h0):
+        return h0 / (1. + 1j * omega * tau)
+    # absolute value for fitting
+    def func_abs(omega, tau, h0):
+        return np.abs(func(omega, tau, h0))
+
+    fit_tf = np.zeros(np.shape(transfer_function), dtype=np.complex_)
+    dim = np.shape(transfer_function)[1]
+    tau_rate = np.zeros(dim)
+    h0 = np.zeros(dim)
+    err_tau = np.zeros(dim)
+    err_h0 = np.zeros(dim)
+
+    bounds = [[0., -np.inf],[np.inf, np.inf]]
+    for i in np.arange(np.shape(fit_tf)[1]):
+        fitParams, fitCovariances = sopt.curve_fit(func_abs,
+                                                   omegas,
+                                                   np.abs(transfer_function[:,i]),
+                                                   bounds=bounds)
+        tau_rate[i] = fitParams[0]
+        h0[i] = fitParams[1]
+        fit_tf[:,i] = func(omegas, tau_rate[i], h0[i])
+
+        # 1 standard deviation
+        fit_err = np.sqrt(np.diag(fitCovariances))
+        # relative error
+        err_tau[i] = fit_err[0] / tau_rate[i]
+        err_h0[i] = fit_err[1] / h0[i]
+
+    return fit_tf, tau_rate, h0, err_tau, err_h0
+
+
+def scan_fit_transfer_function_mean_std_input(mean_inputs, std_inputs,
+                                              tau_m, tau_s, tau_r,
+                                              V_0_rel, V_th_rel, omegas):
+    """
+    Scan all combinations of mean_inputs and std_inputs: Compute and fit the
+    transfer function for each case and return the relative fit errors on
+    tau and h0.
+
+    Parameters:
+    -----------
+    mean_inputs: Quantity(np.ndarray, 'mV')
+        List of mean inputs to scan.
+    std_inputs: Quantity(np.ndarray, 'mV')
+        List of standard deviation of inputs to scan.
+    tau_m: Quantity(float, 'second')
+        Membrane time constant.
+    tau_s: Quantity(float, 'second')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'second')
+        Refractory time.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    omegas: Quantity(np.ndarray, 'hertz')
+        Input angular frequencies to population.
+
+    Returns:
+    --------
+    errs_tau: np.ndarray
+        Relative error on fitted tau for each combination of mean and std of input.
+    errs_h0: np.ndarray
+        Relative error on fitted h0 for each combination of mean and std of input.
+    """
+    dims = (len(mean_inputs), len(std_inputs))
+    errs_tau = np.zeros(dims)
+    errs_h0 = np.zeros(dims)
+
+    for i,mu in enumerate(mean_inputs):
+        for j,sigma in enumerate(std_inputs):
+            if i==0 and j==0: # get unit, same for all
+                unit = transfer_function_1p_shift(mu, sigma, tau_m,tau_s, tau_r,
+                                                  V_th_rel, V_0_rel,
+                                                  omegas[0]).units
+
+            transfer_function = [[transfer_function_1p_shift(mu, sigma, tau_m,
+                                                            tau_s, tau_r, V_th_rel,
+                                                            V_0_rel, omega).magnitude]
+                                    for omega in omegas] * unit
+
+            fit_tf, tau_rate, h0, err_tau, err_h0 = \
+                _fit_transfer_function( \
+                    transfer_function.to(ureg.Hz / ureg.mV).magnitude,
+                    omegas.to(ureg.Hz).magnitude)
+
+            errs_tau[i,j] = err_tau[0]
+            errs_h0[i,j] = err_h0[0]
+    return errs_tau, errs_h0
+
+
+@ureg.wraps(None, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
+def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
+                                mean_input, std_input):
+    """
+    Compute effective coupling strength as the linear contribution of the
+    derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
+    Effective threshold and reset from Fourcoud & Brunel 2002.
+
+    Parameters:
+    -----------
+    tau_m: Quantity(float, 'second')
+        Membrane time constant.
+    tau_s: Quantity(float, 'second')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'second')
+        Refractory time.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    K: np.ndarray
+        Indegree matrix.
+    J: Quantity(np.ndarray, 'millivolt')
+        Effective connectivity matrix.
+    j: Quantity(float, 'millivolt')
+        Effective connectivity weight.
+    nu_ext: Quantity(float, 'hertz')
+        Firing rate of external input.
+    K_ext: np.ndarray
+        Numbers of external input neurons to each population.
+    g: float
+    """
+    dim = len(mean_input)
+    w_ecs = np.zeros((dim, dim))
+    for pre in np.arange(dim):
+        for post in np.arange(dim):
+            w_ecs[post][pre] = aux_calcs.d_nu_d_nu_in_fb(
+                tau_m, tau_s, tau_r, V_th_rel, V_0_rel, J[post][pre],
+                mean_input[pre], std_input[pre])[1] # linear (mu) contribution
+    return w_ecs
