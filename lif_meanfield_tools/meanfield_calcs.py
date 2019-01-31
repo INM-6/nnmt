@@ -222,6 +222,11 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
     The calculation is done according to Eq. 93 in Schuecker et al (2014).
 
+    The difference here is that the linear response of the system is considered
+    with respect to a perturbation of the input to the current I, leading to an
+    additional low pass filtering 1/(1+i w tau_s).
+    Compare with the second equation of Eq. 18 and the text below Eq. 29.
+
     Parameters:
     -----------
     mu: Quantity(float, 'millivolt')
@@ -249,8 +254,8 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega- 0.) < 1e-15:
-        return aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                                         mu, sigma)
+        result = aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                                           mu, sigma)
     else:
         nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
         nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
@@ -265,7 +270,9 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         a1 = aux_calcs.dPsi_x_r(z, x_t, x_r) / a0
         a3 = A / tau_m / nu0_fb * (-a1**2 + aux_calcs.d2Psi_x_r(z, x_t, x_r)/a0)
         result = (np.sqrt(2.) / sigma * nu0_fb / complex(1., omega * tau_m)* (a1 + a3))
-        return result
+
+    # additional low-pass filter due to perturbation to the input current
+    return result / complex(1., omega * tau_s)
 
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV,
@@ -279,6 +286,11 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     (2015). The expression is to first order equivalent to
     `transfer_function_1p_taylor`. Since the underlying theory is correct to
     first order, the two expressions are exchangeable.
+
+    The difference here is that the linear response of the system is considered
+    with respect to a perturbation of the input to the current I, leading to an
+    additional low pass filtering 1/(1+i w tau_s).
+    Compare with the second equation of Eq. 18 and the text below Eq. 29.
 
     Parameters:
     -----------
@@ -312,8 +324,8 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega - 0.) < 1e-15:
-        return aux_calcs.d_nu_d_mu(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                   sigma)
+        result = aux_calcs.d_nu_d_mu(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                     sigma)
     else:
         nu = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
@@ -323,14 +335,18 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
         frac = aux_calcs.dPsi_x_r(z, x_t, x_r) / aux_calcs.Psi_x_r(z, x_t, x_r)
 
-        return (np.sqrt(2.) / sigma * nu
-                / (1. + complex(0., complex(omega*tau_m))) * frac)
+        result = (np.sqrt(2.) / sigma * nu
+                  / (1. + complex(0., complex(omega*tau_m))) * frac)
+
+    # additional low-pass filter due to perturbation to the input current
+    return result / complex(1., omega * tau_s)
 
 
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omegas):
     """
-    Returns transfer functions for all populations.
+    Returns transfer functions for all populations based on
+    transfer_function_1p_shift().
 
     Parameters:
     -----------
@@ -468,7 +484,7 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, tau_m, tau_s,
 
     if omega < 0:
         transfer_function = np.conjugate(transfer_function)
-    H = tau_m * transfer_function.T / complex(1, omega*tau_s)
+    H = tau_m * transfer_function.T
     H = np.hstack([H for i in range(dimension)])
     H = np.transpose(H.reshape(dimension,dimension))
     MH = H*J*delay_dist_matrix
@@ -530,7 +546,7 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
 
         if omega < 0:
             transfer_function = np.conjugate(transfer_function)
-        H = tau_m * transfer_function.T / complex(1, omega*tau_s)
+        H = tau_m * transfer_function.T
         H = np.hstack([H for i in range(dimension)])
         H = np.transpose(H.reshape(dimension,dimension))
         MH = H*J*K*delay_dist_matrix
@@ -595,7 +611,7 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
 
         if omega < 0:
             transfer_function = np.conjugate(transfer_function)
-        H = tau_m * transfer_function.T / complex(1, omega*tau_s)
+        H = tau_m * transfer_function.T
         H = np.hstack([H for i in range(dimension)])
         H = np.transpose(H.reshape(dimension,dimension))
         MH = H*J*delay_dist_matrix
