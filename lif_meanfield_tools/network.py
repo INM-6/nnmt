@@ -36,6 +36,8 @@ eigenvalue_spectra
 r_eigenvec_spectra
 l_eigenvec_spectra
 additional_rates_for_fixed_input
+fit_transfer_function
+scan_fit_transfer_function_mean_std_input
 """
 
 from __future__ import print_function
@@ -825,7 +827,7 @@ class Network(object):
         Scan all combinations of mean_inputs and std_inputs: Compute and fit the
         transfer function for each case and return the relative fit errors on
         tau and h0.
-        
+
         Parameters:
         -----------
         mean_inputs: Quantity(np.ndarray, 'mV')

@@ -18,6 +18,8 @@ sensitivity_measure
 power_spectra
 eigen_spectra
 additional_rates_for_fixed_input
+fit_transfer_function
+effective_coupling_strength
 """
 from __future__ import print_function
 import ipdb
