@@ -864,15 +864,13 @@ def scan_fit_transfer_function_mean_std_input(mean_inputs, std_inputs,
 
     for i,mu in enumerate(mean_inputs):
         for j,sigma in enumerate(std_inputs):
-            if i==0 and j==0: # get unit, same for all
-                unit = transfer_function_1p_shift(mu, sigma, tau_m,tau_s, tau_r,
-                                                  V_th_rel, V_0_rel,
-                                                  omegas[0]).units
-
-            transfer_function = [[transfer_function_1p_shift(mu, sigma, tau_m,
-                                                            tau_s, tau_r, V_th_rel,
-                                                            V_0_rel, omega).magnitude]
-                                    for omega in omegas] * unit
+            tfs = [[transfer_function_1p_shift(mu, sigma, tau_m,
+                                              tau_s, tau_r, V_th_rel,
+                                              V_0_rel, omega)]
+                                    for omega in omegas]
+            tf_magnitudes = [[tf[0].magnitude] for tf in tfs]
+            tf_unit = tfs[0][0].units
+            transfer_function = tf_magnitudes * tf_unit
 
             fit_tf, tau_rate, h0, err_tau, err_h0 = \
                 _fit_transfer_function( \
