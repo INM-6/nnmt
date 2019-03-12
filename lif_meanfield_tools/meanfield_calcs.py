@@ -56,9 +56,9 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     K: np.ndarray
         Indegree matrix.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
     j: Quantity(float, 'millivolt')
-        Effective connectivity weight.
+        Weight.
     nu_ext: Quantity(float, 'hertz')
         Firing rate of external input.
     K_ext: np.ndarray
@@ -122,9 +122,9 @@ def mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     K: np.ndarray
         indegree matrix
     J: Quantity(np.ndarray, 'millivolt')
-        effective connectivity matrix
+        Weight matrix
     j: Quantity(float, 'millivolt')
-        effective connectivity weight
+        Weight
     tau_m: Quantity(float, 'millisecond')
         membrane time constant
     nu_ext: Quantity(float, 'hertz')
@@ -175,9 +175,9 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
     K: np.ndarray
         indegree matrix
     J: Quantity(np.ndarray, 'millivolt')
-        effective connectivity matrix
+        Weight  matrix
     j: Quantity(float, 'millivolt')
-        effective connectivity weight
+        Weight
     tau_m: Quantity(float, 'millisecond')
         membrane time constant
     nu_ext: Quantity(float, 'hertz')
@@ -440,6 +440,7 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
         b1 = np.exp(-np.complex(0,omega)*Delay)
         return b0*b1
 
+
 def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
     """ Calculates delay distribution matrices for all omegas. """
     ddms = [delay_dist_matrix_single(dimension, Delay, Delay_sd,
@@ -453,10 +454,46 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
     return delay_dist_matrices * ddm_unit
 
 
+def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
+                            delay=1):
+    """
+    Effective connectivity.
+    omega: float
+        Input angular frequency to population in Hz.
+    transfer_function: np.ndarray
+        Transfer_function for given frequency omega in hertz/mV.
+    tau_m: float
+        Membrane time constant in s.
+    J: np.ndarray
+        Weight matrix in mV.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Number of populations.
+    delay: None or np.ndarray
+        optional delay_dist_matrix, unitless.
+    """
+    if omega < 0:
+        transfer_function = np.conjugate(transfer_function)
 
-@ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
-                                 ureg.s, ureg.s, None, ureg.Hz))
-def sensitivity_measure(transfer_function, delay_dist_matrix, J, tau_m, tau_s,
+    # matrix of equal columns
+    tf = np.tile(transfer_function, (dimension,1)).T
+
+    eff_conn = tau_m * J * K * tf * delay
+
+    return eff_conn
+
+
+# def effective_connectivity_rate(None, (omega, tau_rate, W)):
+#     """
+#     """
+#     return 1./(1. - tau_rate * complex(0., omega)) * W
+
+
+
+@ureg.wraps(None, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV, None, ureg.s, ureg.s,
+                   None, ureg.Hz))
+def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s,
                         dimension, omega):
     """
     Calculates sensitivity measure as in Eq. 21 in Bos et al. (2015).
@@ -468,7 +505,9 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, tau_m, tau_s,
     delay_dist_matrix: Quantity(np.ndarray, 'dimensionless')
         Delay distribution matrix at given frequency.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
+    K: np.ndarray
+        Indegree matrix.
     tau_m: Quantity(float, 'millisecond')
         Membrane time constant.
     tau_s: Quantity(float, 'millisecond')
@@ -484,12 +523,8 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, tau_m, tau_s,
         Sensitivity measure.
     """
 
-    if omega < 0:
-        transfer_function = np.conjugate(transfer_function)
-    H = tau_m * transfer_function.T
-    H = np.hstack([H for i in range(dimension)])
-    H = np.transpose(H.reshape(dimension,dimension))
-    MH = H*J*delay_dist_matrix
+    MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
+                                 dimension, delay_dist_matrix)
 
     e, U = np.linalg.eig(MH)
     U_inv = np.linalg.inv(U)
@@ -522,7 +557,7 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
     dimension: int
         Number of populations.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
     K: np.ndarray
         Indegree matrix.
     delay_dist_matrix: Quantity(np.ndarray, 'dimensionless')
@@ -546,12 +581,8 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
                                   omega):
         """ Calculate power spectrum for single frequency. """
 
-        if omega < 0:
-            transfer_function = np.conjugate(transfer_function)
-        H = tau_m * transfer_function.T
-        H = np.hstack([H for i in range(dimension)])
-        H = np.transpose(H.reshape(dimension,dimension))
-        MH = H*J*K*delay_dist_matrix
+        MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
+                                     dimension, delay_dist_matrix)
 
         Q = np.linalg.inv(np.identity(dimension)-MH)
         D = (np.diag(np.ones(dimension)) * firing_rates / N)
@@ -569,11 +600,10 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
 
 
 
-@ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None,
-                                 ureg.dimensionless, ureg.mV, ureg.Hz, None,
-                                 None))
+@ureg.wraps(None, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None, None, ureg.mV, None,
+                   ureg.Hz, None, None))
 def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
-                  delay_dist_matrix, J, omegas, quantity, matrix):
+                  delay_dist_matrix, J, K, omegas, quantity, matrix):
     """
     Calcs eigenvals, left and right eigenvecs of matrix at given frequency.
 
@@ -590,7 +620,9 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
     delay_dist_matrix: Quantity(np.ndarray, 'dimensionless')
         Delay distribution matrix at given frequency.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
+    K: np.ndarray
+        Indegree matrix.
     omegas: Quantity(np.ndarray, 'hertz')
         Input angular frequency to population.
     quantity: str
@@ -609,14 +641,10 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
     """
 
     def eigen_spectra_single_freq(tau_m, tau_s, transfer_function, dimension,
-                                  delay_dist_matrix, J, omega, matrix):
+                                  delay_dist_matrix, J, K, omega, matrix):
 
-        if omega < 0:
-            transfer_function = np.conjugate(transfer_function)
-        H = tau_m * transfer_function.T
-        H = np.hstack([H for i in range(dimension)])
-        H = np.transpose(H.reshape(dimension,dimension))
-        MH = H*J*delay_dist_matrix
+        MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
+                                     dimension, delay_dist_matrix)
 
         if matrix == 'MH':
             eig, vr = np.linalg.eig(MH)
@@ -635,15 +663,15 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
 
     if quantity == 'eigvals':
         eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i], dimension,
-                             delay_dist_matrix[i], J, omega, matrix)[0]
+                                         delay_dist_matrix[i], J, K, omega, matrix)[0]
                for i,omega in enumerate(omegas)]
     elif quantity == 'reigvecs':
         eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i], dimension,
-                                         delay_dist_matrix[i], J, omega, matrix)[1]
+                                         delay_dist_matrix[i], J, K, omega, matrix)[1]
                            for i,omega in enumerate(omegas)]
     elif quantity == 'leigvecs':
         eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i], dimension,
-                                        delay_dist_matrix[i], J, omega, matrix)[2]
+                                         delay_dist_matrix[i], J, K, omega, matrix)[2]
                           for i,omega in enumerate(omegas)]
 
     return eig
@@ -683,9 +711,9 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     K: np.ndarray
         Indegree matrix.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
     j: Quantity(float, 'millivolt')
-        Effective connectivity weight.
+        Weight.
     nu_ext: Quantity(float, 'hertz')
         Firing rate of external input.
     K_ext: np.ndarray
@@ -744,7 +772,7 @@ def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     tau_m: Quantity(float, 'second')
         Membrane time constant.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
     K: np.ndarray
         Indegree matrix.
 
@@ -905,9 +933,9 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
     K: np.ndarray
         Indegree matrix.
     J: Quantity(np.ndarray, 'millivolt')
-        Effective connectivity matrix.
+        Weight matrix.
     j: Quantity(float, 'millivolt')
-        Effective connectivity weight.
+        Weight.
     nu_ext: Quantity(float, 'hertz')
         Firing rate of external input.
     K_ext: np.ndarray

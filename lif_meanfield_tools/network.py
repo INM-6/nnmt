@@ -504,7 +504,6 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless'):
             Delay distribution matrix.
         """
-        print(omega)
         return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
                                                  self.network_params['Delay'],
                                                  self.network_params['Delay_sd'],
@@ -630,6 +629,7 @@ class Network(object):
         return meanfield_calcs.sensitivity_measure(transfer_function,
                                                    delay_dist_matrix,
                                                    self.network_params['J'],
+                                                   self.network_params['K'],
                                                    self.network_params['tau_m'],
                                                    self.network_params['tau_s'],
                                                    self.network_params['dimension'],
@@ -674,14 +674,15 @@ class Network(object):
         """
 
         return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
-                                                   self.network_params['tau_s'],
-                                                   self.transfer_function(),
-                                                   self.network_params['dimension'],
-                                                   self.delay_dist_matrix(),
-                                                   self.network_params['J'],
-                                                   self.analysis_params['omegas'],
-                                                   'eigvals',
-                                                   matrix)
+                                              self.network_params['tau_s'],
+                                              self.transfer_function(),
+                                              self.network_params['dimension'],
+                                              self.delay_dist_matrix(),
+                                              self.network_params['J'],
+                                              self.network_params['K'],
+                                              self.analysis_params['omegas'],
+                                              'eigvals',
+                                              matrix)
 
     @_check_and_store('r_eigenvec_spectra', 'r_eigenvec_matrix')
     def r_eigenvec_spectra(self, matrix):
@@ -706,6 +707,7 @@ class Network(object):
                                                    self.network_params['dimension'],
                                                    self.delay_dist_matrix(),
                                                    self.network_params['J'],
+                                                   self.network_params['K'],
                                                    self.analysis_params['omegas'],
                                                    'reigvecs',
                                                    matrix)
@@ -735,6 +737,7 @@ class Network(object):
                                                    self.network_params['dimension'],
                                                    self.delay_dist_matrix(),
                                                    self.network_params['J'],
+                                                   self.network_params['K'],
                                                    self.analysis_params['omegas'],
                                                    'leigvecs',
                                                    matrix)
