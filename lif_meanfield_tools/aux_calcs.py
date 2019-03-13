@@ -17,11 +17,12 @@ Psi_x_r
 dPsi_x_r
 d2Psi_x_r
 d_nu_d_nu_fb
+determinant
 """
 
 from __future__ import print_function
 from scipy.integrate import quad
-from scipy.special import erf, zetac
+from scipy.special import erf, zetac, lambertw
 import scipy
 import numpy as np
 import math
@@ -425,3 +426,45 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
              0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
 
     return lin + sqr, lin, sqr
+
+
+def determinant(matrix):
+    '''
+    Solves
+        det(matrix - x*identity) = 0
+    for the integer x and a square matrix
+    using sympy.
+    '''
+    all_res = np.linalg.eigvals(matrix)
+
+    # return only non-trivial (!=0) solutions
+    idx = np.where(np.abs(all_res) > 1.E-14)[0]
+    assert len(idx) == 1, 'Multiple non-trivial solutions exist.'
+    res = all_res[idx[0]]
+
+    return res
+
+
+def p_hat_boxcar(k, width):
+    '''
+    Fourier transform of boxcar connectivity kernel at wave number k.
+    '''
+    if k == 0:
+        raise Exception
+    else:
+        return np.sin(k * width) / (k * width)
+
+
+def solve_chareq_rate_boxcar(branch, k, tau, W_rate, width, delay):
+    """
+    delay, tau must be floats, W,
+    width is vector
+    """
+
+    M = W_rate * p_hat_boxcar(k, width)
+    xi = determinant(M)
+
+    eigenval = -1./tau + 1./delay * \
+        lambertw(xi * delay/tau * np.exp(delay/tau), branch)
+
+    return eigenval

@@ -29,6 +29,7 @@ import pint
 import scipy.optimize as sopt
 from scipy.special import zetac
 
+
 from . import ureg
 from . import aux_calcs
 
@@ -458,6 +459,9 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
                             delay=1):
     """
     Effective connectivity.
+
+    Parameters:
+    -----------
     omega: float
         Input angular frequency to population in Hz.
     transfer_function: np.ndarray
@@ -472,6 +476,11 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
         Number of populations.
     delay: None or np.ndarray
         optional delay_dist_matrix, unitless.
+
+    Returns:
+    --------
+    np.ndarray
+        Effective connectivity matrix.
     """
     if omega < 0:
         transfer_function = np.conjugate(transfer_function)
@@ -484,10 +493,28 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
     return eff_conn
 
 
-# def effective_connectivity_rate(None, (omega, tau_rate, W)):
-#     """
-#     """
-#     return 1./(1. - tau_rate * complex(0., omega)) * W
+def effective_connectivity_rate(omega, tau_rate, W, delay=1):
+    """
+    Effective connectivity for rate model (first-order low-pass filter).
+
+    Parameters:
+    -----------
+    omega: float
+        Input angular frequency to population in Hz.
+    tau_rate: np.ndarray
+        Time constant in s, one per population.
+    W: np.ndarray
+        Dimensionless weight.
+    delay: None or np.ndarray
+        optional delay_dist_matrix, unitless.
+
+    Returns:
+    --------
+    np.ndarray
+        Effective connectivity matrix for rate model.
+    """
+    eff_conn = [W / (1. + 1j * omega * t) * delay for t in tau_rate]
+    return eff_conn
 
 
 
@@ -950,3 +977,81 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
                 tau_m, tau_s, tau_r, V_th_rel, V_0_rel, J[post][pre],
                 mean_input[pre], std_input[pre])[1] # linear (mu) contribution
     return w_ecs
+
+
+@ureg.wraps(None, (1/ureg.m, None, ureg.s, None, ureg.m, ureg.s, ureg.s))
+def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width, d_e, d_i):
+
+    assert len(np.unique(tau_rate)) == 1, 'Linear interpolation requires equal tau_rate.'
+    tau = tau_rate[0]
+    assert d_e == d_i, 'Linear interpolation requires equal delay.'
+    delay = d_e
+
+    # ground truth at alpha = 0 from rate model
+    k_max, eigenval_max, eigenvals = \
+        eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay)
+
+    # # first alpha must be 0 for integrate.odeint! (initial condition)
+    # alphas_test = np.linspace(0, 1, 5)
+    # alpha_branches = {}
+    # for i,br in enumerate(self.circ.params['branches']):
+    #     print '   branch=%i'%br
+    #
+    #     eig_max_br = eigs[i][idx] # in 1/s
+    #
+    #     # exact for alpha=0 for this branch
+    #     lambda0_list = [eig_max_br.real, eig_max_br.imag]
+    #     lambda0 = complex(lambda0_list[0], lambda0_list[1]) # same as eig_max_br
+    #
+    #     # 1. solution by solving the characteristic equation numerically
+    #     widths = self.circ.params['mask_radius'] * 1e-3 # in m
+    #     alphas_chareq = alphas_test
+    #     lambdas_chareq = []
+    #     for alpha in alphas_test:
+    #         lamb = self.sa.solve_chareq_numerically(f_func=self.get_f_of_alpha, # args: l, delay, alpha
+    #                                                 p_func=self.sa.compute_p_hat,
+    #                                                 lambda_guess=lambda0,
+    #                                                 k=k,
+    #                                                 delay=delay,
+    #                                                 alpha=alpha, # **kwargs
+    #                                                 kernels=np.array(np.array(['boxcar'] * self.dim)),
+    #                                                 widths=widths)
+    #         lambdas_chareq.append(lamb)
+    #
+    #     # 2. solution by solving the integral
+    #     alphas_int = []
+    #     lambdas_int = []
+    #     alphas_int = alphas_test
+    #     lambdas_int = self.get_lambda_of_alpha_int(alphas_int,
+    #                                                lambda0_list,
+    #                                                delay)
+    #
+    #     alpha_branches[br] = [alphas_int, lambdas_int,
+    #                           alphas_chareq, lambdas_chareq]
+    return
+
+
+def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
+
+    eigenvals = np.zeros((len(branches), len(k_wavenumbers)), dtype=complex)
+    #indices_re_max = []
+
+    for i, branch in enumerate(branches):
+        for j, k_wavenumber in enumerate(k_wavenumbers):
+            eigenvals[i,j] = aux_calcs.solve_chareq_rate_boxcar( \
+                branch, k_wavenumber, tau, W_rate, width, delay)
+
+    # index of eigenvalue with maximum real part
+    idx_max = list(np.unravel_index(np.argmax(eigenvals.real), eigenvals.shape))
+
+    # if max at branch -1, swap with 0
+    if branches[idx_max[0]] == -1:
+        idx_n1 = idx_max[0] # index of current branch -1
+        idx_0 = list(branches).index(0) # index of current branch 0
+        eigenvals[[idx_n1, idx_0], [idx_0, idx_n1]]
+        idx_max[0] = idx_0
+
+    eigenval_max = eigenvals[idx_max[0], idx_max[1]]
+    k_max = k_wavenumbers[idx_max[1]]
+
+    return k_max, eigenval_max, eigenvals

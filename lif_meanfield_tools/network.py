@@ -589,6 +589,8 @@ class Network(object):
         return transfer_functions
 
 
+    # TODO check and fix sensitivity measure and eigenvalue calculation
+
     @_check_and_store('sensitivity_measure', 'sensitivity_freqs')
     def sensitivity_measure(self, freq):
         """
@@ -855,3 +857,27 @@ class Network(object):
                 self.network_params['V_th_rel'],
                 self.analysis_params['omegas'])
         return errs_tau, errs_h0
+
+
+    def linear_interpolation_alpha(self, k_wavenumbers, network):
+        """
+        spatial
+        boxcar
+
+        Parameters:
+        -----------
+        k_wavenumbers: Quantity(np.ndarray, '1/mm')
+            Range of wave numbers.
+
+        Returns:
+        --------
+        """
+        meanfield_calcs.linear_interpolation_alpha( \
+            k_wavenumbers,
+            self.analysis_params['branches'],
+            self.network_params['tau_rate'],
+            self.network_params['W_rate'],
+            self.network_params['width'],
+            self.network_params['d_e'],
+            self.network_params['d_i'])
+        return
