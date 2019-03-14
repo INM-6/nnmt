@@ -27,6 +27,8 @@ import warnings
 import numpy as np
 import pint
 import scipy.optimize as sopt
+import scipy.integrate as sint
+import scipy.misc as smisc
 from scipy.special import zetac
 
 
@@ -318,6 +320,13 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     --------
     Quantity(float, 'hertz/millivolt')
     """
+    return _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                                       V_0_rel, omega)
+
+
+def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                                V_0_rel, omega):
+    """ Compute transfer_function_1p_shift() without quantities """
 
     # effective threshold and reset
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
@@ -456,7 +465,7 @@ def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
 
 
 def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
-                            delay=1):
+                            delay_term=1):
     """
     Effective connectivity.
 
@@ -474,7 +483,7 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
         Indegree matrix.
     dimension: int
         Number of populations.
-    delay: None or np.ndarray
+    delay_term: 1 or np.ndarray
         optional delay_dist_matrix, unitless.
 
     Returns:
@@ -482,18 +491,18 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
     np.ndarray
         Effective connectivity matrix.
     """
-    if omega < 0:
+    if np.real(omega) < 0:
         transfer_function = np.conjugate(transfer_function)
 
     # matrix of equal columns
     tf = np.tile(transfer_function, (dimension,1)).T
 
-    eff_conn = tau_m * J * K * tf * delay
+    eff_conn = tau_m * J * K * tf * delay_term
 
     return eff_conn
 
 
-def effective_connectivity_rate(omega, tau_rate, W, delay=1):
+def _effective_connectivity_rate(omega, tau, W_rate, delay_term=1):
     """
     Effective connectivity for rate model (first-order low-pass filter).
 
@@ -501,11 +510,11 @@ def effective_connectivity_rate(omega, tau_rate, W, delay=1):
     -----------
     omega: float
         Input angular frequency to population in Hz.
-    tau_rate: np.ndarray
-        Time constant in s, one per population.
+    tau: np.float
+        Time constant in s.
     W: np.ndarray
         Dimensionless weight.
-    delay: None or np.ndarray
+    delay_term: 1 or np.ndarray
         optional delay_dist_matrix, unitless.
 
     Returns:
@@ -513,7 +522,7 @@ def effective_connectivity_rate(omega, tau_rate, W, delay=1):
     np.ndarray
         Effective connectivity matrix for rate model.
     """
-    eff_conn = [W / (1. + 1j * omega * t) * delay for t in tau_rate]
+    eff_conn = W_rate / (1. + 1j * omega * tau) * delay_term
     return eff_conn
 
 
@@ -979,62 +988,69 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
     return w_ecs
 
 
-@ureg.wraps(None, (1/ureg.m, None, ureg.s, None, ureg.m, ureg.s, ureg.s))
-def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width, d_e, d_i):
-
+@ureg.wraps(None, (1/ureg.m, None, ureg.s, None, ureg.m, ureg.s, ureg.s,
+    ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV,
+    None, None))
+def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
+        d_e, d_i, mean_inputs, std_inputs, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
+        J, K, dimension):
     assert len(np.unique(tau_rate)) == 1, 'Linear interpolation requires equal tau_rate.'
     tau = tau_rate[0]
     assert d_e == d_i, 'Linear interpolation requires equal delay.'
     delay = d_e
+    assert len(np.unique(mean_inputs)) == 1, 'Linear interpolation requires same mean input.'
+    mu = mean_inputs[0]
+    assert len(np.unique(mean_inputs)) == 1, 'Linear interpolation requires same std input.'
+    sigma = std_inputs[0]
 
     # ground truth at alpha = 0 from rate model
-    k_max, eigenval_max, eigenvals = \
+    k_max, idx_k_max, eigenval_max, eigenvals = \
         eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay)
 
-    # # first alpha must be 0 for integrate.odeint! (initial condition)
-    # alphas_test = np.linspace(0, 1, 5)
-    # alpha_branches = {}
-    # for i,br in enumerate(self.circ.params['branches']):
-    #     print '   branch=%i'%br
-    #
-    #     eig_max_br = eigs[i][idx] # in 1/s
-    #
-    #     # exact for alpha=0 for this branch
-    #     lambda0_list = [eig_max_br.real, eig_max_br.imag]
-    #     lambda0 = complex(lambda0_list[0], lambda0_list[1]) # same as eig_max_br
-    #
-    #     # 1. solution by solving the characteristic equation numerically
-    #     widths = self.circ.params['mask_radius'] * 1e-3 # in m
-    #     alphas_chareq = alphas_test
-    #     lambdas_chareq = []
-    #     for alpha in alphas_test:
-    #         lamb = self.sa.solve_chareq_numerically(f_func=self.get_f_of_alpha, # args: l, delay, alpha
-    #                                                 p_func=self.sa.compute_p_hat,
-    #                                                 lambda_guess=lambda0,
-    #                                                 k=k,
-    #                                                 delay=delay,
-    #                                                 alpha=alpha, # **kwargs
-    #                                                 kernels=np.array(np.array(['boxcar'] * self.dim)),
-    #                                                 widths=widths)
-    #         lambdas_chareq.append(lamb)
-    #
-    #     # 2. solution by solving the integral
-    #     alphas_int = []
-    #     lambdas_int = []
-    #     alphas_int = alphas_test
-    #     lambdas_int = self.get_lambda_of_alpha_int(alphas_int,
-    #                                                lambda0_list,
-    #                                                delay)
-    #
-    #     alpha_branches[br] = [alphas_int, lambdas_int,
-    #                           alphas_chareq, lambdas_chareq]
-    return
+    # first alpha must be 0 for integrate.odeint! (initial condition)
+    alphas = np.linspace(0, 1, 5)
+    for i,branch in enumerate(branches):
+
+        # evaluate all eigenvalues at k_max (wavenumbers with largest real part
+        # of eigenvalue from theory)
+        lambda0 = eigenvals[i, idx_k_max]
+        #print(branch, lambda0)
+
+        # print '   branch=%i'%br
+        #
+        # eig_max_br = eigs[i][idx] # in 1/s
+        #
+        # # exact for alpha=0 for this branch
+        # lambda0_list = [eig_max_br.real, eig_max_br.imag]
+        # lambda0 = complex(lambda0_list[0], lambda0_list[1]) # same as eig_max_br
+
+        # 1. solution by solving the characteristic equation numerically
+        widths = self.circ.params['mask_radius'] * 1e-3 # in m
+        alphas_chareq = alphas_test
+        lambdas_chareq = np.zeros(len(alphas), dtype=complex)
+        for j,alpha in enumerate(alphas):
+            lambdas_chareq[j] = _solve_chareq_numerically(f_func=self.get_f_of_alpha, # args: l, delay, alpha
+                                                    p_func=self.sa.compute_p_hat,
+                                                    lambda_guess=lambda0,
+                                                    k=k,
+                                                    delay=delay,
+                                                    alpha=alpha, # **kwargs
+                                                    kernels=np.array(np.array(['boxcar'] * self.dim)),
+                                                    widths=widths)
+
+
+        # 2. solution by solving the integral
+        # TODO find bug
+        lambdas_integral = _lambda_of_alpha_integral(alphas, lambda0, delay,
+            mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
+            tau, W_rate)
+
+    return alphas, lambdas_chareq, lambdas_integral
 
 
 def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
 
     eigenvals = np.zeros((len(branches), len(k_wavenumbers)), dtype=complex)
-    #indices_re_max = []
 
     for i, branch in enumerate(branches):
         for j, k_wavenumber in enumerate(k_wavenumbers):
@@ -1054,4 +1070,127 @@ def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
     eigenval_max = eigenvals[idx_max[0], idx_max[1]]
     k_max = k_wavenumbers[idx_max[1]]
 
-    return k_max, eigenval_max, eigenvals
+    return k_max, idx_max[1], eigenval_max, eigenvals
+
+
+def _lambda_of_alpha_integral(alphas, lambda0, delay,
+        mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
+        tau, W_rate):
+    '''
+    integral
+    '''
+    assert alphas[0] == 0, 'First alpha must be 0!'
+    lambda0_list = [lambda0.real, lambda0.imag]
+
+    def derivative(lambda_list, a0):
+        l = complex(lambda_list[0], lambda_list[1])
+        deriv = _d_lambda_d_alpha(l, a0, delay,
+            mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
+            tau, W_rate)
+        return [deriv.real, deriv.imag]
+
+    llist =  sint.odeint(func=derivative, y0=lambda0_list, t=alphas)
+
+    lambdas_of_alpha = [complex(l[0], l[1]) for l in llist]
+
+    return lambdas_of_alpha
+
+
+def _d_lambda_d_alpha(l, alpha, delay,
+        mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
+        tau, W_rate):
+    '''
+    '''
+    MH_sr, MH_of_alpha = _MH_s_and_MH_r_alpha(l, alpha, mu, sigma, tau_m, tau_s, tau_r,
+                                              Vth_rel, V_0_rel, J, K,
+                                              dimension, tau, W_rate)
+
+    d_MH_s_d_lambda = _d_MH_s_d_lambda(l, mu, sigma, tau_m, tau_s, tau_r,
+                                       V_th_rel, V_0_rel, J, K, dimension)
+    d_MH_r_d_lambda = _d_MH_r_d_lambda(l, tau, W_rate)
+
+    d_MH_of_alpha_d_lambda = alpha * d_MH_s_d_lambda + (1.-alpha) * d_MH_r_d_lambda
+
+    nominator = MH_sr
+    denominator = d_MH_of_alpha_d_lambda - delay * MH_of_alpha
+
+    deriv_matrix = - nominator / denominator
+    # TODO
+    #import ipdb; ipdb.set_trace()
+    #assert len(np.unique(deriv_matrix)) == 1, 'Matrix of derivative has different entries'
+    return deriv_matrix[0][0]
+
+
+def _MH_s_and_MH_r_alpha(l, alpha, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
+                         J, K, dimension, tau, W_rate):
+    omega = complex(0, -l)
+
+    transfer_func = _transfer_function_1p_shift( \
+        mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, omega)
+
+    MH_s = _effective_connectivity(omega, transfer_func, tau_m, J, K, dimension)
+    MH_r = _effective_connectivity_rate(omega, tau, W_rate)
+
+    MH_sr = MH_s - MH_r
+    MH_of_alpha = alpha * MH_s + (1.-alpha) * MH_r
+    return MH_sr, MH_of_alpha
+
+
+def _d_MH_s_d_lambda(l, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                     J, K, dimension):
+    '''
+    Computes the derivative of He_lif wrt lambda,
+    numerically.
+    '''
+    def f(x):
+        omega = complex(0, -l)
+        transfer_func = _transfer_function_1p_shift( \
+            mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, omega)
+        return _effective_connectivity(omega, transfer_func, tau_m,
+                                       J, K, dimension)
+
+    deriv = smisc.derivative(func=f, x0=l, dx=1e-10) # TODO: check precision
+    return deriv
+
+
+def _d_MH_r_d_lambda(l, tau, W_rate):
+    '''
+    Computes the derivative of He_rate wrt lambda,
+    analytical expression.
+    '''
+    lp = 1. / (1. + l * tau)
+    deriv = -1. * lp**2 * tau * W_rate
+    return deriv
+
+
+def _solve_chareq_numerically():
+    '''
+    Uses scipy.optimize.fsolve to solve the characteristic equation:
+        f(lambda) * p_hat(k) = 1
+
+    '''
+    def fsolve_complex(l_re_im):
+        l = complex(l_re_im[0], l_re_im[1])
+
+        MH_sr, MH_of_alpha = _MH_s_and_MH_r_alpha(l, alpha,
+                                                  mu, sigma, tau_m, tau_s, tau_r,
+                                                  Vth_rel, V_0_rel, J, K,
+                                                  dimension, tau, W_rate)
+        # TODO COMBINE WITH DELAY AND XI
+
+
+        # if 'alpha' in kwargs:
+        #     f = f_func(l, delay, kwargs['alpha'])
+        # else:
+        #     f = f_func(l, delay)
+        # p_hat = p_func(k, kwargs['kernels'], kwargs['widths'])
+        #
+        # roots = self.f_p_roots(f, p_hat)
+        return roots
+
+
+    lambda_guess_list = [np.real(lambda_guess), np.imag(lambda_guess)]
+    l_opt = sopt.fsolve(f_p_fsolve_complex, lambda_guess_list)
+    lamb = complex(l_opt[0], l_opt[1])
+
+    return lamb
