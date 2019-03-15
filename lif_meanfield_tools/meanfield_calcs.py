@@ -1016,14 +1016,14 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
         # evaluate all eigenvalues at k_max (wavenumbers with largest real part
         # of eigenvalue from theory)
         lambda0 = eigenvals[i, idx_k_max]
-        #print(branch, lambda0)
+        print(branch, lambda0)
 
         # 1. solution by solving the characteristic equation numerically
         for j,alpha in enumerate(alphas):
             lambdas_chareq[i,j] = \
                 _solve_chareq_numerically_alpha(lambda0, alpha, k_max, delay, mu, sigma,
-                    tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                    J, K, dimension, tau, W_rate, width)
+                                                tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                                                J, K, dimension, tau, W_rate, width)
 
         # 2. solution by solving the integral
         # lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_max, delay,
@@ -1126,7 +1126,7 @@ def _xi_eff_r(l, k, tau, W_rate, width):
     omega = complex(0, -l)
     MH_r = _effective_connectivity_rate(omega, tau, W_rate)
     P_hat = aux_calcs.p_hat_boxcar(k, width)
-    xi_eff_r = aux_calcs.determinant(MH_r * P_hat)
+    xi_eff_r = aux_calcs.determinant_same_rows(MH_r * P_hat)
     return xi_eff_r
 
 
@@ -1156,11 +1156,11 @@ def _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width):
     return deriv
 
 
-def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                     J, K, dimension, tau, W_rate, width):
+def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
+                                    tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                                    J, K, dimension, tau, W_rate, width):
     '''
-    Uses scipy.optimize.fsolve to solve the characteristic equation:
-        f(lambda) * p_hat(k) = 1
+    Uses scipy.optimize.fsolve to solve the characteristic equation
 
     '''
     def fsolve_complex(l_re_im):
@@ -1173,6 +1173,7 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma, ta
         xi_eff_alpha = alpha * xi_eff_s + (1.-alpha) * xi_eff_r
 
         roots = xi_eff_alpha * np.exp(-l * delay) - 1.
+
         return [roots.real, roots.imag]
 
 

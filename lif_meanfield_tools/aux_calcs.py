@@ -434,6 +434,8 @@ def determinant(matrix):
         det(matrix - x*identity) = 0
     for the integer x and a square matrix
     using sympy.
+
+    TODO numerical issues
     '''
     all_res = np.linalg.eigvals(matrix)
 
@@ -445,6 +447,10 @@ def determinant(matrix):
     res = all_res[idx[0]]
 
     return res
+
+
+def determinant_same_rows(matrix):
+    return np.sum(matrix, axis=1)[0]
 
 
 def p_hat_boxcar(k, width):
