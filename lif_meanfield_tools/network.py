@@ -872,23 +872,24 @@ class Network(object):
         Returns:
         --------
         """
-        meanfield_calcs.linear_interpolation_alpha( \
-            k_wavenumbers,
-            self.analysis_params['branches'],
-            self.network_params['tau_rate'],
-            self.network_params['W_rate'],
-            self.network_params['width'],
-            self.network_params['d_e'],
-            self.network_params['d_i'],
-            self.mean_input(),
-            self.std_input(),
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.network_params['tau_r'],
-            self.network_params['V_0_rel'],
-            self.network_params['V_th_rel'],
-            self.network_params['J'],
-            self.network_params['K'],
-            self.network_params['dimension'],
-            )
-        return
+        alphas, lambdas_chareq, lambdas_integral, k_max, eigenval_max, eigenvals = \
+            meanfield_calcs.linear_interpolation_alpha( \
+                k_wavenumbers,
+                self.analysis_params['branches'],
+                self.network_params['tau_rate'],
+                self.network_params['W_rate'],
+                self.network_params['width'],
+                self.network_params['d_e'],
+                self.network_params['d_i'],
+                self.mean_input(),
+                self.std_input(),
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_0_rel'],
+                self.network_params['V_th_rel'],
+                self.network_params['J'],
+                self.network_params['K'],
+                self.network_params['dimension'],
+                )
+        return alphas, lambdas_chareq, lambdas_integral, k_max, eigenval_max, eigenvals

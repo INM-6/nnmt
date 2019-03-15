@@ -438,8 +438,10 @@ def determinant(matrix):
     all_res = np.linalg.eigvals(matrix)
 
     # return only non-trivial (!=0) solutions
-    idx = np.where(np.abs(all_res) > 1.E-14)[0]
-    assert len(idx) == 1, 'Multiple non-trivial solutions exist.'
+
+    idx = np.where(np.abs(all_res) > 1.E-10)[0]
+    if len(idx) !=1 : raise Exception
+    #assert len(idx) == 1, 'Multiple non-trivial solutions exist.'
     res = all_res[idx[0]]
 
     return res
