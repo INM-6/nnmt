@@ -458,7 +458,7 @@ def p_hat_boxcar(k, width):
     Fourier transform of boxcar connectivity kernel at wave number k.
     '''
     if k == 0:
-        raise Exception
+        return 1.
     else:
         return np.sin(k * width) / (k * width)
 

@@ -258,7 +258,7 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
-    if np.abs(omega- 0.) < 1e-15:
+    if np.abs(omega - 0.) < 1e-15:
         result = aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                                            mu, sigma)
     else:
@@ -491,9 +491,6 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
     np.ndarray
         Effective connectivity matrix.
     """
-    if np.real(omega) < 0:
-        transfer_function = np.conjugate(transfer_function)
-
     # matrix of equal columns
     tf = np.tile(transfer_function, (dimension,1)).T
 
@@ -1003,6 +1000,29 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
     assert len(np.unique(mean_inputs)) == 1, 'Linear interpolation requires same std input.'
     sigma = std_inputs[0]
 
+
+    # # TESTING
+    # alpha = 1.
+    # lamb = complex(39.9267549694,-1314.01918663)
+    # #
+    # k = 18000.
+    # # width = np.ones(np.shape(width))
+    # #
+    # xi_eff_s = _xi_eff_s(lamb, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+    #                      J, K, dimension, width)
+    # xi_eff_r = _xi_eff_r(lamb, k, tau, W_rate, width)
+    # #
+    # xi_eff_alpha = alpha * xi_eff_s + (1.-alpha) * xi_eff_r
+    #
+    # delay = 0.0015
+    # print(xi_eff_alpha)
+    # print(xi_eff_alpha * np.exp(-lamb * delay))
+    # print(np.conj(xi_eff_alpha) * np.exp(-lamb * delay))
+    #
+    # import ipdb; ipdb.set_trace()
+
+
+
     # ground truth at alpha = 0 from rate model
     k_max, idx_k_max, eigenval_max, eigenvals = \
         eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay)
@@ -1017,7 +1037,6 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
         # of eigenvalue from theory)
         lambda0 = eigenvals[i, idx_k_max]
         print(branch, lambda0)
-
         # 1. solution by solving the characteristic equation numerically
         for j,alpha in enumerate(alphas):
             lambdas_chareq[i,j] = \
@@ -1026,9 +1045,9 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
                                                 J, K, dimension, tau, W_rate, width)
 
         # 2. solution by solving the integral
-        # lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_max, delay,
-        #     mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
-        #     tau, W_rate, width)
+        lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_max, delay,
+            mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
+            tau, W_rate, width)
 
     return alphas, lambdas_chareq, lambdas_integral, k_max, eigenval_max, eigenvals
 
@@ -1171,11 +1190,9 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
         xi_eff_r = _xi_eff_r(l, k, tau, W_rate, width)
 
         xi_eff_alpha = alpha * xi_eff_s + (1.-alpha) * xi_eff_r
-
         roots = xi_eff_alpha * np.exp(-l * delay) - 1.
 
         return [roots.real, roots.imag]
-
 
     lambda_guess_list = [np.real(lambda_guess), np.imag(lambda_guess)]
     l_opt = sopt.fsolve(fsolve_complex, lambda_guess_list)
