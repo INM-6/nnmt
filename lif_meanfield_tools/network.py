@@ -38,6 +38,7 @@ l_eigenvec_spectra
 additional_rates_for_fixed_input
 fit_transfer_function
 scan_fit_transfer_function_mean_std_input
+linear_interpolation_alpha
 """
 
 from __future__ import print_function
@@ -59,8 +60,10 @@ class Network(object):
     -----------
     network_params: str
         specifies path to yaml file containing network parameters
+        if None only new_network_params are used
     analysis_params: str
         specifies path to yaml file containing analysis parameters
+        if None only new_analysis_params are used
     new_network_params: dict
         dictionary specifying network parameters from yaml file that should be
         overwritten. Format:
@@ -69,10 +72,13 @@ class Network(object):
         dictionary specifying analysis parameters from yaml file that should be
         overwritten. Format:
         {'<param1>:{'val':<value1>, 'unit':<unit1>},...}
+    derive_params: bool
+        whether parameters shall be derived from existing ones
+        can be false if a complete set of network parameters is given
     """
 
-    def __init__(self, network_params, analysis_params, new_network_params={},
-                 new_analysis_params={}):
+    def __init__(self, network_params=None, analysis_params=None, new_network_params={},
+                 new_analysis_params={}, derive_params=True):
         """
         Initiate Network class.
 
@@ -81,42 +87,48 @@ class Network(object):
         Overwrite parameters specified in new_network_parms and
         new_analysis_params.
         Calculate parameters which are derived from given parameters.
-        Try to load existing results.
+        #Try to load existing results.
         """
 
-        # store yaml file names
-        self.network_params_yaml = network_params
-        self.analysis_params_yaml = analysis_params
+        # no yaml file for network parameters given
+        if network_params==None:
+            self.network_params_yaml = ''
+            self.network_params = new_network_params
+        else:
+            self.network_params_yaml = network_params
+            # read from yaml and convert to quantities
+            self.network_params = io.load_params(network_params)
+            self.network_params.update(new_network_params)
 
-        # load network params (read from yaml and convert to quantities)
-        self.network_params = io.load_params(network_params)
-        # load analysis params (read from yaml and convert to quantities)
-        self.analysis_params = io.load_params(analysis_params)
+        # no yaml file for analysis parameters given
+        if analysis_params==None:
+            self.analysis_params_yaml = ''
+            self.analysis_params = new_analysis_params
+        else:
+            self.analysis_params_yaml = analysis_params
+            self.analysis_params = io.load_params(analysis_params)
+            self.analysis_params.update(new_analysis_params)
 
-        # # convert new params to quantities
-        # new_network_params_converted = io.val_unit_to_quantities(
-        #                                                     new_network_params)
-        # new_analysis_params_converted = io.val_unit_to_quantities(
-        #                                                     new_analysis_params)
-        # update network parameters
-        self.network_params.update(new_network_params)
-        # update analysis parameters
-        self.analysis_params.update(new_analysis_params)
+        if derive_params:
+            # calculate dependend network parameters
+            derived_network_params = self._calculate_dependent_network_parameters()
+            self.network_params.update(derived_network_params)
 
-        # calculate dependend network parameters
-        derived_network_params = self._calculate_dependent_network_parameters()
-        self.network_params.update(derived_network_params)
-
-        # calculate dependend analysis parameters
-        derived_analysis_params = self._calculate_dependent_analysis_parameters()
-        self.analysis_params.update(derived_analysis_params)
-        # load already existing results
-        stored_analysis_params, self.results = io.load_from_h5(self.network_params)
-        self.analysis_params.update(stored_analysis_params)
+            # calculate dependend analysis parameters
+            derived_analysis_params = self._calculate_dependent_analysis_parameters()
+            self.analysis_params.update(derived_analysis_params)
 
         # calc hash
         self.hash = io.create_hash(self.network_params,
                                    self.network_params.keys())
+
+        # empty results
+        self.results = {}
+
+        # TODO DANGER THAT ANALYSIS PARAMETERS WILL BE OVERWRITTEN
+        # load already existing results
+        # stored_analysis_params, self.results = io.load_from_h5(self.network_params)
+        # self.analysis_params.update(stored_analysis_params)
 
 
     def _calculate_dependent_network_parameters(self):
@@ -197,6 +209,16 @@ class Network(object):
             return np.arange(w_min, w_max, dw)
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
+
+
+        @ureg.wraps(1/ureg.mm, (1./ureg.mm, 1./ureg.mm, 1./ureg.mm))
+        def calc_evaluated_wavenumbers(k_min, k_max, dk):
+            return np.arange(k_min, k_max, dk)
+
+        derived_params['k_wavenumbers'] = calc_evaluated_wavenumbers( \
+                                          self.analysis_params['k_min'],
+                                          self.analysis_params['k_max'],
+                                          self.analysis_params['dk'])
 
         return derived_params
 
@@ -861,18 +883,29 @@ class Network(object):
 
     def linear_interpolation_alpha(self, k_wavenumbers, network):
         """
-        spatial
-        boxcar
+        Linear interpolation between analytically solved characteristic equation
+        for linear rate model and equation solved for lif model.
+        Eigenvalues lambda are computed by solving the characteristic equation
+        numerically or by solving an integral.
+        Reguires a spatially organized network with boxcar connectivity profile.
 
         Parameters:
         -----------
         k_wavenumbers: Quantity(np.ndarray, '1/mm')
             Range of wave numbers.
+        network: Network object
+            A network.
 
         Returns:
         --------
+        alphas: np.ndarray
+        lambdas_chareq: Quantity(np.ndarray, '1/s')
+        lambdas_integral: Quantity(np.ndarray, '1/s')
+        k_eig_max: Quantity(float, '1/mm')
+        eigenval_max: Quantity(float, '1/s')
+        eigenvals: Quantity(np.ndarray, '1/s')
         """
-        alphas, lambdas_chareq, lambdas_integral, k_max, eigenval_max, eigenvals = \
+        alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals = \
             meanfield_calcs.linear_interpolation_alpha( \
                 k_wavenumbers,
                 self.analysis_params['branches'],
@@ -892,4 +925,48 @@ class Network(object):
                 self.network_params['K'],
                 self.network_params['dimension'],
                 )
-        return alphas, lambdas_chareq, lambdas_integral, k_max, eigenval_max, eigenvals
+        return alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals
+
+
+    def compute_profile_characteristics(self):
+        """
+        """
+        xi_min, xi_max, k_min, k_max = \
+            meanfield_calcs.xi_of_k(self.analysis_params['k_wavenumbers'],
+                                    self.network_params['W_rate'],
+                                    self.network_params['width'])
+
+        lambda_min = meanfield_calcs.solve_chareq_rate_boxcar( \
+            0, # branch
+            k_min,
+            self.network_params['tau_rate'][0],
+            self.network_params['W_rate'],
+            self.network_params['width'],
+            self.network_params['d_e']
+            )
+        lambda_max = meanfield_calcs.solve_chareq_rate_boxcar( \
+            0, # branch
+            k_max,
+            self.network_params['tau_rate'][0],
+            self.network_params['W_rate'],
+            self.network_params['width'],
+            self.network_params['d_e']
+            )
+
+        self.results.update({
+            'rho' : self.network_params['width'][1].to(ureg.mm).magnitude / \
+                    self.network_params['width'][0].to(ureg.mm).magnitude,
+            'eta' : -1 * self.network_params['W_rate'][0,1] / \
+                    self.network_params['W_rate'][0,0],
+            'xi_min' : xi_min,
+            'xi_max' : xi_max,
+            'k_min' : k_min,
+            'k_max' : k_max,
+            'tau_delay' : self.network_params['tau_rate'][0].to(ureg.ms).magnitude /  \
+                          self.network_params['d_e'].to(ureg.ms).magnitude,
+            'lambda_min' : lambda_min,
+            'lambda_max' : lambda_max,
+            'f_min' : lambda_min / (2.*np.pi),
+            'velocity' : np.imag(lambda_min.to(1/ureg.s)) / k_min.to(1/ureg.m),
+            })
+        return

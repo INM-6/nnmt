@@ -20,6 +20,7 @@ eigen_spectra
 additional_rates_for_fixed_input
 fit_transfer_function
 effective_coupling_strength
+linear_interpolation_alpha
 """
 from __future__ import print_function
 import ipdb
@@ -418,7 +419,7 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
     Parameters:
     -----------
     dimension: Quantity(int, 'dimensionless')
-        Dimension of the system / number of populations'
+        Dimension of the system / number of populations
     Delay: Quantity(np.ndarray, 's')
         Delay matrix.
     Delay_sd: Quantity(np.ndarray, 's')
@@ -788,7 +789,7 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     return nu_e_ext, nu_i_ext
 
 
-@ureg.wraps((ureg.s, None, None, ureg.Hz/ureg.mV),
+@ureg.wraps((ureg.ms, None, None, ureg.Hz/ureg.mV),
             (ureg.Hz/ureg.mV, ureg.Hz, ureg.s, ureg.mV, None))
 def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     """
@@ -826,7 +827,7 @@ def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     W_rate_sim = h0 * tau_m * J
     W_rate = np.multiply(W_rate_sim, K)
 
-    return tau_rate, W_rate, W_rate_sim, fit_tf
+    return tau_rate*1.E3, W_rate, W_rate_sim, fit_tf
 
 
 def _fit_transfer_function(transfer_function, omegas):
@@ -845,7 +846,7 @@ def _fit_transfer_function(transfer_function, omegas):
     fit_tf: np.ndarray
         Fitted transfer function.
     tau_rate: np.ndarray
-        Time constant from fit in s.
+        Time constants from fit in s.
     h0: np.ndarray
         Offset of transfer function from fit in Hz/mV.
     err_tau: np.ndarray
@@ -991,6 +992,59 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
 def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
         d_e, d_i, mean_inputs, std_inputs, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
         J, K, dimension):
+    """
+    Linear interpolation between analytically solved characteristic equation
+    for linear rate model and equation solved for lif model.
+    Eigenvalues lambda are computed by solving the characteristic equation
+    numerically or by solving an integral.
+    Reguires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    k_wavenumbers: Quantity(np.ndarray, '1/mm')
+        Range of wave numbers.
+    branches: np.ndarray
+        List of branches.
+    tau_rate: Quantity(np.ndarray, 's')
+        Time constants from fit.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile.
+    d_e: Quantity(float, 's')
+        Excitatory delay.
+    d_i: Quantity(float, 's')
+        Inhibitory delay.
+    mean_inputs: Quantity(np.ndarray, 'mV')
+        List of mean inputs to scan.
+    std_inputs: Quantity(np.ndarray, 'mV')
+        List of standard deviation of inputs to scan.
+    tau_m: Quantity(float, 'second')
+        Membrane time constant.
+    tau_s: Quantity(float, 'second')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'second')
+        Refractory time.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    J: Quantity(np.ndarray, 'millivolt')
+        Weight matrix.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Dimension of the system / number of populations.
+
+    Returns:
+    --------
+    alphas: np.ndarray
+    lambdas_chareq: Quantity(np.ndarray, '1/s')
+    lambdas_integral: Quantity(np.ndarray, '1/s')
+    k_eig_max: Quantity(float, '1/mm')
+    eigenval_max: Quantity(float, '1/s')
+    eigenvals: Quantity(np.ndarray, '1/s')
+    """
     assert len(np.unique(tau_rate)) == 1, 'Linear interpolation requires equal tau_rate.'
     tau = tau_rate[0]
     assert d_e == d_i, 'Linear interpolation requires equal delay.'
@@ -1000,31 +1054,8 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
     assert len(np.unique(mean_inputs)) == 1, 'Linear interpolation requires same std input.'
     sigma = std_inputs[0]
 
-
-    # # TESTING
-    # alpha = 1.
-    # lamb = complex(39.9267549694,-1314.01918663)
-    # #
-    # k = 18000.
-    # # width = np.ones(np.shape(width))
-    # #
-    # xi_eff_s = _xi_eff_s(lamb, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-    #                      J, K, dimension, width)
-    # xi_eff_r = _xi_eff_r(lamb, k, tau, W_rate, width)
-    # #
-    # xi_eff_alpha = alpha * xi_eff_s + (1.-alpha) * xi_eff_r
-    #
-    # delay = 0.0015
-    # print(xi_eff_alpha)
-    # print(xi_eff_alpha * np.exp(-lamb * delay))
-    # print(np.conj(xi_eff_alpha) * np.exp(-lamb * delay))
-    #
-    # import ipdb; ipdb.set_trace()
-
-
-
     # ground truth at alpha = 0 from rate model
-    k_max, idx_k_max, eigenval_max, eigenvals = \
+    k_eig_max, idx_k_eig_max, eigenval_max, eigenvals = \
         eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay)
 
     # first alpha must be 0 for integrate.odeint! (initial condition)
@@ -1033,23 +1064,23 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
     lambdas_chareq = np.zeros((len(branches), len(alphas)), dtype=complex)
     for i,branch in enumerate(branches):
 
-        # evaluate all eigenvalues at k_max (wavenumbers with largest real part
+        # evaluate all eigenvalues at k_eig_max (wavenumbers with largest real part
         # of eigenvalue from theory)
-        lambda0 = eigenvals[i, idx_k_max]
+        lambda0 = eigenvals[i, idx_k_eig_max]
         print(branch, lambda0)
         # 1. solution by solving the characteristic equation numerically
         for j,alpha in enumerate(alphas):
             lambdas_chareq[i,j] = \
-                _solve_chareq_numerically_alpha(lambda0, alpha, k_max, delay, mu, sigma,
+                _solve_chareq_numerically_alpha(lambda0, alpha, k_eig_max, delay, mu, sigma,
                                                 tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                                                 J, K, dimension, tau, W_rate, width)
 
         # 2. solution by solving the integral
-        lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_max, delay,
+        lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_eig_max, delay,
             mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
             tau, W_rate, width)
 
-    return alphas, lambdas_chareq, lambdas_integral, k_max, eigenval_max, eigenvals
+    return alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals
 
 
 def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
@@ -1072,9 +1103,9 @@ def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
         idx_max[0] = idx_0
 
     eigenval_max = eigenvals[idx_max[0], idx_max[1]]
-    k_max = k_wavenumbers[idx_max[1]]
+    k_eig_max = k_wavenumbers[idx_max[1]]
 
-    return k_max, idx_max[1], eigenval_max, eigenvals
+    return k_eig_max, idx_max[1], eigenval_max, eigenvals
 
 
 def _lambda_of_alpha_integral(alphas, lambda0, k, delay,
@@ -1199,3 +1230,31 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
     lamb = complex(l_opt[0], l_opt[1])
 
     return lamb
+
+@ureg.wraps((None, None, 1/ureg.mm, 1/ureg.mm), (1/ureg.mm, None, ureg.mm))
+def xi_of_k(ks, W_rate, width):
+    '''
+    '''
+    xis = np.zeros(len(ks))
+    for i,k in enumerate(ks):
+        P_hat = aux_calcs.p_hat_boxcar(k, width)
+        xis[i] = aux_calcs.determinant(W_rate * P_hat)
+
+        xi_min = np.min(xis)
+        xi_max = np.max(xis)
+        k_min = ks[np.argmin(xis)]
+        k_max = ks[np.argmax(xis)]
+        if k_min == ks[-1]:
+            print('WARNING: k_min==ks[-1] = {}'.format(k_max))
+        if k_max == ks[-1]:
+            print('WARNING: k_max==ks[-1] = {}'.format(k_max))
+    return xi_min, xi_max, k_min, k_max
+
+
+@ureg.wraps(1/ureg.s, (None, 1/ureg.mm, ureg.s, None, ureg.mm, ureg.s))
+def solve_chareq_rate_boxcar(branch, k_wavenumber, tau, W_rate, width, delay):
+    '''
+    '''
+    eigenval = aux_calcs.solve_chareq_rate_boxcar(branch, k_wavenumber, tau,
+                                                  W_rate, width, delay)
+    return eigenval
