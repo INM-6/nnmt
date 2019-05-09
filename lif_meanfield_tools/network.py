@@ -891,7 +891,7 @@ class Network(object):
 
         Parameters:
         -----------
-        k_wavenumbers: Quantity(np.ndarray, '1/mm')
+        k_wavenumbers: Quantity(np.ndarray, '1/m')
             Range of wave numbers.
         network: Network object
             A network.
@@ -901,8 +901,8 @@ class Network(object):
         alphas: np.ndarray
         lambdas_chareq: Quantity(np.ndarray, '1/s')
         lambdas_integral: Quantity(np.ndarray, '1/s')
-        k_eig_max: Quantity(float, '1/mm')
-        eigenval_max: Quantity(float, '1/s')
+        k_eig_max: Quantity(float, '1/m')
+        eigenval_max: Quantity(complex, '1/s')
         eigenvals: Quantity(np.ndarray, '1/s')
         """
         alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals = \

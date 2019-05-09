@@ -997,11 +997,11 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
     for linear rate model and equation solved for lif model.
     Eigenvalues lambda are computed by solving the characteristic equation
     numerically or by solving an integral.
-    Reguires a spatially organized network with boxcar connectivity profile.
+    Requires a spatially organized network with boxcar connectivity profile.
 
     Parameters:
     -----------
-    k_wavenumbers: Quantity(np.ndarray, '1/mm')
+    k_wavenumbers: Quantity(np.ndarray, '1/m')
         Range of wave numbers.
     branches: np.ndarray
         List of branches.
@@ -1041,8 +1041,8 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
     alphas: np.ndarray
     lambdas_chareq: Quantity(np.ndarray, '1/s')
     lambdas_integral: Quantity(np.ndarray, '1/s')
-    k_eig_max: Quantity(float, '1/mm')
-    eigenval_max: Quantity(float, '1/s')
+    k_eig_max: Quantity(float, '1/m')
+    eigenval_max: Quantity(complex, '1/s')
     eigenvals: Quantity(np.ndarray, '1/s')
     """
     assert len(np.unique(tau_rate)) == 1, 'Linear interpolation requires equal tau_rate.'
@@ -1079,12 +1079,37 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
         lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_eig_max, delay,
             mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
             tau, W_rate, width)
-
     return alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals
 
 
 def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
+    """
+    Compute in the linearized rate model for each branch the eigenvalues by
+    solving the characteristic equation analytically.
+    Requires a spatially organized network with boxcar connectivity profile.
 
+    Parameters:
+    -----------
+    k_wavenumbers: np.ndarray
+        Range of wave numbers in 1/m.
+    branches: np.ndarray
+        List of branches.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+    delay: float
+        Delay in s.
+
+    Returns:
+    --------
+    k_eig_max: float
+    idx_k_eig_max: float
+    eigenval_max: complex
+    eigenvals: np.ndarray
+    """
     eigenvals = np.zeros((len(branches), len(k_wavenumbers)), dtype=complex)
 
     for i, branch in enumerate(branches):
@@ -1104,16 +1129,58 @@ def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
 
     eigenval_max = eigenvals[idx_max[0], idx_max[1]]
     k_eig_max = k_wavenumbers[idx_max[1]]
-
-    return k_eig_max, idx_max[1], eigenval_max, eigenvals
+    idx_k_eig_max = idx_max[1]
+    return k_eig_max, idx_k_eig_max, eigenval_max, eigenvals
 
 
 def _lambda_of_alpha_integral(alphas, lambda0, k, delay,
         mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
         tau, W_rate, width):
-    '''
-    integral
-    '''
+    """
+    Compute lambda of alpha by solving the integral.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    alphas: np.ndarray
+        Range of interpolation parameters.
+    lambda0: complex
+        Guess for eigenvalue.
+    k: float
+        Wavenumber in 1/m.
+    delay: float
+        Delay in s.
+    mu: float
+        Mean input in mV.
+    sigma: float
+        Standard deviation of input in mV.
+    tau_m: float
+        Membrane time constant in s.
+    tau_s: float
+        Synaptic time constant in s.
+    tau_r: float
+        Refractory time in s.
+    V_0_rel: float
+        Relative reset potential in mV.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    J: np.ndarray
+        Weight matrix in mV.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Dimension of the system / number of populations.
+    tau_rate: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    lambdas_of_alpha: list
+    """
     assert alphas[0] == 0, 'First alpha must be 0!'
     lambda0_list = [lambda0.real, lambda0.imag]
 
@@ -1127,15 +1194,57 @@ def _lambda_of_alpha_integral(alphas, lambda0, k, delay,
     llist =  sint.odeint(func=derivative, y0=lambda0_list, t=alphas)
 
     lambdas_of_alpha = [complex(l[0], l[1]) for l in llist]
-
     return lambdas_of_alpha
 
 
 def _d_lambda_d_alpha(l, alpha, k, delay,
         mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
         tau, W_rate, width):
-    '''
-    '''
+    """
+    Compute the derivative of lambda with respect to alpha.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    l: complex
+        Eigenvalue.
+    alpha: float
+        Interpolation parameters.
+    k: float
+        Wavenumber in 1/m.
+    delay: float
+        Delay in s.
+    mu: float
+        Mean input in mV.
+    sigma: float
+        Standard deviation of input in mV.
+    tau_m: float
+        Membrane time constant in s.
+    tau_s: float
+        Synaptic time constant in s.
+    tau_r: float
+        Refractory time in s.
+    V_0_rel: float
+        Relative reset potential in mV.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    J: np.ndarray
+        Weight matrix in mV.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Dimension of the system / number of populations.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    deriv: complex
+    """
     xi_eff_s = _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                          J, K, dimension, width)
     xi_eff_r = _xi_eff_r(l, k, tau, W_rate, width)
@@ -1156,12 +1265,48 @@ def _d_lambda_d_alpha(l, alpha, k, delay,
     denominator = d_xi_eff_alpha_d_lambda - delay * xi_eff_alpha
 
     deriv = - nominator / denominator
-
     return deriv
 
 
 def _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
               J, K, dimension, width):
+    """
+    Compute xi_eff for the lif neuron model.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    l: complex
+        Eigenvalue.
+    k: float
+        Wavenumber in 1/m.
+    mu: float
+        Mean input in mV.
+    sigma: float
+        Standard deviation of input in mV.
+    tau_m: float
+        Membrane time constant in s.
+    tau_s: float
+        Synaptic time constant in s.
+    tau_r: float
+        Refractory time in s.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    J: np.ndarray
+        Weight matrix in mV.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Dimension of the system / number of populations.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    xi_eff_s: complex
+    """
     omega = complex(0, -l)
     transfer_func = _transfer_function_1p_shift( \
         mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, omega)
@@ -1173,6 +1318,27 @@ def _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
 
 
 def _xi_eff_r(l, k, tau, W_rate, width):
+    """
+    Compute xi_eff for the linearized rate model.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    l: complex
+        Eigenvalue.
+    k: float
+        Wavenumber in 1/m.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    xi_eff_r: complex
+    """
     omega = complex(0, -l)
     MH_r = _effective_connectivity_rate(omega, tau, W_rate)
     P_hat = aux_calcs.p_hat_boxcar(k, width)
@@ -1182,10 +1348,44 @@ def _xi_eff_r(l, k, tau, W_rate, width):
 
 def _d_xi_eff_s_d_lambda(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
                          J, K, dimension, width):
-    '''
+    """
     Computes the derivative of He_lif wrt lambda,
     numerically.
-    '''
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    l: complex
+        Eigenvalue.
+    k: float
+        Wavenumber in 1/m.
+    mu: float
+        Mean input in mV.
+    sigma: float
+        Standard deviation of input in mV.
+    tau_m: float
+        Membrane time constant in s.
+    tau_s: float
+        Synaptic time constant in s.
+    tau_r: float
+        Refractory time in s.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    J: np.ndarray
+        Weight matrix in mV.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Dimension of the system / number of populations.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    deriv: complex
+    """
     def f(x):
         omega = complex(0, -l)
         return _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
@@ -1196,10 +1396,28 @@ def _d_xi_eff_s_d_lambda(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
 
 
 def _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width):
-    '''
+    """
     Computes the derivative of He_rate wrt lambda,
     analytical expression.
-    '''
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    l: complex
+        Eigenvalue.
+    k: float
+        Wavenumber in 1/m.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    xi_eff_r: complex
+    """
     lp = 1. / (1. + l * tau)
     deriv = -1. * lp**2 * tau * \
         aux_calcs.determinant(W_rate * aux_calcs.p_hat_boxcar(k, width))
@@ -1209,10 +1427,53 @@ def _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width):
 def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
                                     tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                                     J, K, dimension, tau, W_rate, width):
-    '''
-    Uses scipy.optimize.fsolve to solve the characteristic equation
+    """
+    Uses scipy.optimize.fsolve to solve the characteristic equation.
+    Compute the derivative of lambda with respect to alpha.
+    Requires a spatially organized network with boxcar connectivity profile.
 
-    '''
+    Parameters:
+    -----------
+    lambda_guess: complex
+        Guess for eigenvalue.
+    alpha: float
+        Interpolation parameters.
+    k: float
+        Wavenumber in 1/m.
+    delay: float
+        Delay in s.
+    mu: float
+        Mean input in mV.
+    sigma: float
+        Standard deviation of input in mV.
+    tau_m: float
+        Membrane time constant in s.
+    tau_s: float
+        Synaptic time constant in s.
+    tau_r: float
+        Refractory time in s.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    J: np.ndarray
+        Weight matrix in mV.
+    K: np.ndarray
+        Indegree matrix.
+    dimension: int
+        Dimension of the system / number of populations.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in m.
+
+    Returns:
+    --------
+    lamb: complex
+
+    """
     def fsolve_complex(l_re_im):
         l = complex(l_re_im[0], l_re_im[1])
 
@@ -1228,13 +1489,31 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
     lambda_guess_list = [np.real(lambda_guess), np.imag(lambda_guess)]
     l_opt = sopt.fsolve(fsolve_complex, lambda_guess_list)
     lamb = complex(l_opt[0], l_opt[1])
-
     return lamb
 
 @ureg.wraps((None, None, 1/ureg.mm, 1/ureg.mm), (1/ureg.mm, None, ureg.mm))
 def xi_of_k(ks, W_rate, width):
-    '''
-    '''
+    """
+    Compute minimum and maximum of spatial profile xi of k
+    for linearized rate model.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    ks: Quantity(np.ndarray, '1/mm')
+        Range of wavenumbers.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: Quantity(np.ndarray, 'mm')
+        Spatial widths of boxcar connectivtiy profile.
+
+    Returns:
+    --------
+    xi_min: float
+    xi_max: float
+    k_min: Quantity(float, '1/mm')
+    k_max: Quantity(float, '1/mm')
+    """
     xis = np.zeros(len(ks))
     for i,k in enumerate(ks):
         P_hat = aux_calcs.p_hat_boxcar(k, width)
@@ -1253,8 +1532,30 @@ def xi_of_k(ks, W_rate, width):
 
 @ureg.wraps(1/ureg.s, (None, 1/ureg.mm, ureg.s, None, ureg.mm, ureg.s))
 def solve_chareq_rate_boxcar(branch, k_wavenumber, tau, W_rate, width, delay):
-    '''
-    '''
+    """
+    Solve the characteristic equation for the linearized rate model for
+    one branch analytically.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    branch: float
+        Branch number.
+    k: Quantity(float, '1/mm')
+        Wavenumber.
+    tau: Quantity(float, 's')
+        Time constant from fit.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: Quantity(np.ndarray, 'mm')
+        Spatial widths of boxcar connectivtiy profile.
+    delay: Quantity(float, 's')
+        Delay.
+
+    Returns:
+    --------
+    eigenval: complex
+    """
     eigenval = aux_calcs.solve_chareq_rate_boxcar(branch, k_wavenumber, tau,
                                                   W_rate, width, delay)
     return eigenval
