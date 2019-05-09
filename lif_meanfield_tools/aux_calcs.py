@@ -18,6 +18,9 @@ dPsi_x_r
 d2Psi_x_r
 d_nu_d_nu_fb
 determinant
+determinant_same_rows
+p_hat_boxcar
+solve_chareq_rate_boxcar
 """
 
 from __future__ import print_function
@@ -429,17 +432,24 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
 
 
 def determinant(matrix):
-    '''
-    Solves
+    """
+    Solve
         det(matrix - x*identity) = 0
     for the integer x and a square matrix
     using sympy.
 
-    TODO numerical issues
-    '''
-    all_res = np.linalg.eigvals(matrix)
+    Return only non-trivial (!=0) solutions.
 
-    # return only non-trivial (!=0) solutions
+    Parameters:
+    -----------
+    matrix: np.ndarray
+        A matrix.
+
+    Returns:
+    --------
+    res: float or complex
+    """
+    all_res = np.linalg.eigvals(matrix)
 
     idx = np.where(np.abs(all_res) > 1.E-10)[0]
     if len(idx) !=1 : raise Exception
@@ -450,21 +460,69 @@ def determinant(matrix):
 
 
 def determinant_same_rows(matrix):
-    return np.sum(matrix, axis=1)[0]
+    """
+    Compute determinant of matrix with same rows.
+
+    Parameters:
+    -----------
+    matrix: np.ndarray
+        A matrix with same rows.
+
+    Returns:
+    --------
+        res: float or complex
+    """
+    res = p.sum(matrix, axis=1)[0]
+    return res
 
 
 def p_hat_boxcar(k, width):
-    '''
+    """
     Fourier transform of boxcar connectivity kernel at wave number k.
-    '''
+
+    Parameters:
+    -----------
+    k: float
+        Wavenumber.
+    width: float or np.ndarray
+        Width(s) of boxcar kernel(s).
+
+    Returns:
+    --------
+    ft: float
+    """
     if k == 0:
-        return 1.
+        ft = 1.
     else:
-        return np.sin(k * width) / (k * width)
+        ft = np.sin(k * width) / (k * width)
+    return ft
 
 
 def solve_chareq_rate_boxcar(branch, k, tau, W_rate, width, delay):
     """
+    Solve the characteristic equation for the linearized rate model for
+    one branch analytically.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    branch: float
+        Branch number.
+    k: float
+        Wavenumber in 1/mm.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in mm.
+    delay: float
+        Delay in s.
+
+    Returns:
+    --------
+    eigenval: complex
+
     delay, tau must be floats, W,
     width is vector
     """
@@ -474,5 +532,4 @@ def solve_chareq_rate_boxcar(branch, k, tau, W_rate, width, delay):
 
     eigenval = -1./tau + 1./delay * \
         lambertw(xi * delay/tau * np.exp(delay/tau), branch)
-
     return eigenval

@@ -21,6 +21,16 @@ additional_rates_for_fixed_input
 fit_transfer_function
 effective_coupling_strength
 linear_interpolation_alpha
+eigenvals_branches_rate
+_lambda_of_alpha_integral
+_d_lambda_d_alpha
+_xi_eff_s
+_xi_eff_r
+_d_xi_eff_s_d_lambda
+_d_xi_eff_r_d_lambda
+_solve_chareq_numerically_alpha
+xi_of_k
+solve_chareq_rate_boxcar
 """
 from __future__ import print_function
 import ipdb
