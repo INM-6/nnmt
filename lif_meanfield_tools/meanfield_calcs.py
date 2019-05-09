@@ -8,12 +8,16 @@ Functions:
 ----------
 firing_rates
 mean
+_mean
 standard_deviation
+_standard_deviation
 transfer_function_1p_taylor
 transfer_function_1p_shift
 transfer_function
 delay_dist_matrix
 delay_dist_matrix_single
+_effective_connectivity
+_effective_connectivity_rate
 sensitivity_measure
 power_spectra
 eigen_spectra
@@ -688,7 +692,7 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
                                   delay_dist_matrix, J, K, omega, matrix):
 
         MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
-                                     dimension, delay_dist_matrix)
+                                     dimension, delay_dist_matrix).magnitude
 
         if matrix == 'MH':
             eig, vr = np.linalg.eig(MH)
