@@ -472,7 +472,7 @@ def determinant_same_rows(matrix):
     --------
         res: float or complex
     """
-    res = p.sum(matrix, axis=1)[0]
+    res = np.sum(matrix, axis=1)[0]
     return res
 
 
