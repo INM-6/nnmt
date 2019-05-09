@@ -125,7 +125,10 @@ class Network(object):
         # empty results
         self.results = {}
 
-        # TODO DANGER THAT ANALYSIS PARAMETERS WILL BE OVERWRITTEN
+        # TODO: LOAD RESULTS ONLY IF THE ANALYSIS PARAMS ARE THE SAME
+        # OTHERWISE DANGER THAT EITHER ANALYSIS PARAMS GET OVERWRITTEN OR DON'T
+        # CORRESPOND TO THE RESULTS
+        
         # load already existing results
         # stored_analysis_params, self.results = io.load_from_h5(self.network_params)
         # self.analysis_params.update(stored_analysis_params)
