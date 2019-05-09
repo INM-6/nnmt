@@ -722,7 +722,7 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
                                          delay_dist_matrix[i], J, K, omega, matrix)[2]
                           for i,omega in enumerate(omegas)]
 
-    return eig
+    return np.transpose(eig)
 
 
 @ureg.wraps((ureg.Hz, ureg.Hz), (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
