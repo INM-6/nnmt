@@ -128,7 +128,7 @@ class Network(object):
         # TODO: LOAD RESULTS ONLY IF THE ANALYSIS PARAMS ARE THE SAME
         # OTHERWISE DANGER THAT EITHER ANALYSIS PARAMS GET OVERWRITTEN OR DON'T
         # CORRESPOND TO THE RESULTS
-        
+
         # load already existing results
         # stored_analysis_params, self.results = io.load_from_h5(self.network_params)
         # self.analysis_params.update(stored_analysis_params)
@@ -964,12 +964,14 @@ class Network(object):
             'xi_min' : xi_min,
             'xi_max' : xi_max,
             'k_min' : k_min,
+            'k_f_min' : k_min / (2.*np.pi),
             'k_max' : k_max,
+            'k_f_max' : k_max / (2.*np.pi),
             'tau_delay' : self.network_params['tau_rate'][0].to(ureg.ms).magnitude /  \
                           self.network_params['d_e'].to(ureg.ms).magnitude,
             'lambda_min' : lambda_min,
             'lambda_max' : lambda_max,
-            'f_min' : lambda_min / (2.*np.pi),
-            'velocity' : np.imag(lambda_min.to(1/ureg.s)) / k_min.to(1/ureg.m),
+            'lambda_f_min' : np.imag(lambda_min) / (2.*np.pi),
+            'speed' : np.imag(lambda_min.to(1/ureg.s)) / k_min.to(1/ureg.m),
             })
         return
