@@ -14,9 +14,6 @@ Network
 Network Methods:
 ----------------
 __init__
-_calculate_dependent_network_parameters
-_calculate_dependent_analysis_parameters
-_check_and_store
 save
 show
 change_parameters
@@ -39,6 +36,9 @@ additional_rates_for_fixed_input
 fit_transfer_function
 scan_fit_transfer_function_mean_std_input
 linear_interpolation_alpha
+_calculate_dependent_network_parameters
+_calculate_dependent_analysis_parameters
+_check_and_store
 """
 
 from __future__ import print_function

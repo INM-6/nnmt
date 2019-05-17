@@ -8,16 +8,12 @@ Functions:
 ----------
 firing_rates
 mean
-_mean
 standard_deviation
-_standard_deviation
 transfer_function_1p_taylor
 transfer_function_1p_shift
 transfer_function
 delay_dist_matrix
 delay_dist_matrix_single
-_effective_connectivity
-_effective_connectivity_rate
 sensitivity_measure
 power_spectra
 eigen_spectra
@@ -26,6 +22,12 @@ fit_transfer_function
 effective_coupling_strength
 linear_interpolation_alpha
 eigenvals_branches_rate
+xi_of_k
+solve_chareq_rate_boxcar
+_standard_deviation
+_mean
+_effective_connectivity
+_effective_connectivity_rate
 _lambda_of_alpha_integral
 _d_lambda_d_alpha
 _xi_eff_s
@@ -33,8 +35,6 @@ _xi_eff_r
 _d_xi_eff_s_d_lambda
 _d_xi_eff_r_d_lambda
 _solve_chareq_numerically_alpha
-xi_of_k
-solve_chareq_rate_boxcar
 """
 from __future__ import print_function
 import ipdb
