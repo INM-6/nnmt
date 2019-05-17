@@ -614,7 +614,6 @@ class Network(object):
         return transfer_functions
 
 
-    # TODO check and fix sensitivity measure and eigenvalue calculation
 
     @_check_and_store('sensitivity_measure', 'sensitivity_freqs')
     def sensitivity_measure(self, freq):

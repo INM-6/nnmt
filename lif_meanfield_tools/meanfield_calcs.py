@@ -37,7 +37,6 @@ _d_xi_eff_r_d_lambda
 _solve_chareq_numerically_alpha
 """
 from __future__ import print_function
-import ipdb
 import warnings
 import numpy as np
 import pint

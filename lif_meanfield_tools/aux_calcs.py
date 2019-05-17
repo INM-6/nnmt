@@ -380,7 +380,7 @@ def d2Psi_x_r(z, x, y):
 def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
     """
     Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
-    Effective threshold and reset from Fourcoud & Brunel 2002.
+    Effective threshold and reset from Fourcaud & Brunel 2002.
 
     Parameters:
     -----------
