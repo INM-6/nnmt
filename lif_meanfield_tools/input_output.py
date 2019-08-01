@@ -187,7 +187,6 @@ def save(output_key, output, file_name):
     --------
     None
     """
-
     # convert data into format usable in h5 file
     output = quantities_to_val_unit(output)
     output_dict = {}
@@ -197,7 +196,7 @@ def save(output_key, output, file_name):
     h5.save(file_name, output_dict, overwrite_dataset=True)
 
 
-def load_from_h5(network_params, param_keys=[], input_name=''):
+def load_from_h5(network_params={}, param_keys=[], input_name=''):
     """
     Load existing results and analysis_params for given parameters from h5 file.
 
@@ -240,7 +239,7 @@ def load_from_h5(network_params, param_keys=[], input_name=''):
 
     # try to load file with standard name
     try:
-        input_file = h5.load('{}_{}.h5'.format(network_params['label'], hash))
+        input_file = h5.load(input_name)
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
     except OSError:
         return {}, {}
@@ -254,3 +253,19 @@ def load_from_h5(network_params, param_keys=[], input_name=''):
     results = val_unit_to_quantities(results)
 
     return analysis_params, results
+
+
+def load_h5(filename):
+    """
+    filename: str
+        default filename format is ''<label>_<hash>.h5'
+    """
+    try:
+        raw_data = h5.load(filename)
+    except OSError:
+        raw_data = {}
+
+    data = {}
+    for key in sorted(raw_data.keys()):
+        data[key] = val_unit_to_quantities(raw_data[key])
+    return data

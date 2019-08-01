@@ -16,12 +16,17 @@ d_2_Psi
 Psi_x_r
 dPsi_x_r
 d2Psi_x_r
+d_nu_d_nu_fb
+determinant
+determinant_same_rows
+p_hat_boxcar
+solve_chareq_rate_boxcar
 """
 
 from __future__ import print_function
 from scipy.integrate import quad
-from scipy.special import erf
-from scipy.special import zetac
+from scipy.special import erf, zetac, lambertw
+import scipy
 import numpy as np
 import math
 import mpmath
@@ -105,6 +110,43 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+
+def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
+    """
+    Calculates stationary firing rates for filtered synapses based on
+    Fourcaud & Brunel 2002.
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_s: float
+        Synaptic time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Stationary firing rate in Hz.
+    """
+
+    alpha = np.sqrt(2)*abs(zetac(0.5)+1)
+    # effective threshold
+    V_th1 = V_th + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    # effective reset
+    V_r1 = V_r + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    # use standard Siegert with modified threshold and reset
+    return nu_0(tau_m, tau_r, V_th1, V_r1, mu, sigma)
 
 
 def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -295,7 +337,6 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
             * (np.exp(y_th**2) * (1 + erf(y_th)) - np.exp(y_r**2)
                * (1 + erf(y_r))))
 
-
 def Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
@@ -334,3 +375,161 @@ def dPsi_x_r(z, x, y):
 def d2Psi_x_r(z, x, y):
     """Difference of second derivatives of Psi for same first argument z."""
     return d_2_Psi(z, x) - d_2_Psi(z, y)
+
+
+def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
+    """
+    Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
+    Effective threshold and reset from Fourcaud & Brunel 2002.
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_s: float
+        Synaptic time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    j: float
+        Effective connectivity weight in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Derivative in Hz/mV (sum of linear (mu) and squared (sigma^2) contribution).
+    float:
+        Derivative in Hz/mV (linear (mu) contribution).
+    float:
+        Derivative in Hz/mV (squared (sigma^2) contribution).
+    """
+    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
+
+    y_th = (V_th - mu) / sigma
+    y_r = (V_r - mu) / sigma
+
+    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    nu0 = nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma)
+
+    # linear contribution
+    lin = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 +
+             erf(y_th_fb)) - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)))
+
+    # quadratic contribution
+    sqr = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) *\
+             0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
+
+    return lin + sqr, lin, sqr
+
+
+def determinant(matrix):
+    """
+    Solve
+        det(matrix - x*identity) = 0
+    for the integer x and a square matrix
+    using sympy.
+
+    Return only non-trivial (!=0) solutions.
+
+    Parameters:
+    -----------
+    matrix: np.ndarray
+        A matrix.
+
+    Returns:
+    --------
+    res: float or complex
+    """
+    all_res = np.linalg.eigvals(matrix)
+
+    idx = np.where(np.abs(all_res) > 1.E-10)[0]
+    if len(idx) !=1 : raise Exception
+    #assert len(idx) == 1, 'Multiple non-trivial solutions exist.'
+    res = all_res[idx[0]]
+
+    return res
+
+
+def determinant_same_rows(matrix):
+    """
+    Compute determinant of matrix with same rows.
+
+    Parameters:
+    -----------
+    matrix: np.ndarray
+        A matrix with same rows.
+
+    Returns:
+    --------
+        res: float or complex
+    """
+    res = np.sum(matrix, axis=1)[0]
+    return res
+
+
+def p_hat_boxcar(k, width):
+    """
+    Fourier transform of boxcar connectivity kernel at wave number k.
+
+    Parameters:
+    -----------
+    k: float
+        Wavenumber.
+    width: float or np.ndarray
+        Width(s) of boxcar kernel(s).
+
+    Returns:
+    --------
+    ft: float
+    """
+    if k == 0:
+        ft = 1.
+    else:
+        ft = np.sin(k * width) / (k * width)
+    return ft
+
+
+def solve_chareq_rate_boxcar(branch, k, tau, W_rate, width, delay):
+    """
+    Solve the characteristic equation for the linearized rate model for
+    one branch analytically.
+    Requires a spatially organized network with boxcar connectivity profile.
+
+    Parameters:
+    -----------
+    branch: float
+        Branch number.
+    k: float
+        Wavenumber in 1/mm.
+    tau: float
+        Time constant from fit in s.
+    W_rate: np.ndarray
+        Weights from fit.
+    width: np.ndarray
+        Spatial widths of boxcar connectivtiy profile in mm.
+    delay: float
+        Delay in s.
+
+    Returns:
+    --------
+    eigenval: complex
+
+    delay, tau must be floats, W,
+    width is vector
+    """
+
+    M = W_rate * p_hat_boxcar(k, width)
+    xi = determinant(M)
+
+    eigenval = -1./tau + 1./delay * \
+        lambertw(xi * delay/tau * np.exp(delay/tau), branch)
+    return eigenval

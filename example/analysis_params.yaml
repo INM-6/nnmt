@@ -1,4 +1,5 @@
 ---
+# frequencies
 f_min:
   val: 0.1
   unit: Hz
@@ -12,6 +13,18 @@ df:
   val: 0.15915494309189535
   unit: Hz
 
+# k wavenumbers
+k_min:
+  val: 1.0
+  unit: 1/mm
+
+k_max:
+  val: 100.5
+  unit: 1/mm
+
+dk:
+  val: 0.5
+  unit: 1/mm
 
 ### neural response
 # Transfer function is either calculated analytically ('analytical')

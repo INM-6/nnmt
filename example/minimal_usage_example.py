@@ -7,10 +7,10 @@ ureg = lmt.ureg
 network = lmt.Network(network_params='network_params_microcircuit.yaml',
                       analysis_params='analysis_params.yaml')
 
-# # calculate working point
+# calculate working point
 working_point = network.working_point()
 
-#print results
+# print results
 print('Working point:')
 print('mean input: {}'.format(working_point['mean_input']))
 print('std input: {}'.format(working_point['std_input']))
