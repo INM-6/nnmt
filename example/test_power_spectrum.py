@@ -18,7 +18,7 @@ network.save()
 
 plt.figure()
 for i in range(8):
-    plt.plot(freqs, np.sqrt(power[i]), label=network.network_params['populations'][i])
+    plt.plot(freqs, power[i], label=network.network_params['populations'][i])
 plt.yscale('log')
 plt.legend()
 
