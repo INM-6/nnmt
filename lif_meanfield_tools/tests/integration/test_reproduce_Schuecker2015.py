@@ -8,19 +8,16 @@ Modulated escape from a metastable state driven by colored noise.
 Phys. Rev. E - Stat. Nonlinear, Soft Matter Phys. 92, 1–11 (2015).
 """
 
-#TODO: remove path hardcoding!
-import sys
-sys.path.append('/home/essink/working_environment/lif_meanfield_tools')
 import unittest
-from numpy.testing import assert_array_equal, assert_array_almost_equal
 from collections import defaultdict
 
 import numpy as np
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import lif_meanfield_tools as lmt
-from lif_meanfield_tools.__init__ import ureg
-import h5py_wrapper.wrapper as h5
+from ... import ureg
 
+import h5py_wrapper.wrapper as h5
 
 class SchueckerTestCase(unittest.TestCase):
     def setUp(self):
