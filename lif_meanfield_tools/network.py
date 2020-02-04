@@ -180,6 +180,11 @@ class Network(object):
         D = np.transpose(D)
         derived_params['Delay_sd'] = D
 
+        # TODO: Put calculation of network-specifc dervied parameters
+        # into an external script for enhanced generalization.
+        # (e.g. trigger execution of external script called <label>.py here)
+        # Changing the label currently leads to difference which are hard to
+        # track down.
         if self.network_params['label'] == 'microcircuit':
             # larger weight for L4E->L23E connections
             derived_params['W'][0][2] *= 2.0
