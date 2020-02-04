@@ -12,7 +12,7 @@ import unittest
 from collections import defaultdict
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal,assert_array_almost_equal, assert_allclose
 
 import lif_meanfield_tools as lmt
 from ... import ureg
@@ -46,8 +46,47 @@ class SchueckerTestCase(unittest.TestCase):
 
         for index in [1,2]:
             sigma = self.network_params[f'sigma_{index}']
+            self.test_results['sigma'][sigma.magnitude]['mu'] = defaultdict(dict)
             for mu in self.network_params[f'mean_input_{index}']:
-                self.test_results['sigma'][sigma.magnitude]['mu'] = defaultdict(dict)
+
+                # Stationary firing rates for delta shaped PSCs.
+                nu_0 = lmt.aux_calcs.nu_0(
+                    self.network_params['tau_m'],
+                    self.network_params['tau_r'],
+                    self.network_params['theta'],
+                    self.network_params['V_reset'],
+                    mu,
+                    sigma)
+
+                # Stationary firing rates for filtered synapses (via Taylor)
+                nu0_fb = lmt.aux_calcs.nu0_fb(
+                    self.network_params['tau_m'],
+                    self.network_params['tau_s'],
+                    self.network_params['tau_r'],
+                    self.network_params['theta'],
+                    self.network_params['V_reset'],
+                    mu,
+                    sigma)
+
+                # Stationary firing rates for exp PSCs. (via shift)
+                nu0_fb433 = lmt.aux_calcs.nu0_fb433(
+                    self.network_params['tau_m'],
+                    self.network_params['tau_s'],
+                    self.network_params['tau_r'],
+                    self.network_params['theta'],
+                    self.network_params['V_reset'],
+                    mu,
+                    sigma)
+
+                # colored noise zero-frequency limit of transfer function
+                transfer_function_zero_freq = lmt.aux_calcs.d_nu_d_mu_fb433(
+                    self.network_params['tau_m'],
+                    self.network_params['tau_s'],
+                    self.network_params['tau_r'],
+                    self.network_params['theta'],
+                    self.network_params['V_reset'],
+                    mu,
+                    sigma)
 
                 transfer_function = lmt.meanfield_calcs.transfer_function(
                     [mu],
@@ -58,11 +97,16 @@ class SchueckerTestCase(unittest.TestCase):
                     self.network_params['theta'],
                     self.network_params['V_reset'],
                     self.network_params['dimension'],
-                    self.omegas[:2])
+                    self.omegas)
 
                 self.test_results['sigma'][sigma.magnitude]['mu'][mu.magnitude] = {
-                    'absolute_value': np.abs(transfer_function),
-                    'phase': np.angle(transfer_function.magnitude)}
+                    'absolute_value': np.abs(transfer_function.magnitude.flatten()),
+                    'phase': np.angle(transfer_function.magnitude.flatten()) / 2 / np.pi * 360,
+                    'zero_freq': transfer_function_zero_freq.to(ureg.Hz/ureg.mV).magnitude,
+                    'nu_0': nu_0.to(ureg.Hz).magnitude,
+                    'nu0_fb': nu0_fb.to(ureg.Hz).magnitude,
+                    'nu0_fb433': nu0_fb433.to(ureg.Hz).magnitude}
+
 
 
     def test_frequencies(self):
@@ -74,48 +118,71 @@ class SchueckerTestCase(unittest.TestCase):
         assert_array_equal(ground_truth_data['frequencies'],
                            self.frequencies.magnitude)
 
-    def test_sigma_1_mu_1(self):
+    def test_absolute_value(self):
         # define specific sigma and mu
-        sigma = self.network_params['sigma_1'].magnitude
-        mu = self.network_params['mean_input_1'][0].magnitude
-        ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
-        test_data = self.test_results['sigma'][sigma]['mu'][mu]
+        for index in [1,2]:
+            sigma = self.network_params[f'sigma_{index}'].magnitude
+            for mu in self.network_params[f'mean_input_{index}'].magnitude:
+                print(sigma, mu)
 
-        assert_array_equal(ground_truth_data['absolute_value'],
-                           test_data['absolute_value'])
+                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
+                print('absolute_value')
+                print(f'below {self.frequencies[100]}')
+                assert_array_almost_equal(ground_truth_data['absolute_value'][:100],
+                                          test_data['absolute_value'][:100],
+                                          decimal = 4)
 
-    def test_sigma_1_mu_2(self):
+                print(f'below {self.frequencies[300]}')
+                assert_array_almost_equal(ground_truth_data['absolute_value'][100:300],
+                                          test_data['absolute_value'][100:300],
+                                          decimal = 1)
+
+                print(f'below {self.frequencies[-1]}')
+                assert_allclose(ground_truth_data['absolute_value'],
+                                          test_data['absolute_value'], atol=2)
+
+    def test_phase(self):
         # define specific sigma and mu
-        sigma = self.network_params['sigma_1'].magnitude
-        mu = self.network_params['mean_input_1'][1].magnitude
-        ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
-        test_data = self.test_results['sigma'][sigma]['mu'][mu]
+        for index in [1,2]:
+            sigma = self.network_params[f'sigma_{index}'].magnitude
+            for mu in self.network_params[f'mean_input_{index}'].magnitude:
+                print(sigma, mu)
 
-        assert_array_equal(ground_truth_data['absolute_value'],
-                           test_data['absolute_value'])
+                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
-    def test_sigma_2_mu_1(self):
+                print('phase')
+                print(f'below {self.frequencies[100]}')
+                assert_allclose(ground_truth_data['phase'][:100],
+                                          test_data['phase'][:100], atol=2)
+
+                print(f'below {self.frequencies[300]}')
+                assert_allclose(ground_truth_data['phase'][100:300],
+                                          test_data['phase'][100:300], atol=50)
+
+                print(f'below {self.frequencies[-1]}')
+                assert_allclose(ground_truth_data['phase'],
+                                          test_data['phase'], atol=150)
+
+    def test_stationary_firing_rates(self):
         # define specific sigma and mu
-        sigma = self.network_params['sigma_2'].magnitude
-        mu = self.network_params['mean_input_2'][0].magnitude
-        # print(self.ground_truth_result['sigma'][sigma]['mu'].keys(), self.test_results['sigma'][sigma]['mu'].keys())
-        ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
-        test_data = self.test_results['sigma'][sigma]['mu'][mu]
+        for index in [1,2]:
+            sigma = self.network_params[f'sigma_{index}'].magnitude
+            for mu in self.network_params[f'mean_input_{index}'].magnitude:
+                print(sigma, mu)
+
+                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                test_data = self.test_results['sigma'][sigma]['mu'][mu]
+
+                for key in test_data.keys():
+                            if not key in ['absolute_value', 'phase']:
+                                print(key)
+                                assert_allclose(ground_truth_data[key],
+                                                   test_data[key], atol=1e-12)
 
 
-        assert_array_equal(ground_truth_data['absolute_value'],
-                          test_data['absolute_value'])
-
-    def test_sigma_2_mu_2(self):
-        # define specific sigma and mu
-        sigma = self.network_params['sigma_2'].magnitude
-        mu = self.network_params['mean_input_2'][1].magnitude
-        ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
-        test_data = self.test_results['sigma'][sigma]['mu'][mu]
-
-        assert_array_equal(ground_truth_data['absolute_value'],
-                           test_data['absolute_value'])
 
 
 if __name__ == "__main__":
