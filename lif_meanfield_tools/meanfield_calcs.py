@@ -39,7 +39,6 @@ _solve_chareq_numerically_alpha
 from __future__ import print_function
 import warnings
 import numpy as np
-import pint
 import scipy.optimize as sopt
 import scipy.integrate as sint
 import scipy.misc as smisc
