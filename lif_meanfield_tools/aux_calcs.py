@@ -33,7 +33,8 @@ import mpmath
 
 from . import ureg
 
-
+@ureg.wraps(ureg.Hz,
+           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs
@@ -81,7 +82,6 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         print(mu, sigma, x_th, x_r)
     return result
 
-
 def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates for delta shaped PSCs.
@@ -111,7 +111,8 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     else:
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
-
+@ureg.wraps(ureg.Hz,
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """
     Calculates stationary firing rates for filtered synapses based on
@@ -265,7 +266,8 @@ def Phi_prime_mu(s, sigma):
     * (1 + erf(s / np.sqrt(2)))
     + np.sqrt(2) / np.sqrt(np.pi))
 
-
+@ureg.wraps(ureg.Hz/ureg.mV,
+           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     where does this come from and what does it do???
