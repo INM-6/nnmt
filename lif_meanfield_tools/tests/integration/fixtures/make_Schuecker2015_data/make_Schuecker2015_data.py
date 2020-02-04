@@ -118,112 +118,78 @@ def transfer_FP_algebra_j1_shift(omega, tau, tau_s, tau_r, nu0, V_t, V_r, mu,
     return transfer_FP_algebra_j1(omega, tau, tau_r, nu0, V_th1, V_r1, mu,
                                   sigma)
 
-def plot_PRE_Schuecker_Fig4(colors, lw, markersize_cross):
+def plot_PRE_Schuecker_Fig4(frequencies, sigma_1, mean_input_1,
+                            sigma_2, mean_input_2):
 
     results_dict = defaultdict(str)
 
-    # sigma = 4.0, $\nu = 10, 30$ Hz
-    mu_array = np.array([16.42, 19.66])
-    sigma = 4.0
-
     results_dict['sigma'] = defaultdict(dict)
-    results_dict['sigma'][sigma]['mu'] = defaultdict(dict)
 
-    for idx, mu in enumerate(mu_array):
+    for index in [1,2]:
+        sigma = eval('sigma_'+str(index))
+        results_dict['sigma'][sigma]['mu'] = defaultdict(dict)
+        for idx, mu in enumerate(eval('mean_input_'+str(index))):
 
-        nu0 = siegert.nu_0(tau_m, tau_r, theta, V_reset, mu, sigma)
-        nu_fb = siegert.nu0_fb(tau_m, tau_s, tau_r, theta, V_reset, mu, sigma)
-        nu = siegert.nu0_fb433(tau_m, tau_s, tau_r, theta, V_reset, mu, sigma)
+            # Stationary firing rates for delta shaped PSCs.
+            nu_0 = siegert.nu_0(tau_m, tau_r, theta, V_reset, mu, sigma)
 
-        # colored noise zero-frequency limit of transfer function
-        n1_zero_freq = siegert.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, theta,
-                                            V_reset, mu,
-                                            sigma)  # colored noise
+            # Stationary firing rates for filtered synapses (via Taylor)
+            nu0_fb = siegert.nu0_fb(tau_m, tau_s, tau_r, theta, V_reset, mu, sigma)
 
-        n1 = [
-            transfer_FP_algebra_j1_shift((2. * np.pi) * f, tau_m, tau_s, tau_r,
-                                         nu_fb, theta, V_reset, mu, sigma)
-            for f in frequencies
-        ]
+            # Stationary firing rates for exp PSCs. (via shift)
+            nu0_fb433 = siegert.nu0_fb433(tau_m, tau_s, tau_r, theta, V_reset, mu, sigma)
 
-        results_dict['sigma'][sigma]['mu'][mu] = {
-            'frequencies': frequencies,
-            'absolute_value': np.abs(n1),
-            'phase': np.angle(n1),
-            'zero_freq': n1_zero_freq}
+            # colored noise zero-frequency limit of transfer function
+            transfer_function_zero_freq = siegert.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, theta,
+                                                V_reset, mu,
+                                                sigma)  # colored noise
 
-        axA.semilogx(frequencies,
-                     np.abs(n1),
-                     color=colors[idx],
-                     linestyle='-',
-                     linewidth=lw,
-                     label=r'$\nu=$ {} Hz'.format(nu_fb))
-        axB.semilogx(frequencies,
-                     np.angle(n1) / 2 / np.pi * 360,
-                     color=colors[idx],
-                     linestyle='-',
-                     linewidth=lw,
-                     label=r'$\mu=$ ' + str(mu))
-        axA.semilogx(zero_freq,
-                     n1_zero_freq,
-                     '+',
-                     color=colors[idx],
-                     markersize=markersize_cross)
+            transfer_function = [
+                transfer_FP_algebra_j1_shift((2. * np.pi) * f, tau_m, tau_s, tau_r,
+                                             nu0_fb, theta, V_reset, mu, sigma)
+                for f in frequencies
+            ]
 
-    # sigma = 1.5, $\nu = 10, 30$ Hz
-    mu_array = np.array([18.94, 20.96])
-    sigma = 1.5
+            results_dict['sigma'][sigma]['mu'][mu] = {
+                'frequencies': frequencies,
+                'absolute_value': np.abs(transfer_function),
+                'phase': np.angle(transfer_function) / 2 / np.pi * 360,
+                'zero_freq': transfer_function_zero_freq,
+                'nu_0': nu_0,
+                'nu0_fb': nu0_fb,
+                'nu0_fb433': nu0_fb433}
 
-    results_dict['sigma'][sigma]['mu'] = defaultdict(dict)
+            colors = ['black', 'grey']
+            lw = 4
+            markersize_cross = 4
+            if sigma == 4.0:
+                ls = '-'
+            else:
+                ls = '--'
 
-    for idx, mu in enumerate(mu_array):
+            axA.semilogx(frequencies,
+                         np.abs(transfer_function),
+                         color=colors[idx],
+                         linestyle=ls,
+                         linewidth=lw,
+                         label=r'$\nu=$ {} Hz'.format(nu0_fb))
+            axB.semilogx(frequencies,
+                         np.angle(transfer_function) / 2 / np.pi * 360,
+                         color=colors[idx],
+                         linestyle=ls,
+                         linewidth=lw,
+                         label=r'$\mu=$ ' + str(mu))
+            axA.semilogx(zero_freq,
+                         transfer_function_zero_freq,
+                         '+',
+                         color=colors[idx],
+                         markersize=markersize_cross)
 
+    axA.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+    axA.set_ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
 
-        nu0 = siegert.nu_0(tau_m, tau_r, theta, V_reset, mu, sigma)
-        nu_fb = siegert.nu0_fb(tau_m, tau_s, tau_r, theta, V_reset, mu, sigma)
-        nu = siegert.nu0_fb433(tau_m, tau_s, tau_r, theta, V_reset, mu, sigma)
-
-        # colored noise zero-frequency limit of transfer function
-        n1_zero_freq = siegert.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, theta,
-                                            V_reset, mu,
-                                            sigma)
-
-
-        n1 = [
-            transfer_FP_algebra_j1_shift((2. * np.pi) * f, tau_m, tau_s, tau_r,
-                                         nu_fb, theta, V_reset, mu, sigma)
-            for f in frequencies
-        ]
-
-        results_dict['sigma'][sigma]['mu'][mu] = {
-            'frequencies': frequencies,
-            'absolute_value': np.abs(n1),
-            'phase': np.angle(n1),
-            'zero_freq': n1_zero_freq}
-
-        axA.semilogx(frequencies,
-                     np.abs(n1),
-                     color=colors[idx],
-                     linestyle='--',
-                     linewidth=lw,
-                     label=r'$\nu=$ {} Hz'.format(nu_fb))
-        axB.semilogx(frequencies,
-                     np.angle(n1) / 2 / np.pi * 360,
-                     color=colors[idx],
-                     linestyle='--',
-                     linewidth=lw,
-                     label=r'$\mu=$ ' + str(mu))
-        axA.semilogx(zero_freq,
-                     n1_zero_freq,
-                     '+',
-                     color=colors[idx],
-                     markersize=markersize_cross)
-
-        axA.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-        axA.set_ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
-
-        axB.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-        axB.set_ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
+    axB.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+    axB.set_ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
 
     axA.legend()
     axB.legend()
@@ -239,21 +205,22 @@ if __name__ == '__main__':
     theta = 20.0  # threshold potential
     V_reset = 15.0  # reset potential
 
-    #
+    # The following parameters are used in the function
     # sigma = 4.0, $\nu = 10, 30$ Hz
-    mu_array = np.array([16.42, 19.66])
-    sigma = 4.0
+    mean_input_1 = np.array([16.42, 19.66])
+    sigma_1 = 4.0
 
     # sigma = 1.5, $\nu = 10, 30$ Hz
-    mu_array = np.array([18.94, 20.96])
-    sigma = 1.5
+    mean_input_2 = np.array([18.94, 20.96])
+    sigma_2 = 1.5
 
     frequencies = np.logspace(-1, 2.8, num=500)
     zero_freq = 0.06
 
     fig, (axA, axB) = plt.subplots(1, 2, figsize=(15, 10))
     Phi1 = Phi1_mpmath_pcfu
-    results_dict = plot_PRE_Schuecker_Fig4(['black', 'grey'], lw=4, markersize_cross=4)
+    results_dict = plot_PRE_Schuecker_Fig4(frequencies, sigma_1, mean_input_1,
+                                           sigma_2, mean_input_2)
     fig.savefig('PRE_Schuecker_Fig4.pdf')
 
     # save output
