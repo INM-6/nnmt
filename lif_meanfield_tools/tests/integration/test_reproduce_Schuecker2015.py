@@ -108,7 +108,7 @@ class SchueckerTestCase(unittest.TestCase):
                     'nu0_fb433': nu0_fb433.to(ureg.Hz).magnitude}
 
 
-
+    #TODO in assert function first argument should be test data
     def test_frequencies(self):
         # take examplary frequencies for fixed sigma and mu
         sigma = self.network_params['sigma_1'].magnitude
