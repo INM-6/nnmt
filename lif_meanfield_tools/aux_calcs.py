@@ -115,7 +115,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """
     Calculates stationary firing rates for filtered synapses based on
-    Fourcaud & Brunel 2002.
+    Fourcaud & Brunel 2002 (using the shift of the integration boundaries)
 
     Parameters:
     -----------
@@ -252,14 +252,22 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 def Phi(s):
     """
-    where does this come from and what does it do???
+    helper function to calculate stationary firing rates with synaptic
+    filtering
+
+    corresponds to u^-2 F in Eq. 53 of the following publication
+
+
+    Schuecker, J., Diesmann, M. & Helias, M.
+    Reduction of colored noise in excitable systems to white
+    noise and dynamic boundary conditions. 1–23 (2014).
     """
     return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.) * (1 + erf(s / np.sqrt(2))))
 
 
 def Phi_prime_mu(s, sigma):
     """
-    where does this come from and what does it do???
+    Derivative of the helper function Phi(s) with respect to the mean input
     """
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
     * (1 + erf(s / np.sqrt(2)))
@@ -268,7 +276,13 @@ def Phi_prime_mu(s, sigma):
 
 def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    where does this come from and what does it do???
+    Derivative of the stationary firing rates with synaptic filtering
+    with respect to the mean input
+
+    See Appendix B in
+    Schuecker, J., Diesmann, M. & Helias, M.
+    Reduction of colored noise in excitable systems to white
+    noise and dynamic boundary conditions. 1–23 (2014).
 
     Parameters:
     -----------
@@ -306,7 +320,8 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    where does this come from and what does it do???
+    Derivative of the stationary firing rate without synaptic filtering
+    with respect to the mean input
 
     Parameters:
     -----------
@@ -429,6 +444,13 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
              0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
 
     return lin + sqr, lin, sqr
+
+
+def truncated_gaussian_helper(s):
+    """
+    see Bos 2015 Eq. 15
+    """
+    return 0.5 * (1 + erf(s / np.sqrt(2)))
 
 
 def determinant(matrix):
