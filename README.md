@@ -50,6 +50,30 @@ Install lif_meanfield_tools:
 pip install git+https://github.com/INM-6/lif_meanfield_tools.git
 ```
 
+# Current Issues
+
+As the package is still maturing, we currently have some issues that you should
+be aware of:
+
+- __Network model used__: Currently, the toolbox is specialized on the
+  microcircuit model (Potjans and Diesmann 2014), which is why the network
+  parameter 'label' should only be set to  'microcircuit' at the moment.
+
+- __Firing rates can become negative__: It happened once to us that the firing
+  rates we got were negative for a specific set of network parameters.
+  Apparently, the algorithm is running into a non-realistic local minimum. This
+  is an issue we will deal with soon.
+
+- __Accuracy of transfer function at high frequencies__: This actually is not a
+  real issue, but you should be aware that the current implementation is only
+	accurate for moderate frequencies. This is expected from the theory
+	implemented. In the future we might add a support for high frequencies.
+
+- __Accuracy of transfer function depends on ratio of synaptic and membrane time
+  constant__: This is a part of the theory as well. It is only accurate for
+	small values of $tau_s/tau_m$, which is used as a perturbation parameter in
+	the analysis.
+
 # How to use this package
 
 In order to give you a quick and simple start, we wrote a little example script:
@@ -112,9 +136,7 @@ Network methods:
   calculates the resulting mean and variance of the input to a neuron, and uses
   the results and equation (4.33) in Fourcaud & Brunel 2002 to calculate the
   resulting firing rate again. This procedure is continued until the rates
-  converge. Note that it happened once to us that the firing rates we got were
-	negative, after choosing a specific set of network parameters. This is an
-	issue we will deal with soon.
+  converge.
 - __mean_input__: Calculate mean input to a neuron, given the population firing
   rates and external inputs.
 - __std_input__: Calculate the standard deviation of the input to a neuron,
@@ -128,8 +150,7 @@ Network methods:
   'taylor' and 'shift'. The difference is the way the colored noise is treated
   mathematically, which leads to two slightly different  approximations, which
   are however equivalent up to first order (see Schuecker et al. 2015 for
-  further discussion). Note that the results are not accurate in the high
-  frequency limit.
+  further discussion).
 - __sensitivity_measure__: Calculate the sensitivity measure, introduced in Bos
   et al. 2016, equation (7), which can be used to identify the connections
 	crucial for the peak amplitude and frequency of network oscillations, visible
@@ -148,10 +169,6 @@ Network methods:
 - __eigenvals_branches_rate__: ???
 - __xi_of_k__: ???
 - __solve_chareq_rate_boxcar__: ???
-
-Currently, the toolbox is specialized on the microcircuit model (Potjans and
-Diesmann 2014), which is why the network parameter 'label' should only be set to 
-'microcircuit' at the moment.
 
 # History of this Project
 
