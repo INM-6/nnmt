@@ -255,7 +255,9 @@ def Phi(s):
     """
     where does this come from and what does it do???
     """
-    return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.) * (1 + erf(s / np.sqrt(2))))
+    # return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.) * (1 + erf(s / np.sqrt(2))))
+    return 0.5 * (1 + erf(s / np.sqrt(2)))
+
 
 
 def Phi_prime_mu(s, sigma):
