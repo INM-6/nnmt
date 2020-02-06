@@ -112,7 +112,9 @@ Network methods:
   calculates the resulting mean and variance of the input to a neuron, and uses
   the results and equation (4.33) in Fourcaud & Brunel 2002 to calculate the
   resulting firing rate again. This procedure is continued until the rates
-  converge.
+  converge. Note that it happened once to us that the firing rates we got were
+	negative, after choosing a specific set of network parameters. This is an
+	issue we will deal with soon.
 - __mean_input__: Calculate mean input to a neuron, given the population firing
   rates and external inputs.
 - __std_input__: Calculate the standard deviation of the input to a neuron,
@@ -122,7 +124,11 @@ Network methods:
 - __transfer_function__: Calculate the transfer function following equation (93)
   in Schuecker et al. 2014 in first order perturbation theory in $
   \sqrt(tau_s/tau_m) $, the square root of the synaptic time constant divided by
-  the membrane time constant. Note that the results are not accurate in the high
+  the membrane time constant. You can choose between two implementations:
+  'taylor' and 'shift'. The difference is the way the colored noise is treated
+  mathematically, which leads to two slightly different  approximations, which
+  are however equivalent up to first order (see Schuecker et al. 2015 for
+  further discussion). Note that the results are not accurate in the high
   frequency limit.
 - __sensitivity_measure__: Calculate the sensitivity measure, introduced in Bos
   et al. 2016, equation (7), which can be used to identify the connections
@@ -143,6 +149,9 @@ Network methods:
 - __xi_of_k__: ???
 - __solve_chareq_rate_boxcar__: ???
 
+Currently, the toolbox is specialized on the microcircuit model (Potjans and
+Diesmann 2014), which is why the network parameter 'label' should only be set to 
+'microcircuit' at the moment.
 
 # History of this Project
 
