@@ -134,6 +134,14 @@ Network methods:
   eigenvectors of the effective connectivity matrix (eq. 4), the propagator
 	(eq. 16) or the inverse propagator in the frequency	domain as defined in Bos
 	et al. 2016.
+- __additional_rates_for_fixed_input__: ???
+- __fit_transfer_function__: ???
+- __scan_fit_transfer_function_mean_std_input__: ???
+- __effective_coupling_strength__: ???
+- __linear_interpolation_alpha__: ???
+- __eigenvals_branches_rate__: ???
+- __xi_of_k__: ???
+- __solve_chareq_rate_boxcar__: ???
 
 
 # History of this Project
