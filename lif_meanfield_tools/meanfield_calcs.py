@@ -350,7 +350,7 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega - 0.) < 1e-15:
-        result = aux_calcs.d_nu_d_mu(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+        result = aux_calcs.d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu,
                                      sigma)
     else:
         nu = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
@@ -369,10 +369,10 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
 
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                      dimension, omegas):
+                      dimension, omegas, method='shift'):
     """
     Returns transfer functions for all populations based on
-    transfer_function_1p_shift().
+    transfer_function_1p_shift() (default) or transfer_function_1p_taylor()
 
     Parameters:
     -----------
@@ -394,6 +394,8 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
         Number of populations.
     omegas: Quantity(np.ndarray, 'hertz')
         Input frequencies to population.
+    method: str
+        String specifying transfer function to use ('shift', 'taylor').
 
     Returns:
     --------
@@ -403,11 +405,19 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
         given omegas.
     """
 
-    transfer_functions = [[transfer_function_1p_shift(mu[i], sigma[i], tau_m,
-                                                      tau_s, tau_r, V_th_rel,
-                                                      V_0_rel, omega)
-                           for i in range(dimension)]
-                          for omega in omegas]
+    if method == 'shift':
+        transfer_functions = [[transfer_function_1p_shift(mu[i], sigma[i], tau_m,
+                                                          tau_s, tau_r, V_th_rel,
+                                                          V_0_rel, omega)
+                               for i in range(dimension)]
+                              for omega in omegas]
+    if method == 'taylor':
+        transfer_functions = [[transfer_function_1p_taylor(mu[i], sigma[i], tau_m,
+                                                          tau_s, tau_r, V_th_rel,
+                                                          V_0_rel, omega)
+                               for i in range(dimension)]
+                              for omega in omegas]
+
 
     # convert list of list of quantities to list of quantities containing np.ndarray
     tf_magnitudes = np.array([np.array([tf.magnitude for tf in tf_population])

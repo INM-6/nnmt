@@ -542,7 +542,7 @@ class Network(object):
 
 
 
-    def transfer_function(self, freq=None):
+    def transfer_function(self, freq=None, method='shift'):
         """
         Calculates transfer function either for all frequencies or given one.
 
@@ -561,13 +561,13 @@ class Network(object):
         """
 
         if freq == None:
-            return self.transfer_function_multi()
+            return self.transfer_function_multi(method)
         else:
             return self.transfer_function_single(freq)
 
 
     @_check_and_store('transfer_function')
-    def transfer_function_multi(self):
+    def transfer_function_multi(self, method='shift'):
         """
         Calculates transfer function for each population.
 
@@ -586,7 +586,8 @@ class Network(object):
                                                  self.network_params['V_th_rel'],
                                                  self.network_params['V_0_rel'],
                                                  self.network_params['dimension'],
-                                                 self.analysis_params['omegas'])
+                                                 self.analysis_params['omegas'],
+                                                 method=method)
 
         return transfer_functions
 
