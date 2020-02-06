@@ -19,7 +19,7 @@ to contact us, if you think that we could improve your life (or workflow).
 
 # Structure
 
-<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/structure_new.png" width="400">        
+<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/readme_figures/structure_new.png" width="400">        
 
 lif_meanfield_tools consists of four modules:
 
