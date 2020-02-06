@@ -1,0 +1,13 @@
+name: Schuecker2015_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - numpy
+  - scipy
+  - mpmath
+  - pip
+  - requests
+  - pip:
+    - h5py-wrapper

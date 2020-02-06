@@ -19,6 +19,9 @@ from ... import ureg
 
 import h5py_wrapper.wrapper as h5
 
+# TODO remove plotting after debugging
+import matplotlib.pyplot as plt
+
 class SchueckerTestCase(unittest.TestCase):
     def setUp(self):
         # Load ground truth data
@@ -143,6 +146,21 @@ class SchueckerTestCase(unittest.TestCase):
                 assert_allclose(ground_truth_data['absolute_value'],
                                           test_data['absolute_value'], atol=2)
 
+                # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
+                fig = plt.figure()
+                plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
+                plt.semilogx(self.frequencies,
+                             ground_truth_data['absolute_value'],
+                             label='ground truth')
+
+                plt.semilogx(self.frequencies,
+                             test_data['absolute_value'],
+                             label='test data')
+                plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+                plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
+                plt.legend()
+                plt.show()
+
     def test_phase(self):
         # define specific sigma and mu
         for index in [1,2]:
@@ -165,6 +183,22 @@ class SchueckerTestCase(unittest.TestCase):
                 print(f'below {self.frequencies[-1]}')
                 assert_allclose(ground_truth_data['phase'],
                                           test_data['phase'], atol=150)
+
+                # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
+                fig = plt.figure()
+                plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
+                plt.semilogx(self.frequencies,
+                             ground_truth_data['phase'],
+                             label='ground truth')
+
+                plt.semilogx(self.frequencies,
+                             test_data['phase'],
+                             label='test data')
+                plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+                plt.ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
+                plt.legend()
+                plt.show()
+
 
     def test_stationary_firing_rates(self):
         # define specific sigma and mu

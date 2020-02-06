@@ -33,8 +33,8 @@ import mpmath
 
 from . import ureg
 
-# @ureg.wraps(ureg.Hz,
-#            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
+@ureg.wraps(ureg.Hz,
+           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs
