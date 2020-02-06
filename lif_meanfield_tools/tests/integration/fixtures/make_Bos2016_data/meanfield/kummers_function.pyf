@@ -1,0 +1,16 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module fortran_functions ! in 
+    interface  ! in :kummers_function
+        subroutine kummers_function(a,b,z,k) ! in :kummers_function:kummers_function.f90
+            complex intent(in) :: a
+            complex intent(in) :: b
+            complex intent(in) :: z
+            complex intent(out) :: k
+        end subroutine kummers_function
+    end interface 
+end python module fortran_functions
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
