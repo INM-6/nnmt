@@ -219,7 +219,8 @@ class Network(object):
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
 
 
-        @ureg.wraps(1/ureg.mm, (1./ureg.mm, 1./ureg.mm, 1./ureg.mm))
+        @ureg.wraps((1/ureg.mm).units,
+                    ((1/ureg.mm).units, (1/ureg.mm).units, (1/ureg.mm).units))
         def calc_evaluated_wavenumbers(k_min, k_max, dk):
             return np.arange(k_min, k_max, dk)
 

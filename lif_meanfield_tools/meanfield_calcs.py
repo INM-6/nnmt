@@ -1009,9 +1009,11 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
     return w_ecs
 
 
-@ureg.wraps((None, 1/ureg.s, 1/ureg.s, 1./ureg.m, 1./ureg.s, 1./ureg.s), (1/ureg.m, None, ureg.s, None, ureg.m, ureg.s, ureg.s,
-    ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV,
-    None, None))
+@ureg.wraps((None, (1/ureg.s).units, (1/ureg.s).units, (1/ureg.m).units,
+             (1/ureg.s).units, (1/ureg.s).units),
+            ((1/ureg.m).units, None, ureg.s, None, ureg.m, ureg.s, ureg.s,
+             ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV,
+             ureg.mV, None, None))
 def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
         d_e, d_i, mean_inputs, std_inputs, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
         J, K, dimension):
@@ -1514,7 +1516,8 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
     lamb = complex(l_opt[0], l_opt[1])
     return lamb
 
-@ureg.wraps((None, None, 1/ureg.mm, 1/ureg.mm), (1/ureg.mm, None, ureg.mm))
+@ureg.wraps((None, None, (1/ureg.mm).units, (1/ureg.mm).units),
+            ((1/ureg.mm).units, None, ureg.mm))
 def xi_of_k(ks, W_rate, width):
     """
     Compute minimum and maximum of spatial profile xi of k
@@ -1553,7 +1556,8 @@ def xi_of_k(ks, W_rate, width):
     return xi_min, xi_max, k_min, k_max
 
 
-@ureg.wraps(1/ureg.s, (None, 1/ureg.mm, ureg.s, None, ureg.mm, ureg.s))
+@ureg.wraps((1/ureg.s).units,
+            (None, (1/ureg.mm).units, ureg.s, None, ureg.mm, ureg.s))
 def solve_chareq_rate_boxcar(branch, k_wavenumber, tau, W_rate, width, delay):
     """
     Solve the characteristic equation for the linearized rate model for
