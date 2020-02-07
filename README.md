@@ -31,7 +31,7 @@ Contributions are always welcome via
 [Pull requests](https://github.com/INM-6/lif_meanfield_tools/pulls).
 
 If you are using this toolbox, please cite us: for a specific release, we recommend to use the reference from [Zenodo](https://zenodo.org/). Otherwise, you can also provide a link to this repository with the hash of the respective commit.
-In addition, please also cite the publications that used the methods implemented here first. In "[How to Use This Package](#how-to-use-this-package)" you can find details on which function of this package refers to which publication.
+In addition, please also cite the publications that used the methods implemented here first. In [How to Use This Package](#how-to-use-this-package) you can find details on which function of this package refers to which publication.
 
 
 # Structure
