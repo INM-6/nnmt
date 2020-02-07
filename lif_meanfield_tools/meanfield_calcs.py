@@ -42,7 +42,7 @@ import numpy as np
 import scipy.optimize as sopt
 import scipy.integrate as sint
 import scipy.misc as smisc
-from scipy.special import zetac
+from scipy.special import zetac, erf
 
 
 from . import ureg
