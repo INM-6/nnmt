@@ -33,6 +33,11 @@ Contributions are always welcome via
 If you are using this toolbox, please cite us: for a specific release, we recommend to use the reference from [Zenodo](https://zenodo.org/). Otherwise, you can also provide a link to this repository with the hash of the respective commit.
 In addition, please also cite the publications that used the methods implemented here first. In [How to Use This Package](#how-to-use-this-package) you can find details on which function of this package refers to which publication.
 
+<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/readme_figures/power_spectra.png" width="400">    
+
+The figure shows power spectra calculated with this toolbox using the minimal
+example script `examples/power_spectra.py`.
+
 
 # Structure
 
@@ -106,8 +111,9 @@ be aware of:
 
 # How to Use This Package
 
-In order to give you a quick and simple start, we wrote a little example script:
-`example/minimal_usage_example.py`. First of all, you should have a look at this
+In order to give you a quick and simple start, we wrote some example scripts in
+the folder `examples`. You can start with `minimal_usage_example.py`.
+First of all, you should have a look at this
 file. Actually, we hope that the usage might be self-explanatory, once you have
 seen an example. But, if you need a little more hints, just continue reading.
 
