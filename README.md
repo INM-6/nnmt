@@ -1,10 +1,19 @@
-LIF Mean-field Tools
+LIF Meanfield Tools
 ====================
 
 This Python package provides useful tools for analyzing neuronal networks
 consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
 mean-field theory of neuronal networks. That is why this package is called
 __lif_meanfield_tools (LMT)__.
+
+The package provides implementations used in the same or a similar version in 
+the following scientific publications: [Fourcaud & Brunel (2002)](https://doi.org/10.1162/089976602320264015), 
+[Schuecker et al. (2014)](https://arxiv.org/abs/1410.8799),
+[Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119),
+[Schuecker et al. (2017)]( https://doi.org/10.1371/journal.pcbi.1005179),
+[Bos et al. (2016)](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132) and
+Senk et al. ("Conditions for wave trains in spiking neural networks", accepted for
+publication in Physical Review Research).
 
 Using this package, you can easily calculate quantities like firing rates, power
 spectra, and many more, which give you a deeper and more intuitive understanding
@@ -20,6 +29,10 @@ If you encounter a problem or have a feature request, you can open an
 [Issue](https://github.com/INM-6/lif_meanfield_tools/issues).
 Contributions are always welcome via
 [Pull requests](https://github.com/INM-6/lif_meanfield_tools/pulls).
+
+If you are using this toolbox, please cite us: for a specific release, we recommend to use the reference from [Zenodo](https://zenodo.org/). Otherwise, you can also provide a link to this repository with the hash of the respective commit.
+In addition, please also cite the publications that used the methods implemented here first. In [How to Use This Package](#how-to-use-this-package) you can find details on which function of this package refers to which publication.
+
 
 # Structure
 
@@ -47,14 +60,14 @@ lif_meanfield_tools consists of four modules:
   the calculations that belong to `meanfield_calcs.py` and the ones that belong to
   `aux_calcs.py`.
 
-# How to get started / Installation
+# How to Get Started / Installation
 
 If you have a local copy of this repository, you can install LMT by running:
 ```
 pip install .
 ```
 
-An alternative is to install directly from GitHub: 
+An alternative is to install directly from GitHub:
 ```
 pip install git+https://github.com/INM-6/lif_meanfield_tools.git
 ```
@@ -64,30 +77,34 @@ pip install git+https://github.com/INM-6/lif_meanfield_tools.git
 As the package is still maturing, we currently have some issues that you should
 be aware of:
 
-- __Network model used__: Currently, the toolbox is specialized on the
-  microcircuit model (first published by
-  [Potjans and Diesmann (2014)](https://doi.org/10.1093/cercor/bhs358))
-  which is why the network
-  parameter `label` should only be set to `microcircuit` at the moment. See
-  the function `_calculate_dependent_network_parameters()` in `network.py`.
+- [__Network model used__](https://github.com/INM-6/lif_meanfield_tools/issues/36):
+  Currently, the toolbox is specialized on the microcircuit model (first
+  published by [Potjans and Diesmann (2014)](https://doi.org/10.1093/cercor/bhs358))
+  which is why the network parameter `label` should only be set to
+  `microcircuit` at the moment. See the function
+  `_calculate_dependent_network_parameters()` in `network.py`.
 
-- __Firing rates can become negative__: It happened once to us that the firing
-  rates we got were negative for a specific set of network parameters.
-  Apparently, the algorithm is running into a non-realistic local minimum. This
-  is an issue we will deal with soon.
+- [__Firing rates can become negative__](https://github.com/INM-6/lif_meanfield_tools/issues/19):
+  It happened once to us that the firing rates we got were negative for a
+  specific set of network parameters. Apparently, the algorithm is running into
+  a non-realistic local minimum. This is an issue we will deal with soon.
 
-- __Accuracy of transfer function at high frequencies__: This actually is not a
-  real issue, but you should be aware that the current implementation is only
-  accurate for moderate frequencies. This is expected from the theory
-  implemented. In the future we might add a support for high frequencies.
+- [__Accuracy of transfer function at high frequencies__](https://github.com/INM-6/lif_meanfield_tools/issues/37):
+  This actually is not a real issue, but you should be aware that the current
+  implementation is only accurate for moderate frequencies. This is expected
+  from the theory implemented. In the future we might add a support for high
+  frequencies (see [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119) 
+  for further discussion).
 
-- __Accuracy of transfer function depends on ratio of synaptic and membrane time
-  constant__: This is a part of the theory as well. It is only accurate for
-  small values of
-  <img src="https://render.githubusercontent.com/render/math?math=\tau_s/\tau_m">
-  which is used as a perturbation parameter in the analysis.
+- [__Accuracy of transfer function depends on ratio of synaptic and membrane time
+  constant__](https://github.com/INM-6/lif_meanfield_tools/issues/37): This
+  is a part of the theory as well. It is only accurate for small values of
+  <img src="https://render.githubusercontent.com/render/math?math=\sqrt{\tau_s/\tau_m}">
+  which is used as a perturbation parameter in the analysis (see 
+  [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119) for 
+  further discussion).
 
-# How to use this package
+# How to Use This Package
 
 In order to give you a quick and simple start, we wrote a little example script:
 `example/minimal_usage_example.py`. First of all, you should have a look at this
@@ -161,27 +178,27 @@ Network methods:
 - __transfer_function__: Calculate the transfer function following Eq. (93)
   in
   [Schuecker et al. (2014)](https://arxiv.org/abs/1410.8799)
-  in first order perturbation theory in 
+  in first order perturbation theory in
    <img src="https://render.githubusercontent.com/render/math?math=\sqrt{\tau_s/\tau_m}">,
   the square root of the synaptic time constant divided by the membrane time
   constant. You can choose between two implementations:
   `taylor` and `shift`. The difference is the way the colored noise is treated
   mathematically, which leads to two slightly different  approximations, which
-  are however equivalent up to first order (see 
+  are however equivalent up to first order (see
   [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119)
   for further discussion).
 - __sensitivity_measure__: Calculate the sensitivity measure, introduced in
   Eq. (7) of
-  [Bos et al. (2016](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132),
+  [Bos et al. (2016)](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132),
   which can be used to identify the connections
   crucial for the peak amplitude and frequency of network oscillations, visible
   in the power spectrum.
 - __power_spectra__: Calculate the power spectra of all populations following
-  Eq. (18) in Bos et al. (2016).
+  Eq. (18) in [Bos et al. (2016)](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132).
 - __eigen_spectra__: Calculate the eigenvalue spectrum, or left of right
   eigenvectors of the effective connectivity matrix (Eq. 4), the propagator
-  Eq. (16) or the inverse propagator in the frequency domain as defined in Bos
-  et al. (2016).
+  Eq. (16) or the inverse propagator in the frequency domain as defined in 
+  [Bos et al. (2016)](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132).
 
 The following additional Network methods have been used in Senk et al.
 ("Conditions for wave trains in spiking neural networks", accepted for
@@ -202,9 +219,9 @@ publication in Physical Review Research):
   neural-field model (see Fig. 6 for alpha=0).
 - __xi_of_k__: Effective spatial profile (see Fig. 3(b) and (d)).
 - __solve_chareq_rate_boxcar__: Analytical solution of the characteristic
-  equation for a neural-field model with boxcar-shaped connectivity kernels. 
+  equation for a neural-field model with boxcar-shaped connectivity kernels.
 
-# History of this project
+# History of this Project
 
 Mean-field theory is a very handy tool when you want to understand the behaviour
 of your network. Using this theory allows you to predict some features of a
