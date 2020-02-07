@@ -93,7 +93,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     '''
     def rate_function(mu, sigma):
         """ calculate stationary firing rate with given parameters """
-        return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+        return aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                    sigma)
 
     def get_rate_difference(nu):
@@ -276,7 +276,7 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                            mu, sigma)
     else:
         nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+        nu0_fb = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                      sigma)
         x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma

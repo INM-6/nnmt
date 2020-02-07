@@ -66,6 +66,10 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+
+    return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
