@@ -1,15 +1,14 @@
 from setuptools import setup
 
-long_description = open("README.md").read()
-
-setup(name='lif_meanfield_tools',
-      version='0.1',
-      description='Mean-field toolbox for networks of LIF neurons.',
-      url='https://github.com/INM-6/lif_meanfield_tools',
-      author='Moritz Layer, Hannah Bos, Jannis Schuecker, Johanna Senk, Karolina Korvasova, Moritz Helias',
-      author_email='m.layer@fz-juelich.de',
-      license='MIT',
-      packages=['lif_meanfield_tools'],
+setup(name = 'lif_meanfield_tools',
+      version = '0.1',
+      description = 'Mean-field toolbox for networks of LIF neurons.',
+      long_description = open('README.md').read(),
+      url = 'https://github.com/INM-6/lif_meanfield_tools',
+      author = 'see authors.md',
+      author_email = 'm.layer@fz-juelich.de',
+      license = 'GNU GPLv3',
+      packages = ['lif_meanfield_tools'],
       install_requires = [
         'setuptools>=23.1.0',
         'numpy>=1.8',
@@ -21,6 +20,5 @@ setup(name='lif_meanfield_tools',
         'pyyaml',
         'requests',
         'mpmath',
-        'decorator',
-])
-
+        'decorator'],
+     python_requires='>=3')
