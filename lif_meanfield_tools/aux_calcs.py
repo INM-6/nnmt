@@ -445,14 +445,6 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
 
     return lin + sqr, lin, sqr
 
-
-def truncated_gaussian_helper(s):
-    """
-    see Bos 2015 Eq. 15
-    """
-    return 0.5 * (1 + erf(s / np.sqrt(2)))
-
-
 def determinant(matrix):
     """
     Solve
