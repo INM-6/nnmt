@@ -43,7 +43,7 @@ import pint
 import scipy.optimize as sopt
 import scipy.integrate as sint
 import scipy.misc as smisc
-from scipy.special import zetac
+from scipy.special import zetac, erf
 
 
 from . import ureg
@@ -463,8 +463,8 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
         return D*np.exp(-np.complex(0,omega)*Delay)
 
     elif delay_dist == 'truncated_gaussian':
-        a0 = aux_calcs.Phi(-Delay/Delay_sd+1j*omega*Delay_sd)
-        a1 = aux_calcs.Phi(-Delay/Delay_sd)
+        a0 = 0.5 * (1 + erf((-Delay/Delay_sd+1j*omega*Delay_sd) / np.sqrt(2)))
+        a1 = 0.5 * (1 + erf((-Delay/Delay_sd) / np.sqrt(2)))
         b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
         b1 = np.exp(-np.complex(0,omega)*Delay)
         return (1.0-a0)/(1.0-a1)*b0*b1
