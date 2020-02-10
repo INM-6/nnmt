@@ -23,6 +23,11 @@ import matplotlib.pyplot as plt
 
 class BosTestCase(unittest.TestCase):
     def setUp(self):
+        # Parameters to tweak the behavior of the test
+        self.save_data=False
+        self.use_saved_data=True
+        self.plot_comparison=False
+
         # Load ground truth data
         self.path_to_fixtures = './lif_meanfield_tools/tests/integration/fixtures/'
         self.ground_truth_result = h5.load(self.path_to_fixtures +
@@ -44,6 +49,20 @@ class BosTestCase(unittest.TestCase):
                                           'Bos_test_power_spectra.npy')
         self.eigenvalue_spectra = np.load(self.path_to_fixtures +
                                           'Bos_test_eigenvalue_spectra.npy')
+        # In the case that test have to run several times for debugging
+        # it can be advantageous to once save intermediate results and load
+        # those in subsequent runs
+        if self.use_saved_data:
+            self.transfer_functions = np.load(self.path_to_fixtures +
+                                              'Bos_test_transfer_function.npy')
+            self.power_spectra = np.load(self.path_to_fixtures +
+                                              'Bos_test_power_spectra.npy')
+            self.eigenvalue_spectra = np.load(self.path_to_fixtures +
+                                              'Bos_test_eigenvalue_spectra.npy')
+        else:
+            self.transfer_functions = self.network.transfer_function(method='taylor')
+            self.power_spectra = self.network.power_spectra(method='taylor')
+            self.eigenvalue_spectra = self.network.eigenvalue_spectra('MH', method='taylor')
 
 
     def test_network_parameters(self):
@@ -163,6 +182,22 @@ class BosTestCase(unittest.TestCase):
         # # save output
         # np.save(self.path_to_fixtures + 'Bos_test_transfer_function.npy', test_data.magnitude)
 
+        if self.plot_comparison:
+            populations = self.network.network_params['populations']
+            fig = plt.figure()
+            for i, trans_func in enumerate(bos_code_data):
+                plt.plot(self.freqs, trans_func, label=f'bos: {populations[i]}')
+
+            for i, trans_func in enumerate(test_data):
+                plt.plot(self.freqs, trans_func, ls='--', label=f'lmt: {populations[i]}')
+            plt.legend()
+            plt.title('Transfer Functions')
+            plt.show()
+
+        if self.save_data:
+            np.save(self.path_to_fixtures + 'Bos_test_transfer_function.npy',
+                    self.transfer_functions.magnitude)
+
     def test_power_spectra(self):
         # Bos code actually calculates square of the power
         ground_truth_data = np.sqrt(self.ground_truth_result['fig_microcircuit']['power_ana'])
@@ -177,6 +212,11 @@ class BosTestCase(unittest.TestCase):
         # save output
         # np.save(self.path_to_fixtures + 'Bos_test_power_spectra.npy', test_data.magnitude)
 
+        if self.plot_comparison:
+            # TODO improve this plot
+            populations = self.network.network_params['populations']
+            nx = 5
+            ny = 4
 
         print(ground_truth_data.shape)
         # print(test_data.shape)
@@ -220,17 +260,49 @@ class BosTestCase(unittest.TestCase):
                 if pop == 0:
                     ax[j].set_xticklabels([])
                 else:
-                    box = ax[j].get_position()
-                    ax[j].set_position([box.x0, box.y0-box.height*0.2,
-                                           box.width, box.height])
-                    ax[j].set_xlabel(r'frequency (1/$s$)', fontsize=12)
-            ax[0].set_yticks([1e-5,1e-3,1e-1])
-            ax[1].set_yticks([1e-5,1e-3,1e-1])
-            ax[0].set_ylabel(r'$|C(\omega)|$')
-            ax[1].set_ylabel(r'$|C(\omega)|$')
-        fig.tight_layout()
-        plt.show()
+            fig = plt.figure()
 
+            fig.suptitle('Power Spectra - Meanfield', y=0.5)
+            fig.subplots_adjust(wspace=0.1, hspace=0.2, top=0.93,
+                                bottom=0.185, left=0.1, right=0.97)
+            ax = [plt.subplot2grid((nx,ny), (nx-(2-i%2),int(np.floor(i/2)))) for i in range(8)] # spectra
+
+            for layer in [0, 1, 2, 3]:
+                for pop in [0, 1]:
+                    j = layer*2+pop
+                    box = ax[j].get_position()
+                    ax[j].set_position([box.x0, box.y0-box.height*0.58,
+                                           box.width, box.height])
+                    ax[j].plot(self.freqs, ground_truth_data[j],
+                               label='ground_truth_data', zorder=1)
+                    ax[j].plot(self.freqs, bos_code_data[j], ls='--',
+                               label='bos_code_data', zorder=2)
+                    ax[j].plot(self.freqs, test_data[j], ls=(0, (3, 5, 1, 5)),
+                               label='test', zorder=3)
+                    ax[j].set_xlim([-5.0, 400.0])
+                    ax[j].set_ylim([1e-6, 1e1])
+                    ax[j].set_yscale('log')
+                    ax[j].set_yticks([])
+                    ax[j].set_xticks([100, 200, 300])
+                    ax[j].set_title(populations[j])
+                    ax[j].legend()
+                    if pop == 0:
+                        ax[j].set_xticklabels([])
+                    else:
+                        box = ax[j].get_position()
+                        ax[j].set_position([box.x0, box.y0-box.height*0.2,
+                                               box.width, box.height])
+                        ax[j].set_xlabel(r'frequency (1/$s$)', fontsize=12)
+                ax[0].set_yticks([1e-5,1e-3,1e-1])
+                ax[1].set_yticks([1e-5,1e-3,1e-1])
+                ax[0].set_ylabel(r'$|C(\omega)|$')
+                ax[1].set_ylabel(r'$|C(\omega)|$')
+            fig.tight_layout()
+            plt.show()
+
+        if self.save_data:
+            np.save(self.path_to_fixtures + 'Bos_test_power_spectra.npy',
+                    self.power_spectra.magnitude)
 
 
     def test_eigenvalue_trajectories(self):
@@ -331,15 +403,53 @@ class BosTestCase(unittest.TestCase):
     def test_sensitivity_measure(self):
         ground_truth_data = self.ground_truth_result['sensitivity_measure']
 
+        if self.plot_comparison:
+            populations = self.network.network_params['populations']
+            # Eigenvalue Trajectories
+            fig = plt.figure()
+            fig.suptitle('Eigenvalue Trajectories')
+            for eig_index, eig_results in self.sensitivity_dict.items():
+                sc = plt.scatter(np.real(test_data[eig_index]), np.imag(test_data[eig_index]),
+                            c=self.freqs, cmap='viridis', s=0.5)
+                plt.scatter(np.real(eig_results['critical_eigenvalue']),
+                            np.imag(eig_results['critical_eigenvalue']),
+                            marker='+',
+                            s=30, label=eig_index)
+            plt.legend(title='Eigenvalue Index')
+            plt.xlabel('Re($\lambda(\omega)$)')
+            plt.ylabel('Im($\lambda(\omega)$)')
+            plt.scatter(1,0, marker='*', s=15, color='black')
+            plt.ylim([-4, 6.5])
+            plt.xlim([-11.5, 2])
+            cbar = plt.colorbar(sc)
+            cbar.set_label('Frequency $\omega$ [Hz]')
+            plt.clim(np.min(self.freqs), np.max(self.freqs))
+            plt.show()
 
-        freqs = self.network.analysis_params['omegas'].to(ureg.Hz).magnitude /2./np.pi
-        power = self.power_spectra
-        eigs = self.eigenvalue_spectra
-        populations = self.network.network_params['populations']
+            # Eigenvalue Trajectories - Zoomed In
+            fig = plt.figure()
+            fig.suptitle('Eigenvalue Trajectories Zoom')
+            for eig_index, eig_results in self.sensitivity_dict.items():
+                sc = plt.scatter(np.real(test_data[eig_index]), np.imag(test_data[eig_index]),
+                            c=self.freqs, cmap='viridis', s=0.5)
+                plt.scatter(np.real(eig_results['critical_eigenvalue']),
+                            np.imag(eig_results['critical_eigenvalue']),
+                            marker='+',
+                            s=30, label=eig_index)
+            plt.legend(title='Eigenvalue Index')
+            plt.xlabel('Re($\lambda(\omega)$)')
+            plt.ylabel('Im($\lambda(\omega)$)')
+            plt.scatter(1,0, marker='*', s=15, color='black')
+            plt.ylim([-0.2, 0.5])
+            plt.xlim([-0.5, 2])
+            cbar = plt.colorbar(sc)
+            cbar.set_label('Frequency $\omega$ [Hz]')
+            plt.clim(np.min(self.freqs), np.max(self.freqs))
+            plt.show()
 
-        # Adapt to shapes of ground_truth_data
-        # freqs = freqs[:ground_truth_data['freqs'].shape[0]]
-        # eigs = eigs.transpose()[:ground_truth_data['eigs'].shape[0],:]
+        if self.save_data:
+            np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy',
+                    self.eigenvalue_spectra.magnitude)
 
         # assert_array_almost_equal(freqs, ground_truth_data['freqs'])
         # assert_array_almost_equal(eigs, ground_truth_data['eigs'], decimal=4)
@@ -389,57 +499,58 @@ class BosTestCase(unittest.TestCase):
         assert_array_almost_equal(Z_amp, ground_truth_data['high_gamma1']['Z_amp'], decimal=4)
         assert_array_almost_equal(Z_freq, ground_truth_data['high_gamma1']['Z_freq'], decimal=4)
 
+        if self.plot_comparison:
+            populations = self.network.network_params['populations']
 
-        zmin = np.min(np.real(Z))
-        zmax = np.max(np.real(Z))
-        z = np.max([abs(zmin), abs(zmax)])
+            # identify colorbar limits
+            zmin = np.min(np.real(Z))
+            zmax = np.max(np.real(Z))
+            z = np.max([abs(zmin), abs(zmax)])
 
-        # plotting
+            # real(Z)
+            fig, ax = plt.subplots()
+            ax.set_title('$\\mathcal{R}(Z($' + str(np.round(fmax,1)) +'))')
+            heatmap = ax.imshow(np.real(Z), vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
+            fig.colorbar(heatmap, fraction=0.046, pad=0.04)
+            ax.set_xticks(np.arange(len(populations)))
+            ax.set_yticks(np.arange(len(populations)))
+            ax.set_xticklabels(populations)
+            ax.set_yticklabels(populations)
+            plt.tight_layout()
+            plt.show()
 
-        fig, ax = plt.subplots()
-        ax.set_title('$\\mathcal{R}(Z($' + str(np.round(fmax,1)) +'))')
-        heatmap = ax.imshow(np.real(Z), vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
-        fig.colorbar(heatmap, fraction=0.046, pad=0.04)
-        ax.set_xticks(np.arange(len(populations)))
-        ax.set_yticks(np.arange(len(populations)))
-        ax.set_xticklabels(populations)
-        ax.set_yticklabels(populations)
-        plt.tight_layout()
-        plt.show()
+            # imag(Z)
+            fig, ax = plt.subplots()
+            ax.set_title('$\\mathcal{I}(Z($' + str(np.round(fmax,1)) +'))')
+            heatmap = ax.imshow(np.imag(Z), vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
+            fig.colorbar(heatmap, fraction=0.046, pad=0.04)
+            ax.set_xticks(np.arange(len(populations)))
+            ax.set_yticks(np.arange(len(populations)))
+            ax.set_xticklabels(populations)
+            ax.set_yticklabels(populations)
+            plt.tight_layout()
+            plt.show()
 
+            # Z_amp
+            fig, ax = plt.subplots()
+            heatmap = ax.imshow(Z_amp, vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
+            ax.set_title('$(Z_{amp}($' + str(np.round(fmax,1)) +'))')
+            fig.colorbar(heatmap, fraction=0.046, pad=0.04)
+            ax.set_xticks(np.arange(len(populations)))
+            ax.set_yticks(np.arange(len(populations)))
+            ax.set_xticklabels(populations)
+            ax.set_yticklabels(populations)
+            plt.tight_layout()
+            plt.show()
 
-
-        fig, ax = plt.subplots()
-        ax.set_title('$\\mathcal{I}(Z($' + str(np.round(fmax,1)) +'))')
-        heatmap = ax.imshow(np.imag(Z), vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
-        fig.colorbar(heatmap, fraction=0.046, pad=0.04)
-        ax.set_xticks(np.arange(len(populations)))
-        ax.set_yticks(np.arange(len(populations)))
-        ax.set_xticklabels(populations)
-        ax.set_yticklabels(populations)
-        plt.tight_layout()
-        plt.show()
-
-
-        fig, ax = plt.subplots()
-        heatmap = ax.imshow(Z_amp, vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
-        ax.set_title('$(Z_{amp}($' + str(np.round(fmax,1)) +'))')
-        fig.colorbar(heatmap, fraction=0.046, pad=0.04)
-        ax.set_xticks(np.arange(len(populations)))
-        ax.set_yticks(np.arange(len(populations)))
-        ax.set_xticklabels(populations)
-        ax.set_yticklabels(populations)
-        plt.tight_layout()
-        plt.show()
-
-
-        fig, ax = plt.subplots()
-        heatmap = ax.imshow(Z_freq, vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
-        ax.set_title('$(Z_{freq}($' + str(np.round(fmax,1)) +'))')
-        fig.colorbar(heatmap, fraction=0.046, pad=0.04)
-        ax.set_xticks(np.arange(len(populations)))
-        ax.set_yticks(np.arange(len(populations)))
-        ax.set_xticklabels(populations)
-        ax.set_yticklabels(populations)
-        plt.tight_layout()
-        plt.show()
+            # Z_freq
+            fig, ax = plt.subplots()
+            heatmap = ax.imshow(Z_freq, vmin=-z, vmax=z, cmap=plt.cm.coolwarm)
+            ax.set_title('$(Z_{freq}($' + str(np.round(fmax,1)) +'))')
+            fig.colorbar(heatmap, fraction=0.046, pad=0.04)
+            ax.set_xticks(np.arange(len(populations)))
+            ax.set_yticks(np.arange(len(populations)))
+            ax.set_xticklabels(populations)
+            ax.set_yticklabels(populations)
+            plt.tight_layout()
+            plt.show()
