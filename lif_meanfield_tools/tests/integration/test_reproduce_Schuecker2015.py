@@ -24,6 +24,9 @@ import matplotlib.pyplot as plt
 
 class SchueckerTestCase(unittest.TestCase):
     def setUp(self):
+        # Parameters to tweak the behavior of the test
+        self.plot_comparison=False
+
         # Load ground truth data
         self.path_to_fixtures = './lif_meanfield_tools/tests/integration/fixtures/'
         self.ground_truth_result = h5.load(self.path_to_fixtures +
@@ -136,20 +139,21 @@ class SchueckerTestCase(unittest.TestCase):
                                 ground_truth_data['absolute_value'],
                                 atol=1e-14)
 
-                # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
-                fig = plt.figure()
-                plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
-                plt.semilogx(self.frequencies,
-                             ground_truth_data['absolute_value'],
-                             label='ground truth')
+                if self.plot_comparison:
+                    # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
+                    fig = plt.figure()
+                    plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
+                    plt.semilogx(self.frequencies,
+                                 ground_truth_data['absolute_value'],
+                                 label='ground truth')
 
-                plt.semilogx(self.frequencies,
-                             test_data['absolute_value'], ls='--',
-                             label='test data')
-                plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-                plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
-                plt.legend()
-                plt.show()
+                    plt.semilogx(self.frequencies,
+                                 test_data['absolute_value'], ls='--',
+                                 label='test data')
+                    plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+                    plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
+                    plt.legend()
+                    plt.show()
 
     def test_phase(self):
         # define specific sigma and mu
@@ -166,20 +170,21 @@ class SchueckerTestCase(unittest.TestCase):
                                 ground_truth_data['phase'],
                                 atol=1e-14)
 
-                # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
-                fig = plt.figure()
-                plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
-                plt.semilogx(self.frequencies,
-                             ground_truth_data['phase'],
-                             label='ground truth')
+                if self.plot_comparison:
+                    # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
+                    fig = plt.figure()
+                    plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
+                    plt.semilogx(self.frequencies,
+                                 ground_truth_data['phase'],
+                                 label='ground truth')
 
-                plt.semilogx(self.frequencies,
-                             test_data['phase'], ls='--',
-                             label='test data')
-                plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-                plt.ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
-                plt.legend()
-                plt.show()
+                    plt.semilogx(self.frequencies,
+                                 test_data['phase'], ls='--',
+                                 label='test data')
+                    plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+                    plt.ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
+                    plt.legend()
+                    plt.show()
 
     def test_stationary_firing_rates(self):
         # define specific sigma and mu
