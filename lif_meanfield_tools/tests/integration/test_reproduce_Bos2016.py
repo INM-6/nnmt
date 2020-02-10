@@ -9,6 +9,7 @@ Microcircuit. PLoS Comput. Biol. 12, 1–34 (2016).
 """
 
 import unittest
+from collections import defaultdict
 
 import numpy as np
 from numpy.testing import assert_array_equal,assert_array_almost_equal, assert_allclose
@@ -35,7 +36,6 @@ class BosTestCase(unittest.TestCase):
         self.bos_code_result = h5.load(self.path_to_fixtures +
                                            'Bos2016_data.h5')
 
-        # TODO do this more nicely
         self.exemplary_frequency_idx = self.bos_code_result['exemplary_frequency_idx']
 
         self.network_params = self.path_to_fixtures + 'Bos2016_network_params.yaml'
@@ -43,12 +43,9 @@ class BosTestCase(unittest.TestCase):
 
         self.network = lmt.Network(network_params=self.network_params,
                               analysis_params=self.analysis_params)
-        self.transfer_functions = np.load(self.path_to_fixtures +
-                                          'Bos_test_transfer_function.npy')
-        self.power_spectra = np.load(self.path_to_fixtures +
-                                          'Bos_test_power_spectra.npy')
-        self.eigenvalue_spectra = np.load(self.path_to_fixtures +
-                                          'Bos_test_eigenvalue_spectra.npy')
+
+        self.freqs = self.network.analysis_params['omegas'].to(ureg.Hz).magnitude /2./np.pi
+
         # In the case that test have to run several times for debugging
         # it can be advantageous to once save intermediate results and load
         # those in subsequent runs
@@ -63,6 +60,17 @@ class BosTestCase(unittest.TestCase):
             self.transfer_functions = self.network.transfer_function(method='taylor')
             self.power_spectra = self.network.power_spectra(method='taylor')
             self.eigenvalue_spectra = self.network.eigenvalue_spectra('MH', method='taylor')
+
+        # identify frequency which is closest to the point complex(1,0) per eigenvalue trajectory
+        self.sensitivity_dict = defaultdict(int)
+        for eig_index, eig in enumerate(self.eigenvalue_spectra):
+            critical_frequency = self.freqs[np.argmin(abs(eig-1.0))]
+            critical_frequency_index = np.argmin(abs(self.freqs-critical_frequency))
+            critical_eigenvalue = eig[critical_frequency_index]
+
+            self.sensitivity_dict[eig_index] = {'critical_frequency': critical_frequency,
+                                           'critical_frequency_index': critical_frequency_index,
+                                           'critical_eigenvalue': critical_eigenvalue}
 
 
     def test_network_parameters(self):
@@ -114,7 +122,7 @@ class BosTestCase(unittest.TestCase):
     def test_analysis_frequencies(self):
         ground_truth_data = self.ground_truth_result['fig_microcircuit']['freq_ana']
         bos_code_data = self.bos_code_result['omegas'] /2./np.pi
-        test_data = self.network.analysis_params['omegas'].to(ureg.Hz).magnitude /2./np.pi
+        test_data = self.freqs
 
         # check ground truth data vs data generated via old code
         assert_array_equal(bos_code_data, ground_truth_data)
@@ -133,11 +141,13 @@ class BosTestCase(unittest.TestCase):
 
         # check ground truth data vs data generated via old code
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal = 5)
-
         # check ground truth data vs data generated via lmt
         assert_array_almost_equal(test_data, ground_truth_data, decimal = 5)
 
     def test_delay_distribution_at_single_frequency(self):
+        # ground truth data does not exist, but as regenerated bos_code_data
+        # passes all comparisons to ground truth data, this can be assumed to
+        # be fine
         bos_code_data = self.bos_code_result['delay_dist']
         omega = self.network.analysis_params['omegas'][self.exemplary_frequency_idx]
         test_data = self.network.delay_dist_matrix_single(omega)
@@ -146,6 +156,9 @@ class BosTestCase(unittest.TestCase):
         assert_array_equal(test_data.magnitude, bos_code_data)
 
     def test_effective_connectivity_at_single_frequency(self):
+        # ground truth data does not exist, but as regenerated bos_code_data
+        # passes all comparisons to ground truth data, this can be assumed to
+        # be fine
         bos_code_data = self.bos_code_result['MH']
         omega = self.network.analysis_params['omegas'][self.exemplary_frequency_idx]
         test_data = lmt.meanfield_calcs._effective_connectivity(omega,
@@ -154,33 +167,21 @@ class BosTestCase(unittest.TestCase):
                                                          self.network.network_params['J'],
                                                          self.network.network_params['K'],
                                                          self.network.network_params['dimension'],
-                                                         self.network.delay_dist_matrix_single(omega))
+                                                         self.network.delay_dist_matrix_single(omega)).to(ureg.s * ureg.mV)
 
-        assert_array_almost_equal(test_data.to(ureg.s * ureg.mV), bos_code_data, decimal = 5)
+        assert_array_almost_equal(test_data, bos_code_data, decimal = 5)
 
     def test_transfer_function(self):
+        # ground truth data does not exist, but as regenerated bos_code_data
+        # passes all comparisons to ground truth data, this can be assumed to
+        # be fine
         bos_code_data = self.bos_code_result['transfer_function_with_synaptic_filter']
-        # test_data = self.network.transfer_function(method='taylor')
-        test_data = self.transfer_functions
+        test_data = self.transfer_functions.transpose()
 
-        print(bos_code_data.shape, test_data.shape)
-        # plot for debugging
-        freqs = self.network.analysis_params['omegas']/2./np.pi
-        populations = self.network.network_params['populations']
-        fig = plt.figure()
-        for i, trans_func in enumerate(bos_code_data):
-            plt.plot(freqs, trans_func, label=f'bos: {populations[i]}')
-
-        for i, trans_func in enumerate(test_data.transpose()):
-            plt.plot(freqs, trans_func, ls='--', label=f'lmt: {populations[i]}')
-        plt.legend()
-        plt.title('Transfer Functions')
-        plt.show()
-
+        assert_array_equal(test_data.shape, bos_code_data.shape)
         # Transfer functions are stored transposed
-        assert_array_almost_equal(test_data.transpose(), bos_code_data, decimal = 3)
-        # # save output
-        # np.save(self.path_to_fixtures + 'Bos_test_transfer_function.npy', test_data.magnitude)
+        assert_array_almost_equal(test_data, bos_code_data, decimal = 4)
+
 
         if self.plot_comparison:
             populations = self.network.network_params['populations']
@@ -203,63 +204,21 @@ class BosTestCase(unittest.TestCase):
         ground_truth_data = np.sqrt(self.ground_truth_result['fig_microcircuit']['power_ana'])
         bos_code_data = np.sqrt(self.bos_code_result['power_spectra'])
 
+        # test regenerated data via original Bos code with publicated data
+        assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=3)
 
         # Bos code used Taylor method and the fortran implementation of the Kummer's function
         # to approximate the parabolic cylinder functions
-        # self.network.transfer_function(method='taylor')
-        # test_data = self.network.power_spectra(method='taylor')
         test_data = self.power_spectra
-        # save output
-        # np.save(self.path_to_fixtures + 'Bos_test_power_spectra.npy', test_data.magnitude)
 
+        assert_array_equal(test_data.shape, ground_truth_data.shape)
+        assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
         if self.plot_comparison:
             # TODO improve this plot
             populations = self.network.network_params['populations']
             nx = 5
             ny = 4
 
-        print(ground_truth_data.shape)
-        # print(test_data.shape)
-        print(self.network.analysis_params.keys())
-
-        assert_array_almost_equal(test_data, ground_truth_data,decimal=3)
-
-        # plot for debugging
-        # TODO improve this plot
-        freqs = self.network.analysis_params['omegas']/2./np.pi
-        populations = self.network.network_params['populations']
-        nx = 5
-        ny = 4
-
-        fig = plt.figure()
-
-        fig.suptitle('Power Spectra - Meanfield', y=0.5)
-        fig.subplots_adjust(wspace=0.1, hspace=0.2, top=0.93,
-                            bottom=0.185, left=0.1, right=0.97)
-        ax = [plt.subplot2grid((nx,ny), (nx-(2-i%2),int(np.floor(i/2)))) for i in range(8)] # spectra
-
-        for layer in [0, 1, 2, 3]:
-            for pop in [0, 1]:
-                j = layer*2+pop
-                box = ax[j].get_position()
-                ax[j].set_position([box.x0, box.y0-box.height*0.58,
-                                       box.width, box.height])
-                ax[j].plot(freqs, ground_truth_data[j],
-                           label='ground_truth_data', zorder=1)
-                ax[j].plot(freqs, bos_code_data[j], ls='--',
-                           label='bos_code_data', zorder=2)
-                ax[j].plot(freqs, test_data[j], ls=(0, (3, 5, 1, 5)),
-                           label='test', zorder=3)
-                ax[j].set_xlim([-5.0, 400.0])
-                ax[j].set_ylim([1e-6, 1e1])
-                ax[j].set_yscale('log')
-                ax[j].set_yticks([])
-                ax[j].set_xticks([100, 200, 300])
-                ax[j].set_title(populations[j])
-                # ax[j].legend()
-                if pop == 0:
-                    ax[j].set_xticklabels([])
-                else:
             fig = plt.figure()
 
             fig.suptitle('Power Spectra - Meanfield', y=0.5)
@@ -307,101 +266,18 @@ class BosTestCase(unittest.TestCase):
 
     def test_eigenvalue_trajectories(self):
         ground_truth_data = self.ground_truth_result['eigenvalue_trajectories']['eigs']
-        # test_data = self.network.eigenvalue_spectra('MH', method='taylor')
-
+        bos_code_data = self.bos_code_result['eigenvalue_spectra']
         test_data = self.eigenvalue_spectra
-        # save output
-        # np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy', test_data)
 
+        # need to bring the to the same shape (probably just calculated up to 400 Hz in Bos paper)
+        assert_array_almost_equal(bos_code_data.transpose()[:ground_truth_data.shape[0],:], ground_truth_data, decimal=4)
+
+        print('eigenvalue_trajectories are stored transposed and just calculate up to 400Hz')
         print(test_data.shape)
         print(ground_truth_data.shape)
 
         # need to bring the to the same shape (probably just calculated up to 400 Hz in Bos paper)
         assert_array_almost_equal(test_data.transpose()[:ground_truth_data.shape[0],:], ground_truth_data, decimal=4)
-
-        freqs = self.network.analysis_params['omegas'].to(ureg.Hz).magnitude /2./np.pi
-        power = self.power_spectra
-        eigs = self.eigenvalue_spectra
-        populations = self.network.network_params['populations']
-
-        # identify frequency with maximal power
-        eig_index, freq_idx =  np.unravel_index(np.argmax(power), np.shape(power))
-        fmax = freqs[freq_idx]
-        print(fmax)
-
-        eigcs = []
-        critical_indices = []
-        for eig_index, eig in enumerate(eigs):
-            print(eig.shape)
-            fmax = freqs[np.argmin(abs(eig-1.0))]
-            print(fmax)
-            fmax_index = np.argmin(abs(freqs-fmax))
-            eigc = eig[fmax_index]
-            print(eigc)
-            eigcs.append(eigc)
-            critical_indices.append((eig_index, fmax_index))
-
-
-
-        fig = plt.figure()
-        fig.suptitle('Eigenvalue Trajectories')
-        for i in range(8):
-            sc = plt.scatter(np.real(eigs[i]), np.imag(eigs[i]),
-                        c=freqs, cmap='viridis',
-                        s=0.5)
-        # for i in range(8):
-        #     plt.scatter(np.real(eigs[i][freq_idx]), np.imag(eigs[i][freq_idx]),
-        #                 marker='p',
-        #                 s=30, label=i)
-        for i in range(8):
-            plt.scatter(np.real(eigs[critical_indices[i][0]][critical_indices[i][1]]),
-                        np.imag(eigs[critical_indices[i][0]][critical_indices[i][1]]),
-                        marker='+',
-                        s=30, label=i)
-
-        plt.legend()
-        plt.xlabel('Re($\lambda(\omega)$)')
-        plt.ylabel('Im($\lambda(\omega)$)')
-        plt.scatter(1,0, marker='*', s=15, color='black')
-        plt.ylim([-4, 6.5])
-        plt.xlim([-11.5, 2])
-        cbar = plt.colorbar(sc)
-        cbar.set_label('Frequency $\omega$ [Hz]')
-        plt.clim(np.min(freqs), np.max(freqs))
-        plt.show()
-
-        fig = plt.figure()
-        fig.suptitle('Eigenvalue Trajectories Zoom')
-        for i in range(8):
-            sc = plt.scatter(np.real(eigs[i]), np.imag(eigs[i]),
-                        c=freqs, cmap='viridis',
-                        s=0.5)
-        for i in range(8):
-            plt.scatter(np.real(eigs[i][freq_idx]), np.imag(eigs[i][freq_idx]),
-                        marker='p',
-                        s=30 , label=i)
-        plt.legend()
-        plt.xlabel('Re($\lambda(\omega)$)')
-        plt.ylabel('Im($\lambda(\omega)$)')
-        plt.scatter(1,0, marker='*', s=15, color='black')
-        plt.ylim([-0.2, 0.5])
-        plt.xlim([-0.5, 2])
-        cbar = plt.colorbar(sc)
-        cbar.set_label('Frequency $\omega$ [Hz]')
-        plt.clim(np.min(freqs), np.max(freqs))
-        plt.show()
-
-        fig = plt.figure()
-        fig.suptitle('Critical Eigenvalue')
-        plt.scatter(freqs, np.real(eigs[eig_index]), label="real", s=1)
-        plt.scatter(freqs, np.imag(eigs[eig_index]), label="imag", s=1)
-        plt.scatter(freqs, abs(eigs[eig_index]-1), label="abs($\lambda$ - 1)", s=1)
-        plt.axvline(x=fmax, ymin=-5, ymax=5, label=f'fmax={np.round(fmax,1)}Hz')
-        plt.legend()
-        plt.show()
-
-    def test_sensitivity_measure(self):
-        ground_truth_data = self.ground_truth_result['sensitivity_measure']
 
         if self.plot_comparison:
             populations = self.network.network_params['populations']
@@ -451,42 +327,37 @@ class BosTestCase(unittest.TestCase):
             np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy',
                     self.eigenvalue_spectra.magnitude)
 
-        # assert_array_almost_equal(freqs, ground_truth_data['freqs'])
-        # assert_array_almost_equal(eigs, ground_truth_data['eigs'], decimal=4)
 
+    def test_sensitivity_measure(self):
+        ground_truth_data = self.ground_truth_result['sensitivity_measure']
 
-        pop_idx, freq_idx =  np.unravel_index(np.argmax(power), np.shape(power))
-        freqs = self.network.analysis_params['omegas'].to(ureg.Hz).magnitude /2./np.pi
-        fmax = freqs[freq_idx]
+        # check whether highest power is identified correctly
+        # TODO maybe not necessary
+        pop_idx, freq_idx = np.unravel_index(np.argmax(self.power_spectra),
+                                              np.shape(self.power_spectra))
+        fmax = self.freqs[freq_idx]
         self.assertEqual(fmax, ground_truth_data['high_gamma1']['f_peak'])
 
-        print(pop_idx, fmax)
+        # identify which eigenvalue contributes most to this peak
+        for eig_index, eig_results in self.sensitivity_dict.items():
+            if eig_results['critical_frequency'] ==  fmax:
+                eigenvalue_index = eig_index
+                print(f'eigenvalue that contributes most to identified peak at {fmax}: {eigenvalue_index}')
 
+        # see lines 224 ff in make_Bos2016_data/sensitivity_measure.py
+        self.assertEqual(eigenvalue_index, 1)
 
-
-        # calculate sensitivity measure
+        # test sensitivity measure
         Z = self.network.sensitivity_measure(fmax*ureg.Hz, method='taylor')
         assert_array_almost_equal(Z, ground_truth_data['high_gamma1']['Z'], decimal=4)
 
-        # eigc = eigs[pop_idx][np.argmin(abs(eigs[pop_idx]-1))]
-        eigcs = []
-        critical_indices = []
-        for eig_index, eig in enumerate(eigs):
-            print(eig.shape)
-            fmax = freqs[np.argmin(abs(eig-1.0))]
-            print(fmax)
-            fmax_index = np.argmin(abs(freqs-fmax))
-            eigc = eig[fmax_index]
-            print(eigc)
-            eigcs.append(eigc)
-            critical_indices.append((eig_index, fmax_index))
-        # TODO check why this is failing
-
-        eigc = eigcs[1]
-        fmax = freqs[critical_indices[1][1]]
-
+        # test critical eigenvalue
+        eigc = self.sensitivity_dict[eigenvalue_index]['critical_eigenvalue']
+        fmax = self.sensitivity_dict[eigenvalue_index]['critical_frequency']
         assert_array_almost_equal(eigc, ground_truth_data['high_gamma1']['eigc'], decimal=5)
 
+        # test vector (k) between critical eigenvalue and complex(1,0)
+        # and repective perpendicular (k_per)
         k = np.asarray([1, 0])-np.asarray([eigc.real, eigc.imag])
         k /= np.sqrt(np.dot(k, k))
         k_per = np.asarray([-k[1], k[0]])
@@ -494,6 +365,7 @@ class BosTestCase(unittest.TestCase):
         assert_array_almost_equal(k, ground_truth_data['high_gamma1']['k'], decimal=4)
         assert_array_almost_equal(k_per, ground_truth_data['high_gamma1']['k_per'], decimal=4)
 
+        # test projections of sensitivty measure onto k and k_per
         Z_amp = Z.real*k[0]+Z.imag*k[1]
         Z_freq = Z.real*k_per[0]+Z.imag*k_per[1]
         assert_array_almost_equal(Z_amp, ground_truth_data['high_gamma1']['Z_amp'], decimal=4)
