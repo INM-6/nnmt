@@ -192,14 +192,25 @@ class SchueckerTestCase(unittest.TestCase):
                 ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
-                for key in test_data.keys():
-                            if not key in ['absolute_value', 'phase']:
-                                print(key)
-                                assert_allclose(ground_truth_data[key],
-                                                   test_data[key], atol=1e-12)
+                for key in ['nu_0', 'nu0_fb', 'nu0_fb433']:
+                    print(key)
+                    assert_allclose(ground_truth_data[key],
+                                       test_data[key], atol=1e-14)
 
+    def test_zero_frequency_limit(self):
+        # define specific sigma and mu
+        for index in [1,2]:
+            sigma = self.network_params[f'sigma_{index}'].magnitude
+            for mu in self.network_params[f'mean_input_{index}'].magnitude:
+                print(sigma, mu)
 
+                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
+                key = 'zero_freq'
+                print(key)
+                assert_allclose(ground_truth_data[key],
+                                   test_data[key], atol=1e-14)
 
 if __name__ == "__main__":
     unittest.main()
