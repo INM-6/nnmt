@@ -112,15 +112,14 @@ class SchueckerTestCase(unittest.TestCase):
                     'nu0_fb433': nu0_fb433.to(ureg.Hz).magnitude}
 
 
-    #TODO in assert function first argument should be test data
     def test_frequencies(self):
         # take examplary frequencies for fixed sigma and mu
         sigma = self.network_params['sigma_1'].magnitude
         mu = self.network_params['mean_input_1'][0].magnitude
         ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
 
-        assert_array_equal(ground_truth_data['frequencies'],
-                           self.frequencies.magnitude)
+        assert_array_equal(self.frequencies.magnitude,
+                           ground_truth_data['frequencies'])
 
     def test_absolute_value(self):
         # define specific sigma and mu
@@ -133,8 +132,8 @@ class SchueckerTestCase(unittest.TestCase):
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 print('absolute_value')
-                assert_allclose(ground_truth_data['absolute_value'],
-                                test_data['absolute_value'],
+                assert_allclose(test_data['absolute_value'],
+                                ground_truth_data['absolute_value'],
                                 atol=1e-14)
 
                 # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
@@ -163,8 +162,8 @@ class SchueckerTestCase(unittest.TestCase):
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 print('phase')
-                assert_allclose(ground_truth_data['phase'][:100],
-                                test_data['phase'][:100],
+                assert_allclose(test_data['phase'],
+                                ground_truth_data['phase'],
                                 atol=1e-14)
 
                 # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
@@ -194,8 +193,9 @@ class SchueckerTestCase(unittest.TestCase):
 
                 for key in ['nu_0', 'nu0_fb', 'nu0_fb433']:
                     print(key)
-                    assert_allclose(ground_truth_data[key],
-                                       test_data[key], atol=1e-14)
+                    assert_allclose(test_data[key],
+                                    ground_truth_data[key],
+                                    atol=1e-14)
 
     def test_zero_frequency_limit(self):
         # define specific sigma and mu
@@ -209,8 +209,9 @@ class SchueckerTestCase(unittest.TestCase):
 
                 key = 'zero_freq'
                 print(key)
-                assert_allclose(ground_truth_data[key],
-                                   test_data[key], atol=1e-14)
+                assert_allclose(test_data[key],
+                                ground_truth_data[key],
+                                atol=1e-14)
 
 if __name__ == "__main__":
     unittest.main()
