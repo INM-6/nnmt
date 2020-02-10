@@ -6,4 +6,4 @@ from . import (input_output,
                aux_calcs)
 from .network import Network
 
-__version__ = '0.1'
+__version__ = '0.2'
