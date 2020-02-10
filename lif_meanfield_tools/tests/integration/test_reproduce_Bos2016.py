@@ -18,6 +18,7 @@ from ... import ureg
 
 import h5py_wrapper.wrapper as h5
 
+# TODO remove plotting after debugging
 import matplotlib.pyplot as plt
 
 class BosTestCase(unittest.TestCase):
@@ -28,6 +29,7 @@ class BosTestCase(unittest.TestCase):
                                            'Bos2016_publicated_and_converted_data.h5')
         self.bos_code_result = h5.load(self.path_to_fixtures +
                                            'Bos2016_data.h5')
+
         # TODO do this more nicely
         self.exemplary_frequency_idx = self.bos_code_result['exemplary_frequency_idx']
 
@@ -87,6 +89,7 @@ class BosTestCase(unittest.TestCase):
         assert_array_equal(test_data['K_ext'], bos_code_data['Next'])
 
         assert_array_equal(test_data['Delay'].magnitude, bos_code_data['Delay'])
+
         assert_array_equal(test_data['Delay_sd'].magnitude, bos_code_data['Delay_sd'])
 
     def test_analysis_frequencies(self):
@@ -120,7 +123,6 @@ class BosTestCase(unittest.TestCase):
         omega = self.network.analysis_params['omegas'][self.exemplary_frequency_idx]
         test_data = self.network.delay_dist_matrix_single(omega)
 
-
         assert_array_equal(test_data.shape, bos_code_data.shape)
         assert_array_equal(test_data.magnitude, bos_code_data)
 
@@ -128,17 +130,14 @@ class BosTestCase(unittest.TestCase):
         bos_code_data = self.bos_code_result['MH']
         omega = self.network.analysis_params['omegas'][self.exemplary_frequency_idx]
         test_data = lmt.meanfield_calcs._effective_connectivity(omega,
-                                                         self.transfer_function[20],
+                                                         self.transfer_functions[self.exemplary_frequency_idx],
                                                          self.network.network_params['tau_m'],
                                                          self.network.network_params['J'],
                                                          self.network.network_params['K'],
                                                          self.network.network_params['dimension'],
                                                          self.network.delay_dist_matrix_single(omega))
 
-
-        print(test_data, bos_code_data)
-        assert_array_equal(test_data, bos_code_data)
-
+        assert_array_almost_equal(test_data.to(ureg.s * ureg.mV), bos_code_data, decimal = 5)
 
     def test_transfer_function(self):
         bos_code_data = self.bos_code_result['transfer_function_with_synaptic_filter']
