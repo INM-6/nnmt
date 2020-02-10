@@ -26,7 +26,7 @@ class BosTestCase(unittest.TestCase):
     def setUp(self):
         # Parameters to tweak the behavior of the test
         self.save_data=False
-        self.use_saved_data=True
+        self.use_saved_data=False
         self.plot_comparison=False
 
         # Load ground truth data
