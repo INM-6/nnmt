@@ -100,7 +100,8 @@ class SchueckerTestCase(unittest.TestCase):
                     self.network_params['theta'],
                     self.network_params['V_reset'],
                     self.network_params['dimension'],
-                    self.omegas)
+                    self.omegas,
+                    synaptic_filter=False)
 
                 self.test_results['sigma'][sigma.magnitude]['mu'][mu.magnitude] = {
                     'absolute_value': np.abs(transfer_function.magnitude.flatten()),
@@ -132,19 +133,9 @@ class SchueckerTestCase(unittest.TestCase):
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 print('absolute_value')
-                print(f'below {self.frequencies[100]}')
-                assert_array_almost_equal(ground_truth_data['absolute_value'][:100],
-                                          test_data['absolute_value'][:100],
-                                          decimal = 4)
-
-                print(f'below {self.frequencies[300]}')
-                assert_array_almost_equal(ground_truth_data['absolute_value'][100:300],
-                                          test_data['absolute_value'][100:300],
-                                          decimal = 1)
-
-                print(f'below {self.frequencies[-1]}')
                 assert_allclose(ground_truth_data['absolute_value'],
-                                          test_data['absolute_value'], atol=2)
+                                test_data['absolute_value'],
+                                atol=1e-14)
 
                 # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
                 fig = plt.figure()
@@ -154,7 +145,7 @@ class SchueckerTestCase(unittest.TestCase):
                              label='ground truth')
 
                 plt.semilogx(self.frequencies,
-                             test_data['absolute_value'],
+                             test_data['absolute_value'], ls='--',
                              label='test data')
                 plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
                 plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
@@ -172,17 +163,9 @@ class SchueckerTestCase(unittest.TestCase):
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 print('phase')
-                print(f'below {self.frequencies[100]}')
                 assert_allclose(ground_truth_data['phase'][:100],
-                                          test_data['phase'][:100], atol=2)
-
-                print(f'below {self.frequencies[300]}')
-                assert_allclose(ground_truth_data['phase'][100:300],
-                                          test_data['phase'][100:300], atol=50)
-
-                print(f'below {self.frequencies[-1]}')
-                assert_allclose(ground_truth_data['phase'],
-                                          test_data['phase'], atol=150)
+                                test_data['phase'][:100],
+                                atol=1e-14)
 
                 # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
                 fig = plt.figure()
@@ -192,13 +175,12 @@ class SchueckerTestCase(unittest.TestCase):
                              label='ground truth')
 
                 plt.semilogx(self.frequencies,
-                             test_data['phase'],
+                             test_data['phase'], ls='--',
                              label='test data')
                 plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
                 plt.ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
                 plt.legend()
                 plt.show()
-
 
     def test_stationary_firing_rates(self):
         # define specific sigma and mu
