@@ -49,28 +49,29 @@ class BosTestCase(unittest.TestCase):
         # In the case that test have to run several times for debugging
         # it can be advantageous to once save intermediate results and load
         # those in subsequent runs
+
+        # TODO raise error if not files not existant
         if self.use_saved_data:
-            self.transfer_functions = np.load(self.path_to_fixtures +
-                                              'Bos_test_transfer_function.npy')
-            self.power_spectra = np.load(self.path_to_fixtures +
-                                              'Bos_test_power_spectra.npy')
-            self.eigenvalue_spectra = np.load(self.path_to_fixtures +
-                                              'Bos_test_eigenvalue_spectra.npy')
-        else:
-            self.transfer_functions = self.network.transfer_function(method='taylor')
-            self.power_spectra = self.network.power_spectra(method='taylor')
-            self.eigenvalue_spectra = self.network.eigenvalue_spectra('MH', method='taylor')
+            try:
+                self.transfer_functions = np.load(self.path_to_fixtures +
+                                                  'Bos_test_transfer_function.npy')*ureg.Hz/ureg.mV
+            except FileNotFoundError:
+                print('Need to run one of the following tests with save_data being set to True:',
+                      'test_transfer_function', 'test_effective_connectivity_at_single_frequency')
 
-        # identify frequency which is closest to the point complex(1,0) per eigenvalue trajectory
-        self.sensitivity_dict = defaultdict(int)
-        for eig_index, eig in enumerate(self.eigenvalue_spectra):
-            critical_frequency = self.freqs[np.argmin(abs(eig-1.0))]
-            critical_frequency_index = np.argmin(abs(self.freqs-critical_frequency))
-            critical_eigenvalue = eig[critical_frequency_index]
+            try:
+                self.power_spectra = np.load(self.path_to_fixtures +
+                                                  'Bos_test_power_spectra.npy')*ureg.Hz
+            except FileNotFoundError:
+                print('Need to run one of the following tests with save_data being set to True:',
+                      'test_power_spectra', 'test_sensitivity_measure')
 
-            self.sensitivity_dict[eig_index] = {'critical_frequency': critical_frequency,
-                                           'critical_frequency_index': critical_frequency_index,
-                                           'critical_eigenvalue': critical_eigenvalue}
+            try:
+                self.eigenvalue_spectra = np.load(self.path_to_fixtures +
+                                                  'Bos_test_eigenvalue_spectra.npy')
+            except FileNotFoundError:
+                print('Need to run one of the following tests with save_data being set to True:',
+                      'test_eigenvalue_trajectories', 'test_sensitivity_measure')
 
 
     def test_network_parameters(self):
@@ -161,17 +162,29 @@ class BosTestCase(unittest.TestCase):
         # be fine
         bos_code_data = self.bos_code_result['MH']
         omega = self.network.analysis_params['omegas'][self.exemplary_frequency_idx]
+
+        if not self.use_saved_data:
+            self.transfer_functions = self.network.transfer_function(method='taylor')
+
         test_data = lmt.meanfield_calcs._effective_connectivity(omega,
                                                          self.transfer_functions[self.exemplary_frequency_idx],
                                                          self.network.network_params['tau_m'],
                                                          self.network.network_params['J'],
                                                          self.network.network_params['K'],
                                                          self.network.network_params['dimension'],
-                                                         self.network.delay_dist_matrix_single(omega)).to(ureg.s * ureg.mV)
+                                                         self.network.delay_dist_matrix_single(omega))
 
-        assert_array_almost_equal(test_data, bos_code_data, decimal = 5)
+        assert_array_almost_equal(test_data.to_base_units(), bos_code_data, decimal = 5)
+
+        if self.save_data:
+            np.save(self.path_to_fixtures + 'Bos_test_transfer_function.npy',
+                    self.transfer_functions.magnitude)
+
 
     def test_transfer_function(self):
+        if not self.use_saved_data:
+            self.transfer_functions = self.network.transfer_function(method='taylor')
+
         # ground truth data does not exist, but as regenerated bos_code_data
         # passes all comparisons to ground truth data, this can be assumed to
         # be fine
@@ -200,6 +213,9 @@ class BosTestCase(unittest.TestCase):
                     self.transfer_functions.magnitude)
 
     def test_power_spectra(self):
+        if not self.use_saved_data:
+            self.power_spectra = self.network.power_spectra(method='taylor')
+
         # Bos code actually calculates square of the power
         ground_truth_data = np.sqrt(self.ground_truth_result['fig_microcircuit']['power_ana'])
         bos_code_data = np.sqrt(self.bos_code_result['power_spectra'])
@@ -259,12 +275,17 @@ class BosTestCase(unittest.TestCase):
             fig.tight_layout()
             plt.show()
 
+
         if self.save_data:
             np.save(self.path_to_fixtures + 'Bos_test_power_spectra.npy',
                     self.power_spectra.magnitude)
 
 
+
     def test_eigenvalue_trajectories(self):
+        if not self.use_saved_data:
+            self.eigenvalue_spectra = self.network.eigenvalue_spectra('MH', method='taylor')
+
         ground_truth_data = self.ground_truth_result['eigenvalue_trajectories']['eigs']
         bos_code_data = self.bos_code_result['eigenvalue_spectra']
         test_data = self.eigenvalue_spectra
@@ -278,6 +299,17 @@ class BosTestCase(unittest.TestCase):
 
         # need to bring the to the same shape (probably just calculated up to 400 Hz in Bos paper)
         assert_array_almost_equal(test_data.transpose()[:ground_truth_data.shape[0],:], ground_truth_data, decimal=4)
+
+        # identify frequency which is closest to the point complex(1,0) per eigenvalue trajectory
+        self.sensitivity_dict = defaultdict(int)
+        for eig_index, eig in enumerate(self.eigenvalue_spectra):
+            critical_frequency = self.freqs[np.argmin(abs(eig-1.0))]
+            critical_frequency_index = np.argmin(abs(self.freqs-critical_frequency))
+            critical_eigenvalue = eig[critical_frequency_index]
+
+            self.sensitivity_dict[eig_index] = {'critical_frequency': critical_frequency,
+                                           'critical_frequency_index': critical_frequency_index,
+                                           'critical_eigenvalue': critical_eigenvalue}
 
         if self.plot_comparison:
             populations = self.network.network_params['populations']
@@ -323,12 +355,16 @@ class BosTestCase(unittest.TestCase):
             plt.clim(np.min(self.freqs), np.max(self.freqs))
             plt.show()
 
+
         if self.save_data:
             np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy',
-                    self.eigenvalue_spectra.magnitude)
-
+                    self.eigenvalue_spectra)
 
     def test_sensitivity_measure(self):
+        if not self.use_saved_data:
+            self.power_spectra = self.network.power_spectra(method='taylor')
+            self.eigenvalue_spectra = self.network.eigenvalue_spectra('MH', method='taylor')
+
         ground_truth_data = self.ground_truth_result['sensitivity_measure']
 
         # check whether highest power is identified correctly
@@ -337,6 +373,17 @@ class BosTestCase(unittest.TestCase):
                                               np.shape(self.power_spectra))
         fmax = self.freqs[freq_idx]
         self.assertEqual(fmax, ground_truth_data['high_gamma1']['f_peak'])
+
+        # identify frequency which is closest to the point complex(1,0) per eigenvalue trajectory
+        self.sensitivity_dict = defaultdict(int)
+        for eig_index, eig in enumerate(self.eigenvalue_spectra):
+            critical_frequency = self.freqs[np.argmin(abs(eig-1.0))]
+            critical_frequency_index = np.argmin(abs(self.freqs-critical_frequency))
+            critical_eigenvalue = eig[critical_frequency_index]
+
+            self.sensitivity_dict[eig_index] = {'critical_frequency': critical_frequency,
+                                           'critical_frequency_index': critical_frequency_index,
+                                           'critical_eigenvalue': critical_eigenvalue}
 
         # identify which eigenvalue contributes most to this peak
         for eig_index, eig_results in self.sensitivity_dict.items():
@@ -426,3 +473,9 @@ class BosTestCase(unittest.TestCase):
             ax.set_yticklabels(populations)
             plt.tight_layout()
             plt.show()
+
+        if self.save_data:
+            np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy',
+                    self.eigenvalue_spectra)
+            np.save(self.path_to_fixtures + 'Bos_test_power_spectra.npy',
+                    self.power_spectra.magnitude)
