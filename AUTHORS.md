@@ -1,7 +1,7 @@
 # Authors and contributors
 
 The following people have contributed code and/or ideas to the current version
-of lif_meanfield_tools:
+of LIF Meanfield Tools:
 
 * Moritz Layer
 * Johanna Senk
