@@ -553,8 +553,8 @@ def _effective_connectivity_rate(omega, tau, W_rate, delay_term=1):
 
 
 
-@ureg.wraps(None, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV, None, ureg.s, ureg.s,
-                   None, ureg.Hz))
+@ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
+                                 None, ureg.s, ureg.s, None, ureg.Hz))
 def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s,
                         dimension, omega):
     """
@@ -662,8 +662,8 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
 
 
 
-@ureg.wraps(None, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None, None, ureg.mV, None,
-                   ureg.Hz, None, None))
+@ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None, None,
+                                 ureg.mV, None, ureg.Hz, None, None))
 def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
                   delay_dist_matrix, J, K, omegas, quantity, matrix):
     """
