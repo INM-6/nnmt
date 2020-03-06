@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name = 'lif_meanfield_tools',
-      version = '0.1',
+      version = '0.2',
       description = 'Mean-field toolbox for networks of LIF neurons.',
       long_description = open('README.md').read(),
       url = 'https://github.com/INM-6/lif_meanfield_tools',
