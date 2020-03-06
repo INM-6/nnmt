@@ -358,7 +358,7 @@ class BosTestCase(unittest.TestCase):
 
         if self.save_data:
             np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy',
-                    self.eigenvalue_spectra)
+                    self.eigenvalue_spectra.magnitude)
 
     def test_sensitivity_measure(self):
         if not self.use_saved_data:
@@ -476,6 +476,6 @@ class BosTestCase(unittest.TestCase):
 
         if self.save_data:
             np.save(self.path_to_fixtures + 'Bos_test_eigenvalue_spectra.npy',
-                    self.eigenvalue_spectra)
+                    self.eigenvalue_spectra.magnitude)
             np.save(self.path_to_fixtures + 'Bos_test_power_spectra.npy',
                     self.power_spectra.magnitude)
