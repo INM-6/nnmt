@@ -106,7 +106,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    if mu <= V_th_rel + (0.95 * abs(V_th_rel) - abs(V_th_rel)):
+    if mu <= V_th_rel - 0.05 * abs(V_th_rel):
         return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
