@@ -40,7 +40,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
-    deviation sigma, using Eq. 433 in Fourcaud & Brunel (2002) with Taylor
+    deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
     expansion k = sqrt(tau_s/tau_m).
 
     Parameters:
