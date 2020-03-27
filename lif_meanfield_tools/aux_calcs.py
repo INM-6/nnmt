@@ -151,7 +151,7 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
 
 def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    Calculates stationary firing rates for delta shaped PSCs.
+    Calculates stationary firing rates for delta shaped PSCs for mu < V_th_rel.
 
     Parameters:
     -----------
@@ -173,7 +173,19 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    # for mu < V_th_rel
+
+    if tau_m < 0:
+        raise ValueError('tau_m should be larger than zero!')
+    if tau_r < 0:
+        raise ValueError('tau_r should be larger than zero!')
+    if sigma < 0:
+        raise ValueError('sigma should be larger than zero!')
+    if V_th_rel < V_0_rel:
+        raise ValueError('V_th should be larger than V_0!')
+    if mu > V_th_rel:
+        raise ValueError('mu should be smaller than V_th! Use siegert2 if mu > V_th.')
+    
+
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
 
@@ -183,6 +195,7 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         else:
             return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th) * u)) / u
 
+    # find lower bound of integration, such that integrand is smaller than 1e-12 at lower bound
     lower_bound = y_th
     err_dn = 1.0
     while err_dn > 1e-12 and lower_bound > 1e-16:
@@ -190,6 +203,7 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         if err_dn > 1e-12:
             lower_bound /= 2
 
+    # find upper bound of integration, such that integrand is smaller than 1e-12 at lower bound
     upper_bound = y_th
     err_up = 1.0
     while err_up > 1e-12:
@@ -209,7 +223,7 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    Calculates stationary firing rates for delta shaped PSCs.
+    Calculates stationary firing rates for delta shaped PSCs for mu > V_th_rel.
 
     Parameters:
     -----------
@@ -231,7 +245,7 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    # for mu > V_th_rel
+    
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
 
