@@ -30,9 +30,14 @@ import scipy
 import numpy as np
 import math
 import mpmath
+import warnings
 
 from . import ureg
 
+def check_if_positive(parameters, parameter_names):
+    for parameter, parameter_name in zip(parameters, parameter_names):
+        if parameter < 0:
+            raise ValueError('{} should be larger than zero!'.format(parameter_name))
 
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
@@ -41,7 +46,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
     deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
-    expansion k = sqrt(tau_s/tau_m).
+    expansion around k = sqrt(tau_s/tau_m).
 
     Parameters:
     -----------
@@ -65,20 +70,46 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+    
+    pos_parameters = [tau_m, tau_s, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+
+    if V_th_rel < V_0_rel:
+        raise ValueError('V_th should be larger than V_0!')
+    
+    k = np.sqrt(tau_s / tau_m)
+
+    if (0.1 < k) & (k < 1):
+        k_warning = 'k=sqrt(tau_s/tau_m)={} might be too large for calculation of firing rates via Taylor expansion!'.format(k)
+        warnings.warn(k_warning)
+    if 1 <= k:
+        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of firing rates via Taylor expansion!')
+        
+    # use zetac function (zeta-1) because zeta is not giving finite values for arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
+    
+    # additional prefactor sqrt(2) because its x from Schuecker 2015
     x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
 
     # preventing overflow in np.exponent in Phi(s)
+    # note: this simply returns the white noise result... is this ok?
     if x_th > 20.0 / np.sqrt(2.):
         result = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
+        # white noise firing rate
         r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        
         dPhi = Phi(x_th) - Phi(x_r)
+        # colored noise firing rate (might this lead to negative rates?)
         result = (r - np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
                   * dPhi * (r * tau_m)**2)
-    if math.isnan(result):
-        print(mu, sigma, x_th, x_r)
+        
+    # why do we have this?
+    # if math.isnan(result):
+    #     print(mu, sigma, x_th, x_r)
+    # 
     return result
 
 
@@ -106,6 +137,8 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+    
+    # why is this the threshold?
     if mu <= V_th_rel - 0.05 * abs(V_th_rel):
         return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
@@ -114,8 +147,10 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """
-    Calculates stationary firing rates for filtered synapses based on
-    Fourcaud & Brunel 2002 (using the shift of the integration boundaries)
+    Calculates stationary firing rates including synaptic filtering.
+    
+    Based on Fourcaud & Brunel 2002, using shift of the integration boundaries 
+    in the white noise Siegert formula, as derived in Schuecker 2015. 
 
     Parameters:
     -----------
@@ -139,9 +174,15 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+    
+    pos_parameters = [tau_m, tau_s, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
 
+    # using zetac (zeta-1), because zeta is giving nan result for arguments smaller 1
     alpha = np.sqrt(2)*abs(zetac(0.5)+1)
     # effective threshold
+    # additional factor sigma is canceled in siegert
     V_th1 = V_th + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # effective reset
     V_r1 = V_r + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
@@ -174,16 +215,14 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Stationary firing rate in Hz.
     """
 
-    if tau_m < 0:
-        raise ValueError('tau_m should be larger than zero!')
-    if tau_r < 0:
-        raise ValueError('tau_r should be larger than zero!')
-    if sigma < 0:
-        raise ValueError('sigma should be larger than zero!')
+    pos_parameters = [tau_m, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+    
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
     if mu > V_th_rel:
-        raise ValueError('mu should be smaller than V_th! Use siegert2 if mu > V_th.')
+        raise ValueError('mu should be smaller than V_th_V_0! Use siegert2 if mu > (V_th-V_0).')
     
 
     y_th = (V_th_rel - mu) / sigma
@@ -245,6 +284,16 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+    
+    pos_parameters = [tau_m, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+
+    if V_th_rel < V_0_rel:
+        raise ValueError('V_th should be larger than V_0!')
+    if mu < V_th_rel:
+        raise ValueError('mu should be smaller than V_th-V_0! Use siegert1 if mu < (V_th-V_0).')
+    
     
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
