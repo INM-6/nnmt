@@ -145,7 +145,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
-def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
+def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
     
@@ -183,11 +183,11 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     alpha = np.sqrt(2)*abs(zetac(0.5)+1)
     # effective threshold
     # additional factor sigma is canceled in siegert
-    V_th1 = V_th + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    V_th1 = V_th_rel + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # effective reset
-    V_r1 = V_r + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    V_01 = V_0_rel + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # use standard Siegert with modified threshold and reset
-    return nu_0(tau_m, tau_r, V_th1, V_r1, mu, sigma)
+    return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma)
 
 
 def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -332,6 +332,12 @@ def Phi_prime_mu(s, sigma):
     """
     Derivative of the helper function Phi(s) with respect to the mean input
     """
+    
+    if sigma < 0:
+        raise ValueError('sigma needs to be larger than zero!')
+    if sigma == 0:
+        raise ZeroDivisionError('Function contains division by sigma!')
+    
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
     * (1 + erf(s / np.sqrt(2)))
     + np.sqrt(2) / np.sqrt(np.pi))
@@ -367,8 +373,14 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     Returns:
     --------
     float:
-        Something in Hz/mV.
+        Zero frequency limit of colored noise transfer function in Hz/mV.
     """
+    
+    if sigma < 0:
+        raise ValueError('sigma needs to be larger than zero!')
+    if sigma == 0:
+        raise ZeroDivisionError('Function contains division by sigma!')
+    
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
     x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
@@ -406,8 +418,14 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     Returns:
     --------
     float:
-        Something in Hz/mV.
+        Zero frequency limit of white noise transfer function in Hz/mV.
     """
+    
+    if sigma < 0:
+        raise ValueError('sigma needs to be larger than zero!')
+    if sigma == 0:
+        raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    
     y_th = (V_th_rel - mu)/sigma
     y_r = (V_0_rel - mu)/sigma
     nu0 = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
