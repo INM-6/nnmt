@@ -376,8 +376,10 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Zero frequency limit of colored noise transfer function in Hz/mV.
     """
     
-    if sigma < 0:
-        raise ValueError('sigma needs to be larger than zero!')
+    pos_parameters = [tau_m, tau_s, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+    
     if sigma == 0:
         raise ZeroDivisionError('Function contains division by sigma!')
     
@@ -421,8 +423,10 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Zero frequency limit of white noise transfer function in Hz/mV.
     """
     
-    if sigma < 0:
-        raise ValueError('sigma needs to be larger than zero!')
+    pos_parameters = [tau_m, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+    
     if sigma == 0:
         raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
     
@@ -432,6 +436,69 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     return (np.sqrt(np.pi) * tau_m * nu0**2 / sigma
             * (np.exp(y_th**2) * (1 + erf(y_th)) - np.exp(y_r**2)
                * (1 + erf(y_r))))
+    
+    
+def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
+    """
+    Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
+    Effective threshold and reset from Fourcaud & Brunel 2002.
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_s: float
+        Synaptic time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    j: float
+        Effective connectivity weight in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Derivative in Hz/mV (sum of linear (mu) and squared (sigma^2) contribution).
+    float:
+        Derivative in Hz/mV (linear (mu) contribution).
+    float:
+        Derivative in Hz/mV (squared (sigma^2) contribution).
+    """
+    
+    pos_parameters = [tau_m, tau_s, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+    
+    if sigma == 0:
+        raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    
+    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    nu0 = nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+    # linear contribution
+    lin = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 +
+             erf(y_th_fb)) - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)))
+
+    # quadratic contribution
+    sqr = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) *\
+             0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
+
+    return lin + sqr, lin, sqr
+
 
 def Psi(z, x):
     """
@@ -473,58 +540,6 @@ def d2Psi_x_r(z, x, y):
     return d_2_Psi(z, x) - d_2_Psi(z, y)
 
 
-def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
-    """
-    Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
-    Effective threshold and reset from Fourcaud & Brunel 2002.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_s: float
-        Synaptic time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float
-        Relative threshold potential in mV.
-    V_0_rel: float
-        Relative reset potential in mV.
-    j: float
-        Effective connectivity weight in mV.
-    mu: float
-        Mean neuron activity in mV.
-    sigma:
-        Standard deviation of neuron activity in mV.
-
-    Returns:
-    --------
-    float:
-        Derivative in Hz/mV (sum of linear (mu) and squared (sigma^2) contribution).
-    float:
-        Derivative in Hz/mV (linear (mu) contribution).
-    float:
-        Derivative in Hz/mV (squared (sigma^2) contribution).
-    """
-    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
-
-    y_th = (V_th - mu) / sigma
-    y_r = (V_r - mu) / sigma
-
-    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
-    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
-
-    nu0 = nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma)
-
-    # linear contribution
-    lin = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 +
-             erf(y_th_fb)) - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)))
-
-    # quadratic contribution
-    sqr = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) *\
-             0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
-
-    return lin + sqr, lin, sqr
 
 def determinant(matrix):
     """
