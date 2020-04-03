@@ -659,6 +659,11 @@ class Test_d_nu_d_mu_fb433(unittest.TestCase, TestFiringRateDerivativeFunctions)
     def fixture(self):
         return 'tests/unit/fixtures/d_nu_d_mu_fb433.npy'
     
+
+    @property
+    def fixture_d_nu_d_mu(self):
+        return 'tests/unit/fixtures/d_nu_d_mu_fb433_d_nu_d_mu.npy'
+    
     
     @property
     def positive_params(self):
@@ -673,6 +678,23 @@ class Test_d_nu_d_mu_fb433(unittest.TestCase, TestFiringRateDerivativeFunctions)
     @property
     def parameters_for_output_test(self):
         return self._parameters_for_output_test_0 + self._parameters_for_output_test_1 + self._parameters_for_output_test_2
+    
+    
+    def test_correct_output(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
+            
+            with patch('lif_meanfield_tools.aux_calcs.d_nu_d_mu') as mocked_d_nu_d_mu:
+                
+                mocked_d_nu_d_mu.side_effect = np.load(self.fixture_d_nu_d_mu)
+                
+                for expected_output, params in zip(self.expected_output, self.parameters_for_output_test):
+                
+                    temp_params = self.parameters.copy()
+                    temp_params.update(params)                                                
+                    result = self.function(**temp_params)
+                    self.assertAlmostEqual(expected_output, result, self.precision)
+            
 
 
 class Test_d_nu_d_nu_in_fb(unittest.TestCase, TestFiringRateDerivativeFunctions):
