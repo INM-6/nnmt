@@ -451,17 +451,14 @@ class Test_Phi(unittest.TestCase):
     
     def setUp(self):
         
-        lp = -5
-        hp = 1.5
-        self.test_inputs = np.concatenate([-np.logspace(hp, lp),[0],np.logspace(lp, hp)])
-        
-        # fixtures created with parameters above
-        self.expected_outputs = np.load('tests/unit/fixtures/phi.npy')
+        self.test_inputs = np.load(fixtures_input_path + 'Phi.npy')
+        self.expected_outputs = np.load(fixtures_output_path + 'Phi.npy')
 
     def test_correct_predictions(self):
         
         result = Phi(self.test_inputs)
         np.testing.assert_almost_equal(result, self.expected_outputs, 5)
+        
         
         
 class Test_Phi_prime_mu(unittest.TestCase):
@@ -779,29 +776,137 @@ class Test_d_nu_d_nu_in_fb(unittest.TestCase, TestFiringRateDerivativeFunctions)
                 self.assertAlmostEqual(expected_output[0], result[0], self.precision)
                 self.assertAlmostEqual(expected_output[1], result[1], self.precision)
                 self.assertAlmostEqual(expected_output[2], result[2], self.precision)
-            
+
+
             
 class Test_Psi(unittest.TestCase):
-    
+
     def setUp(self):
-                
+        
         inputs = np.load(fixtures_input_path + 'Psi.npz')
         self.zs = inputs['zs']
         self.xs = inputs['xs']
+        self.pcfu = inputs['pcfu']
         
         self.expected_outputs = np.load(fixtures_output_path + 'Psi.npy')
+        
+        self.function = Psi
+        
+        
+    def test_correct_output(self):
+
+        with patch('lif_meanfield_tools.aux_calcs.mpmath.pcfu') as mock_pcfu:
+
+            mock_pcfu.side_effect = self.pcfu
+
+            for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
+
+                result = self.function(z, x)
+                self.assertEqual(expected_output, result)
     
+            
+            
+class Test_d_Psi(unittest.TestCase):
+    
+    def setUp(self):
+                
+        inputs = np.load(fixtures_input_path + 'd_Psi.npz')
+        self.zs = inputs['zs']
+        self.xs = inputs['xs']
+        self.psi = inputs['psi']
+
+        self.expected_outputs = np.load(fixtures_output_path + 'd_Psi.npy')
+        
+        self.function = d_Psi
+        
+        
     def test_correct_output(self):
         
-        for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
+        with patch('lif_meanfield_tools.aux_calcs.Psi') as mock_psi:
         
-            result = Psi(z, x)
-            self.assertEqual(expected_output, result)
-        
+            mock_psi.side_effect = self.psi
+            
+            for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
+            
+                result = self.function(z, x)
+                self.assertEqual(expected_output, result)
         
     
+    
+class Test_d_2_Psi(unittest.TestCase):
+    
+    def setUp(self):
+                
+        inputs = np.load(fixtures_input_path + 'd_2_Psi.npz')
+        self.zs = inputs['zs']
+        self.xs = inputs['xs']
+        self.psi = inputs['psi']
 
-# 
+        
+        self.expected_outputs = np.load(fixtures_output_path + 'd_2_Psi.npy')
+        self.function = d_2_Psi
+        
+        
+    def test_correct_output(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.Psi') as mock_psi:
+        
+            mock_psi.side_effect = self.psi
+            
+            for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
+            
+                result = self.function(z, x)
+                self.assertEqual(expected_output, result)
+        
+    
+class Test_Psi_x_r(unittest.TestCase):
+    
+    def setUp(self):
+        
+        self.z = 0
+        self.x = 1
+        self.y = 2
+        
+    def test_Psi_is_called_two_times(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.Psi') as mock_Psi:
+            
+            Psi_x_r(self.z, self.x, self.y)
+            mock_Psi.assert_has_calls([mock.call(0,1), mock.call(0,2)], any_order=True)
+            
+             
+class Test_dPsi_x_r(unittest.TestCase):
+    
+    def setUp(self):
+        
+        self.z = 0
+        self.x = 1
+        self.y = 2
+        
+    def test_d_Psi_is_called_two_times(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.d_Psi') as mock_Psi:
+            
+            dPsi_x_r(self.z, self.x, self.y)
+            mock_Psi.assert_has_calls([mock.call(0,1), mock.call(0,2)], any_order=True)
+            
+            
+class Test_d2Psi_x_r(unittest.TestCase):
+    
+    def setUp(self):
+        
+        self.z = 0
+        self.x = 1
+        self.y = 2
+        
+    def test_d_2_Psi_is_called_two_times(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.d_2_Psi') as mock_Psi:
+            
+            d2Psi_x_r(self.z, self.x, self.y)
+            mock_Psi.assert_has_calls([mock.call(0,1), mock.call(0,2)], any_order=True)
+        
+
 # class Test_determinant(unittest.TestCase):
 # 
 #     def test_real_matrix_with_zero_determinant(self):
@@ -833,4 +938,18 @@ class Test_Psi(unittest.TestCase):
 #         real_determinant = np.linalg.det(M)
 #         result = determinant(M)
 #         self.assertEqual(result, real_determinant)
+# 
 
+class Test_p_hat_boxcar(unittest.TestCase):
+    
+    def test_zero_frequency_input(self):
+        pass 
+    
+    def test_zero_width_raises_exception(self):
+        pass
+
+    def test_negative_width_raises_exception(self):
+        pass
+    
+    def test_correct_output(self):
+        pass
