@@ -13,6 +13,8 @@ from lif_meanfield_tools.aux_calcs import *
 
 ureg = lmt.ureg
 
+fixtures_input_path = 'tests/unit/fixtures/input/'
+fixtures_output_path = 'tests/unit/fixtures/output/'
 
 class TestFiringRateFunctions(ABC):
     """ Base class for testing firing rate type functions. """
@@ -466,20 +468,17 @@ class Test_Phi_prime_mu(unittest.TestCase):
     
     def setUp(self):
         
-        lp = -5
-        hp = 1.5
-        steps = 20
-        self.test_input_s = np.concatenate([-np.logspace(hp, lp, steps),[0],np.logspace(lp, hp, steps)])
-        self.test_input_sigma = np.linspace(1, 100, 10)
-        self.test_input_s = np.repeat(self.test_input_s, len(self.test_input_sigma))
-        self.test_input_sigma = np.repeat(self.test_input_sigma, (2*steps+1))
+        inputs = np.load(fixtures_input_path + 'Phi_prime_mu.npz')
+        self.ss = inputs['ss']
+        self.sigmas = inputs['sigmas']
         
         # fixtures created with parameters above
-        self.expected_outputs = np.load('tests/unit/fixtures/phi_prime_mu.npy')
+        self.expected_outputs = np.load(fixtures_output_path + 'Phi_prime_mu.npy')
 
     def test_correct_predictions(self):
 
-        for i, (s, sigma) in enumerate(zip(self.test_input_s, self.test_input_sigma)):
+        for i, (s, sigma) in enumerate(zip(self.ss, self.sigmas)):
+            
             result = Phi_prime_mu(s, sigma)
             self.assertEqual(result, self.expected_outputs[i])
             
@@ -781,6 +780,26 @@ class Test_d_nu_d_nu_in_fb(unittest.TestCase, TestFiringRateDerivativeFunctions)
                 self.assertAlmostEqual(expected_output[1], result[1], self.precision)
                 self.assertAlmostEqual(expected_output[2], result[2], self.precision)
             
+            
+class Test_Psi(unittest.TestCase):
+    
+    def setUp(self):
+                
+        inputs = np.load(fixtures_input_path + 'Psi.npz')
+        self.zs = inputs['zs']
+        self.xs = inputs['xs']
+        
+        self.expected_outputs = np.load(fixtures_output_path + 'Psi.npy')
+    
+    def test_correct_output(self):
+        
+        for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
+        
+            result = Psi(z, x)
+            self.assertEqual(expected_output, result)
+        
+        
+    
 
 # 
 # class Test_determinant(unittest.TestCase):
