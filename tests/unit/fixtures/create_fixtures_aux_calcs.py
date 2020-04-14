@@ -13,9 +13,92 @@ import sys
 sys.path.insert(1, './')
 from lif_meanfield_tools.aux_calcs import *
 
+from lif_meanfield_tools import ureg
+
 fixtures_input_path = 'tests/unit/fixtures/input/'
 fixtures_output_path = 'tests/unit/fixtures/output/'
 
+
+def fixtures_siegert1():
+    
+    function_name = 'siegert1'
+    
+    # noise driven regime mu < V_th
+    # parameters taken from microcircuit example
+    
+    mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
+    sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
+    # parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, V_th_rel=V_th) for mu, sigma in zip(mus, sigmas)]
+
+    tau_m = 10. * ureg.ms
+    tau_r = 2 * ureg.ms
+    V_th_rel = 15 * ureg.mV
+    V_0_rel = 0 * ureg.mV
+    mu = 3 * ureg.mV
+    sigma = 6 * ureg.mV
+    
+    V_th_rel = 17.85865096129104 * ureg.mV
+    tau_ms = np.repeat(tau_m, len(mus))
+    tau_rs = np.repeat(tau_r, len(mus))
+    V_th_rels = np.repeat(V_th_rel, len(mus))
+    V_0_rels = np.repeat(V_0_rel, len(mus))
+    
+    inputs = np.array([dict(mu=mu, sigma=sigma, V_th_rel=V_th_rel, 
+                            V_0_rel=V_0_rel, tau_m=tau_m, tau_r = tau_r) 
+                       for mu, sigma, V_th_rel, V_0_rel, tau_m, tau_r in 
+                       zip(mus, sigmas, V_th_rels, V_0_rels, tau_ms, tau_rs)])
+    
+    input_file = fixtures_input_path + function_name + '_noise_driven_regime' + '.npy'
+    np.save(input_file, inputs)
+    
+    # regime in which negative firing rates occured once
+    # parameters taken from circuit in which lmt returned negative rates
+    
+    tau_m = 20 * ureg.ms
+    mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
+    sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
+    V_th_rel = 17.85865096129104 * ureg.mV
+    
+    tau_ms = np.repeat(tau_m, len(mus))
+    tau_rs = np.repeat(tau_r, len(mus))
+    V_th_rels = np.repeat(V_th_rel, len(mus))
+    V_0_rels = np.repeat(V_0_rel, len(mus))
+    
+    inputs = np.array([dict(mu=mu, sigma=sigma, V_th_rel=V_th_rel, 
+                            V_0_rel=V_0_rel, tau_m=tau_m, tau_r = tau_r) 
+                       for mu, sigma, V_th_rel, V_0_rel, tau_m, tau_r in 
+                       zip(mus, sigmas, V_th_rels, V_0_rels, tau_ms, tau_rs)])
+        
+    input_file = fixtures_input_path + function_name + '_negative_firing_rate_regime' + '.npy'
+    np.save(input_file, inputs)
+    
+
+def fixtures_siegert2():
+    
+    function_name = 'siegert2'
+
+    # mean driven regime mu > V_th
+    # parameters taken from adjusted microcircuit example
+
+    tau_m = 20. * ureg.ms
+    tau_r = 0.5 * ureg.ms
+    V_th_rel = 20 * ureg.mV
+    V_0_rel = 0 * ureg.mV
+    mus =  [741.89455754, 21.24112709, 35.86521795, 40.69297877, 651.19761921] * ureg.mV
+    sigmas = [39.3139564, 6.17632725, 9.79196704, 10.64437979, 37.84928217] * ureg.mV
+
+    tau_ms = np.repeat(tau_m, len(mus))
+    tau_rs = np.repeat(tau_r, len(mus))
+    V_th_rels = np.repeat(V_th_rel, len(mus))
+    V_0_rels = np.repeat(V_0_rel, len(mus))
+
+    inputs = np.array([dict(mu=mu, sigma=sigma, V_th_rel=V_th_rel, 
+                            V_0_rel=V_0_rel, tau_m=tau_m, tau_r = tau_r) 
+                       for mu, sigma, V_th_rel, V_0_rel, tau_m, tau_r in 
+                       zip(mus, sigmas, V_th_rels, V_0_rels, tau_ms, tau_rs)])
+
+    input_file = fixtures_input_path + function_name + '_mean_driven_regime' + '.npy'
+    np.save(input_file, inputs)
 
 
 def fixtures_Phi():
@@ -37,7 +120,6 @@ def fixtures_Phi():
     
     np.save(output_file, results)
 
-    
 
 def fixtures_Phi_prime_mu():
     
@@ -182,9 +264,12 @@ def fixtures_p_hat_boxcar():
     
 if __name__ == '__main__':
     
+    
+    # fixtures_siegert1()
+    fixtures_siegert2()
     # fixtures_Phi()
     # fixtures_Phi_prime_mu()
     # fixtures_Psi()
     # fixtures_d_Psi()
     # fixtures_d_2_Psi()
-    fixtures_p_hat_boxcar()
+    # fixtures_p_hat_boxcar()

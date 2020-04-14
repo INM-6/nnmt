@@ -16,6 +16,7 @@ ureg = lmt.ureg
 fixtures_input_path = 'tests/unit/fixtures/input/'
 fixtures_output_path = 'tests/unit/fixtures/output/'
 
+
 class TestFiringRateFunctions(ABC):
     """ Base class for testing firing rate type functions. """
     
@@ -23,32 +24,27 @@ class TestFiringRateFunctions(ABC):
     @abstractmethod
     def parameters(self):
         """ 
-        Returns all arguments in a dictionary.
+        Returns all standard arguments in a dictionary.
         
         NOTE: Needs to contain V_th_rel and V_0_rel! 
         Please improve this implementation if possible. I would like to enforce 
         this upon subclassing, but I don't know how. 
         """
-        pass
-    
-    @property
-    @abstractmethod
-    def parameters_for_output_test(self):
-        """ 
-        List of dictionaries containing parameters to be updated for each test.
-        """
+        
         pass
     
     @property
     @abstractmethod
     def positive_params(self):
         """ List of names of positive parameters. """
+        
         pass
     
     @property
     @abstractmethod
     def function(self):
         """ The function to be tested. """
+        
         pass
     
     @property
@@ -57,29 +53,27 @@ class TestFiringRateFunctions(ABC):
         """ 
         Precision to which rate result needs to coincide with expected result.
         """
+        
         pass
-    
     
     @abstractmethod
     def expected_output(self):
         """ Function for calculating the expected result. """
+        
         pass
-    
     
     def integrand(self, x):
         return  np.exp(x**2) * (1 + erf(x))
-
 
     def real_siegert(self, tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         """ Siegert formula as given in Fourcaud Brunel 2002 eq. 4.11 """
 
         y_th = (V_th_rel - mu) / sigma
         y_r = (V_0_rel - mu) / sigma
-
+        
         nu = 1 / (tau_r + np.sqrt(np.pi) * tau_m * quad(self.integrand, y_r, y_th)[0])
-
+        
         return nu
-    
     
     def real_shifted_siegert(self, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         """ 
@@ -90,17 +84,15 @@ class TestFiringRateFunctions(ABC):
         
         alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
         k = np.sqrt(tau_s / tau_m)
-
+        
         V_th_eff = V_th_rel + sigma * alpha * k / 2
         V_0_eff = V_0_rel + sigma * alpha * k / 2
-
+        
         nu = self.real_siegert(tau_m, tau_r, V_th_eff, V_0_eff, mu, sigma)
-
+        
         return nu              
     
-    
     def test_negative_parameters_that_should_be_positive_raise_exception(self):
-        
         for param in self.positive_params:
             
             temp_params = self.parameters
@@ -109,7 +101,6 @@ class TestFiringRateFunctions(ABC):
             
             with self.assertRaises(ValueError):
                 self.function(**temp_params)
-            
             
     def test_V_0_larger_V_th_raise_exception(self):
         """ 
@@ -122,12 +113,6 @@ class TestFiringRateFunctions(ABC):
         
         with self.assertRaises(ValueError):
             self.function(**temp_params)
-        
-        
-    @abstractmethod
-    def test_correct_output(self):
-        pass
-
 
 
 class TestFiringRateWhiteNoiseCase(TestFiringRateFunctions):
@@ -136,38 +121,30 @@ class TestFiringRateWhiteNoiseCase(TestFiringRateFunctions):
     def positive_params(self):
         return ['tau_m', 'tau_r', 'sigma']
     
-    
     def expected_output(self, **parameters):
         return self.real_siegert(**parameters)
     
-    
-    def test_correct_output(self):
-
-        for params in self.parameters_for_output_test:
+    def check_output_for_given_params(self, params):
+        """ 
+        Calc expected output and result and assert equality for given parameters.
+        """
         
-            temp_params = self.parameters.copy()
-            temp_params.update(params)                                                
-            expected_output = self.expected_output(**temp_params)
-            result = self.function(**temp_params)
-            self.assertAlmostEqual(expected_output, result, self.precision)
-    
-
+        temp_params = self.parameters.copy()
+        temp_params.update(params)                                
+                        
+        expected_output = self.expected_output(**temp_params)
+        
+        result = self.function(**temp_params)
+        
+        self.assertAlmostEqual(expected_output, result, self.precision)
+        
 
 class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
     
     @classmethod
     def setUpClass(cls):
-                
-        V_th = 17.85865096129104 * ureg.mV
-        mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
-        sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, V_th_rel=V_th) for mu, sigma in zip(mus, sigmas)]
-        
-        tau_m = 20 * ureg.ms
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
-        cls._parameters_for_output_test_1 = [dict(mu=mu, sigma=sigma, tau_m=tau_m) for mu, sigma in zip(mus, sigmas)]
-        
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'siegert1_noise_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'siegert1_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -175,8 +152,7 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
         self.V_th_rel = 15 * ureg.mV
         self.V_0_rel = 0 * ureg.mV
         self.mu = 3 * ureg.mV
-        self.sigma = 6 * ureg.mV
-        
+        self.sigma = 6 * ureg.mV    
         
     @property
     def parameters(self):
@@ -187,21 +163,21 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
                     mu = self.mu,
                     sigma = self.sigma)
 
-
     @property
     def function(self):
         return siegert1
-    
-    
+
     @property
     def precision(self):
         return 10
     
+    @property
+    def parameters_for_noise_driven_regime(self):
+        return self._parameters_for_noise_driven_regime
     
     @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0 + self._parameters_for_output_test_1
-    
+    def parameters_for_negative_firing_rate_regime(self):
+        return self._parameters_for_noise_driven_regime
     
     def test_mu_larger_V_th_raises_exception(self):
         """ Give warning if mu > V_th, Siegert2 should be used. """
@@ -210,31 +186,30 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
         temp_params['mu'] = temp_params['V_th_rel'] * 1.1
 
         with self.assertRaises(ValueError):
-            siegert1(**temp_params)
+            siegert1(**temp_params)        
             
-
+    def test_correct_output_in_noise_driven_regime(self):
+        for params in self.parameters_for_noise_driven_regime:
+            self.check_output_for_given_params(params)    
+            
+    def test_correct_output_in_regime_where_negative_firing_rates_once_occurred(self):
+        for params in self.parameters_for_negative_firing_rate_regime:
+            self.check_output_for_given_params(params)
+            
 
 class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-                
-        tau_m = 20. * ureg.ms
-        tau_r = 0.5 * ureg.ms
-        V_th = 20 * ureg.mV
-        mus =  [741.89455754, 21.24112709, 35.86521795, 40.69297877, 651.19761921] * ureg.mV
-        sigmas = [39.3139564, 6.17632725, 9.79196704, 10.64437979, 37.84928217] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, V_th_rel=V_th, tau_m=tau_m, tau_r=tau_r) for mu, sigma in zip(mus, sigmas)]
-        
-        
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'siegert2_mean_driven_regime.npy')
+            
     def setUp(self):
         self.tau_m = 10. * ureg.ms
         self.tau_r = 2 * ureg.ms
         self.V_th_rel = 15 * ureg.mV
         self.V_0_rel = 0 * ureg.mV
         self.mu = 3 * ureg.mV
-        self.sigma = 6 * ureg.mV
-        
+        self.sigma = 6 * ureg.mV    
         
     @property
     def parameters(self):
@@ -248,18 +223,15 @@ class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
     @property
     def function(self):
         return siegert2
-
-
+    
     @property
     def precision(self):
         return 10
     
-
     @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0
+    def parameters_for_mean_driven_regime(self):
+        return self._parameters_for_mean_driven_regime
     
-
     def test_mu_smaller_V_th_raises_exception(self):
         """ Give warning if mu < V_th, Siegert1 should be used. """
 
@@ -267,9 +239,12 @@ class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
         temp_params['mu'] = temp_params['V_th_rel'] * 0.9
 
         with self.assertRaises(ValueError):
-            siegert2(**temp_params)
+            siegert2(**temp_params)        
             
-            
+    def test_correct_output_in_mean_driven_regime(self):
+        for params in self.parameters_for_mean_driven_regime:
+            self.check_output_for_given_params(params)
+                
             
 class TestFiringRateColoredNoiseCase(TestFiringRateFunctions):
     
@@ -950,7 +925,6 @@ class Test_p_hat_boxcar(unittest.TestCase):
     def setUp(self):
                 
         inputs = np.load(fixtures_input_path + 'p_hat_boxcar.npz')
-        print(inputs)
         self.ks = inputs['ks']
         self.widths = inputs['widths']
         

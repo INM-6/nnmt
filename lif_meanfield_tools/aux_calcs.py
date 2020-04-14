@@ -601,6 +601,8 @@ def p_hat_boxcar(k, width):
     --------
     ft: float
     """
+    if width <= 0:
+        raise ValueError('boxcar width must be positive!')
     if k == 0:
         ft = 1.
     else:
