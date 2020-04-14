@@ -113,16 +113,6 @@ class TestFiringRateFunctions(ABC):
         
         with self.assertRaises(ValueError):
             self.function(**temp_params)
-
-
-class TestFiringRateWhiteNoiseCase(TestFiringRateFunctions):
-    
-    @property
-    def positive_params(self):
-        return ['tau_m', 'tau_r', 'sigma']
-    
-    def expected_output(self, **parameters):
-        return self.real_siegert(**parameters)
     
     def check_output_for_given_params(self, params):
         """ 
@@ -137,6 +127,16 @@ class TestFiringRateWhiteNoiseCase(TestFiringRateFunctions):
         result = self.function(**temp_params)
         
         self.assertAlmostEqual(expected_output, result, self.precision)
+
+
+class TestFiringRateWhiteNoiseCase(TestFiringRateFunctions):
+    
+    @property
+    def positive_params(self):
+        return ['tau_m', 'tau_r', 'sigma']
+    
+    def expected_output(self, **parameters):
+        return self.real_siegert(**parameters)
         
 
 class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
@@ -252,46 +252,35 @@ class TestFiringRateColoredNoiseCase(TestFiringRateFunctions):
     def positive_params(self):
         return ['tau_m', 'tau_s', 'tau_r', 'sigma']
     
-
     def expected_output(self, **parameters):
         return self.real_shifted_siegert(**parameters)
-
-
-    def test_correct_output(self):
+                
+    def test_correct_output_in_noise_driven_regime(self):
         
         with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            
-            for params in self.parameters_for_output_test:
-            
-                temp_params = self.parameters.copy()
-                temp_params.update(params)                                                
-                expected_output = self.expected_output(**temp_params)
-                result = self.function(**temp_params)
-                self.assertAlmostEqual(expected_output, result, self.precision)
+            for params in self.parameters_for_noise_driven_regime:
+                self.check_output_for_given_params(params)
+                
+    def test_correct_output_in_mean_driven_regime(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
+            for params in self.parameters_for_mean_driven_regime:
+                self.check_output_for_given_params(params)
+                
+    def test_correct_output_in_regime_where_negative_firing_rates_once_occurred(self):
+        
+        with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
+            for params in self.parameters_for_negative_firing_rate_regime:
+                self.check_output_for_given_params(params)
 
 
 class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        
-        tau_s = 2. * ureg.ms
-        mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
-        sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, tau_s=tau_s) for mu, sigma in zip(mus, sigmas)]
-        
-        tau_m = 20 * ureg.ms
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
-        cls._parameters_for_output_test_1 = [dict(mu=mu, sigma=sigma, tau_m=tau_m) for mu, sigma in zip(mus, sigmas)]
-
-        tau_m = 20. * ureg.ms
-        tau_r = 0.5 * ureg.ms
-        V_th_rel = 20 * ureg.mV
-        mus =  [741.89455754, 651.19761921, 21.24112709, 35.86521795, 40.69297877] * ureg.mV
-        sigmas = [39.3139564, 37.84928217, 6.17632725, 9.79196704, 10.64437979] * ureg.mV
-        cls._parameters_for_output_test_2 = [dict(mu=mu, sigma=sigma, tau_m=tau_m, tau_r=tau_r, V_th_rel=V_th_rel) for mu, sigma in zip(mus, sigmas)]
-    
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'nu0_fb433_noise_driven_regime.npy')
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'nu0_fb433_mean_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'nu0_fb433_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -302,7 +291,6 @@ class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
         self.mu = 3 * ureg.mV
         self.sigma = 6 * ureg.mV
         
-        
     @property
     def parameters(self):
         return dict(tau_m = self.tau_m,
@@ -312,46 +300,35 @@ class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
                     V_0_rel = self.V_0_rel,
                     mu = self.mu,
                     sigma = self.sigma)
-
         
     @property
     def function(self):
         return nu0_fb433
 
-
     @property
     def precision(self):
         return 4
 
+    @property
+    def parameters_for_noise_driven_regime(self):
+        return self._parameters_for_noise_driven_regime
 
     @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0 + self._parameters_for_output_test_1 + self._parameters_for_output_test_2
+    def parameters_for_mean_driven_regime(self):
+        return self._parameters_for_mean_driven_regime
 
+    @property
+    def parameters_for_negative_firing_rate_regime(self):
+        return self._parameters_for_negative_firing_rate_regime
 
 
 class Test_nu0_fb(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        
-        tau_s = 2. * ureg.ms
-        mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
-        sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, tau_s=tau_s) for mu, sigma in zip(mus, sigmas)]
-        
-        tau_m = 20 * ureg.ms
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
-        cls._parameters_for_output_test_1 = [dict(mu=mu, sigma=sigma, tau_m=tau_m) for mu, sigma in zip(mus, sigmas)]
-
-        tau_m = 20. * ureg.ms
-        tau_r = 0.5 * ureg.ms
-        V_th = 20 * ureg.mV
-        mus =  [741.89455754, 651.19761921, 21.24112709, 35.86521795, 40.69297877] * ureg.mV
-        sigmas = [39.3139564, 37.84928217, 6.17632725, 9.79196704, 10.64437979] * ureg.mV
-        cls._parameters_for_output_test_2 = [dict(mu=mu, sigma=sigma, tau_m=tau_m, tau_r=tau_r, V_th_rel=V_th) for mu, sigma in zip(mus, sigmas)]
-    
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'nu0_fb_noise_driven_regime.npy')
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'nu0_fb_mean_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'nu0_fb_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -361,7 +338,6 @@ class Test_nu0_fb(unittest.TestCase, TestFiringRateColoredNoiseCase):
         self.V_0_rel = 0 * ureg.mV
         self.mu = 3 * ureg.mV
         self.sigma = 6 * ureg.mV
-        
         
     @property
     def parameters(self):
@@ -373,21 +349,25 @@ class Test_nu0_fb(unittest.TestCase, TestFiringRateColoredNoiseCase):
                     mu = self.mu,
                     sigma = self.sigma)
 
-        
     @property
     def function(self):
         return nu0_fb
-
 
     @property
     def precision(self):
         return 4
 
+    @property
+    def parameters_for_noise_driven_regime(self):
+        return self._parameters_for_noise_driven_regime
 
     @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0 + self._parameters_for_output_test_1 + self._parameters_for_output_test_2
+    def parameters_for_mean_driven_regime(self):
+        return self._parameters_for_mean_driven_regime
 
+    @property
+    def parameters_for_negative_firing_rate_regime(self):
+        return self._parameters_for_negative_firing_rate_regime
 
 
 class Test_nu_0(unittest.TestCase):
