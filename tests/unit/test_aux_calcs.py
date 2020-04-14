@@ -942,14 +942,42 @@ class Test_d2Psi_x_r(unittest.TestCase):
 
 class Test_p_hat_boxcar(unittest.TestCase):
     
-    def test_zero_frequency_input(self):
-        pass 
+    def setUp(self):
+                
+        inputs = np.load(fixtures_input_path + 'p_hat_boxcar.npz')
+        print(inputs)
+        self.ks = inputs['ks']
+        self.widths = inputs['widths']
+        
+        self.expected_outputs = np.load(fixtures_output_path + 'p_hat_boxcar.npy')
     
+    def test_zero_frequency_input(self):
+        
+        k = 0 
+        width = 1
+        self.assertEqual(p_hat_boxcar(k, width), 1)
+
     def test_zero_width_raises_exception(self):
-        pass
+        
+        k = 1
+        width = 0 
+        
+        with self.assertRaises(ValueError):
+            p_hat_boxcar(k, width)
+
 
     def test_negative_width_raises_exception(self):
-        pass
+        
+        k = 1
+        width = -1
+        
+        with self.assertRaises(ValueError):
+            p_hat_boxcar(k, width)
+    
     
     def test_correct_output(self):
-        pass
+        
+        for expected_output, k, width in zip(self.expected_outputs, self.ks, self.widths):
+        
+            result = p_hat_boxcar(k, width)
+            self.assertEqual(expected_output, result)

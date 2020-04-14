@@ -5,10 +5,17 @@ Only run this script, if you are sure that all functions in aux_calcs.py are cor
 import numpy as np
 
 from mpmath import pcfu
+
+# temporarily add local version of lif_meanfield_tools to pythonpath 
+# this is necessary to create the data using the local version and not the 
+# installed module (important for debugging)
+import sys
+sys.path.insert(1, './')
 from lif_meanfield_tools.aux_calcs import *
 
 fixtures_input_path = 'tests/unit/fixtures/input/'
 fixtures_output_path = 'tests/unit/fixtures/output/'
+
 
 
 def fixtures_Phi():
@@ -163,7 +170,7 @@ def fixtures_p_hat_boxcar():
     ks = ks.flatten()
     widths = widths.flatten()
     
-    np.save(input_file, ks, widths)
+    np.savez(input_file, ks=ks, widths=widths)
     
     results = []
     
