@@ -940,6 +940,11 @@ class Test_d2Psi_x_r(unittest.TestCase):
 #         self.assertEqual(result, real_determinant)
 # 
 
+class Test_determinant_same_rows(unittest.TestCase):
+    """ Implement, when you know what determinant in aux_calcs is doing. """
+    pass
+
+
 class Test_p_hat_boxcar(unittest.TestCase):
     
     def setUp(self):
@@ -981,3 +986,8 @@ class Test_p_hat_boxcar(unittest.TestCase):
         
             result = p_hat_boxcar(k, width)
             self.assertEqual(expected_output, result)
+            
+            
+class Test_solve_chareq_rate_boxcar(unittest.TestCase):
+    """ Implement, when you know what determinant in aux_calcs is doing. """
+    pass
