@@ -101,6 +101,11 @@ class Fixtures():
         temp = d.copy()
         temp.pop(key)
         return temp
+    
+    def dict_with_new_entry(self, d, key, value):
+        temp = d.copy()
+        temp[key] = value
+        return temp
 
     def white_noise_firing_rate_functions(self):
         
@@ -187,6 +192,94 @@ class Fixtures():
         
         np.save(output_file, results)
         
+    def d_nu_d_mu(self):
+        
+        function_name = 'd_nu_d_mu'
+        function = d_nu_d_mu
+        
+        parameters_noise_driven_regime = np.load(self.input_path + 'white_noise_firing_rate_functions_noise_driven_regime.npy')
+        parameters_mean_driven_regime = np.load(self.input_path + 'white_noise_firing_rate_functions_mean_driven_regime.npy')
+        parameters_negative_firing_rate_regime = np.load(self.input_path + 'white_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        
+        output_noise_driven_regime = []
+        for params in parameters_noise_driven_regime:
+            output_noise_driven_regime.append(function(**params).magnitude)
+            
+        output_mean_driven_regime = []
+        for params in parameters_mean_driven_regime:
+            output_mean_driven_regime.append(function(**params).magnitude)
+            
+        output_negative_firing_rate_regime = []
+        for params in parameters_negative_firing_rate_regime:
+            output_negative_firing_rate_regime.append(function(**params).magnitude)
+            
+        np.save(self.output_path + function_name + '_noise_driven_regime.npy', output_noise_driven_regime)
+        np.save(self.output_path + function_name + '_mean_driven_regime.npy', output_mean_driven_regime)
+        np.save(self.output_path + function_name + '_negative_firing_rate_regime.npy', output_negative_firing_rate_regime)
+            
+    def d_nu_d_mu_fb433(self):
+        
+        function_name = 'd_nu_d_mu_fb433'
+        function = d_nu_d_mu_fb433
+        
+        parameters_noise_driven_regime = np.load(self.input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
+        parameters_mean_driven_regime = np.load(self.input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
+        parameters_negative_firing_rate_regime = np.load(self.input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        
+        def calc_and_save_output_and_d_nu_d_mu_input(parameters, regime_name):
+            output = []
+            d_nu_d_mu_input = []
+            for params in parameters:
+                d_nu_d_mu_input.append(d_nu_d_mu(**self.dict_without_key(params, 'tau_s')).magnitude)
+                output.append(function(**params).magnitude)
+            print(d_nu_d_mu_input)
+            np.save(self.input_path + function_name + '_d_nu_d_mu_{}_regime.npy'.format(regime_name), d_nu_d_mu_input)
+            np.save(self.output_path + function_name + '_{}_regime.npy'.format(regime_name), output)
+        
+        calc_and_save_output_and_d_nu_d_mu_input(parameters_noise_driven_regime, 'noise_driven')
+        calc_and_save_output_and_d_nu_d_mu_input(parameters_mean_driven_regime, 'mean_driven')
+        calc_and_save_output_and_d_nu_d_mu_input(parameters_negative_firing_rate_regime, 'negative_firing_rate')
+            
+    def d_nu_d_nu_in_fb(self):
+        
+        function_name = 'd_nu_d_nu_in_fb'
+        function = d_nu_d_nu_in_fb
+        
+        j = np.repeat(0.1756 * ureg.mV, len(self.parameters_noise_driven_regime['mu']))
+        parameters_noise_driven_regime = self.dict_with_new_entry(self.parameters_noise_driven_regime, 'j', j) 
+        parameters_noise_driven_regime = self.convert_dict_of_lists_to_array_of_dicts(parameters_noise_driven_regime)
+        input_file = self.input_path + function_name + '_noise_driven_regime' + '.npy'
+        np.save(input_file, parameters_noise_driven_regime)
+        
+        j = np.repeat(-0.7024 * ureg.mV, len(self.parameters_noise_driven_regime['mu']))
+        parameters_mean_driven_regime = self.dict_with_new_entry(self.parameters_mean_driven_regime, 'j', j) 
+        parameters_mean_driven_regime = self.convert_dict_of_lists_to_array_of_dicts(parameters_mean_driven_regime)
+        input_file = self.input_path + function_name + '_mean_driven_regime' + '.npy'
+        np.save(input_file, parameters_mean_driven_regime)
+        
+        j = np.repeat(0.1756 * ureg.mV, len(self.parameters_noise_driven_regime['mu']))
+        parameters_negative_firing_rate_regime = self.dict_with_new_entry(self.parameters_negative_firing_rate_regime, 'j', j) 
+        parameters_negative_firing_rate_regime = self.convert_dict_of_lists_to_array_of_dicts(parameters_negative_firing_rate_regime)
+        input_file = self.input_path + function_name + '_negative_firing_rate_regime' + '.npy'
+        np.save(input_file, parameters_negative_firing_rate_regime)
+        
+        output_noise_driven_regime = []
+        for params in parameters_noise_driven_regime:
+            output_noise_driven_regime.append(function(**params))
+        
+        output_mean_driven_regime = []
+        for params in parameters_mean_driven_regime:
+            output_mean_driven_regime.append(function(**params))
+            
+        output_negative_firing_rate_regime = []
+        for params in parameters_negative_firing_rate_regime:
+            output_negative_firing_rate_regime.append(function(**params))
+            
+        np.save(self.output_path + function_name + '_noise_driven_regime.npy', output_noise_driven_regime)
+        np.save(self.output_path + function_name + '_mean_driven_regime.npy', output_mean_driven_regime)
+        np.save(self.output_path + function_name + '_negative_firing_rate_regime.npy', output_negative_firing_rate_regime)
+            
+    
     def Psi(self):
         
         function_name = 'Psi'
@@ -307,9 +400,12 @@ if __name__ == '__main__':
 
     fixtures = Fixtures(input_path, output_path)
     fixtures.white_noise_firing_rate_functions()
-    fixtures.colored_noise_firing_rate_functions()
+    # fixtures.colored_noise_firing_rate_functions()
     # fixtures.Phi()
     # fixtures.Phi_prime_mu()
+    # fixtures.d_nu_d_mu()
+    fixtures.d_nu_d_mu_fb433()
+    # fixtures.d_nu_d_nu_in_fb()
     # fixtures.Psi()
     # fixtures.d_Psi()
     # fixtures.d_2_Psi()

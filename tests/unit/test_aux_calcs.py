@@ -17,7 +17,7 @@ fixtures_input_path = 'tests/unit/fixtures/input/'
 fixtures_output_path = 'tests/unit/fixtures/output/'
 
 
-class TestFiringRateFunctions(ABC):
+class TestFiringRateRelatedFunctions(ABC):
     """ Base class for testing firing rate type functions. """
     
     @property
@@ -53,12 +53,6 @@ class TestFiringRateFunctions(ABC):
         """ 
         Precision to which rate result needs to coincide with expected result.
         """
-        
-        pass
-    
-    @abstractmethod
-    def expected_output(self):
-        """ Function for calculating the expected result. """
         
         pass
     
@@ -113,7 +107,16 @@ class TestFiringRateFunctions(ABC):
         
         with self.assertRaises(ValueError):
             self.function(**temp_params)
+
+
+class TestFiringRateFunctions(TestFiringRateRelatedFunctions):
     
+    @abstractmethod
+    def expected_output(self):
+        """ Function for calculating the expected result. """
+        
+        pass
+
     def check_output_for_given_params(self, params):
         """ 
         Calc expected output and result and assert equality for given parameters.
@@ -143,8 +146,8 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
     
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_noise_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        cls._parameters_noise_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls._parameters_negative_firing_rate_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -172,12 +175,12 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
         return 10
     
     @property
-    def parameters_for_noise_driven_regime(self):
-        return self._parameters_for_noise_driven_regime
+    def parameters_noise_driven_regime(self):
+        return self._parameters_noise_driven_regime
     
     @property
-    def parameters_for_negative_firing_rate_regime(self):
-        return self._parameters_for_noise_driven_regime
+    def parameters_negative_firing_rate_regime(self):
+        return self._parameters_noise_driven_regime
     
     def test_mu_larger_V_th_raises_exception(self):
         """ Give warning if mu > V_th, Siegert2 should be used. """
@@ -189,11 +192,11 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
             siegert1(**temp_params)        
             
     def test_correct_output_in_noise_driven_regime(self):
-        for params in self.parameters_for_noise_driven_regime:
+        for params in self.parameters_noise_driven_regime:
             self.check_output_for_given_params(params)    
             
     def test_correct_output_in_regime_where_negative_firing_rates_once_occurred(self):
-        for params in self.parameters_for_negative_firing_rate_regime:
+        for params in self.parameters_negative_firing_rate_regime:
             self.check_output_for_given_params(params)
             
 
@@ -201,7 +204,7 @@ class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls._parameters_mean_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_mean_driven_regime.npy')
             
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -229,8 +232,8 @@ class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
         return 10
     
     @property
-    def parameters_for_mean_driven_regime(self):
-        return self._parameters_for_mean_driven_regime
+    def parameters_mean_driven_regime(self):
+        return self._parameters_mean_driven_regime
     
     def test_mu_smaller_V_th_raises_exception(self):
         """ Give warning if mu < V_th, Siegert1 should be used. """
@@ -242,7 +245,7 @@ class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
             siegert2(**temp_params)        
             
     def test_correct_output_in_mean_driven_regime(self):
-        for params in self.parameters_for_mean_driven_regime:
+        for params in self.parameters_mean_driven_regime:
             self.check_output_for_given_params(params)
                 
             
@@ -258,19 +261,19 @@ class TestFiringRateColoredNoiseCase(TestFiringRateFunctions):
     def test_correct_output_in_noise_driven_regime(self):
         
         with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            for params in self.parameters_for_noise_driven_regime:
+            for params in self.parameters_noise_driven_regime:
                 self.check_output_for_given_params(params)
                 
     def test_correct_output_in_mean_driven_regime(self):
         
         with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            for params in self.parameters_for_mean_driven_regime:
+            for params in self.parameters_mean_driven_regime:
                 self.check_output_for_given_params(params)
                 
     def test_correct_output_in_regime_where_negative_firing_rates_once_occurred(self):
         
         with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            for params in self.parameters_for_negative_firing_rate_regime:
+            for params in self.parameters_negative_firing_rate_regime:
                 self.check_output_for_given_params(params)
 
 
@@ -278,9 +281,9 @@ class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        cls._parameters_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls._parameters_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls._parameters_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -310,25 +313,25 @@ class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
         return 5
 
     @property
-    def parameters_for_noise_driven_regime(self):
-        return self._parameters_for_noise_driven_regime
+    def parameters_noise_driven_regime(self):
+        return self._parameters_noise_driven_regime
 
     @property
-    def parameters_for_mean_driven_regime(self):
-        return self._parameters_for_mean_driven_regime
+    def parameters_mean_driven_regime(self):
+        return self._parameters_mean_driven_regime
 
     @property
-    def parameters_for_negative_firing_rate_regime(self):
-        return self._parameters_for_negative_firing_rate_regime
+    def parameters_negative_firing_rate_regime(self):
+        return self._parameters_negative_firing_rate_regime
 
 
 class Test_nu0_fb(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        cls._parameters_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls._parameters_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls._parameters_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -358,16 +361,16 @@ class Test_nu0_fb(unittest.TestCase, TestFiringRateColoredNoiseCase):
         return 4
 
     @property
-    def parameters_for_noise_driven_regime(self):
-        return self._parameters_for_noise_driven_regime
+    def parameters_noise_driven_regime(self):
+        return self._parameters_noise_driven_regime
 
     @property
-    def parameters_for_mean_driven_regime(self):
-        return self._parameters_for_mean_driven_regime
+    def parameters_mean_driven_regime(self):
+        return self._parameters_mean_driven_regime
 
     @property
-    def parameters_for_negative_firing_rate_regime(self):
-        return self._parameters_for_negative_firing_rate_regime
+    def parameters_negative_firing_rate_regime(self):
+        return self._parameters_negative_firing_rate_regime
 
 
 class Test_nu_0(unittest.TestCase):
@@ -430,25 +433,15 @@ class Test_Phi_prime_mu(unittest.TestCase):
             Phi_prime_mu(s, sigma)
             
             
-class TestFiringRateDerivativeFunctions(TestFiringRateFunctions):
+class TestFiringRateDerivativeFunctions(TestFiringRateRelatedFunctions):    
     
-    @property
-    @abstractmethod
-    def fixture(self):
-        pass
-    
-    @property
-    def expected_output(self):
-        expected_outputs = np.load(self.fixture)
-        return expected_outputs
-    
-    def test_correct_output(self):
+    def check_output_for_given_params(self, parameters_regime, expected_outputs):
         with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            for expected_output, params in zip(self.expected_output, self.parameters_for_output_test):
+            for params, expected_output in zip(parameters_regime, expected_outputs):
                 temp_params = self.parameters.copy()
                 temp_params.update(params)                                                
                 result = self.function(**temp_params)
-                self.assertAlmostEqual(expected_output, result, self.precision)
+                np.testing.assert_array_almost_equal(expected_output, result, self.precision)
                 
     def test_zero_sigma_raises_error(self):
         self.sigma = 0 * ureg.mV
@@ -460,28 +453,13 @@ class Test_d_nu_d_mu(unittest.TestCase, TestFiringRateDerivativeFunctions):
     
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'nu0_fb_noise_driven_regime.npy')
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'nu0_fb_mean_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'nu0_fb_negative_firing_rate_regime.npy')
+        cls.parameters_noise_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls.parameters_mean_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls.parameters_negative_firing_rate_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        cls.expected_output_noise_driven_regime = np.load(fixtures_output_path + 'd_nu_d_mu_noise_driven_regime.npy')
+        cls.expected_output_mean_driven_regime = np.load(fixtures_output_path + 'd_nu_d_mu_mean_driven_regime.npy')
+        cls.expected_output_negative_firing_rate_regime = np.load(fixtures_output_path + 'd_nu_d_mu_negative_firing_rate_regime.npy')
         
-        
-        mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
-        sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma) for mu, sigma in zip(mus, sigmas)]
-        
-        tau_m = 20 * ureg.ms
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
-        cls._parameters_for_output_test_1 = [dict(mu=mu, sigma=sigma, tau_m=tau_m) for mu, sigma in zip(mus, sigmas)]
-
-        tau_m = 20. * ureg.ms
-        tau_r = 0.5 * ureg.ms
-        V_th_rel = 20 * ureg.mV
-        mus =  [741.89455754, 651.19761921, 21.24112709, 35.86521795, 40.69297877] * ureg.mV
-        sigmas = [39.3139564, 37.84928217, 6.17632725, 9.79196704, 10.64437979] * ureg.mV
-        cls._parameters_for_output_test_2 = [dict(mu=mu, sigma=sigma, tau_m=tau_m, tau_r=tau_r, V_th_rel=V_th_rel) for mu, sigma in zip(mus, sigmas)]
-    
-    
     def setUp(self):
         self.tau_m = 10. * ureg.ms
         self.tau_r = 2 * ureg.ms
@@ -489,7 +467,6 @@ class Test_d_nu_d_mu(unittest.TestCase, TestFiringRateDerivativeFunctions):
         self.V_0_rel = 0 * ureg.mV
         self.mu = 3 * ureg.mV
         self.sigma = 6 * ureg.mV
-        
         
     @property
     def parameters(self):
@@ -499,57 +476,43 @@ class Test_d_nu_d_mu(unittest.TestCase, TestFiringRateDerivativeFunctions):
                     V_0_rel = self.V_0_rel,
                     mu = self.mu,
                     sigma = self.sigma)
-
         
     @property
     def function(self):
         return d_nu_d_mu
 
-
-    @property
-    def fixture(self):
-        return 'tests/unit/fixtures/d_nu_d_mu.npy'
-    
-    
     @property
     def positive_params(self):
         return ['tau_m', 'tau_r', 'sigma']
     
-    
     @property
     def precision(self):
         return 10
+    
+    def test_correct_output_in_noise_driven_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.expected_output_noise_driven_regime)
 
-
-    @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0 + self._parameters_for_output_test_1 + self._parameters_for_output_test_2
-
-
+    def test_correct_output_in_mean_driven_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.expected_output_noise_driven_regime)
+    
+    def test_correct_output_in_negative_firing_rate_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.expected_output_noise_driven_regime)
+                
         
 class Test_d_nu_d_mu_fb433(unittest.TestCase, TestFiringRateDerivativeFunctions):
     
     @classmethod
     def setUpClass(cls):
+        cls.parameters_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls.parameters_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls.parameters_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
+        cls.d_nu_d_mu_input_noise_driven_regime = np.load(fixtures_input_path + 'd_nu_d_mu_fb433_d_nu_d_mu_noise_driven_regime.npy')
+        cls.d_nu_d_mu_input_mean_driven_regime = np.load(fixtures_input_path + 'd_nu_d_mu_fb433_d_nu_d_mu_mean_driven_regime.npy')
+        cls.d_nu_d_mu_input_negative_firing_rate_regime = np.load(fixtures_input_path + 'd_nu_d_mu_fb433_d_nu_d_mu_negative_firing_rate_regime.npy')
+        cls.expected_output_noise_driven_regime = np.load(fixtures_output_path + 'd_nu_d_mu_fb433_noise_driven_regime.npy')
+        cls.expected_output_mean_driven_regime = np.load(fixtures_output_path + 'd_nu_d_mu_fb433_mean_driven_regime.npy')
+        cls.expected_output_negative_firing_rate_regime = np.load(fixtures_output_path + 'd_nu_d_mu_fb433_negative_firing_rate_regime.npy')
         
-        tau_s = 2. * ureg.ms
-        mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
-        sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, tau_s=tau_s) for mu, sigma in zip(mus, sigmas)]
-        
-        tau_m = 20 * ureg.ms
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
-        cls._parameters_for_output_test_1 = [dict(mu=mu, sigma=sigma, tau_m=tau_m) for mu, sigma in zip(mus, sigmas)]
-
-        tau_m = 20. * ureg.ms
-        tau_r = 0.5 * ureg.ms
-        V_th_rel = 20 * ureg.mV
-        mus =  [741.89455754, 651.19761921, 21.24112709, 35.86521795, 40.69297877] * ureg.mV
-        sigmas = [39.3139564, 37.84928217, 6.17632725, 9.79196704, 10.64437979] * ureg.mV
-        cls._parameters_for_output_test_2 = [dict(mu=mu, sigma=sigma, tau_m=tau_m, tau_r=tau_r, V_th_rel=V_th_rel) for mu, sigma in zip(mus, sigmas)]
-    
-    
     def setUp(self):
         self.tau_m = 10. * ureg.ms
         self.tau_s = 0.5 * ureg.ms
@@ -558,7 +521,6 @@ class Test_d_nu_d_mu_fb433(unittest.TestCase, TestFiringRateDerivativeFunctions)
         self.V_0_rel = 0 * ureg.mV
         self.mu = 3 * ureg.mV
         self.sigma = 6 * ureg.mV
-        
         
     @property
     def parameters(self):
@@ -569,79 +531,45 @@ class Test_d_nu_d_mu_fb433(unittest.TestCase, TestFiringRateDerivativeFunctions)
                     V_0_rel = self.V_0_rel,
                     mu = self.mu,
                     sigma = self.sigma)
-
         
     @property
     def function(self):
         return d_nu_d_mu_fb433
-
-
-    @property
-    def fixture(self):
-        return 'tests/unit/fixtures/d_nu_d_mu_fb433.npy'
-    
-
-    @property
-    def fixture_d_nu_d_mu(self):
-        return 'tests/unit/fixtures/d_nu_d_mu_fb433_d_nu_d_mu.npy'
-    
     
     @property
     def positive_params(self):
         return ['tau_m', 'tau_s', 'tau_r', 'sigma']
     
-    
     @property
     def precision(self):
         return 10
-
-
-    @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0 + self._parameters_for_output_test_1 + self._parameters_for_output_test_2
     
+    def check_output_for_given_params(self, parameters_regime, d_nu_d_mu_input, expected_outputs):
+        with patch('lif_meanfield_tools.aux_calcs.d_nu_d_mu') as mocked_d_nu_d_mu:
+            mocked_d_nu_d_mu.side_effect = d_nu_d_mu_input
+            super().check_output_for_given_params(parameters_regime, expected_outputs)
+
+    def test_correct_output_in_noise_driven_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.d_nu_d_mu_input_noise_driven_regime, self.expected_output_noise_driven_regime)
+
+    def test_correct_output_in_mean_driven_regime(self):
+        self.check_output_for_given_params(self.parameters_mean_driven_regime, self.d_nu_d_mu_input_mean_driven_regime, self.expected_output_mean_driven_regime)
     
-    def test_correct_output(self):
-        
-        with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            
-            with patch('lif_meanfield_tools.aux_calcs.d_nu_d_mu') as mocked_d_nu_d_mu:
-                
-                mocked_d_nu_d_mu.side_effect = np.load(self.fixture_d_nu_d_mu)
-                
-                for expected_output, params in zip(self.expected_output, self.parameters_for_output_test):
-                
-                    temp_params = self.parameters.copy()
-                    temp_params.update(params)                                                
-                    result = self.function(**temp_params)
-                    self.assertAlmostEqual(expected_output, result, self.precision)
-            
+    def test_correct_output_in_negative_firing_rate_regime(self):
+        self.check_output_for_given_params(self.parameters_negative_firing_rate_regime, self.d_nu_d_mu_input_negative_firing_rate_regime, self.expected_output_negative_firing_rate_regime)
 
 
 class Test_d_nu_d_nu_in_fb(unittest.TestCase, TestFiringRateDerivativeFunctions):
     
     @classmethod
     def setUpClass(cls):
+        cls.parameters_noise_driven_regime = np.load(fixtures_input_path + 'd_nu_d_nu_in_fb_noise_driven_regime.npy')
+        cls.parameters_mean_driven_regime = np.load(fixtures_input_path + 'd_nu_d_nu_in_fb_mean_driven_regime.npy')
+        cls.parameters_negative_firing_rate_regime = np.load(fixtures_input_path + 'd_nu_d_nu_in_fb_negative_firing_rate_regime.npy')
+        cls.expected_output_noise_driven_regime = np.load(fixtures_output_path + 'd_nu_d_nu_in_fb_noise_driven_regime.npy')
+        cls.expected_output_mean_driven_regime = np.load(fixtures_output_path + 'd_nu_d_nu_in_fb_mean_driven_regime.npy')
+        cls.expected_output_negative_firing_rate_regime = np.load(fixtures_output_path + 'd_nu_d_nu_in_fb_negative_firing_rate_regime.npy')
         
-        tau_s = 2. * ureg.ms
-        mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
-        sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
-        cls._parameters_for_output_test_0 = [dict(mu=mu, sigma=sigma, tau_s=tau_s) for mu, sigma in zip(mus, sigmas)]
-        
-        tau_m = 20 * ureg.ms
-        j = -0.7024 * ureg.mV
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
-        cls._parameters_for_output_test_1 = [dict(mu=mu, sigma=sigma, tau_m=tau_m) for mu, sigma in zip(mus, sigmas)]
-
-        tau_m = 20. * ureg.ms
-        tau_r = 0.5 * ureg.ms
-        V_th_rel = 20 * ureg.mV
-        mus =  [741.89455754, 651.19761921, 21.24112709, 35.86521795, 40.69297877] * ureg.mV
-        sigmas = [39.3139564, 37.84928217, 6.17632725, 9.79196704, 10.64437979] * ureg.mV
-        cls._parameters_for_output_test_2 = [dict(mu=mu, sigma=sigma, tau_m=tau_m, tau_r=tau_r, V_th_rel=V_th_rel) for mu, sigma in zip(mus, sigmas)]
-    
-    
     def setUp(self):
         self.tau_m = 10. * ureg.ms
         self.tau_s = 0.5 * ureg.ms
@@ -651,7 +579,6 @@ class Test_d_nu_d_nu_in_fb(unittest.TestCase, TestFiringRateDerivativeFunctions)
         self.V_0_rel = 0 * ureg.mV
         self.mu = 3 * ureg.mV
         self.sigma = 6 * ureg.mV
-        
         
     @property
     def parameters(self):
@@ -663,123 +590,79 @@ class Test_d_nu_d_nu_in_fb(unittest.TestCase, TestFiringRateDerivativeFunctions)
                     V_0_rel = self.V_0_rel,
                     mu = self.mu,
                     sigma = self.sigma)
-
         
     @property
     def function(self):
         return d_nu_d_nu_in_fb
-
-
-    @property
-    def fixture(self):
-        return 'tests/unit/fixtures/d_nu_d_nu_in_fb.npy'
-    
     
     @property
     def positive_params(self):
         return ['tau_m', 'tau_s', 'tau_r', 'sigma']
     
-    
     @property
     def precision(self):
         return 10
+    
+    def test_correct_output_in_noise_driven_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.expected_output_noise_driven_regime)
 
-
-    @property
-    def parameters_for_output_test(self):
-        return self._parameters_for_output_test_0 + self._parameters_for_output_test_1 + self._parameters_for_output_test_2
-
-
-    def test_correct_output(self):
-        
-        with patch('lif_meanfield_tools.aux_calcs.nu0_fb', wraps=self.real_shifted_siegert) as mock_nu0_fb:
-            
-            for expected_output, params in zip(self.expected_output, self.parameters_for_output_test):
-                temp_params = self.parameters.copy()
-                temp_params.update(params)                                                
-                result = self.function(**temp_params)
-                self.assertAlmostEqual(expected_output[0], result[0], self.precision)
-                self.assertAlmostEqual(expected_output[1], result[1], self.precision)
-                self.assertAlmostEqual(expected_output[2], result[2], self.precision)
-
+    def test_correct_output_in_mean_driven_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.expected_output_noise_driven_regime)
+    
+    def test_correct_output_in_negative_firing_rate_regime(self):
+        self.check_output_for_given_params(self.parameters_noise_driven_regime, self.expected_output_noise_driven_regime)
 
             
 class Test_Psi(unittest.TestCase):
 
     def setUp(self):
-        
         inputs = np.load(fixtures_input_path + 'Psi.npz')
         self.zs = inputs['zs']
         self.xs = inputs['xs']
         self.pcfu = inputs['pcfu']
-        
         self.expected_outputs = np.load(fixtures_output_path + 'Psi.npy')
-        
         self.function = Psi
         
-        
     def test_correct_output(self):
-
         with patch('lif_meanfield_tools.aux_calcs.mpmath.pcfu') as mock_pcfu:
-
             mock_pcfu.side_effect = self.pcfu
-
             for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
-
                 result = self.function(z, x)
                 self.assertEqual(expected_output, result)
     
-            
             
 class Test_d_Psi(unittest.TestCase):
     
     def setUp(self):
-                
         inputs = np.load(fixtures_input_path + 'd_Psi.npz')
         self.zs = inputs['zs']
         self.xs = inputs['xs']
         self.psi = inputs['psi']
-
         self.expected_outputs = np.load(fixtures_output_path + 'd_Psi.npy')
-        
         self.function = d_Psi
         
-        
     def test_correct_output(self):
-        
         with patch('lif_meanfield_tools.aux_calcs.Psi') as mock_psi:
-        
             mock_psi.side_effect = self.psi
-            
             for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
-            
                 result = self.function(z, x)
                 self.assertEqual(expected_output, result)
         
-    
-    
+
 class Test_d_2_Psi(unittest.TestCase):
     
     def setUp(self):
-                
         inputs = np.load(fixtures_input_path + 'd_2_Psi.npz')
         self.zs = inputs['zs']
         self.xs = inputs['xs']
         self.psi = inputs['psi']
-
-        
         self.expected_outputs = np.load(fixtures_output_path + 'd_2_Psi.npy')
         self.function = d_2_Psi
         
-        
     def test_correct_output(self):
-        
         with patch('lif_meanfield_tools.aux_calcs.Psi') as mock_psi:
-        
             mock_psi.side_effect = self.psi
-            
             for expected_output, z, x in zip(self.expected_outputs, self.zs, self.xs):
-            
                 result = self.function(z, x)
                 self.assertEqual(expected_output, result)
         
@@ -787,31 +670,25 @@ class Test_d_2_Psi(unittest.TestCase):
 class Test_Psi_x_r(unittest.TestCase):
     
     def setUp(self):
-        
         self.z = 0
         self.x = 1
         self.y = 2
         
     def test_Psi_is_called_two_times(self):
-        
         with patch('lif_meanfield_tools.aux_calcs.Psi') as mock_Psi:
-            
             Psi_x_r(self.z, self.x, self.y)
             mock_Psi.assert_has_calls([mock.call(0,1), mock.call(0,2)], any_order=True)
+
             
-             
 class Test_dPsi_x_r(unittest.TestCase):
     
     def setUp(self):
-        
         self.z = 0
         self.x = 1
         self.y = 2
         
     def test_d_Psi_is_called_two_times(self):
-        
         with patch('lif_meanfield_tools.aux_calcs.d_Psi') as mock_Psi:
-            
             dPsi_x_r(self.z, self.x, self.y)
             mock_Psi.assert_has_calls([mock.call(0,1), mock.call(0,2)], any_order=True)
             
@@ -819,19 +696,16 @@ class Test_dPsi_x_r(unittest.TestCase):
 class Test_d2Psi_x_r(unittest.TestCase):
     
     def setUp(self):
-        
         self.z = 0
         self.x = 1
         self.y = 2
         
     def test_d_2_Psi_is_called_two_times(self):
-        
         with patch('lif_meanfield_tools.aux_calcs.d_2_Psi') as mock_Psi:
-            
             d2Psi_x_r(self.z, self.x, self.y)
             mock_Psi.assert_has_calls([mock.call(0,1), mock.call(0,2)], any_order=True)
-        
 
+        
 # class Test_determinant(unittest.TestCase):
 # 
 #     def test_real_matrix_with_zero_determinant(self):
@@ -863,7 +737,7 @@ class Test_d2Psi_x_r(unittest.TestCase):
 #         real_determinant = np.linalg.det(M)
 #         result = determinant(M)
 #         self.assertEqual(result, real_determinant)
-# 
+
 
 class Test_determinant_same_rows(unittest.TestCase):
     """ Implement, when you know what determinant in aux_calcs is doing. """
@@ -873,41 +747,30 @@ class Test_determinant_same_rows(unittest.TestCase):
 class Test_p_hat_boxcar(unittest.TestCase):
     
     def setUp(self):
-                
         inputs = np.load(fixtures_input_path + 'p_hat_boxcar.npz')
         self.ks = inputs['ks']
         self.widths = inputs['widths']
-        
         self.expected_outputs = np.load(fixtures_output_path + 'p_hat_boxcar.npy')
     
     def test_zero_frequency_input(self):
-        
         k = 0 
         width = 1
         self.assertEqual(p_hat_boxcar(k, width), 1)
 
     def test_zero_width_raises_exception(self):
-        
         k = 1
         width = 0 
-        
         with self.assertRaises(ValueError):
             p_hat_boxcar(k, width)
-
 
     def test_negative_width_raises_exception(self):
-        
         k = 1
         width = -1
-        
         with self.assertRaises(ValueError):
             p_hat_boxcar(k, width)
     
-    
     def test_correct_output(self):
-        
         for expected_output, k, width in zip(self.expected_outputs, self.ks, self.widths):
-        
             result = p_hat_boxcar(k, width)
             self.assertEqual(expected_output, result)
             
