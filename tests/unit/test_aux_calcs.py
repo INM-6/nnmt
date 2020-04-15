@@ -307,7 +307,7 @@ class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @property
     def precision(self):
-        return 4
+        return 5
 
     @property
     def parameters_for_noise_driven_regime(self):
@@ -379,78 +379,56 @@ class Test_nu_0(unittest.TestCase):
                                V_0_rel = 0 * ureg.mV,
                                mu = 3 * ureg.mV,
                                sigma = 6 * ureg.mV)
-        
     
     def test_sieger1_is_called_if_mu_smaller_V_th_rel(self):
-        
         self.parameters['mu'] = self.parameters['V_th_rel'] * 0.9
-        
         with patch('lif_meanfield_tools.aux_calcs.siegert1') as mock_siegert1:
-            
             nu_0(**self.parameters)
             mock_siegert1.assert_called()
             
-            
     def test_sieger2_is_called_if_mu_bigger_V_th_rel(self):
-        
         self.parameters['mu'] = self.parameters['V_th_rel'] * 1.1
-        
         with patch('lif_meanfield_tools.aux_calcs.siegert2') as mock_siegert2:
-            
             nu_0(**self.parameters)
             mock_siegert2.assert_called()
-        
         
 
 class Test_Phi(unittest.TestCase):
     
     def setUp(self):
-        
         self.test_inputs = np.load(fixtures_input_path + 'Phi.npy')
         self.expected_outputs = np.load(fixtures_output_path + 'Phi.npy')
 
     def test_correct_predictions(self):
-        
         result = Phi(self.test_inputs)
         np.testing.assert_almost_equal(result, self.expected_outputs, 5)
-        
         
         
 class Test_Phi_prime_mu(unittest.TestCase):
     
     def setUp(self):
-        
         inputs = np.load(fixtures_input_path + 'Phi_prime_mu.npz')
         self.ss = inputs['ss']
         self.sigmas = inputs['sigmas']
-        
-        # fixtures created with parameters above
         self.expected_outputs = np.load(fixtures_output_path + 'Phi_prime_mu.npy')
 
     def test_correct_predictions(self):
-
         for i, (s, sigma) in enumerate(zip(self.ss, self.sigmas)):
-            
             result = Phi_prime_mu(s, sigma)
             self.assertEqual(result, self.expected_outputs[i])
             
         
     def test_negative_sigma_raises_error(self):
-    
         sigma = -1 * ureg.mV
         s = 1
-    
         with self.assertRaises(ValueError):
             Phi_prime_mu(s, sigma)
             
     def test_zero_sigma_raises_error(self):
-        
         sigma = 0 * ureg.mV
         s = 1
-    
         with self.assertRaises(ZeroDivisionError):
             Phi_prime_mu(s, sigma)
-            
             
             
 class TestFiringRateDerivativeFunctions(TestFiringRateFunctions):
@@ -460,34 +438,23 @@ class TestFiringRateDerivativeFunctions(TestFiringRateFunctions):
     def fixture(self):
         pass
     
-    
     @property
     def expected_output(self):
-        
         expected_outputs = np.load(self.fixture)
-        
         return expected_outputs
     
-    
     def test_correct_output(self):
-        
         with patch('lif_meanfield_tools.aux_calcs.nu_0', wraps=self.real_siegert) as mocked_nu_0:
-            
             for expected_output, params in zip(self.expected_output, self.parameters_for_output_test):
-            
                 temp_params = self.parameters.copy()
                 temp_params.update(params)                                                
                 result = self.function(**temp_params)
                 self.assertAlmostEqual(expected_output, result, self.precision)
-            
                 
     def test_zero_sigma_raises_error(self):
-        
         self.sigma = 0 * ureg.mV
-        
         with self.assertRaises(ZeroDivisionError):
             self.function(**self.parameters)
-
     
             
 class Test_d_nu_d_mu(unittest.TestCase, TestFiringRateDerivativeFunctions):

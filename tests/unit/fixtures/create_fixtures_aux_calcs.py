@@ -29,7 +29,7 @@ class Fixtures():
         sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV
 
         tau_m = 10. * ureg.ms
-        tau_s = 2. * ureg.ms
+        tau_s = 0.5 * ureg.ms
         tau_r = 2 * ureg.ms
         V_th_rel = 15 * ureg.mV
         V_0_rel = 0 * ureg.mV
@@ -48,15 +48,14 @@ class Fixtures():
 
         # regime in which negative firing rates occured once
         # parameters taken from circuit in which lmt returned negative rates
-        mus = [-4.69428276, -12.88765852, -21.41462729, 6.76113423] * ureg.mV
-        sigmas = [13.51676476, 9.26667293, 10.42112985, 4.56041] * ureg.mV
+        mus = [-12.88765852, -21.41462729, 6.76113423, -4.69428276] * ureg.mV
+        sigmas = [9.26667293, 10.42112985, 4.56041, 13.51676476] * ureg.mV
 
         tau_m = 20 * ureg.ms
-        tau_s = 0.5 * ureg.ms
+        tau_s = 2 * ureg.ms
         tau_r = 2 * ureg.ms
         V_th_rel = 15 * ureg.mV
         V_0_rel = 0 * ureg.mV
-        # V_th_rel = 17.85865096129104 * ureg.mV
 
         tau_ms = np.repeat(tau_m, len(mus))
         tau_ss = np.repeat(tau_s, len(mus))
