@@ -143,8 +143,8 @@ class Test_siegert1(unittest.TestCase, TestFiringRateWhiteNoiseCase):
     
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'siegert1_noise_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'siegert1_negative_firing_rate_regime.npy')
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -201,7 +201,7 @@ class Test_siegert2(unittest.TestCase, TestFiringRateWhiteNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'siegert2_mean_driven_regime.npy')
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'white_noise_firing_rate_functions_mean_driven_regime.npy')
             
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -278,9 +278,9 @@ class Test_nu0_fb433(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'nu0_fb433_noise_driven_regime.npy')
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'nu0_fb433_mean_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'nu0_fb433_negative_firing_rate_regime.npy')
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -326,9 +326,9 @@ class Test_nu0_fb(unittest.TestCase, TestFiringRateColoredNoiseCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'nu0_fb_noise_driven_regime.npy')
-        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'nu0_fb_mean_driven_regime.npy')
-        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'nu0_fb_negative_firing_rate_regime.npy')
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_noise_driven_regime.npy')
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_mean_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'colored_noise_firing_rate_functions_negative_firing_rate_regime.npy')
         
     def setUp(self):
         self.tau_m = 10. * ureg.ms
@@ -417,7 +417,6 @@ class Test_Phi_prime_mu(unittest.TestCase):
             result = Phi_prime_mu(s, sigma)
             self.assertEqual(result, self.expected_outputs[i])
             
-        
     def test_negative_sigma_raises_error(self):
         sigma = -1 * ureg.mV
         s = 1
@@ -461,6 +460,10 @@ class Test_d_nu_d_mu(unittest.TestCase, TestFiringRateDerivativeFunctions):
     
     @classmethod
     def setUpClass(cls):
+        cls._parameters_for_noise_driven_regime = np.load(fixtures_input_path + 'nu0_fb_noise_driven_regime.npy')
+        cls._parameters_for_mean_driven_regime = np.load(fixtures_input_path + 'nu0_fb_mean_driven_regime.npy')
+        cls._parameters_for_negative_firing_rate_regime = np.load(fixtures_input_path + 'nu0_fb_negative_firing_rate_regime.npy')
+        
         
         mus = [3.30031035, 7.02709379, 7.18151477, 9.18259078] * ureg.mV
         sigmas = [6.1901737, 5.11420662, 5.96478947, 4.89397196] * ureg.mV

@@ -102,10 +102,10 @@ class Fixtures():
         temp.pop(key)
         return temp
 
-    def siegert1(self):
+    def white_noise_firing_rate_functions(self):
         
-        function_name = 'siegert1'
-        
+        function_name = 'white_noise_firing_rate_functions'
+            
         # noise driven regime 
         inputs = self.dict_without_key(self.parameters_noise_driven_regime, 'tau_s')
         inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)   
@@ -117,24 +117,16 @@ class Fixtures():
         inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)    
         input_file = self.input_path + function_name + '_negative_firing_rate_regime' + '.npy'
         np.save(input_file, inputs)        
-
-    def siegert2(self):
         
-        function_name = 'siegert2'
-
         # mean driven regime mu > V_th
         inputs = self.dict_without_key(self.parameters_mean_driven_regime, 'tau_s')
         inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)    
         input_file = self.input_path + function_name + '_mean_driven_regime' + '.npy'
         np.save(input_file, inputs)
         
-    def nu0_fb433(self):
-        self._colored_noise_firing_rate_functions('nu0_fb433')
-
-    def nu0_fb(self):
-        self._colored_noise_firing_rate_functions('nu0_fb')
-
-    def _colored_noise_firing_rate_functions(self, function_name):
+    def colored_noise_firing_rate_functions(self):
+        
+        function_name = 'colored_noise_firing_rate_functions'
         
         # noise driven regime
         inputs = self.convert_dict_of_lists_to_array_of_dicts(self.parameters_noise_driven_regime)
@@ -314,10 +306,8 @@ if __name__ == '__main__':
     output_path = 'tests/unit/fixtures/output/'
 
     fixtures = Fixtures(input_path, output_path)
-    fixtures.siegert1()
-    fixtures.siegert2()
-    fixtures.nu0_fb433()
-    fixtures.nu0_fb()
+    fixtures.white_noise_firing_rate_functions()
+    fixtures.colored_noise_firing_rate_functions()
     # fixtures.Phi()
     # fixtures.Phi_prime_mu()
     # fixtures.Psi()
