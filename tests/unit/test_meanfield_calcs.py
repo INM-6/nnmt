@@ -161,6 +161,36 @@ def get_required_params(function, all_params):
     return required_params
 
 
+class Test_firing_rates:
+    """Tests firing rates function. Probably this is a functional test."""
+    
+    function = staticmethod(firing_rates)
+    
+    # define fixtures
+    standard_params_fr = inject_fixture('standard_params_fr', 
+                                          create_standard_params, 
+                                          firing_rates, all_standard_params)
+    pos_params_fr = inject_fixture('pos_params_fr', 
+                                     create_pos_params, 
+                                     firing_rates, all_pos_params)
+    
+    def test_negative_parameters_that_should_be_positive_raise_exception(
+            self, standard_params_fr, pos_params_fr):
+        check_negative_parameters_that_should_be_positive_raise_exception(
+            self.function, standard_params_fr, pos_params_fr)
+        
+    def test_V_0_larger_V_th_raise_exception(self, standard_params_fr):
+        standard_params_fr['V_0_rel'] = 1.1 * standard_params_fr['V_th_rel']
+        with pytest.raises(ValueError):
+            self.function(**standard_params_fr)
+    
+    def test_correct_output(self, params_all_regimes):
+        output = params_all_regimes['firing_rates']
+        required_params = get_required_params(self.function, params_all_regimes)
+        check_correct_output(self.function, required_params, output)
+        
+
+
 class Test_mean:
 
     # define tested function
