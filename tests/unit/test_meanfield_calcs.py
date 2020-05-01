@@ -10,6 +10,7 @@ from lif_meanfield_tools.input_output import load_params
 
 ureg = lmt.ureg
 
+fixture_path = 'tests/unit/fixtures/'
 
 all_standard_params = dict(mu = 1*ureg.mV,
                            sigma = 1*ureg.mV,
@@ -28,6 +29,7 @@ all_standard_params = dict(mu = 1*ureg.mV,
                            nu_e_ext = 1*ureg.Hz,
                            nu_i_ext = 1*ureg.Hz,
                            dimension = 1,
+                           omega = 1*ureg.Hz,
                            omegas = [1*ureg.Hz,])
 
 
@@ -48,15 +50,19 @@ all_pos_params = ['a',
 # noise driven regime mu < V_th
 # parameters taken from microcircuit example
 _params_noise_driven_regime = load_params(
-                                'tests/unit/fixtures/noise_driven_regime.yaml')
+    '{}noise_driven_regime.yaml'.format(fixture_path))
+_params_noise_driven_regime['mu'] = _params_noise_driven_regime['mean_input']
+_params_noise_driven_regime['sigma'] = _params_noise_driven_regime['std_input']
 _params_noise_driven_regime['nu'] = _params_noise_driven_regime['firing_rates']
 
 # regime in which negative firing rates occured once
 # parameters taken from circuit in which lmt returned negative rates
 _params_negative_firing_rate_regime = load_params(
-                    'tests/unit/fixtures/negative_firing_rate_regime.yaml')
+    '{}negative_firing_rate_regime.yaml'.format(fixture_path))
+_params_negative_firing_rate_regime['mu'] = _params_negative_firing_rate_regime['mean_input']
+_params_negative_firing_rate_regime['sigma'] = _params_negative_firing_rate_regime['std_input']
 _params_negative_firing_rate_regime['nu'] = _params_negative_firing_rate_regime[
-                                               'firing_rates']
+    'firing_rates']
 
 # # mean driven regime mu > V_th
 # # parameters taken from adjusted microcircuit example
@@ -93,6 +99,16 @@ _ids_all_regimes = ['noise_driven_regime',
 _params_all_regimes = [_params_noise_driven_regime,
                        _params_negative_firing_rate_regime,]
                        # params_mean_driven_regime]
+                       
+_transfer_function_shift = [np.load('{}transfer_function_shift_noise_driven.npy'.format(fixture_path)),
+                            np.load('{}transfer_function_shift_negative_firing_rate.npy'.format(fixture_path))]
+_transfer_function_taylor = [np.load('{}transfer_function_taylor_noise_driven.npy'.format(fixture_path)),
+                            np.load('{}transfer_function_taylor_negative_firing_rate.npy'.format(fixture_path))]
+
+_params_all_regimes = [dict(params, **dict(tf_shift=tf_s, tf_taylor=tf_t))
+                       for params, tf_s, tf_t in zip(_params_all_regimes, 
+                                                     _transfer_function_shift,
+                                                     _transfer_function_taylor)]
 
 @pytest.fixture(params=_params_all_regimes, ids=_ids_all_regimes)
 def params_all_regimes(request):
@@ -269,8 +285,41 @@ class Test_transfer_function:
             
             
 class Test_transfer_function_1p_shift():
-    pass 
+    
+    # define tested functiosn
+    function = staticmethod(transfer_function_1p_shift)
+    
+    # define fixtures
+    standard_params_tf_shift = inject_fixture('standard_params_tf_shift', 
+                                              create_standard_params, 
+                                              transfer_function_1p_shift, 
+                                              all_standard_params)
+    pos_params_tf_shift = inject_fixture('pos_params_tf_shift', 
+                                         create_pos_params, 
+                                         transfer_function_1p_shift, 
+                                         all_pos_params)
+    
+    def test_negative_parameters_that_should_be_positive_raise_exception(
+            self, standard_params_tf_shift, pos_params_tf_shift):
+        check_negative_parameters_that_should_be_positive_raise_exception(
+            self.function, standard_params_tf_shift, pos_params_tf_shift)
         
+    def test_warning_is_given_if_k_is_critical(self, standard_params_tf_shift):
+        standard_params_tf_shift['tau_s'] = 0.5 * standard_params_tf_shift['tau_m']
+        with pytest.warns(UserWarning):
+            self.function(**standard_params_tf_shift)
+            
+    def test_exception_is_raised_if_k_is_too_large(self, standard_params_tf_shift):
+        standard_params_tf_shift['tau_s'] = 2 * standard_params_tf_shift['tau_m']
+        print(standard_params_tf_shift)
+        with pytest.raises(ValueError):
+            self.function(**standard_params_tf_shift)
+    
+    # def test_correct_output(self, params_all_regimes):
+    #     output = params_all_regimes['tf_shift']
+    #     required_params = get_required_params(self.function, params_all_regimes)
+    #     check_correct_output(self.function, required_params, output)
+    
         
 class Test_transfer_function_1p_taylor():
     pass 
