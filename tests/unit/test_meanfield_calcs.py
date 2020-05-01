@@ -6,14 +6,97 @@ import numpy as np
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.meanfield_calcs import *
+from lif_meanfield_tools.input_output import load_params
 
 ureg = lmt.ureg
 
-fixtures_input_path = 'tests/unit/fixtures/input/'
-fixtures_output_path = 'tests/unit/fixtures/output/'
 
-all_pos_params = ['a', 'nu', 'K', 'tau_m', 'nu_ext', 'K_ext', 
-                  'nu_e_ext', 'nu_i_ext']
+all_standard_params = dict(mu = 1*ureg.mV,
+                           sigma = 1*ureg.mV,
+                           nu = 1*ureg.Hz,
+                           K = 1,
+                           J = 1*ureg.mV,
+                           j = 1*ureg.mV,
+                           V_th_rel = 15*ureg.mV,
+                           V_0_rel = 0*ureg.mV,
+                           tau_m = 20*ureg.s,
+                           tau_s = 1*ureg.s,
+                           tau_r = 1*ureg.s,
+                           nu_ext = 1*ureg.Hz,
+                           K_ext = 1,
+                           g = 1,
+                           nu_e_ext = 1*ureg.Hz,
+                           nu_i_ext = 1*ureg.Hz,
+                           dimension = 1,
+                           omegas = [1*ureg.Hz,])
+
+
+all_pos_params = ['a', 
+                  'nu', 
+                  'K', 
+                  'tau_m', 
+                  'tau_s',
+                  'tau_r',
+                  'nu_ext', 
+                  'K_ext', 
+                  'nu_e_ext', 
+                  'nu_i_ext',
+                  'dimension',
+                  'sigma']
+
+
+# noise driven regime mu < V_th
+# parameters taken from microcircuit example
+_params_noise_driven_regime = load_params(
+                                'tests/unit/fixtures/noise_driven_regime.yaml')
+_params_noise_driven_regime['nu'] = _params_noise_driven_regime['firing_rates']
+
+# regime in which negative firing rates occured once
+# parameters taken from circuit in which lmt returned negative rates
+_params_negative_firing_rate_regime = load_params(
+                    'tests/unit/fixtures/negative_firing_rate_regime.yaml')
+_params_negative_firing_rate_regime['nu'] = _params_negative_firing_rate_regime[
+                                               'firing_rates']
+
+# # mean driven regime mu > V_th
+# # parameters taken from adjusted microcircuit example
+# params_mean_driven_regime = load_params(
+#                                 'tests/unit/fixtures/mean_driven_regime.yaml')
+# params_mean_driven_regime['nu'] = params_mean_driven_regime['firing_rates']
+
+# mus =  [741.89455754, 21.24112709, 35.86521795, 40.69297877, 651.19761921] * ureg.mV
+# sigmas = [39.3139564, 6.17632725, 9.79196704, 10.64437979, 37.84928217] * ureg.mV
+# 
+# tau_m = 20. * ureg.ms
+# tau_s = 0.5 * ureg.ms
+# tau_r = 0.5 * ureg.ms
+# V_th_rel = 20 * ureg.mV
+# V_0_rel = 0 * ureg.mV
+# 
+# tau_ms = np.repeat(tau_m, len(mus))
+# tau_ss = np.repeat(tau_s, len(mus))
+# tau_rs = np.repeat(tau_r, len(mus))
+# V_th_rels = np.repeat(V_th_rel, len(mus))
+# V_0_rels = np.repeat(V_0_rel, len(mus))
+# 
+# _parameters_mean_driven_regime =dict(mu=mus, sigma=sigmas, 
+#                                      tau_m=tau_ms, tau_s=tau_ss,
+#                                      tau_r=tau_rs, 
+#                                      V_th_rel=V_th_rels,
+#                                      V_0_rel=V_0_rels)
+
+
+_ids_all_regimes = ['noise_driven_regime', 
+                    'negative_firing_rate_regime',]
+                    # 'mean_driven_regime']
+
+_params_all_regimes = [_params_noise_driven_regime,
+                       _params_negative_firing_rate_regime,]
+                       # params_mean_driven_regime]
+
+@pytest.fixture(params=_params_all_regimes, ids=_ids_all_regimes)
+def params_all_regimes(request):
+    return request.param
 
     
 def check_negative_parameters_that_should_be_positive_raise_exception(
@@ -27,192 +110,143 @@ def check_correct_output(function, params, output, updates=None):
     if updates:
         params = params.copy()
         params.update(updates)
-    assert function(**params) == output
-
-
-@pytest.fixture
-def standard_params(self):
-    return dict(nu = 1*ureg.Hz,
-                K = 1,
-                J = 1*ureg.mV,
-                j = 1*ureg.mV,
-                tau_m = 18*ureg.s,
-                nu_ext = 1*ureg.Hz,
-                K_ext = 1,
-                g = 1,
-                nu_e_ext = 1*ureg.Hz,
-                nu_i_ext = 1*ureg.Hz)
+    np.testing.assert_array_equal(function(**params), output)
     
     
-def get_standard_params(function):
-    """ Creates parameter fixture for given function. """
+def inject_fixture(name, creation_function, *someparams):
+    """
+    Register dynamically created fixtures such that pytest can find them.
+    
+    Parameters
+    ----------
+    name : str
+        Name of fixture.
+    creation_function : function
+        Function that returns a fixture.
+    someparams : anything
+        Parameters of `creation_function` in correct order (no kwargs).
+    """
+    globals()[name] = creation_function(*someparams)
+    
+    
+def create_standard_params(function, all_standard_params):
+    """Creates parameter fixture for given function."""
+    required_keys = list(inspect.signature(function).parameters)
     @pytest.fixture
-    def standard_params(standard_params):
-        """ Returns standard params needed for respective function. """
-        _params = {k:v for k,v in standard_params 
-                   if k in inspect.signature(function).parameters}
-        return _params
+    def standard_params():
+        """Returns standard params needed for respective function."""
+        return get_required_params(function, all_standard_params)
+    
     return standard_params
 
 
-def get_pos_params(function, all_pos_params):
-    """ Creates a fixture for all positive params of given function. """
+def create_pos_params(function, all_pos_params):
+    """Creates a fixture for all positive params of given function."""
     # all params in all_pos_params and required as function argument
-    pos_params = [param for param in all_pos_params 
-                  if param in inspect.signature(function).parameters]
+    _pos_params = [param for param in all_pos_params 
+                   if param in inspect.signature(function).parameters]
     
-    @pytest.fixture(params=pos_params)
+    @pytest.fixture(params=_pos_params)
     def pos_params(request):
-        """ Parametrizes positive parameters. """
+        """Parametrizes positive parameters."""
         return request.param
 
     return pos_params
 
 
+def get_required_params(function, all_params):
+    """Checks arguments of function and returns corresponding parameters."""
+    required_keys = list(inspect.signature(function).parameters)
+    required_params = {k:v for k,v in all_params.items() if k in required_keys}
+    return required_params
 
-class TestMean():
+
+class Test_mean:
 
     # define tested function
-    function = mean
+    function = staticmethod(mean)
     
     # define fixtures
-    standard_params = get_standard_params(function)
-    pos_params = get_pos_params(function, all_pos_params)
+    standard_params_mean = inject_fixture('standard_params_mean', 
+                                          create_standard_params, 
+                                          mean, all_standard_params)
+    pos_params_mean = inject_fixture('pos_params_mean', 
+                                     create_pos_params, 
+                                     mean, all_pos_params)
     
-    # @pytest.mark.parametrize('pos_param', pos_params)
     def test_negative_parameters_that_should_be_positive_raise_exception(
-            self, standard_params, pos_params):
+            self, standard_params_mean, pos_params_mean):
         check_negative_parameters_that_should_be_positive_raise_exception(
-            self.function, standard_params, pos_params)
+            self.function, standard_params_mean, pos_params_mean)
+    
+    def test_correct_output(self, params_all_regimes):
+        output = params_all_regimes['mean_input']
+        required_params = get_required_params(self.function, params_all_regimes)
+        check_correct_output(self.function, required_params, output)
+        
 
-    # @pytest.mark.parametrize('updates, output', 
-    #                          [(dict(nu=10*ureg.Hz), 198*ureg.mV)])
-    # def test_correct_output_in_noise_driven_regime(self, params, output, 
-    #                                                updates):
-    #     check_correct_output(self.function, params, output, updates)
-    # 
-    # @pytest.mark.parametrize('updates, output', 
-    #                          [(dict(nu=10*ureg.Hz), 3*ureg.Hz)])
-    # def test_correct_output_in_mean_driven_regime(self, params, output, 
-    #                                               updates):
-    #     check_correct_output(self.function, params, output, updates)
-    # 
-    # @pytest.mark.parametrize('updates, output', 
-    #                          [(dict(nu=10*ureg.Hz), 3*ureg.Hz)])
-    # def test_correct_output_in_negative_firing_rate_regime(self, params, output, 
-    #                                                        updates):
-    #     check_correct_output(self.function, params, output, updates)
-    # 
+class Test_standard_deviation:
+
+    # define tested functiosn
+    function = staticmethod(standard_deviation)
+    
+    # define fixtures
+    standard_params_std = inject_fixture('standard_params_std', 
+                                         create_standard_params, 
+                                         standard_deviation, 
+                                         all_standard_params)
+    pos_params_std = inject_fixture('pos_params_std', 
+                                    create_pos_params, 
+                                    standard_deviation, 
+                                    all_pos_params)
+    
+    def test_negative_parameters_that_should_be_positive_raise_exception(
+            self, standard_params_std, pos_params_std):
+        check_negative_parameters_that_should_be_positive_raise_exception(
+            self.function, standard_params_std, pos_params_std)
+    
+    def test_correct_output(self, params_all_regimes):
+        output = params_all_regimes['std_input']
+        required_params = get_required_params(self.function, params_all_regimes)
+        check_correct_output(self.function, required_params, output)
     
     
-# 
-# @pytest.fixture
-# def parameters():
-#     return dict(nu = 1*ureg.Hz,
-#                           K = 1,
-#                           J = 1*ureg.mV,
-#                           j = 1*ureg.mV,
-#                           tau_m = 18*ureg.s,
-#                           nu_ext = 1*ureg.Hz,
-#                           K_ext = 1,
-#                           g = 1,
-#                           nu_e_ext = 1*ureg.Hz,
-#                           nu_i_ext = 1*ureg.Hz,)
-# 
-# @pytest.fixture
-# def parameters_2(parameters):
-#     return parameters.update
-# def pama
-# 
-# @pytest.fixture
-# def correct_output_mean():
-#     return 36 * ureg.mV
-# 
-# def test_correct_output(parameters, correct_output_mean):
-#     result = mean(**parameters) 
-#     assert result == correct_output_mean
-# 
+class Test_transfer_function:
+    
+    # define tested functiosn
+    function = staticmethod(transfer_function)
 
-# 
-# 
-# import unittest
-# from unittest import mock
-# from unittest.mock import patch
-# 
-# import numpy as np
-# 
-# import lif_meanfield_tools as lmt
-# from lif_meanfield_tools.meanfield_calcs import *
-# 
-# ureg = lmt.ureg
-# 
-# fixtures_input_path = 'tests/unit/fixtures/input/'
-# fixtures_output_path = 'tests/unit/fixtures/output/'
-# 
-# 
-# class GeneralTester(unittest.TestCase):
-# 
-#     def __init__(self, function, params, positive_params, precision=10):
-#         self.function = function
-#         self.params = params
-#         self.positive_params = positive_params
-#         self.precision = precision
-# 
-#     def check_negative_parameters_that_should_be_positive_raise_exception(self):
-#         for param in self.positive_params:
-#             temp_params = self.params
-#             temp_params[param] *= -1
-#             with self.assertRaises(ValueError):
-#                 self.function(**temp_params)
+    # define fixtures
+    @pytest.fixture
+    def standard_params_tf(self):
+        _standard_params = get_required_params(self.function,
+                                               all_standard_params)
+        _standard_params['mu'] = [1*ureg.mV, 2*ureg.mV]
+        _standard_params['sigma'] = [1*ureg.mV, 2*ureg.mV]
+        return _standard_params
+    
+    def test_shift_method_is_called(self, mocker, standard_params_tf):
+        mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.transfer_function_1p_shift')
+        standard_params_tf['method'] = 'shift'
+        transfer_function(**standard_params_tf)
+        mocked_tf.assert_called_once()
+        
+    def test_taylor_method_is_called(self, mocker, standard_params_tf):
+        mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.transfer_function_1p_taylor')
+        standard_params_tf['method'] = 'taylor'
+        transfer_function(**standard_params_tf)
+        mocked_tf.assert_called_once()
+            
+            
+class Test_transfer_function_1p_shift():
+    pass 
+        
+        
+class Test_transfer_function_1p_taylor():
+    pass 
+        
+        
 
-    # def test_correct_output(self):
-    #     for param, expected_output in zip(params, expected_outputs):
-    #         temp_param = self.parameters.copy()
-    #         temp_param.update(param)                                
-    #         output = self.function(**temp_param)
-    #         self.assertAlmostEqual(expected_output, output, self.precision)
-
-# 
-# class Test_mean(unittest.TestCase):
-#     # 
-#     # _general_tests = ['test_negative_parameters_that_should_be_positive_raise_exception', 
-#     #                   'test_correct_output']
-#     # 
-#     def __init__(self):
-#         self.params = dict(nu = 1, 
-#                            K = 1, 
-#                            J = 1,
-#                            j = 1, 
-#                            tau_m = 1, 
-#                            nu_ext = 1, 
-#                            K_ext = 1, 
-#                            g = 1, 
-#                            nu_e_ext = 1, 
-#                            nu_i_ext = 1)
-#         self.positive_params = ['nu', 'K', 'tau_m', 'nu_ext', 'K_ext', 
-#                                 'nu_e_ext', 'nu_i_ext']
-#         self._tester = GeneralTester(mean, self.params, self.positive_params)
-#     # 
-#     # def __getattr__(self, attribute):
-#     #     if attribute in self._general_tests:
-#     #         return getattr(self._tester, attribute)
-# 
-#     def test_negative_parameters_that_should_be_positive_raise_exception(self):
-#         self._tester.check_negative_parameters_that_should_be_positive_raise_exception()
-# 
-# 
-# class Test_standard_deviation(unittest.TestCase):
-# 
-#     @property
-#     def positive_params(self):
-#         return ['nu', 'K', 'tau_m', 'nu_ext', 'K_ext', 'nu_e_ext', 'nu_i_ext']
-# 
-#     def test_negative_parameters_that_should_be_positive_raise_exception(self):
-#         pass
-# 
-#     def test_correct_output(self):
-#         pass 
-# 
 # 
 # class Test_firing_rates(unittest.TestCase):
 # 
@@ -232,7 +266,7 @@ class TestMean():
 #     def test_correct_output_in_mean_driven_regime(self):
 #         pass 
 # 
-#     def test_correct_output_in_negative_firing_rate_regime(self):
+#     def test_correct_output_in_neg_firing_rate_regime(self):
 #         pass
 # 
 # 
@@ -244,7 +278,7 @@ class TestMean():
 #     def test_correct_output_in_mean_driven_regime(self):
 #         pass
 # 
-#     def test_correct_output_in_negative_firing_rate_regime(self):
+#     def test_correct_output_in_neg_firing_rate_regime(self):
 #         pass
 # 
 #     def test_for_zero_frequency_d_nu_d_mu_fb433_is_called(self):
@@ -259,16 +293,10 @@ class TestMean():
 #     def test_correct_output_in_mean_driven_regime(self):
 #         pass
 # 
-#     def test_correct_output_in_negative_firing_rate_regime(self):
+#     def test_correct_output_in_neg_firing_rate_regime(self):
 #         pass
 # 
 #     def test_for_zero_frequency_d_nu_d_mu_fb433_is_called(self):
-#         pass
-# 
-# 
-# class Test_transfer_function(unittest.TestCase):
-# 
-#     def test_correct_function_is_called(self):
 #         pass
 # 
 # 
