@@ -178,11 +178,11 @@ def inject_fixture(name, creation_function, *someparams):
 def create_standard_params(function, all_std_params):
     """Creates parameter fixture for given function."""
     @pytest.fixture
-    def standard_params():
+    def std_params():
         """Returns standard params needed for respective function."""
         return get_required_params(function, all_std_params)
 
-    return standard_params
+    return std_params
 
 
 def create_pos_params(function, all_pos_keys):
@@ -206,7 +206,7 @@ class Test_firing_rates:
     # but we still want to attach it to the class for later reference. This
     # allows calling function as an 'unbound function', without passing the
     # instance to the function:
-    # `self.function()` = `function()` != `function(self)`.
+    # `self.func()` = `func()` != `func(self)`.
     func = staticmethod(firing_rates)
     # Invoking the __get__ method is necessary because the staticmethod is
     # implemented using the desciptor protocol, but we need to access the
@@ -317,88 +317,74 @@ class Test_standard_deviation:
 class Test_transfer_function:
 
     # define tested functiosn
-    function = staticmethod(transfer_function)
+    func = staticmethod(transfer_function)
+    pos_keys = get_required_keys(func.__get__(object), all_pos_keys)
 
-    # define fixtures
+    @pytest.fixture(params=pos_keys)
+    def pos_keys(self, request):
+        """Returns keys of params that are always positive."""
+        return request.param
+
     @pytest.fixture
-    def standard_params(self):
-        _standard_params = get_required_params(self.function,
-                                               all_std_params)
-        _standard_params['mu'] = [1*ureg.mV, 2*ureg.mV]
-        _standard_params['sigma'] = [1*ureg.mV, 2*ureg.mV]
-        return _standard_params
-    #
-    # @pytest.fixture
-    # def standard_params_tf(self):
-    #     _standard_params = get_required_params(self.function,
-    #                                            all_std_params)
-    #     _standard_params['mu'] = [1*ureg.mV, 2*ureg.mV]
-    #     _standard_params['sigma'] = [1*ureg.mV, 2*ureg.mV]
-    #     return _standard_params
+    def std_params(self):
+        """Returns set of standard params needed for all tests."""
+        params = get_required_params(self.func, all_std_params)
+        params['mu'] = [1*ureg.mV, 2*ureg.mV]
+        params['sigma'] = [1*ureg.mV, 2*ureg.mV]
+        return params
 
-    pos_params_tf = inject_fixture('pos_params_tf',
-                                   create_pos_params,
-                                   transfer_function,
-                                   all_pos_keys)
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
-    def test_pos_params_neg_raise_exception(
-            self, standard_params, pos_params_tf):
-        check_pos_params_neg_raise_exception(
-            self.function, standard_params, pos_params_tf)
-
-    def test_shift_method_is_called(self, mocker, standard_params):
+    def test_shift_method_is_called(self, mocker, std_params):
         mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                  'transfer_function_1p_shift')
-        standard_params['method'] = 'shift'
-        transfer_function(**standard_params)
+        std_params['method'] = 'shift'
+        self.func(**std_params)
         mocked_tf.assert_called_once()
 
-    def test_taylor_method_is_called(self, mocker, standard_params_tf):
+    def test_taylor_method_is_called(self, mocker, std_params):
         mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                  'transfer_function_1p_taylor')
-        standard_params_tf['method'] = 'taylor'
-        transfer_function(**standard_params_tf)
+        std_params['method'] = 'taylor'
+        self.func(**std_params)
         mocked_tf.assert_called_once()
 
 
 class Test_transfer_function_1p_shift():
 
     # define tested functiosn
-    function = staticmethod(transfer_function_1p_shift)
+    func = staticmethod(transfer_function_1p_shift)
+    pos_keys = get_required_keys(func.__get__(object), all_pos_keys)
+    output_key = 'std_input'
 
-    # define fixtures
-    standard_params_tf_shift = inject_fixture('standard_params_tf_shift',
-                                              create_standard_params,
-                                              transfer_function_1p_shift,
-                                              all_std_params)
-    pos_params_tf_shift = inject_fixture('pos_params_tf_shift',
-                                         create_pos_params,
-                                         transfer_function_1p_shift,
-                                         all_pos_keys)
+    @pytest.fixture
+    def std_params(self):
+        """Returns set of standard params needed for all tests."""
+        return get_required_params(self.func, all_std_params)
 
-    def test_pos_params_neg_raise_exception(
-            self, standard_params_tf_shift, pos_params_tf_shift):
-        check_pos_params_neg_raise_exception(
-            self.function, standard_params_tf_shift, pos_params_tf_shift)
+    @pytest.fixture(params=pos_keys)
+    def pos_keys(self, request):
+        """Returns keys of params that are always positive."""
+        return request.param
 
-    def test_warning_is_given_if_k_is_critical(self, standard_params_tf_shift):
-        standard_params_tf_shift['tau_s'] = (
-            0.5 * standard_params_tf_shift['tau_m'])
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        std_params['tau_s'] = 0.5 * std_params['tau_m']
         with pytest.warns(UserWarning):
-            self.function(**standard_params_tf_shift)
+            self.func(**std_params)
 
-    def test_exception_is_raised_if_k_is_too_large(self,
-                                                   standard_params_tf_shift):
-        standard_params_tf_shift['tau_s'] = (
-            2 * standard_params_tf_shift['tau_m'])
-        print(standard_params_tf_shift)
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        std_params['tau_s'] = 2 * std_params['tau_m']
         with pytest.raises(ValueError):
-            self.function(**standard_params_tf_shift)
+            self.func(**std_params)
 
     # def test_correct_output(self, params_all_regimes):
     #     output = params_all_regimes['tf_shift']
-    #     required_params = get_required_params(self.function, params_all_regimes)
-    #     check_correct_output(self.function, required_params, output)
+    #     required_params = get_required_params(self.func, params_all_regimes)
+    #     check_correct_output(self.func, required_params, output)
 
 
 class Test_transfer_function_1p_taylor():
