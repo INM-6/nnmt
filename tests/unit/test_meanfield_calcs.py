@@ -1,10 +1,9 @@
 import pytest
+import numpy as np
 
 from checks import (check_pos_params_neg_raise_exception,
                     check_correct_output,
                     check_V_0_larger_V_th_raise_exception)
-
-from ..utils import get_required_params
 
 from lif_meanfield_tools import ureg
 from lif_meanfield_tools.meanfield_calcs import *
@@ -20,11 +19,6 @@ class Test_firing_rates:
     # `self.func()` = `func()` != `func(self)`.
     func = staticmethod(firing_rates)
     output_key = 'firing_rates'
-
-    @pytest.fixture
-    def std_params(self, all_std_params):
-        """Returns set of standard params needed for all tests."""
-        return get_required_params(self.func, all_std_params)
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -44,11 +38,6 @@ class Test_mean:
     func = staticmethod(mean)
     output_key = 'mean_input'
 
-    @pytest.fixture
-    def std_params(self, all_std_params):
-        """Returns set of standard params needed for all tests."""
-        return get_required_params(self.func, all_std_params)
-
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
@@ -63,11 +52,6 @@ class Test_standard_deviation:
     # further explanation see Test_firing_rates
     func = staticmethod(standard_deviation)
     output_key = 'std_input'
-
-    @pytest.fixture
-    def std_params(self, all_std_params):
-        """Returns set of standard params needed for all tests."""
-        return get_required_params(self.func, all_std_params)
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -84,12 +68,11 @@ class Test_transfer_function:
     func = staticmethod(transfer_function)
 
     @pytest.fixture
-    def std_params(self, all_std_params):
+    def std_params(self, std_params):
         """Returns set of standard params needed for all tests."""
-        params = get_required_params(self.func, all_std_params)
-        params['mu'] = [1*ureg.mV, 2*ureg.mV]
-        params['sigma'] = [1*ureg.mV, 2*ureg.mV]
-        return params
+        std_params['mu'] = np.array([1, 2])*ureg.mV
+        std_params['sigma'] = np.array([1, 2])*ureg.mV
+        return std_params
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -113,12 +96,7 @@ class Test_transfer_function_1p_shift():
 
     # define tested functiosn
     func = staticmethod(transfer_function_1p_shift)
-    output_key = 'std_input'
-
-    @pytest.fixture
-    def std_params(self, all_std_params):
-        """Returns set of standard params needed for all tests."""
-        return get_required_params(self.func, all_std_params)
+    # output_key = 'std_input'
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -142,29 +120,7 @@ class Test_transfer_function_1p_shift():
 class Test_transfer_function_1p_taylor():
     pass
 
-#
-# class Test_firing_rates(unittest.TestCase):
-#
-#     @property
-#     def positive_params(self):
-#         return ['dimension', 'tau_m', 'tau_s', 'tau_r', 'K', 'nu_ext', 'K_ext', 'nu_e_ext', 'nu_i_ext']
-#
-#     def test_pos_params_neg_raise_exception(self):
-#         pass
-#
-#     def test_V_0_larger_V_th_raise_exception(self):
-#         pass
-#
-#     def test_correct_output_in_noise_driven_regime(self):
-#         pass
-#
-#     def test_correct_output_in_mean_driven_regime(self):
-#         pass
-#
-#     def test_correct_output_in_neg_firing_rate_regime(self):
-#         pass
-#
-#
+
 # class Test_transfer_function_1p_taylor(unittest.TestCase):
 #
 #     def test_correct_output_in_noise_driven_regime(self):

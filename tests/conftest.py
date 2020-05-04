@@ -30,6 +30,12 @@ def all_std_params():
                 omegas=[1*ureg.Hz])
 
 
+@pytest.fixture
+def std_params(request, all_std_params):
+    """Returns set of standard params needed for all tests."""
+    return get_required_params(request.cls.func, all_std_params)
+
+
 all_pos_keys = ['nu',
                 'K',
                 'tau_m',
@@ -47,6 +53,7 @@ fixture_path = 'tests/fixtures/'
 
 # noise driven regime mu < V_th
 # parameters taken from microcircuit example
+# need to rename, because results are saved under different key than args need
 _params_noise_driven_regime = load_params(
     '{}noise_driven_regime.yaml'.format(fixture_path))
 _params_noise_driven_regime['mu'] = _params_noise_driven_regime['mean_input']
@@ -130,7 +137,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("pos_keys", pos_keys)
 
     elif "output_test_fixtures" in metafunc.fixturenames:
-        # test every parameter regime seperately
+        # test every parameter regime seperately using all_params
         params = [get_required_params(func, params) for params in all_params]
 
         output_key = metafunc.cls.output_key
