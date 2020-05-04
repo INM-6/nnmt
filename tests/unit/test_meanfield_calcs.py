@@ -124,8 +124,6 @@ _params_all_regimes = [dict(params, **dict(tf_shift=tf_s, tf_taylor=tf_t))
 # def params_all_regimes(request):
 #     return request.param
 
-################## TESTS ###############
-
 def check_pos_params_neg_raise_exception(func, params, pos_key):
     """Test whether exception is raised if always pos param gets negative."""
     params[pos_key] *= -1
@@ -144,6 +142,21 @@ def check_V_0_larger_V_th_raise_exception(func, params):
     params['V_0_rel'] = 1.1 * params['V_th_rel']
     with pytest.raises(ValueError):
         func(**params)
+
+
+def get_required_keys(function, all_keys):
+    """Checks arguments of function and returns corresponding parameters."""
+    arg_keys = list(inspect.signature(function).parameters)
+    required_keys = [key for key in all_keys if key in arg_keys]
+    return required_keys
+
+
+def get_required_params(function, all_params):
+    """Checks arguments of function and returns corresponding parameters."""
+    required_keys = list(inspect.signature(function).parameters)
+    required_params = {k: v for k, v in all_params.items()
+                       if k in required_keys}
+    return required_params
 
 
 def inject_fixture(name, creation_function, *someparams):
@@ -184,31 +197,6 @@ def create_pos_params(function, all_pos_keys):
         return request.param
 
     return pos_params
-
-
-def get_required_keys(function, all_keys):
-    """Checks arguments of function and returns corresponding parameters."""
-    arg_keys = list(inspect.signature(function).parameters)
-    required_keys = [key for key in all_keys if key in arg_keys]
-    return required_keys
-
-
-def get_required_params(function, all_params):
-    """Checks arguments of function and returns corresponding parameters."""
-    required_keys = list(inspect.signature(function).parameters)
-    required_params = {k: v for k, v in all_params.items()
-                       if k in required_keys}
-    return required_params
-
-
-def make_test_V_0_larger_V_th_raise_exception():
-
-    def test_V_0_larger_V_th_raise_exception(self, standard_params):
-        standard_params['V_0_rel'] = 1.1 * standard_params['V_th_rel']
-        with pytest.raises(ValueError):
-            self.function(**standard_params)
-
-    return test_V_0_larger_V_th_raise_exception
 
 
 class Test_firing_rates:
@@ -260,56 +248,72 @@ class Test_firing_rates:
 
 class Test_mean:
 
-    # define tested function
-    function = staticmethod(mean)
+    # further explanation see Test_firing_rates
+    func = staticmethod(mean)
+    pos_keys = get_required_keys(func.__get__(object), all_pos_keys)
+    output_key = 'mean_input'
 
-    # define fixtures
-    standard_params_mean = inject_fixture('standard_params_mean',
-                                          create_standard_params,
-                                          mean, all_std_params)
-    pos_params_mean = inject_fixture('pos_params_mean',
-                                     create_pos_params,
-                                     mean, all_pos_keys)
+    @pytest.fixture
+    def std_params(self):
+        """Returns set of standard params needed for all tests."""
+        return get_required_params(self.func, all_std_params)
 
-    def test_pos_params_neg_raise_exception(
-            self, standard_params_mean, pos_params_mean):
-        check_pos_params_neg_raise_exception(
-            self.function, standard_params_mean, pos_params_mean)
+    @pytest.fixture(params=pos_keys)
+    def pos_keys(self, request):
+        """Returns keys of params that are always positive."""
+        return request.param
 
-    def test_correct_output(self, params_all_regimes):
-        output = params_all_regimes['mean_input']
-        required_params = get_required_params(self.function,
-                                              params_all_regimes)
-        check_correct_output(self.function, required_params, output)
+    @pytest.fixture(params=_params_all_regimes, ids=_ids_all_regimes)
+    def output_test_fixtures(self, request):
+        """Returns dict of params for output tests."""
+        all_params = request.param
+        params = get_required_params(self.func, all_params)
+        output = all_params[self.output_key]
+        return dict(output=output, params=params)
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
 
 
 class Test_standard_deviation:
 
-    # define tested functiosn
-    function = staticmethod(standard_deviation)
+    # further explanation see Test_firing_rates
+    func = staticmethod(standard_deviation)
+    pos_keys = get_required_keys(func.__get__(object), all_pos_keys)
+    output_key = 'std_input'
 
-    # define fixtures
-    standard_params_std = inject_fixture('standard_params_std',
-                                         create_standard_params,
-                                         standard_deviation,
-                                         all_std_params)
-    pos_params_std = inject_fixture('pos_params_std',
-                                    create_pos_params,
-                                    standard_deviation,
-                                    all_pos_keys)
+    @pytest.fixture
+    def std_params(self):
+        """Returns set of standard params needed for all tests."""
+        return get_required_params(self.func, all_std_params)
 
-    def test_pos_params_neg_raise_exception(
-            self, standard_params_std, pos_params_std):
-        check_pos_params_neg_raise_exception(
-            self.function, standard_params_std, pos_params_std)
+    @pytest.fixture(params=pos_keys)
+    def pos_keys(self, request):
+        """Returns keys of params that are always positive."""
+        return request.param
 
-    def test_correct_output(self, params_all_regimes):
-        output = params_all_regimes['std_input']
-        required_params = get_required_params(self.function,
-                                              params_all_regimes)
-        check_correct_output(self.function, required_params, output)
-    
-    
+    @pytest.fixture(params=_params_all_regimes, ids=_ids_all_regimes)
+    def output_test_fixtures(self, request):
+        """Returns dict of params for output tests."""
+        all_params = request.param
+        params = get_required_params(self.func, all_params)
+        output = all_params[self.output_key]
+        return dict(output=output, params=params)
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
+
+
 class Test_transfer_function:
 
     # define tested functiosn
