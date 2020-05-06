@@ -151,7 +151,7 @@ class Test_delay_dist_matrix_single:
 
     # define tested function
     func = staticmethod(delay_dist_matrix)
-    output_key = 'delay_dist'
+    output_key = 'delay_dist_all'
 
     def test_correct_output_dist_none(self, output_test_fixtures):
         delay_dist = 'none'
@@ -189,7 +189,29 @@ class Test_sensitivity_measure:
 
 
 class Test_power_spectra:
-    pass
+
+    # define tested function
+    func = staticmethod(power_spectra)
+    output_key = 'power_spectra'
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params,
+                                             pos_keys)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        std_params['tau_s'] = 0.5 * std_params['tau_m']
+        with pytest.warns(UserWarning):
+            self.func(**std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        std_params['tau_s'] = 2 * std_params['tau_m']
+        with pytest.raises(ValueError):
+            self.func(**std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
 
 
 class Test_eigen_spectra:

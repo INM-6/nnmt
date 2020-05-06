@@ -52,6 +52,7 @@ def calc_dep_params(params):
 def all_std_params():
 
     # standard params from first two populations of microcircuit
+    firing_rates = np.array([0.71, 2.75])*ureg.Hz
     params = dict(C=250*ureg.pF,
                   K=np.array([[2199, 1079], [2990, 860]]),
                   K_ext=np.array([1600, 1500]),
@@ -63,10 +64,16 @@ def all_std_params():
                   d_e_sd=0.75*ureg.ms,
                   d_i_sd=0.375*ureg.ms,
                   delay_dist=None,
+                  delay_dist_matrix=([[complex(1.000, -0.005),
+                                       complex(1.000, -0.002)],
+                                      [complex(1.000, -0.005),
+                                       complex(1.000, -0.002)]]
+                                     )*ureg.dimensionless,
+                  firing_rates=firing_rates,
                   g=4,
                   label='microcircuit',
                   mu=np.array([3.30, 7.03])*ureg.mV,
-                  nu=np.array([0.71, 2.75])*ureg.Hz,
+                  nu=firing_rates,
                   nu_ext=8*ureg.Hz,
                   nu_e_ext=np.array([0, 0])*ureg.Hz,
                   nu_i_ext=np.array([0, 0])*ureg.Hz,
@@ -75,6 +82,8 @@ def all_std_params():
                   tau_m=10*ureg.s,
                   tau_s=0.5*ureg.s,
                   tau_r=2.0*ureg.s,
+                  transfer_function=[complex(0.653, -0.101),
+                                     complex(1.811, -0.228)]*ureg.Hz/ureg.mV,
                   omega=20*ureg.Hz,
                   omegas=np.array([20])*ureg.Hz,
                   w=87.8*ureg.pA
@@ -126,7 +135,8 @@ fixture_path = 'tests/fixtures/'
 regimes = ['noise_driven', 'negative_firing_rate']
 key_pairs = (('mean_input', 'mu'),
              ('std_input', 'sigma'),
-             ('firing_rates', 'nu'))
+             ('firing_rates', 'nu'),
+             ('delay_dist', 'delay_dist_matrix'))
 all_params = []
 results = []
 ids_all_regimes = []
