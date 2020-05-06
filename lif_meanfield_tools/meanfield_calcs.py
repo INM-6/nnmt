@@ -39,7 +39,6 @@ _solve_chareq_numerically_alpha
 from __future__ import print_function
 import warnings
 import numpy as np
-import pint
 import scipy.optimize as sopt
 import scipy.integrate as sint
 import scipy.misc as smisc
@@ -92,6 +91,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     Quantity(np.ndarray, 'hertz')
         Array of firing rates of each population in hertz.
     '''
+
     def rate_function(mu, sigma):
         """ calculate stationary firing rate with given parameters """
         return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
@@ -270,6 +270,16 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     Quantity(float, 'hertz/millivolt')
     """
 
+    k = np.sqrt(tau_s / tau_m)
+    if (0.1 < k) & (k < 1):
+        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
+                     'calculation of firing rates via Taylor expansion!'
+                     ).format(k)
+        warnings.warn(k_warning)
+    if 1 <= k:
+        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation '
+                         'of firing rates via Taylor expansion!')
+
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega - 0.) < 1e-15:
@@ -341,6 +351,16 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                 V_0_rel, omega):
     """ Compute transfer_function_1p_shift() without quantities """
+    
+    k = np.sqrt(tau_s / tau_m)
+    if (0.1 < k) & (k < 1):
+        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
+                     'calculation of firing rates via Taylor expansion!'
+                     ).format(k)
+        warnings.warn(k_warning)
+    if 1 <= k:
+        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation '
+                         'of firing rates via Taylor expansion!')
 
     # effective threshold and reset
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
@@ -425,6 +445,7 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     tf_unit = transfer_functions[0][0].units
 
     return tf_magnitudes * tf_unit
+
 
 @ureg.wraps(ureg.dimensionless, (None, ureg.s, ureg.s, None, ureg.Hz))
 def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
