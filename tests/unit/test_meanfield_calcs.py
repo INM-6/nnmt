@@ -64,61 +64,80 @@ class Test_standard_deviation:
 
 class Test_transfer_function:
 
-    # define tested functiosn
+    # define tested function
     func = staticmethod(transfer_function)
 
-    @pytest.fixture
-    def std_params(self, std_params):
-        """Returns set of standard params needed for all tests."""
-        std_params['mu'] = np.array([1, 2])*ureg.mV
-        std_params['sigma'] = np.array([1, 2])*ureg.mV
-        return std_params
+    def test_pos_params_neg_raise_exception(self, std_params_tf, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params_tf,
+                                             pos_keys)
 
-    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_shift_method_is_called(self, mocker, std_params):
+    def test_shift_method_is_called(self, mocker, std_params_tf):
         mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                  'transfer_function_1p_shift')
-        std_params['method'] = 'shift'
-        self.func(**std_params)
+        std_params_tf['method'] = 'shift'
+        self.func(**std_params_tf)
         mocked_tf.assert_called_once()
 
-    def test_taylor_method_is_called(self, mocker, std_params):
+    def test_taylor_method_is_called(self, mocker, std_params_tf):
         mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                  'transfer_function_1p_taylor')
-        std_params['method'] = 'taylor'
-        self.func(**std_params)
+        std_params_tf['method'] = 'taylor'
+        self.func(**std_params_tf)
         mocked_tf.assert_called_once()
 
 
 class Test_transfer_function_1p_shift():
 
-    # define tested functiosn
-    func = staticmethod(transfer_function_1p_shift)
-    # output_key = 'std_input'
+    # define tested function
+    func = staticmethod(transfer_function)
+    output_key = 'tf_shift'
 
-    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+    def test_pos_params_neg_raise_exception(self, std_params_tf, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params_tf,
+                                             pos_keys)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        std_params['tau_s'] = 0.5 * std_params['tau_m']
+    def test_warning_is_given_if_k_is_critical(self, std_params_tf):
+        std_params_tf['tau_s'] = 0.5 * std_params_tf['tau_m']
         with pytest.warns(UserWarning):
-            self.func(**std_params)
+            self.func(**std_params_tf)
 
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        std_params['tau_s'] = 2 * std_params['tau_m']
+    def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
+        std_params_tf['tau_s'] = 2 * std_params_tf['tau_m']
         with pytest.raises(ValueError):
-            self.func(**std_params)
+            self.func(**std_params_tf)
 
-    # def test_correct_output(self, params_all_regimes):
-    #     output = params_all_regimes['tf_shift']
-    #     required_params = get_required_params(self.func, params_all_regimes)
-    #     check_correct_output(self.func, required_params, output)
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['method'] = 'shift'
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
 
 
 class Test_transfer_function_1p_taylor():
-    pass
+
+    # define tested function
+    func = staticmethod(transfer_function)
+    output_key = 'tf_taylor'
+
+    def test_pos_params_neg_raise_exception(self, std_params_tf, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params_tf,
+                                             pos_keys)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params_tf):
+        std_params_tf['tau_s'] = 0.5 * std_params_tf['tau_m']
+        with pytest.warns(UserWarning):
+            self.func(**std_params_tf)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
+        std_params_tf['tau_s'] = 2 * std_params_tf['tau_m']
+        with pytest.raises(ValueError):
+            self.func(**std_params_tf)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['method'] = 'taylor'
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
 
 
 # class Test_transfer_function_1p_taylor(unittest.TestCase):
