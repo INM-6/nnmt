@@ -140,25 +140,6 @@ for i, regime in enumerate(regimes):
     results.append(result)
     ids_all_regimes.append('{}_regime'.format(regime))
 
-# noise driven regime mu < V_th
-# parameters taken from microcircuit example
-# need to rename, because results are saved under different key than args need
-# _params_noise_driven_regime = load_h5(
-#     '{}noise_driven_regime.h5'.format(fixture_path))
-# _params_noise_driven_regime['mu'] = _params_noise_driven_regime['mean_input']
-# _params_noise_driven_regime['sigma'] = _params_noise_driven_regime['std_input']
-# _params_noise_driven_regime['nu'] = _params_noise_driven_regime['firing_rates']
-#
-# # regime in which negative firing rates occured once
-# # parameters taken from circuit in which lmt returned negative rates
-# _params_negative_firing_rate_regime = load_h5(
-#     '{}negative_firing_rate_regime.h5'.format(fixture_path))
-# _params_negative_firing_rate_regime['mu'] = (
-#     _params_negative_firing_rate_regime['mean_input'])
-# _params_negative_firing_rate_regime['sigma'] = (
-#     _params_negative_firing_rate_regime['std_input'])
-# _params_negative_firing_rate_regime['nu'] = (
-#     _params_negative_firing_rate_regime['firing_rates'])
 
 # # mean driven regime mu > V_th
 # # parameters taken from adjusted microcircuit example
@@ -186,34 +167,6 @@ for i, regime in enumerate(regimes):
 #                                      tau_r=tau_rs,
 #                                      V_th_rel=V_th_rels,
 #                                      V_0_rel=V_0_rels)
-
-# ids_all_regimes = ['noise_driven_regime',
-#                     'negative_firing_rate_regime']
-#                     # 'mean_driven_regime']
-#
-# _params_all_regimes = [_params_noise_driven_regime,
-#                        _params_negative_firing_rate_regime, ]
-# #                        # params_mean_driven_regime]
-#
-# tf_shift_noise_path = ('{}transfer_function_shift_noise_driven.npy'
-#                        ).format(fixture_path)
-# tf_shift_neg_rate_path = ('{}transfer_function_shift_negative_firing_rate.npy'
-#                           ).format(fixture_path)
-# tf_taylor_noise_path = ('{}transfer_function_taylor_noise_driven.npy'
-#                         ).format(fixture_path)
-# tf_taylor_neg_rate_path = ('{}transfer_function_taylor_negative_firing_rate'
-#                            '.npy').format(fixture_path)
-#
-# _transfer_function_shift = [np.load(tf_shift_noise_path),
-#                             np.load(tf_shift_neg_rate_path)]
-# _transfer_function_taylor = [np.load(tf_taylor_noise_path),
-#                              np.load(tf_taylor_neg_rate_path)]
-
-# all_params = [dict(params, **dict(tf_shift=tf_s, tf_taylor=tf_t))
-#               for params, tf_s, tf_t in zip(_params_all_regimes,
-#                                             _transfer_function_shift,
-#                                             _transfer_function_taylor)
-#               ]
 
 
 def pytest_generate_tests(metafunc):
