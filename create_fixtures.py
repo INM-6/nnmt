@@ -26,10 +26,28 @@ for case in cases:
     network.working_point()
 
     network.transfer_function(method='shift')
-    tf_shift = network.results.pop('transfer_function')
-
+    # tf_shift = network.results.pop('transfer_function')
+    network.results['tf_shift'] = network.results.pop('transfer_function')
     network.transfer_function(method='taylor')
-    tf_taylor = network.results.pop('transfer_function')
+    # tf_taylor = network.results.pop('transfer_function')
+    network.results['tf_taylor'] = network.results.pop('transfer_function')
+    # np.save('{}transfer_function_shift_{}.npy'.format(fixture_path, regime),
+    #         tf_shift)
+    # np.save('{}transfer_function_taylor_{}.npy'.format(fixture_path, regime),
+    #         tf_taylor)
+
+    network.network_params['delay_dist'] = 'none'
+    network.delay_dist_matrix()
+    dd_none = network.results.pop('delay_dist')
+    network.network_params['delay_dist'] = 'truncated_gaussian'
+    network.delay_dist_matrix()
+    dd_truncated_gaussian = network.results.pop('delay_dist')
+    network.network_params['delay_dist'] = 'gaussian'
+    network.delay_dist_matrix()
+    dd_gaussian = network.results.pop('delay_dist')
+    network.results['delay_dist'] = [dd_none.magnitude,
+                                     dd_truncated_gaussian.magnitude,
+                                     dd_gaussian.magnitude]*dd_none.units
 
     params = network.network_params
 
@@ -38,21 +56,17 @@ for case in cases:
 
     fixtures = lmt.input_output.quantities_to_val_unit(fixtures)
 
-    for k, v in fixtures.items():
-        try:
-            fixtures[k] = v.tolist()
-        except AttributeError:
-            try:
-                fixtures[k]['val'] = v['val'].tolist()
-            except AttributeError:
-                pass
-            except TypeError:
-                pass
+    # for k, v in fixtures.items():
+    #     try:
+    #         fixtures[k] = v.tolist()
+    #     except AttributeError:
+    #         try:
+    #             fixtures[k]['val'] = v['val'].tolist()
+    #         except AttributeError:
+    #             pass
+    #         except TypeError:
+    #             pass
 
-    with open('{}{}_regime.yaml'.format(fixture_path, regime), 'w') as file:
-        yaml.dump(fixtures, file)
-
-    np.save('{}transfer_function_shift_{}.npy'.format(fixture_path, regime),
-            tf_shift)
-    np.save('{}transfer_function_taylor_{}.npy'.format(fixture_path, regime),
-            tf_taylor)
+    network.save(file_name='{}{}_regime.h5'.format(fixture_path, regime))
+    # with open('{}{}_regime.yaml'.format(fixture_path, regime), 'w') as file:
+    #     yaml.dump(fixtures, file)

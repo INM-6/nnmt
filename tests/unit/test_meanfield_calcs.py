@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 
 from checks import (check_pos_params_neg_raise_exception,
                     check_correct_output,
@@ -134,8 +133,8 @@ class Test_transfer_function_1p_taylor():
         params['method'] = 'taylor'
         output = output_test_fixtures.pop('output')
         check_correct_output(self.func, params, output)
-        
-        
+
+
 class Test_delay_dist_matrix:
 
     # define tested function
@@ -148,21 +147,112 @@ class Test_delay_dist_matrix:
         mocked_tf.assert_called_once()
 
 
-#
-# class Test_delay_dist_matrix_single(unittest.TestCase):
-#
-#     def test_correct_output_for_none(self):
-#         pass
-#
-#     def test_correct_output_for_truncated_gaussian(self):
-#         pass
-#
-#     def test_correct_output_for_gaussian(self):
-#         pass
-#
-#
-# class Test_effective_connectivity(unittest.TestCase):
-#
-#     def test_correct_output(self):
-#         pass
-#
+class Test_delay_dist_matrix_single:
+
+    # define tested function
+    func = staticmethod(delay_dist_matrix)
+    output_key = 'delay_dist'
+
+    def test_correct_output_dist_none(self, output_test_fixtures):
+        delay_dist = 'none'
+        params = output_test_fixtures.pop('params')
+        params['delay_dist'] = delay_dist
+        output = output_test_fixtures.pop('output')[0]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_dist_truncated_gaussian(self,
+                                                    output_test_fixtures):
+        delay_dist = 'truncated_gaussian'
+        params = output_test_fixtures.pop('params')
+        params['delay_dist'] = delay_dist
+        output = output_test_fixtures.pop('output')[1]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_dist_gaussian(self, output_test_fixtures):
+        delay_dist = 'gaussian'
+        params = output_test_fixtures.pop('params')
+        params['delay_dist'] = delay_dist
+        output = output_test_fixtures.pop('output')[2]
+        check_correct_output(self.func, params, output)
+
+
+class Test_effective_connectivity:
+    pass
+
+
+class Test__effective_connectivity_rate:
+    pass
+
+
+class Test_sensitivity_measure:
+    pass
+
+
+class Test_power_spectra:
+    pass
+
+
+class Test_eigen_spectra:
+    pass
+
+
+# here tests for Senk start
+
+class Test_additional_rates_for_fixed_input:
+    pass
+
+
+class Test_fit_transfer_function:
+    pass
+
+
+class Test_scan_fit_transfer_function_mean_std_input:
+    pass
+
+
+class Test_effective_coupling_strength:
+    pass
+
+
+class Test_linear_interpolation_alpha:
+    pass
+
+
+class Test_eigenvals_branches_rate:
+    pass
+
+
+class Test_lambda_of_alpha_integral:
+    pass
+
+
+class Test_d_lambda_d_alpha:
+    pass
+
+
+class Test_xi_eff_s:
+    pass
+
+
+class Test_xi_eff_r:
+    pass
+
+
+class Test_d_xi_eff_s_d_lambda:
+    pass
+
+
+class Test_d_xi_eff_r_d_lambda:
+    pass
+
+
+class Test_solve_chareq_numerically_alpha:
+    pass
+
+
+class Test_xi_of_k:
+    pass
+
+
+class Test_solve_chareq_rate_boxcar:
+    pass
