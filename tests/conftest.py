@@ -100,17 +100,26 @@ def std_params_tf(std_params):
     return std_params
 
 
-all_pos_keys = ['nu',
+all_pos_keys = ['C',
                 'K',
+                'K_ext',
+                'N',
+                'd_e',
+                'd_i',
+                'd_e_sd',
+                'd_i_sd',
+                'dimension',
+                'g',
+                'nu',
+                'nu_ext',
+                'nu_e_ext',
+                'nu_i_ext',
+                'sigma'
                 'tau_m',
                 'tau_s',
                 'tau_r',
                 'nu_ext',
-                'K_ext',
-                'nu_e_ext',
-                'nu_i_ext',
-                'dimension',
-                'sigma']
+                ]
 
 
 fixture_path = 'tests/fixtures/'
