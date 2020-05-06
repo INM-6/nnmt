@@ -7,33 +7,97 @@ from lif_meanfield_tools.input_output import load_params
 from lif_meanfield_tools import ureg
 
 
+def calc_dep_params(params):
+    """
+    Calcs dependend parameters derived from params.
+
+    Taken from network.py.
+    """
+
+    # calculate dimension of system
+    dim = len(params['populations'])
+    params['dimension'] = dim
+
+    # reset reference potential to 0
+    params['V_0_rel'] = 0 * ureg.mV
+    params['V_th_rel'] = (params['V_th_abs'] - params['V_0_abs'])
+
+    # convert weights in pA (current) to weights in mV (voltage)
+    tau_s_div_C = params['tau_s'] / params['C']
+    params['j'] = (tau_s_div_C * params['w']).to(ureg.mV)
+
+    # weight matrix in pA (current)
+    W = np.ones((dim, dim))*params['w']
+    W[1:dim:2] *= -params['g']
+    W = np.transpose(W)
+    params['W'] = W
+
+    # weight matrix in mV (voltage)
+    params['J'] = (tau_s_div_C * params['W']).to(ureg.mV)
+
+    # delay matrix
+    D = np.ones((dim, dim))*params['d_e']
+    D[1:dim:2] = np.ones(dim)*params['d_i']
+    D = np.transpose(D)
+    params['Delay'] = D
+
+    # delay standard deviation matrix
+    D = np.ones((dim, dim))*params['d_e_sd']
+    D[1:dim:2] = np.ones(dim)*params['d_i_sd']
+    D = np.transpose(D)
+    params['Delay_sd'] = D
+
+
 @pytest.fixture
 def all_std_params():
-    return dict(mu=1*ureg.mV,
-                sigma=1*ureg.mV,
-                nu=1*ureg.Hz,
-                K=1,
-                J=1*ureg.mV,
-                j=1*ureg.mV,
-                V_th_rel=15*ureg.mV,
-                V_0_rel=0*ureg.mV,
-                tau_m=20*ureg.s,
-                tau_s=1*ureg.s,
-                tau_r=1*ureg.s,
-                nu_ext=1*ureg.Hz,
-                K_ext=1,
-                g=1,
-                nu_e_ext=1*ureg.Hz,
-                nu_i_ext=1*ureg.Hz,
-                dimension=1,
-                omega=1*ureg.Hz,
-                omegas=[1*ureg.Hz])
+
+    # standard params from first two populations of microcircuit
+    params = dict(C=250*ureg.pF,
+                  K=np.array([[2199, 1079], [2990, 860]]),
+                  K_ext=np.array([1600, 1500]),
+                  N=np.array([20683, 5834]),
+                  V_th_abs=-50*ureg.mV,
+                  V_0_abs=-65*ureg.mV,
+                  d_e=1.5*ureg.ms,
+                  d_i=0.75*ureg.ms,
+                  d_e_sd=0.75*ureg.ms,
+                  d_i_sd=0.375*ureg.ms,
+                  delay_dist=None,
+                  g=4,
+                  label='microcircuit',
+                  mu=np.array([3.30, 7.03])*ureg.mV,
+                  nu=np.array([0.71, 2.75])*ureg.Hz,
+                  nu_ext=8*ureg.Hz,
+                  nu_e_ext=np.array([0, 0])*ureg.Hz,
+                  nu_i_ext=np.array([0, 0])*ureg.Hz,
+                  populations=['23E', '23I'],
+                  sigma=np.array([6.19, 5.11])*ureg.mV,
+                  tau_m=10*ureg.s,
+                  tau_s=0.5*ureg.s,
+                  tau_r=2.0*ureg.s,
+                  omega=20*ureg.Hz,
+                  omegas=np.array([20])*ureg.Hz,
+                  w=87.8*ureg.pA
+                  )
+
+    calc_dep_params(params)
+
+    return params
 
 
 @pytest.fixture
 def std_params(request, all_std_params):
     """Returns set of standard params needed for all tests."""
     return get_required_params(request.cls.func, all_std_params)
+
+
+@pytest.fixture
+def std_params_tf(std_params):
+    """Returns set of standard params needed for all tests."""
+    std_params['dimension'] = 1
+    std_params['mu'] = np.array([1, 2])*ureg.mV
+    std_params['sigma'] = np.array([1, 2])*ureg.mV
+    return std_params
 
 
 all_pos_keys = ['nu',

@@ -67,10 +67,6 @@ class Test_transfer_function:
     # define tested function
     func = staticmethod(transfer_function)
 
-    def test_pos_params_neg_raise_exception(self, std_params_tf, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params_tf,
-                                             pos_keys)
-
     def test_shift_method_is_called(self, mocker, std_params_tf):
         mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                  'transfer_function_1p_shift')
@@ -138,37 +134,20 @@ class Test_transfer_function_1p_taylor():
         params['method'] = 'taylor'
         output = output_test_fixtures.pop('output')
         check_correct_output(self.func, params, output)
+        
+        
+class Test_delay_dist_matrix:
+
+    # define tested function
+    func = staticmethod(delay_dist_matrix)
+
+    def test_delay_dist_matrix_single_is_called(self, mocker, std_params):
+        mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                                 'delay_dist_matrix_single')
+        self.func(**std_params)
+        mocked_tf.assert_called_once()
 
 
-# class Test_transfer_function_1p_taylor(unittest.TestCase):
-#
-#     def test_correct_output_in_noise_driven_regime(self):
-#         pass
-#
-#     def test_correct_output_in_mean_driven_regime(self):
-#         pass
-#
-#     def test_correct_output_in_neg_firing_rate_regime(self):
-#         pass
-#
-#     def test_for_zero_frequency_d_nu_d_mu_fb433_is_called(self):
-#         pass
-#
-#
-# class Test_transfer_function_1p_shift(unittest.TestCase):
-#
-#     def test_correct_output_in_noise_driven_regime(self):
-#         pass
-#
-#     def test_correct_output_in_mean_driven_regime(self):
-#         pass
-#
-#     def test_correct_output_in_neg_firing_rate_regime(self):
-#         pass
-#
-#     def test_for_zero_frequency_d_nu_d_mu_fb433_is_called(self):
-#         pass
-#
 #
 # class Test_delay_dist_matrix_single(unittest.TestCase):
 #
