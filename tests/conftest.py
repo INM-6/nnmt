@@ -102,7 +102,7 @@ def std_params(request, all_std_params):
 
 @pytest.fixture
 def std_params_tf(std_params):
-    """Returns set of standard params needed for all tests."""
+    """Returns set of standard params needed for transfer function tests."""
     std_params['dimension'] = 1
     std_params['mu'] = np.array([1, 2])*ureg.mV
     std_params['sigma'] = np.array([1, 2])*ureg.mV
@@ -157,8 +157,10 @@ for i, regime in enumerate(regimes):
 #                                 'tests/unit/fixtures/mean_driven_regime.yaml')
 # params_mean_driven_regime['nu'] = params_mean_driven_regime['firing_rates']
 
-# mus =  [741.89455754, 21.24112709, 35.86521795, 40.69297877, 651.19761921] * ureg.mV
-# sigmas = [39.3139564, 6.17632725, 9.79196704, 10.64437979, 37.84928217] * ureg.mV
+# mus =  [741.89455754, 21.24112709, 35.86521795, 40.69297877,
+#         651.19761921] * ureg.mV
+# sigmas = [39.3139564, 6.17632725, 9.79196704, 10.64437979,
+#           37.84928217] * ureg.mV
 #
 # tau_m = 20. * ureg.ms
 # tau_s = 0.5 * ureg.ms
@@ -179,7 +181,7 @@ for i, regime in enumerate(regimes):
 #                                      V_0_rel=V_0_rels)
 
 
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(metafunc, all_params=all_params, results=results):
     """Define parametrization schemes for pos_keys and output_test_fixtures."""
     func = metafunc.cls.func
 
@@ -192,6 +194,14 @@ def pytest_generate_tests(metafunc):
         # test every parameter regime seperately using all_params
         params = [get_required_params(func, dict(params, **results))
                   for params, results in zip(all_params, results)]
+
+        if 'sensitivity_measure' in metafunc.cls.__name__:
+            for param, result in zip(params, results):
+                # sensitivity measure requires special transfer function as arg
+                param['transfer_function'] = result['transfer_function_'
+                                                    'single'][0]
+                # sensitivity measure requires special delay_dist_matrix as arg
+                param['delay_dist_matrix'] = result['delay_dist_single'][0]
 
         output_key = metafunc.cls.output_key
         output = [result[output_key] for result in results]

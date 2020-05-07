@@ -185,7 +185,29 @@ class Test__effective_connectivity_rate:
 
 
 class Test_sensitivity_measure:
-    pass
+
+    # define tested function
+    func = staticmethod(sensitivity_measure)
+    output_key = 'sensitivity_measure'
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params,
+                                             pos_keys)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        std_params['tau_s'] = 0.5 * std_params['tau_m']
+        with pytest.warns(UserWarning):
+            self.func(**std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        std_params['tau_s'] = 2 * std_params['tau_m']
+        with pytest.raises(ValueError):
+            self.func(**std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')[0]
+        check_correct_output(self.func, params, output)
 
 
 class Test_power_spectra:
