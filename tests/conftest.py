@@ -72,6 +72,7 @@ def all_std_params():
                   firing_rates=firing_rates,
                   g=4,
                   label='microcircuit',
+                  matrix='MH',
                   mu=np.array([3.30, 7.03])*ureg.mV,
                   nu=firing_rates,
                   nu_ext=8*ureg.Hz,
@@ -107,6 +108,13 @@ def std_params_tf(std_params):
     std_params['mu'] = np.array([1, 2])*ureg.mV
     std_params['sigma'] = np.array([1, 2])*ureg.mV
     return std_params
+
+
+@pytest.fixture
+def std_params_eval_spectra(request, all_std_params):
+    """Returns set of standard params needed for all tests."""
+    all_std_params['quantity'] = 'eigvals'
+    return get_required_params(request.cls.func, all_std_params)
 
 
 all_pos_keys = ['C',
@@ -181,7 +189,8 @@ for i, regime in enumerate(regimes):
 #                                      V_0_rel=V_0_rels)
 
 
-def pytest_generate_tests(metafunc, all_params=all_params, results=results):
+def pytest_generate_tests(metafunc, all_params=all_params, results=results,
+                          ids_all_regimes=ids_all_regimes):
     """Define parametrization schemes for pos_keys and output_test_fixtures."""
     func = metafunc.cls.func
 
@@ -191,9 +200,22 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results):
         metafunc.parametrize("pos_keys", pos_keys)
 
     elif "output_test_fixtures" in metafunc.fixturenames:
+
+        if 'prop_inv' in metafunc.function.__name__:
+            # take out negative_firing_rate regime because prop is singular
+            singular_regime = 'negative_firing_rate'
+            indices = [i for i, params in enumerate(all_params)
+                       if params['regime'] != singular_regime]
+            all_params = [all_params[i] for i in indices]
+            results = [results[i] for i in indices]
+            ids_all_regimes = [ids_all_regimes[i] for i in indices]
+
         # test every parameter regime seperately using all_params
         params = [get_required_params(func, dict(params, **results))
                   for params, results in zip(all_params, results)]
+
+        output_key = metafunc.cls.output_key
+        output = [result[output_key] for result in results]
 
         if 'sensitivity_measure' in metafunc.cls.__name__:
             for param, result in zip(params, results):
@@ -202,9 +224,6 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results):
                                                     'single'][0]
                 # sensitivity measure requires special delay_dist_matrix as arg
                 param['delay_dist_matrix'] = result['delay_dist_single'][0]
-
-        output_key = metafunc.cls.output_key
-        output = [result[output_key] for result in results]
 
         fixtures = [dict(output=output, params=params) for output, params
                     in zip(output, params)]

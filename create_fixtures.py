@@ -24,8 +24,9 @@ for case in cases:
     network = lmt.Network(parameters, ('{}analysis_params_test.yaml'
                                        ).format(fixture_path))
 
-    network.working_point()
+    network.network_params['regime'] = regime
 
+    network.working_point()
 
     network.transfer_function(method='shift')
     network.results['tf_shift'] = network.results.pop('transfer_function')
@@ -52,6 +53,21 @@ for case in cases:
     network.transfer_function(omega)
     network.delay_dist_matrix()
     network.power_spectra()
+
+    network.eigenvalue_spectra('MH')
+    network.eigenvalue_spectra('prop')
+    if regime != 'negative_firing_rate':
+        network.eigenvalue_spectra('prop_inv')
+
+    network.r_eigenvec_spectra('MH')
+    network.r_eigenvec_spectra('prop')
+    if regime != 'negative_firing_rate':
+        network.r_eigenvec_spectra('prop_inv')
+
+    network.l_eigenvec_spectra('MH')
+    network.l_eigenvec_spectra('prop')
+    if regime != 'negative_firing_rate':
+        network.l_eigenvec_spectra('prop_inv')
 
     params = network.network_params
     #

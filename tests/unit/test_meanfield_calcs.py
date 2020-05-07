@@ -4,8 +4,14 @@ from checks import (check_pos_params_neg_raise_exception,
                     check_correct_output,
                     check_V_0_larger_V_th_raise_exception)
 
-from lif_meanfield_tools import ureg
-from lif_meanfield_tools.meanfield_calcs import *
+from lif_meanfield_tools.meanfield_calcs import (firing_rates,
+                                                 mean,
+                                                 standard_deviation,
+                                                 transfer_function,
+                                                 delay_dist_matrix,
+                                                 sensitivity_measure,
+                                                 power_spectra,
+                                                 eigen_spectra,)
 
 
 class Test_firing_rates:
@@ -176,14 +182,6 @@ class Test_delay_dist_matrix_single:
         check_correct_output(self.func, params, output)
 
 
-class Test_effective_connectivity:
-    pass
-
-
-class Test__effective_connectivity_rate:
-    pass
-
-
 class Test_sensitivity_measure:
 
     # define tested function
@@ -236,8 +234,105 @@ class Test_power_spectra:
         check_correct_output(self.func, params, output)
 
 
-class Test_eigen_spectra:
-    pass
+class Test_eigen_spectra_eval:
+
+    # define tested function
+    func = staticmethod(eigen_spectra)
+    output_key = 'eigenvalue_spectra'
+
+    def test_pos_params_neg_raise_exception(self, std_params_eval_spectra,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func,
+                                             std_params_eval_spectra,
+                                             pos_keys)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params_eval_spectra):
+        std_params_eval_spectra['tau_s'] = 0.5*std_params_eval_spectra['tau_m']
+        with pytest.warns(UserWarning):
+            self.func(**std_params_eval_spectra)
+
+    def test_exception_is_raised_if_k_is_too_large(self,
+                                                   std_params_eval_spectra):
+        std_params_eval_spectra['tau_s'] = 2 * std_params_eval_spectra['tau_m']
+        with pytest.raises(ValueError):
+            self.func(**std_params_eval_spectra)
+
+    def test_correct_output_eigvals_MH(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'eigvals'
+        params['matrix'] = 'MH'
+        output = output_test_fixtures.pop('output')[0]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_eigvals_prop(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'eigvals'
+        params['matrix'] = 'prop'
+        output = output_test_fixtures.pop('output')[1]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_eigvals_prop_inv(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'eigvals'
+        params['matrix'] = 'prop_inv'
+        output = output_test_fixtures.pop('output')[2]
+        check_correct_output(self.func, params, output)
+
+
+class Test_eigen_spectra_reigvecs:
+
+    # define tested function
+    func = staticmethod(eigen_spectra)
+    output_key = 'r_eigenvec_spectra'
+
+    def test_correct_output_reigvecs_MH(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'reigvecs'
+        params['matrix'] = 'MH'
+        output = output_test_fixtures.pop('output')[0]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_reigvecs_prop(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'reigvecs'
+        params['matrix'] = 'prop'
+        output = output_test_fixtures.pop('output')[1]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_reigvecs_prop_inv(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'reigvecs'
+        params['matrix'] = 'prop_inv'
+        output = output_test_fixtures.pop('output')[2]
+        check_correct_output(self.func, params, output)
+
+
+class Test_eigen_spectra_leigvecs:
+
+    # define tested function
+    func = staticmethod(eigen_spectra)
+    output_key = 'l_eigenvec_spectra'
+
+    def test_correct_output_leigvecs_MH(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'leigvecs'
+        params['matrix'] = 'MH'
+        output = output_test_fixtures.pop('output')[0]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_leigvecs_prop(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'leigvecs'
+        params['matrix'] = 'prop'
+        output = output_test_fixtures.pop('output')[1]
+        check_correct_output(self.func, params, output)
+
+    def test_correct_output_leigvecs_prop_inv(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        params['quantity'] = 'leigvecs'
+        params['matrix'] = 'prop_inv'
+        output = output_test_fixtures.pop('output')[2]
+        check_correct_output(self.func, params, output)
 
 
 # here tests for Senk start
