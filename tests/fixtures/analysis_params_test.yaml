@@ -1,0 +1,63 @@
+---
+# frequencies
+f_min:
+  val: 0.1
+  unit: Hz
+
+f_max:
+  val: 300
+  unit: Hz
+
+df:
+  # 1/(2*pi)
+  val: 30
+  unit: Hz
+
+# k wavenumbers
+k_min:
+  val: 1.0
+  unit: 1/mm
+
+k_max:
+  val: 100.5
+  unit: 1/mm
+
+dk:
+  val: 10
+  unit: 1/mm
+
+### neural response
+# Transfer function is either calculated analytically ('analytical')
+# or approximated by an exponential ('empirical'). In the latter case
+# the time constants in response to an incoming impulse ('tau_impulse'),
+# as well as the instantaneous rate jumps ('delta_f') have to be
+# specified.
+tf_mode: analytical
+# val: empirical
+# tau_impulse:
+#   val:
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#   unit: ms
+#
+# delta_f:
+#   val:
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#     - 0.0
+#   unit: ms
+
+# number of modes used when fast response time constants are calculated
+num_modes: 1
+...

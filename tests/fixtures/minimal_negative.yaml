@@ -1,0 +1,370 @@
+---
+label: zajzi
+
+populations:
+  - E0A
+  - E00
+  - I0A
+  - I00
+
+  - E1A
+  - E10
+  - I1A
+  - I10
+
+  - E2A
+  - E20
+  - I2A
+  - I20
+
+# number of neurons in populations
+N:
+  - 800
+  - 7200
+  - 200
+  - 1800
+
+  - 800
+  - 7200
+  - 200
+  - 1800
+
+  - 800
+  - 7200
+  - 200
+  - 1800
+
+
+### neurons
+# membrane capacitance
+C:
+  val: 250.0
+  unit: pF
+
+# membrane time constant
+tau_m:
+  val: 20.0
+  unit: ms
+
+# refractory time
+tau_r:
+  val: 2.0
+  unit: ms
+
+# absolute reset potential
+V_0_abs:
+  val: -70.0
+  unit: mV
+
+# absolute threshold of membrane potential
+V_th_abs:
+  val: -55.0
+  unit: mV
+
+
+### synapses
+# synaptic time constant
+tau_s:
+  val: 2.
+  unit: ms
+
+# delay of excitatory connections
+d_e:
+  val: 1.5
+  unit: ms
+
+# delay of inhibitory connections
+d_i:
+  val: 1.5
+  unit: ms
+
+# standard deviation of delay of excitatory connections
+d_e_sd:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of inhibitory connections
+d_i_sd:
+  val: 0.375
+  unit: ms
+
+# delay distribution, options: none, gaussian (standard deviation is defined
+# above), truncated_gaussian (standard deviation is defined above, truncation
+# at zero)
+delay_dist: none
+
+# PSC amplitude
+w:
+  val: 32.28
+  unit: pA
+
+# indegrees
+K:
+  #############################
+  # M0 ------------------------
+
+  # E0A
+  - - 80    #E0A E0A  Module #0
+    - 720   #E0A E00
+    - 20    #E0A I0A
+    - 180   #E0A I00
+
+    - 0     #E0A E1A
+    - 0     #E0A E10
+    - 0     #E0A I1A
+    - 0     #E0A I10
+
+    - 0     #E0A E2A
+    - 0     #E0A E20
+    - 0     #E0A I2A
+    - 0     #E0A I20
+
+  # E00
+  - - 80    #E0A E0A  Module #0
+    - 720   #E0A E00
+    - 20    #E0A I0A
+    - 180   #E0A I00
+
+    - 0     #E0A E1A
+    - 0     #E0A E10
+    - 0     #E0A I1A
+    - 0     #E0A I10
+
+    - 0     #E0A E2A
+    - 0     #E0A E20
+    - 0     #E0A I2A
+    - 0     #E0A I20
+
+  # I0A
+  - - 80    #E0A E0A  Module #0
+    - 720   #E0A E00
+    - 20    #E0A I0A
+    - 180   #E0A I00
+
+    - 0     #E0A E1A
+    - 0     #E0A E10
+    - 0     #E0A I1A
+    - 0     #E0A I10
+
+    - 0     #E0A E2A
+    - 0     #E0A E20
+    - 0     #E0A I2A
+    - 0     #E0A I20
+
+  # I00
+  - - 80    #E0A E0A  Module #0
+    - 720   #E0A E00
+    - 20    #E0A I0A
+    - 180   #E0A I00
+
+    - 0     #E0A E1A
+    - 0     #E0A E10
+    - 0     #E0A I1A
+    - 0     #E0A I10
+
+    - 0     #E0A E2A
+    - 0     #E0A E20
+    - 0     #E0A I2A
+    - 0     #E0A I20
+
+  #############################
+  # M1 ------------------------
+
+  # E1A M1
+  - - 255    #E1A
+    - 437
+    - 0
+    - 0
+
+    - 80    #E1AE1A
+    - 720   #E1AE10
+    - 20    #E1AI1A
+    - 180   #E1AI10
+
+    - 0
+    - 0
+    - 0
+    - 0
+
+  # E10 M1
+  - - 38    #E1A
+    - 559
+    - 0
+    - 0
+
+    - 80
+    - 720
+    - 20
+    - 180
+
+    - 0
+    - 0
+    - 0
+    - 0
+
+  # I1A M1
+  - - 255
+    - 342
+    - 0
+    - 0
+
+    - 80
+    - 720
+    - 20
+    - 180
+
+    - 0
+    - 0
+    - 0
+    - 0
+
+  # I10 M1
+  - - 38
+    - 559
+    - 0
+    - 0
+
+    - 80
+    - 720
+    - 20
+    - 180
+
+    - 0
+    - 0
+    - 0
+    - 0
+
+  #############################
+  # M2 ------------------------
+
+  # E2A
+  - - 0
+    - 0
+    - 0
+    - 0
+
+    - 255
+    - 342
+    - 0
+    - 0
+
+    - 80    #E2A E2A
+    - 720   #E2A E20
+    - 20    #E2A I2A
+    - 180   #E2A I20
+
+  # E20
+  - - 0
+    - 0
+    - 0
+    - 0
+
+    - 38
+    - 559
+    - 0
+    - 0
+
+    - 80
+    - 720
+    - 20
+    - 180
+
+  # I2A
+  - - 0
+    - 0
+    - 0
+    - 0
+
+    - 255
+    - 342
+    - 0
+    - 0
+
+    - 80
+    - 720
+    - 20
+    - 180
+
+  # I20
+  - - 0
+    - 0
+    - 0
+    - 0
+
+    - 38
+    - 559
+    - 0
+    - 0
+
+    - 80
+    - 720
+    - 20
+    - 180
+
+# ratio of inhibitory to excitatory weights
+g: 12.0
+
+### external input
+# firing rate of external input
+nu_ext:
+  val: 12.0
+  unit: Hz
+
+# number of external neurons
+K_ext:
+  - 800
+  - 800
+  - 800
+  - 800
+
+  - 200
+  - 200
+  - 200
+  - 200
+
+  - 200
+  - 200
+  - 200
+  - 200
+
+
+# rates of additional external excitatory and inhibitory Poisson input
+nu_e_ext:
+  val:
+    - 2400.0
+    - 0.0
+    - 2400.0
+    - 0.0
+
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+
+  unit: Hz
+
+nu_i_ext:
+  val:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  unit: Hz
+
+
+
+
+...
