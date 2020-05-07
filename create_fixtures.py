@@ -74,6 +74,17 @@ for case in cases:
             network.network_params['mean_input_set'],
             network.network_params['std_input_set']))
 
+    eff_coupling_strength = lmt.meanfield_calcs.effective_coupling_strength(
+        network.network_params['tau_m'],
+        network.network_params['tau_s'],
+        network.network_params['tau_r'],
+        network.network_params['V_0_rel'],
+        network.network_params['V_th_rel'],
+        network.network_params['J'],
+        network.mean_input(),
+        network.std_input())
+    network.results['effective_coupling_strength'] = eff_coupling_strength
+
     params = network.network_params
     #
     # fixtures = dict(params, **network.results)

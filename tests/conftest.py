@@ -53,6 +53,8 @@ def all_std_params():
 
     # standard params from first two populations of microcircuit
     firing_rates = np.array([0.71, 2.75])*ureg.Hz
+    mean_input = np.array([3.30, 7.03])*ureg.mV
+    std_input = np.array([6.19, 5.11])*ureg.mV
     params = dict(C=250*ureg.pF,
                   K=np.array([[2199, 1079], [2990, 860]]),
                   K_ext=np.array([1600, 1500]),
@@ -73,15 +75,17 @@ def all_std_params():
                   g=4,
                   label='microcircuit',
                   matrix='MH',
-                  mu=np.array([3.30, 7.03])*ureg.mV,
+                  mean_input=mean_input,
+                  mu=mean_input,
                   mu_set=np.array([3, 7])*ureg.mV,
                   nu=firing_rates,
                   nu_ext=8*ureg.Hz,
                   nu_e_ext=np.array([0, 0])*ureg.Hz,
                   nu_i_ext=np.array([0, 0])*ureg.Hz,
                   populations=['23E', '23I'],
-                  sigma=np.array([6.19, 5.11])*ureg.mV,
+                  sigma=std_input,
                   sigma_set=np.array([6, 5])*ureg.mV,
+                  std_input=std_input,
                   tau_m=10*ureg.s,
                   tau_s=0.5*ureg.s,
                   tau_r=2.0*ureg.s,

@@ -4,15 +4,17 @@ from .checks import (check_pos_params_neg_raise_exception,
                      check_warning_is_given_if_k_is_critical,
                      check_exception_is_raised_if_k_is_too_large)
 
-from lif_meanfield_tools.meanfield_calcs import (firing_rates,
-                                                 mean,
-                                                 standard_deviation,
-                                                 transfer_function,
-                                                 delay_dist_matrix,
-                                                 sensitivity_measure,
-                                                 power_spectra,
-                                                 eigen_spectra,
-                                                 additional_rates_for_fixed_input)
+from lif_meanfield_tools.meanfield_calcs import (
+    firing_rates,
+    mean,
+    standard_deviation,
+    transfer_function,
+    delay_dist_matrix,
+    sensitivity_measure,
+    power_spectra,
+    eigen_spectra,
+    additional_rates_for_fixed_input,
+    effective_coupling_strength)
 
 
 class Test_firing_rates:
@@ -350,7 +352,20 @@ class Test_scan_fit_transfer_function_mean_std_input:
 
 
 class Test_effective_coupling_strength:
-    ...
+
+    func = staticmethod(effective_coupling_strength)
+    output_key = 'effective_coupling_strength'
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_params):
+        check_V_0_larger_V_th_raise_exception(self.func, std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
 
 
 # spatial functions
