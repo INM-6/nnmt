@@ -69,6 +69,11 @@ for case in cases:
     if regime != 'negative_firing_rate':
         network.l_eigenvec_spectra('prop_inv')
 
+    network.results['additional_rates_for_fixed_input'] = (
+        network.additional_rates_for_fixed_input(
+            network.network_params['mean_input_set'],
+            network.network_params['std_input_set']))
+
     params = network.network_params
     #
     # fixtures = dict(params, **network.results)

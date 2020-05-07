@@ -1,8 +1,8 @@
-import pytest
-
-from checks import (check_pos_params_neg_raise_exception,
-                    check_correct_output,
-                    check_V_0_larger_V_th_raise_exception)
+from .checks import (check_pos_params_neg_raise_exception,
+                     check_correct_output,
+                     check_V_0_larger_V_th_raise_exception,
+                     check_warning_is_given_if_k_is_critical,
+                     check_exception_is_raised_if_k_is_too_large)
 
 from lif_meanfield_tools.meanfield_calcs import (firing_rates,
                                                  mean,
@@ -11,7 +11,8 @@ from lif_meanfield_tools.meanfield_calcs import (firing_rates,
                                                  delay_dist_matrix,
                                                  sensitivity_measure,
                                                  power_spectra,
-                                                 eigen_spectra,)
+                                                 eigen_spectra,
+                                                 additional_rates_for_fixed_input)
 
 
 class Test_firing_rates:
@@ -98,14 +99,10 @@ class Test_transfer_function_1p_shift():
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params_tf):
-        std_params_tf['tau_s'] = 0.5 * std_params_tf['tau_m']
-        with pytest.warns(UserWarning):
-            self.func(**std_params_tf)
-
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+        
     def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
-        std_params_tf['tau_s'] = 2 * std_params_tf['tau_m']
-        with pytest.raises(ValueError):
-            self.func(**std_params_tf)
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -125,14 +122,10 @@ class Test_transfer_function_1p_taylor():
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params_tf):
-        std_params_tf['tau_s'] = 0.5 * std_params_tf['tau_m']
-        with pytest.warns(UserWarning):
-            self.func(**std_params_tf)
-
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+        
     def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
-        std_params_tf['tau_s'] = 2 * std_params_tf['tau_m']
-        with pytest.raises(ValueError):
-            self.func(**std_params_tf)
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -193,14 +186,10 @@ class Test_sensitivity_measure:
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params):
-        std_params['tau_s'] = 0.5 * std_params['tau_m']
-        with pytest.warns(UserWarning):
-            self.func(**std_params)
-
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+        
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        std_params['tau_s'] = 2 * std_params['tau_m']
-        with pytest.raises(ValueError):
-            self.func(**std_params)
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -219,14 +208,10 @@ class Test_power_spectra:
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params):
-        std_params['tau_s'] = 0.5 * std_params['tau_m']
-        with pytest.warns(UserWarning):
-            self.func(**std_params)
-
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+        
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        std_params['tau_s'] = 2 * std_params['tau_m']
-        with pytest.raises(ValueError):
-            self.func(**std_params)
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -247,15 +232,13 @@ class Test_eigen_spectra_eval:
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params_eval_spectra):
-        std_params_eval_spectra['tau_s'] = 0.5*std_params_eval_spectra['tau_m']
-        with pytest.warns(UserWarning):
-            self.func(**std_params_eval_spectra)
+        check_warning_is_given_if_k_is_critical(self.func,
+                                                std_params_eval_spectra)
 
     def test_exception_is_raised_if_k_is_too_large(self,
                                                    std_params_eval_spectra):
-        std_params_eval_spectra['tau_s'] = 2 * std_params_eval_spectra['tau_m']
-        with pytest.raises(ValueError):
-            self.func(**std_params_eval_spectra)
+        check_exception_is_raised_if_k_is_too_large(self.func,
+                                                    std_params_eval_spectra)
 
     def test_correct_output_eigvals_MH(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -338,7 +321,24 @@ class Test_eigen_spectra_leigvecs:
 # here tests for Senk start
 
 class Test_additional_rates_for_fixed_input:
-    pass
+
+    # define tested function
+    func = staticmethod(additional_rates_for_fixed_input)
+    output_key = 'additional_rates_for_fixed_input'
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output(self.func, params, output)
 
 
 class Test_fit_transfer_function:
@@ -350,9 +350,10 @@ class Test_scan_fit_transfer_function_mean_std_input:
 
 
 class Test_effective_coupling_strength:
-    pass
+    ...
 
 
+# spatial functions
 class Test_linear_interpolation_alpha:
     pass
 
