@@ -1,6 +1,3 @@
-import numpy as np
-import yaml
-
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
@@ -32,7 +29,7 @@ for case in cases:
     network.results['tf_shift'] = network.results.pop('transfer_function')
     network.transfer_function(method='taylor')
     network.results['tf_taylor'] = network.results['transfer_function']
-
+    
     original_delay_dist = network.network_params['delay_dist']
     network.network_params['delay_dist'] = 'none'
     network.delay_dist_matrix()
@@ -43,37 +40,39 @@ for case in cases:
     network.network_params['delay_dist'] = 'gaussian'
     network.delay_dist_matrix()
     dd_gaussian = network.results.pop('delay_dist')
-    network.results['delay_dist_all'] = [dd_none.magnitude,
-                                         dd_truncated_gaussian.magnitude,
-                                         dd_gaussian.magnitude]*dd_none.units
+    network.results['delay_dist_none'] = dd_none
+    network.results['delay_dist_truncated_gaussian'] = dd_truncated_gaussian
+    print(network.analysis_params['omegas'][0])
+    network.results['delay_dist_gaussian'] = dd_gaussian
     network.network_params['delay_dist'] = original_delay_dist
-
+    
     omega = network.analysis_params['omega']
     network.sensitivity_measure(omega)
     network.transfer_function(omega)
     network.delay_dist_matrix()
     network.power_spectra()
-
+    
     network.eigenvalue_spectra('MH')
     network.eigenvalue_spectra('prop')
     if regime != 'negative_firing_rate':
         network.eigenvalue_spectra('prop_inv')
-
+    
     network.r_eigenvec_spectra('MH')
     network.r_eigenvec_spectra('prop')
     if regime != 'negative_firing_rate':
         network.r_eigenvec_spectra('prop_inv')
-
+    
     network.l_eigenvec_spectra('MH')
     network.l_eigenvec_spectra('prop')
     if regime != 'negative_firing_rate':
         network.l_eigenvec_spectra('prop_inv')
-
-    network.results['additional_rates_for_fixed_input'] = (
-        network.additional_rates_for_fixed_input(
-            network.network_params['mean_input_set'],
-            network.network_params['std_input_set']))
-
+    
+    nu_e_ext, nu_i_ext = network.additional_rates_for_fixed_input(
+        network.network_params['mean_input_set'],
+        network.network_params['std_input_set'])
+    network.results['add_nu_e_ext'] = nu_e_ext
+    network.results['add_nu_i_ext'] = nu_i_ext
+    
     eff_coupling_strength = lmt.meanfield_calcs.effective_coupling_strength(
         network.network_params['tau_m'],
         network.network_params['tau_s'],
@@ -81,27 +80,10 @@ for case in cases:
         network.network_params['V_0_rel'],
         network.network_params['V_th_rel'],
         network.network_params['J'],
-        network.mean_input(),
-        network.std_input())
+        network.results['mean_input'],
+        network.results['std_input'])
     network.results['effective_coupling_strength'] = eff_coupling_strength
 
     params = network.network_params
-    #
-    # fixtures = dict(params, **network.results)
-    # fixtures = dict(fixtures, **network.analysis_params)
-    #
-    # fixtures = lmt.input_output.quantities_to_val_unit(fixtures)
 
-    # for k, v in fixtures.items():
-    #     try:
-    #         fixtures[k] = v.tolist()
-    #     except AttributeError:
-    #         try:
-    #             fixtures[k]['val'] = v['val'].tolist()
-    #         except AttributeError:
-    #             pass
-    #         except TypeError:
-    #             pass
     network.save(file_name='{}{}_regime.h5'.format(fixture_path, regime))
-    # with open('{}{}_regime.yaml'.format(fixture_path, regime), 'w') as file:
-    #     yaml.dump(fixtures, file)

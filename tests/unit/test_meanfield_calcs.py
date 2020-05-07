@@ -104,7 +104,7 @@ class Test_transfer_function_1p_shift():
 
     def test_warning_is_given_if_k_is_critical(self, std_params_tf):
         check_warning_is_given_if_k_is_critical(self.func, std_params_tf)
-        
+            
     def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params_tf)
 
@@ -171,7 +171,6 @@ class Test_delay_dist_matrix_single:
         params = output_test_fixtures.pop('params')
         params['delay_dist'] = delay_dist
         output = output_test_fixtures.pop('output')[1]
-        import pdb; pdb.set_trace()
         check_correct_output(self.func, params, output)
 
     def test_correct_output_dist_gaussian(self, output_test_fixtures):
@@ -325,8 +324,6 @@ class Test_eigen_spectra_leigvecs:
         check_correct_output(self.func, params, output)
 
 
-# here tests for Senk start
-
 class Test_additional_rates_for_fixed_input:
 
     # define tested function
@@ -353,14 +350,6 @@ class Test_additional_rates_for_fixed_input:
         np.testing.assert_array_equal(self.func(**params)[1], output[1])
 
 
-class Test_fit_transfer_function:
-    pass
-
-
-class Test_scan_fit_transfer_function_mean_std_input:
-    pass
-
-
 class Test_effective_coupling_strength:
 
     func = staticmethod(effective_coupling_strength)
@@ -376,6 +365,14 @@ class Test_effective_coupling_strength:
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
         check_correct_output(self.func, params, output)
+
+
+class Test_fit_transfer_function:
+    pass
+
+
+class Test_scan_fit_transfer_function_mean_std_input:
+    pass
 
 
 # spatial functions

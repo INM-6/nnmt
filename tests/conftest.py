@@ -3,7 +3,7 @@ import numpy as np
 
 from .utils import get_required_keys, get_required_params
 
-from lif_meanfield_tools.input_output import load_params, load_h5
+from lif_meanfield_tools.input_output import load_h5
 from lif_meanfield_tools import ureg
 
 
@@ -27,7 +27,7 @@ def calc_dep_params(params):
     params['j'] = (tau_s_div_C * params['w']).to(ureg.mV)
 
     # weight matrix in pA (current)
-    W = np.ones((dim, dim))*params['w']
+    W = np.ones((dim, dim)) * params['w']
     W[1:dim:2] *= -params['g']
     W = np.transpose(W)
     params['W'] = W
@@ -36,14 +36,14 @@ def calc_dep_params(params):
     params['J'] = (tau_s_div_C * params['W']).to(ureg.mV)
 
     # delay matrix
-    D = np.ones((dim, dim))*params['d_e']
-    D[1:dim:2] = np.ones(dim)*params['d_i']
+    D = np.ones((dim, dim)) * params['d_e']
+    D[1:dim:2] = np.ones(dim) * params['d_i']
     D = np.transpose(D)
     params['Delay'] = D
 
     # delay standard deviation matrix
-    D = np.ones((dim, dim))*params['d_e_sd']
-    D[1:dim:2] = np.ones(dim)*params['d_i_sd']
+    D = np.ones((dim, dim)) * params['d_e_sd']
+    D[1:dim:2] = np.ones(dim) * params['d_i_sd']
     D = np.transpose(D)
     params['Delay_sd'] = D
 
@@ -52,48 +52,49 @@ def calc_dep_params(params):
 def all_std_params():
 
     # standard params from first two populations of microcircuit
-    firing_rates = np.array([0.71, 2.75])*ureg.Hz
-    mean_input = np.array([3.30, 7.03])*ureg.mV
-    std_input = np.array([6.19, 5.11])*ureg.mV
-    params = dict(C=250*ureg.pF,
+    firing_rates = np.array([0.71, 2.75]) * ureg.Hz
+    mean_input = np.array([3.30, 7.03]) * ureg.mV
+    std_input = np.array([6.19, 5.11]) * ureg.mV
+    params = dict(C=250 * ureg.pF,
                   K=np.array([[2199, 1079], [2990, 860]]),
                   K_ext=np.array([1600, 1500]),
                   N=np.array([20683, 5834]),
-                  V_th_abs=-50*ureg.mV,
-                  V_0_abs=-65*ureg.mV,
-                  d_e=1.5*ureg.ms,
-                  d_i=0.75*ureg.ms,
-                  d_e_sd=0.75*ureg.ms,
-                  d_i_sd=0.375*ureg.ms,
+                  V_th_abs=-50 * ureg.mV,
+                  V_0_abs=-65 * ureg.mV,
+                  d_e=1.5 * ureg.ms,
+                  d_i=0.75 * ureg.ms,
+                  d_e_sd=0.75 * ureg.ms,
+                  d_i_sd=0.375 * ureg.ms,
                   delay_dist=None,
                   delay_dist_matrix=([[complex(1.000, -0.005),
                                        complex(1.000, -0.002)],
                                       [complex(1.000, -0.005),
                                        complex(1.000, -0.002)]]
-                                     )*ureg.dimensionless,
+                                     ) * ureg.dimensionless,
                   firing_rates=firing_rates,
                   g=4,
                   label='microcircuit',
                   matrix='MH',
                   mean_input=mean_input,
                   mu=mean_input,
-                  mu_set=np.array([3, 7])*ureg.mV,
+                  mu_set=np.array([3, 7]) * ureg.mV,
                   nu=firing_rates,
-                  nu_ext=8*ureg.Hz,
-                  nu_e_ext=np.array([0, 0])*ureg.Hz,
-                  nu_i_ext=np.array([0, 0])*ureg.Hz,
+                  nu_ext=8 * ureg.Hz,
+                  nu_e_ext=np.array([0, 0]) * ureg.Hz,
+                  nu_i_ext=np.array([0, 0]) * ureg.Hz,
                   populations=['23E', '23I'],
                   sigma=std_input,
-                  sigma_set=np.array([6, 5])*ureg.mV,
+                  sigma_set=np.array([6, 5]) * ureg.mV,
                   std_input=std_input,
-                  tau_m=10*ureg.s,
-                  tau_s=0.5*ureg.s,
-                  tau_r=2.0*ureg.s,
+                  tau_m=10 * ureg.s,
+                  tau_s=0.5 * ureg.s,
+                  tau_r=2.0 * ureg.s,
                   transfer_function=[complex(0.653, -0.101),
-                                     complex(1.811, -0.228)]*ureg.Hz/ureg.mV,
-                  omega=20*ureg.Hz,
-                  omegas=np.array([20])*ureg.Hz,
-                  w=87.8*ureg.pA
+                                     complex(1.811, -0.228),
+                                     ] * ureg.Hz / ureg.mV,
+                  omega=20 * ureg.Hz,
+                  omegas=np.array([20]) * ureg.Hz,
+                  w=87.8 * ureg.pA
                   )
 
     calc_dep_params(params)
@@ -111,8 +112,8 @@ def std_params(request, all_std_params):
 def std_params_tf(std_params):
     """Returns set of standard params needed for transfer function tests."""
     std_params['dimension'] = 1
-    std_params['mu'] = np.array([1, 2])*ureg.mV
-    std_params['sigma'] = np.array([1, 2])*ureg.mV
+    std_params['mu'] = np.array([1, 2]) * ureg.mV
+    std_params['sigma'] = np.array([1, 2]) * ureg.mV
     return std_params
 
 
