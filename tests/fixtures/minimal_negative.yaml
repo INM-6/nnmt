@@ -364,6 +364,69 @@ nu_i_ext:
     - 0.0
   unit: Hz
 
+mean_input_set:
+  unit: millivolt
+  val:
+  - 7
+  - -6
+  - 7
+  - -6
+  - 2
+  - -22
+  - 8
+  - -22
+  - 8
+  - 6
+  - 7
+  - 6
+
+mu_set:
+  unit: millivolt
+  val:
+  - 7
+  - -6
+  - 7
+  - -6
+  - 2
+  - -22
+  - 8
+  - -22
+  - 8
+  - 6
+  - 7
+  - 6
+  
+std_input_set:
+  unit: millivolt
+  val:
+  - 15
+  - 14
+  - 15
+  - 14
+  - 10
+  - 11
+  - 9
+  - 11
+  - 5
+  - 5
+  - 5
+  - 5
+  
+sigma_set:
+  unit: millivolt
+  val:
+  - 15
+  - 14
+  - 15
+  - 14
+  - 10
+  - 11
+  - 9
+  - 11
+  - 5
+  - 5
+  - 5
+  - 5
 
 
 

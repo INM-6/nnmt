@@ -1,3 +1,5 @@
+import numpy as np
+
 from .checks import (check_pos_params_neg_raise_exception,
                      check_correct_output,
                      check_V_0_larger_V_th_raise_exception,
@@ -101,10 +103,10 @@ class Test_transfer_function_1p_shift():
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params_tf):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
+        check_warning_is_given_if_k_is_critical(self.func, std_params_tf)
         
     def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params_tf)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -124,10 +126,10 @@ class Test_transfer_function_1p_taylor():
                                              pos_keys)
 
     def test_warning_is_given_if_k_is_critical(self, std_params_tf):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
+        check_warning_is_given_if_k_is_critical(self.func, std_params_tf)
         
     def test_exception_is_raised_if_k_is_too_large(self, std_params_tf):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params_tf)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -152,7 +154,9 @@ class Test_delay_dist_matrix_single:
 
     # define tested function
     func = staticmethod(delay_dist_matrix)
-    output_key = 'delay_dist_all'
+    output_keys = ['delay_dist_none',
+                   'delay_dist_truncated_gaussian',
+                   'delay_dist_gaussian']
 
     def test_correct_output_dist_none(self, output_test_fixtures):
         delay_dist = 'none'
@@ -167,6 +171,7 @@ class Test_delay_dist_matrix_single:
         params = output_test_fixtures.pop('params')
         params['delay_dist'] = delay_dist
         output = output_test_fixtures.pop('output')[1]
+        import pdb; pdb.set_trace()
         check_correct_output(self.func, params, output)
 
     def test_correct_output_dist_gaussian(self, output_test_fixtures):
@@ -326,7 +331,7 @@ class Test_additional_rates_for_fixed_input:
 
     # define tested function
     func = staticmethod(additional_rates_for_fixed_input)
-    output_key = 'additional_rates_for_fixed_input'
+    output_keys = ['add_nu_e_ext', 'add_nu_i_ext']
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -337,10 +342,15 @@ class Test_additional_rates_for_fixed_input:
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
-    def test_correct_output(self, output_test_fixtures):
+    def test_correct_output_nu_e_ext(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
-        check_correct_output(self.func, params, output)
+        np.testing.assert_array_equal(self.func(**params)[0], output[0])
+
+    def test_correct_output_nu_i_ext(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        np.testing.assert_array_equal(self.func(**params)[1], output[1])
 
 
 class Test_fit_transfer_function:

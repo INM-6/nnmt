@@ -220,8 +220,13 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
         params = [get_required_params(func, dict(params, **results))
                   for params, results in zip(all_params, results)]
 
-        output_key = metafunc.cls.output_key
-        output = [result[output_key] for result in results]
+        try:
+            output_key = metafunc.cls.output_key
+            output = [result[output_key] for result in results]
+        except AttributeError:
+            output_keys = metafunc.cls.output_keys
+            output = [[result[output_key] for output_key in output_keys]
+                      for result in results]
 
         if 'sensitivity_measure' in metafunc.cls.__name__:
             for param, result in zip(params, results):

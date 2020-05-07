@@ -13,6 +13,10 @@ df:
   val: 30
   unit: Hz
 
+omega:
+  val: 20
+  unit: Hz
+
 # k wavenumbers
 k_min:
   val: 1.0
