@@ -1,7 +1,7 @@
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
-fixture_path = 'tests/fixtures/'
+fixture_path = ''
 
 cases = [0, 1]
 for case in cases:
