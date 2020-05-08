@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 
 from .checks import (check_pos_params_neg_raise_exception,
@@ -76,18 +77,13 @@ class Test_transfer_function:
 
     # define tested function
     func = staticmethod(transfer_function)
+    methods = ['shift', 'taylor']
 
-    def test_shift_method_is_called(self, mocker, std_params_tf):
+    @pytest.mark.parametrize('method', methods)
+    def test_correct_method_is_called(self, mocker, std_params_tf, method):
         mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
-                                 'transfer_function_1p_shift')
-        std_params_tf['method'] = 'shift'
-        self.func(**std_params_tf)
-        mocked_tf.assert_called_once()
-
-    def test_taylor_method_is_called(self, mocker, std_params_tf):
-        mocked_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
-                                 'transfer_function_1p_taylor')
-        std_params_tf['method'] = 'taylor'
+                                 'transfer_function_1p_{}'.format(method))
+        std_params_tf['method'] = method
         self.func(**std_params_tf)
         mocked_tf.assert_called_once()
 
@@ -154,30 +150,15 @@ class Test_delay_dist_matrix_single:
 
     # define tested function
     func = staticmethod(delay_dist_matrix)
-    output_keys = ['delay_dist_none',
-                   'delay_dist_truncated_gaussian',
-                   'delay_dist_gaussian']
+    ids = ['none', 'truncated_gaussian', 'gaussian']
+    output_keys = ['delay_dist_{}'.format(id) for id in ids]
 
-    def test_correct_output_dist_none(self, output_test_fixtures):
+    @pytest.mark.parametrize('key', [0, 1, 2], ids=ids)
+    def test_correct_output_dist_none(self, output_test_fixtures, key):
         delay_dist = 'none'
-        params = output_test_fixtures.pop('params')
+        params = output_test_fixtures['params']
         params['delay_dist'] = delay_dist
-        output = output_test_fixtures.pop('output')[0]
-        check_correct_output(self.func, params, output)
-
-    def test_correct_output_dist_truncated_gaussian(self,
-                                                    output_test_fixtures):
-        delay_dist = 'truncated_gaussian'
-        params = output_test_fixtures.pop('params')
-        params['delay_dist'] = delay_dist
-        output = output_test_fixtures.pop('output')[1]
-        check_correct_output(self.func, params, output)
-
-    def test_correct_output_dist_gaussian(self, output_test_fixtures):
-        delay_dist = 'gaussian'
-        params = output_test_fixtures.pop('params')
-        params['delay_dist'] = delay_dist
-        output = output_test_fixtures.pop('output')[2]
+        output = output_test_fixtures['output'][key]
         check_correct_output(self.func, params, output)
 
 
@@ -339,15 +320,12 @@ class Test_additional_rates_for_fixed_input:
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
-    def test_correct_output_nu_e_ext(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        output = output_test_fixtures.pop('output')
-        np.testing.assert_array_equal(self.func(**params)[0], output[0])
-
-    def test_correct_output_nu_i_ext(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        output = output_test_fixtures.pop('output')
-        np.testing.assert_array_equal(self.func(**params)[1], output[1])
+    @pytest.mark.parametrize('key', [0, 1],
+                             ids=['nu_e_ext', 'nu_i_ext'])
+    def test_correct_output_nu_e_ext(self, output_test_fixtures, key):
+        params = output_test_fixtures['params']
+        output = output_test_fixtures['output']
+        np.testing.assert_array_equal(self.func(**params)[key], output[key])
 
 
 class Test_effective_coupling_strength:
