@@ -56,7 +56,7 @@ class Test_initialization:
         network._calculate_dependent_network_parameters.assert_not_called()
         network._calculate_dependent_analysis_parameters.assert_not_called()
 
-    def test_hash_is_crated(self, network):
+    def test_hash_is_created(self, network):
         assert hasattr(network, 'hash')
     
     @pytest.mark.xfail
