@@ -37,6 +37,7 @@ class Test_initialization:
                               new_analysis_params=dict(df=df))
         assert network.analysis_params['df'] == df
     
+    @pytest.mark.xfail
     def test_warning_is_given_if_necessary_parameters_are_missing(self):
         """What are necessary parameters? For what?"""
         raise NotImplementedError
@@ -56,11 +57,15 @@ class Test_initialization:
         network._calculate_dependent_analysis_parameters.assert_not_called()
 
     def test_hash_is_crated(self, network):
-        assert network.hash
+        assert hasattr(network, 'hash')
     
+    @pytest.mark.xfail
     def test_loading_of_existing_results(self):
         """How do we want them to be loaded?"""
         raise NotImplementedError
+    
+    def test_result_dict_is_crated(self, network):
+        assert hasattr(network, 'results')
     
 
 class Test_calculation_of_dependent_network_params:
@@ -127,11 +132,32 @@ class Test_calculation_of_dependent_analysis_params:
                                       k_wavenumbers)
     
     
-# class Test_meta_functions:
-#
-#     def test_change_of_parameters(self):
-#         pass
-#
+class Test_meta_functions:
+
+    def test_save(self):
+        pass
+    
+    def test_show(self, network):
+        assert network.show() == []
+        network.mean_input()
+        assert network.show() == ['firing_rates', 'mean_input']
+
+    def test_change_network_parameters(self, network):
+        new_tau_m = 1000 * ureg.ms
+        update = dict(tau_m=new_tau_m)
+        network.change_parameters(changed_network_params=update)
+        assert network.network_params['tau_m'] == new_tau_m
+
+    def test_change_analysis_parameters(self, network):
+        new_df = 1000 * ureg.Hz
+        update = dict(df=new_df)
+        network.change_parameters(changed_analysis_params=update)
+        assert network.analysis_params['df'] == new_df
+    
+    @pytest.mark.xfail
+    def test_extend_analysis_frequencies(self):
+        raise NotImplementedError
+
 #
 # class Test_check_and_store_decorator:
 #
@@ -139,16 +165,8 @@ class Test_calculation_of_dependent_analysis_params:
 #         """Very complicated!"""
 #         pass
 #
-#
-# class Test_saving_and_loading_routines:
-#
-#     def test_saving(self):
-#         pass
-#
-#     def test_loading(self):
-#         pass
-#
-#
+
+
 meanfield_calls = dict(
     firing_rates=['firing_rates'],
     mean_input=['mean'],
