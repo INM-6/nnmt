@@ -1,5 +1,7 @@
+import re
 import pytest
 import numpy as np
+
 import lif_meanfield_tools as lmt
 
 ureg = lmt.ureg
@@ -69,6 +71,9 @@ class Test_initialization:
     
 
 class Test_calculation_of_dependent_network_params:
+    """
+    Depends strongly on network_params_microcircuit.yaml in tests/fixtures.
+    """
     
     def test_dimension(self, network):
         assert network.network_params['dimension'] == 8
@@ -110,6 +115,7 @@ class Test_calculation_of_dependent_network_params:
     
 
 class Test_calculation_of_dependent_analysis_params:
+    """Depends strongly on analysis_params_test.yaml in tests/fixtures."""
     
     def test_omegas(self, network):
         omegas = [6.28318531e-01,
@@ -131,12 +137,116 @@ class Test_calculation_of_dependent_analysis_params:
         np.testing.assert_array_equal(network.analysis_params['k_wavenumbers'],
                                       k_wavenumbers)
     
+
+class Test_saving_and_loading:
+    
+    def test_save_creates_h5_file(self, tmpdir, network):
+        # create temp directory
+        tmp_test = tmpdir.mkdir('tmp_test')
+        # calculate and save mean_input in tmp dir
+        with tmp_test.as_cwd():
+            network.mean_input()
+            network.save()
+        # results file name expression
+        exp = re.compile(r'.*microcircuit.*\.h5')
+        # file names in tmp dir
+        file_names = [str(obj) for obj in tmp_test.listdir()]
+        # file names matching exp
+        matches = list(filter(exp.match, file_names))
+        # pass test if test file created
+        assert any(matches)
+                
+    def test_save_with_given_file_name(self, tmpdir, network):
+        file_name = 'my_file_name.h5'
+        # create temp directory
+        tmp_test = tmpdir.mkdir('tmp_test')
+        # calculate and save mean_input in tmp dir
+        with tmp_test.as_cwd():
+            network.mean_input()
+            network.save(file_name=file_name)
+        # results file name expression
+        exp = re.compile(r'.*{}'.format(file_name))
+        # file names in tmp dir
+        file_names = [str(obj) for obj in tmp_test.listdir()]
+        # file names matching exp
+        matches = list(filter(exp.match, file_names))
+        # pass test if test file created
+        assert any(matches)
+    
+    @pytest.mark.improve
+    def test_save_passed_output(self, tmpdir, network):
+        """
+        This checks if some file is created, but doesn't check its content!
+        Improve as soon as possible!
+        """
+        file_name = 'file.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        output_key = 'my_key'
+        output = dict(my_var=10 * ureg.m)
+        with tmp_test.as_cwd():
+            network.save(output_key=output_key,
+                         output=output,
+                         file_name=file_name)
+        # results file name expression
+        exp = re.compile(r'.*{}'.format(file_name))
+        # file names in tmp dir
+        file_names = [str(obj) for obj in tmp_test.listdir()]
+        # file names matching exp
+        matches = list(filter(exp.match, file_names))
+        # pass test if test file created
+        assert any(matches)
+        
+    @pytest.mark.xfail
+    def test_save_passed_output_without_key_raises_exception(self,
+                                                             tmpdir,
+                                                             network):
+        file_name = 'file.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        output = dict(my_var=10 * ureg.m)
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                network.save(output=output, file_name=file_name)
+        
+    @pytest.mark.xfail
+    def test_save_passed_output_without_output_raises_exception(self,
+                                                                tmpdir,
+                                                                network):
+        file_name = 'file.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        output_key = 'my_key'
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                network.save(output_key=output_key, file_name=file_name)
+    
+    @pytest.mark.xfail
+    def test_save_overwriting_existing_file_raises_error(self, tmpdir,
+                                                         network):
+        file_name = 'file.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                network.mean_input()
+                network.save(file_name=file_name)
+                network.save(file_name=file_name)
+                
+    @pytest.mark.improve
+    @pytest.mark.xfail
+    def test_save_overwrites_existing_file_if_explicitely_told(self, tmpdir,
+                                                               network):
+        file_name = 'file.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            network.mean_input()
+            network.save(file_name=file_name)
+            network.network_params['tau_m'] = 100 * ureg.ms
+            new_mean = network.mean_input()
+            network.save(file_name=file_name, overwrite=True)
+            network.load(file_name=file_name)
+            assert network.results['mean_input'] == new_mean
+    
     
 class Test_meta_functions:
-
-    def test_save(self):
-        pass
-    
+        
     def test_show(self, network):
         assert network.show() == []
         network.mean_input()
