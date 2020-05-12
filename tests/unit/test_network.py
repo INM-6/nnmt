@@ -7,6 +7,18 @@ ureg = lmt.ureg
 
 class Test_initialization:
     
+    @pytest.mark.parametrize('key, value', [('tau_m', 10 * ureg.ms),
+                                            ('d_i_sd', 0.375 * ureg.ms),
+                                            ('label', 'microcircuit')])
+    def test_correct_network_params_loaded(self, network, key, value):
+        assert network.network_params[key] == value
+    
+    @pytest.mark.parametrize('key, value', [('f_min', 0.1 * ureg.Hz),
+                                            ('omega', 20 * ureg.Hz),
+                                            ('k_max', 100.5 / ureg.mm)])
+    def test_correct_analysis_params_loaded(self, network, key, value):
+        assert network.analysis_params[key] == value
+    
     def test_network_params_updated_on_initialization(self,
                                                       network_params_yaml,
                                                       analysis_params_yaml):
@@ -115,28 +127,28 @@ class Test_calculation_of_dependent_analysis_params:
                                       k_wavenumbers)
     
     
-class Test_meta_functions:
-    
-    def test_change_of_parameters(self):
-        pass
-    
-    
-class Test_check_and_store_decorator:
-    
-    def test_check_and_store(self):
-        """Very complicated!"""
-        pass
-    
-    
-class Test_saving_and_loading_routines:
-    
-    def test_saving(self):
-        pass
-    
-    def test_loading(self):
-        pass
-    
-    
+# class Test_meta_functions:
+#
+#     def test_change_of_parameters(self):
+#         pass
+#
+#
+# class Test_check_and_store_decorator:
+#
+#     def test_check_and_store(self):
+#         """Very complicated!"""
+#         pass
+#
+#
+# class Test_saving_and_loading_routines:
+#
+#     def test_saving(self):
+#         pass
+#
+#     def test_loading(self):
+#         pass
+#
+#
 meanfield_calls = dict(
     firing_rates=['firing_rates'],
     mean_input=['mean'],
