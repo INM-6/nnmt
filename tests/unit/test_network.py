@@ -296,7 +296,7 @@ results = [result_types[key] for key in ids]
 
 class Test_check_and_store_decorator:
 
-    @pytest.mark.parametrize('test_method,result', zip(test_methods, results),
+    @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
                              ids=ids)
     def test_save_results(self, mocker, network, test_method, result):
         mocker.patch.object(lmt.Network, 'mean_input',
@@ -307,8 +307,24 @@ class Test_check_and_store_decorator:
         except ValueError:
             np.testing.assert_array_equal(network.results['test'], result)
         
-    # def test_returns_existing_result(self):
-    #     pass
+    @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
+                             ids=ids)
+    def test_returns_existing_result(self, mocker, network, test_method,
+                                     result):
+        mocker.patch.object(lmt.Network, 'mean_input',
+                            new=test_method)
+        network.mean_input()
+        try:
+            assert network.mean_input() == result
+        except ValueError:
+            np.testing.assert_array_equal(network.mean_input(), result)
+            
+    def test_result_not_calculated_twice(self, mocker, network):
+        mocked = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                              'firing_rates')
+        network.firing_rates()
+        network.firing_rates()
+        mocked.assert_called_once()
     #
     # def test_saves_new_analysis_key_with_param_and_results(self):
     #     pass
