@@ -64,7 +64,7 @@ class Test_initialization:
         """How do we want them to be loaded?"""
         raise NotImplementedError
     
-    def test_result_dict_is_crated(self, network):
+    def test_result_dict_is_created(self, network):
         assert hasattr(network, 'results')
     
 
