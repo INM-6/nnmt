@@ -269,46 +269,64 @@ class Test_meta_functions:
         raise NotImplementedError
 
 
+def make_test_method(output):
+    
+    @lmt.Network._check_and_store('test')
+    def test_method(self):
+        return output
+    
+    return test_method
+
+
+result_types = dict(numerical=1,
+                    quantity=1 * ureg.s,
+                    array=np.array([1, 2, 3]),
+                    quantity_array=np.array([1, 2, 3]) * ureg.s,
+                    list_of_quantities=[1 * ureg.s, 2 * ureg.s, 3 * ureg.s],
+                    two_d_array=np.arange(9).reshape(3, 3),
+                    two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s,
+                    two_d_list_of_quantites=[[i * ureg.s for i in range(3)]
+                                             for j in range(3)],
+                    )
+ids = sorted(result_types.keys())
+test_methods = [make_test_method(result_types[key])
+                for key in ids]
+results = [result_types[key] for key in ids]
+
+
 class Test_check_and_store_decorator:
 
-    def test_saves_single_non_quantity_numerical(self):
-        pass
-
-    def test_saves_single_quantity_numerical(self):
-        pass
-    
-    def test_saves_1d_non_quantity_array(self):
-        pass
-
-    def test_saves_1d_quantity_array(self):
-        pass
-    
-    def test_save_higher_dim_non_quantity_array(self):
-        pass
-    
-    def test_save_higher_dim_quantity_array(self):
-        pass
-    
-    def test_returns_existing_result(self):
-        pass
-    
-    def test_saves_new_analysis_key_with_param_and_results(self):
-        pass
-    
-    def test_returns_existing_analysis_key_with_param_and_results(self):
-        pass
-    
-    def test_saves_new_param_and_results_for_existing_analysis_key(self):
-        pass
-    
-    def test_returns_existing_key_param_results_for_second_param(self):
-        pass
-    
-    def test_saves_new_analysis_key_with_quantity_param(self):
-        pass
-    
-    def test_saves_new_analysis_key_with_non_quantity_param(self):
-        pass
+    @pytest.mark.parametrize('test_method,result', zip(test_methods, results),
+                             ids=ids)
+    def test_save_results(self, mocker, network, test_method, result):
+        mocker.patch.object(lmt.Network, 'mean_input',
+                            new=test_method)
+        network.mean_input()
+        try:
+            assert network.results['test'] == result
+        except ValueError:
+            np.testing.assert_array_equal(network.results['test'], result)
+        
+    # def test_returns_existing_result(self):
+    #     pass
+    #
+    # def test_saves_new_analysis_key_with_param_and_results(self):
+    #     pass
+    #
+    # def test_returns_existing_analysis_key_with_param_and_results(self):
+    #     pass
+    #
+    # def test_saves_new_param_and_results_for_existing_analysis_key(self):
+    #     pass
+    #
+    # def test_returns_existing_key_param_results_for_second_param(self):
+    #     pass
+    #
+    # def test_saves_new_analysis_key_with_quantity_param(self):
+    #     pass
+    #
+    # def test_saves_new_analysis_key_with_non_quantity_param(self):
+    #     pass
 
 
 meanfield_calls = dict(
