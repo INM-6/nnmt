@@ -268,13 +268,47 @@ class Test_meta_functions:
     def test_extend_analysis_frequencies(self):
         raise NotImplementedError
 
-#
-# class Test_check_and_store_decorator:
-#
-#     def test_check_and_store(self):
-#         """Very complicated!"""
-#         pass
-#
+
+class Test_check_and_store_decorator:
+
+    def test_saves_single_non_quantity_numerical(self):
+        pass
+
+    def test_saves_single_quantity_numerical(self):
+        pass
+    
+    def test_saves_1d_non_quantity_array(self):
+        pass
+
+    def test_saves_1d_quantity_array(self):
+        pass
+    
+    def test_save_higher_dim_non_quantity_array(self):
+        pass
+    
+    def test_save_higher_dim_quantity_array(self):
+        pass
+    
+    def test_returns_existing_result(self):
+        pass
+    
+    def test_saves_new_analysis_key_with_param_and_results(self):
+        pass
+    
+    def test_returns_existing_analysis_key_with_param_and_results(self):
+        pass
+    
+    def test_saves_new_param_and_results_for_existing_analysis_key(self):
+        pass
+    
+    def test_returns_existing_key_param_results_for_second_param(self):
+        pass
+    
+    def test_saves_new_analysis_key_with_quantity_param(self):
+        pass
+    
+    def test_saves_new_analysis_key_with_non_quantity_param(self):
+        pass
 
 
 meanfield_calls = dict(
