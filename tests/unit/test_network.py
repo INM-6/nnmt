@@ -270,13 +270,18 @@ class Test_meta_functions:
 
 
 def make_test_method(output):
-    
     @lmt.Network._check_and_store('test')
     def test_method(self):
         return output
-    
     return test_method
 
+
+def make_test_method_with_key(output, key):
+    @lmt.Network._check_and_store('test', key)
+    def test_method(self, key):
+        return output
+    return test_method
+        
 
 result_types = dict(numerical=1,
                     quantity=1 * ureg.s,
@@ -287,20 +292,33 @@ result_types = dict(numerical=1,
                     two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s,
                     two_d_list_of_quantites=[[i * ureg.s for i in range(3)]
                                              for j in range(3)],
+                    tuple_of_quantity_arrays=(np.array([1, 2, 3]) * ureg.s,
+                                              np.array([4, 5, 6]) * ureg.m),
                     )
-ids = sorted(result_types.keys())
+analysis_key_types = dict(numerical=1,
+                          quantity=1 * ureg.s,
+                          string='test_string',
+                          # array=np.array([1, 2, 3]),
+                          # quantity_array=np.array([1, 2, 3]) * ureg.s,
+                          # list_of_quantities=[1 * ureg.s,
+                          #                     2 * ureg.s,
+                          #                     3 * ureg.s],
+                          )
+result_ids = sorted(result_types.keys())
+result_ids = sorted(result_types.keys())
+key_ids = sorted(analysis_key_types.keys())
 test_methods = [make_test_method(result_types[key])
-                for key in ids]
-results = [result_types[key] for key in ids]
+                for key in result_ids]
+keys = [analysis_key_types[key] for key in key_ids]
+results = [result_types[key] for key in result_ids]
 
 
 class Test_check_and_store_decorator:
 
     @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
-                             ids=ids)
+                             ids=result_ids)
     def test_save_results(self, mocker, network, test_method, result):
-        mocker.patch.object(lmt.Network, 'mean_input',
-                            new=test_method)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input()
         try:
             assert network.results['test'] == result
@@ -308,11 +326,10 @@ class Test_check_and_store_decorator:
             np.testing.assert_array_equal(network.results['test'], result)
         
     @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
-                             ids=ids)
+                             ids=result_ids)
     def test_returns_existing_result(self, mocker, network, test_method,
                                      result):
-        mocker.patch.object(lmt.Network, 'mean_input',
-                            new=test_method)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input()
         try:
             assert network.mean_input() == result
@@ -325,26 +342,98 @@ class Test_check_and_store_decorator:
         network.firing_rates()
         network.firing_rates()
         mocked.assert_called_once()
-    #
-    # def test_saves_new_analysis_key_with_param_and_results(self):
-    #     pass
-    #
-    # def test_returns_existing_analysis_key_with_param_and_results(self):
-    #     pass
-    #
-    # def test_saves_new_param_and_results_for_existing_analysis_key(self):
-    #     pass
-    #
-    # def test_returns_existing_key_param_results_for_second_param(self):
-    #     pass
-    #
-    # def test_saves_new_analysis_key_with_quantity_param(self):
-    #     pass
-    #
-    # def test_saves_new_analysis_key_with_non_quantity_param(self):
-    #     pass
-
-
+                 
+    @pytest.mark.parametrize('key', keys, ids=key_ids)
+    @pytest.mark.parametrize('result', results, ids=result_ids)
+    def test_saves_new_analysis_key_with_param_and_results(self,
+                                                           mocker,
+                                                           network,
+                                                           key,
+                                                           result):
+        test_method = make_test_method_with_key(result, key)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(key)
+        try:
+            assert network.results['test'][0] == result
+        except ValueError:
+            np.testing.assert_array_equal(network.results['test'][0], result)
+            
+    @pytest.mark.parametrize('key', keys, ids=key_ids)
+    @pytest.mark.parametrize('result', results, ids=result_ids)
+    def test_returns_existing_analysis_key_with_param_and_results(self,
+                                                                  mocker,
+                                                                  network,
+                                                                  key,
+                                                                  result):
+        test_method = make_test_method_with_key(result, key)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(key)
+        try:
+            assert network.mean_input(key) == result
+        except ValueError:
+            np.testing.assert_array_equal(network.mean_input(key), result)
+    
+    @pytest.mark.parametrize('key', keys, ids=key_ids)
+    @pytest.mark.parametrize('result', results, ids=result_ids)
+    def test_saves_new_param_and_results_for_existing_analysis_key(self,
+                                                                   mocker,
+                                                                   network,
+                                                                   key,
+                                                                   result):
+        test_method = make_test_method_with_key(result, key)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(key)
+        network.mean_input(2 * key)
+        try:
+            assert network.results['test'][1] == result
+        except ValueError:
+            np.testing.assert_array_equal(network.results['test'][1], result)
+        
+    def test_returns_existing_key_param_results_for_second_param(self,
+                                                                 mocker,
+                                                                 network):
+        @lmt.Network._check_and_store('test', 'test_key')
+        def test_method(self, key):
+            return key
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        omegas = [10 * ureg.Hz, 11 * ureg.Hz]
+        network.mean_input(omegas[0])
+        network.mean_input(omegas[1])
+        assert network.mean_input(omegas[1]) == omegas[1]
+    
+    def test_result_not_calculated_twice_for_same_key(self,
+                                                      mocker,
+                                                      network):
+        mocked = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                              'delay_dist_matrix')
+        network.delay_dist_matrix(10 * ureg.Hz)
+        network.delay_dist_matrix(10 * ureg.Hz)
+        mocked.assert_called_once()
+    
+    def test_result_not_calculated_twice_for_second_key(self,
+                                                        mocker,
+                                                        network):
+        mocked = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                              'delay_dist_matrix')
+        network.delay_dist_matrix(10 * ureg.Hz)
+        network.delay_dist_matrix(11 * ureg.Hz)
+        network.delay_dist_matrix(11 * ureg.Hz)
+        assert mocked.call_count == 2
+    
+    def test_result_calculated_twice_for_differing_keys(self,
+                                                        mocker,
+                                                        network):
+        @lmt.Network._check_and_store('test', 'test_key')
+        def test_method(self, key):
+            return key
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        omegas = [10 * ureg.Hz, 11 * ureg.Hz]
+        network.mean_input(omegas[0])
+        network.mean_input(omegas[1])
+        assert len(network.analysis_params['test_key']) == 2
+        assert len(network.results['test']) == 2
+        
+        
 meanfield_calls = dict(
     firing_rates=['firing_rates'],
     mean_input=['mean'],
