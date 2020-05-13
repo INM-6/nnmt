@@ -298,18 +298,18 @@ result_types = dict(numerical=1,
 analysis_key_types = dict(numerical=1,
                           quantity=1 * ureg.s,
                           string='test_string',
-                          # array=np.array([1, 2, 3]),
-                          # quantity_array=np.array([1, 2, 3]) * ureg.s,
-                          # list_of_quantities=[1 * ureg.s,
-                          #                     2 * ureg.s,
-                          #                     3 * ureg.s],
+                          array=np.array([1, 2, 3]),
+                          quantity_array=np.array([1, 2, 3]) * ureg.s,
+                          list_of_quantities=[1 * ureg.s,
+                                              2 * ureg.s,
+                                              3 * ureg.s],
                           )
 result_ids = sorted(result_types.keys())
 result_ids = sorted(result_types.keys())
-key_ids = sorted(analysis_key_types.keys())
+key_names = sorted(analysis_key_types.keys())
 test_methods = [make_test_method(result_types[key])
                 for key in result_ids]
-keys = [analysis_key_types[key] for key in key_ids]
+keys = [analysis_key_types[key] for key in key_names]
 results = [result_types[key] for key in result_ids]
 
 
@@ -343,14 +343,14 @@ class Test_check_and_store_decorator:
         network.firing_rates()
         mocked.assert_called_once()
                  
-    @pytest.mark.parametrize('key', keys, ids=key_ids)
+    @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_saves_new_analysis_key_with_param_and_results(self,
                                                            mocker,
                                                            network,
                                                            key,
                                                            result):
-        test_method = make_test_method_with_key(result, key)
+        test_method = make_test_method_with_key(result, 'test_key')
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         try:
@@ -358,14 +358,14 @@ class Test_check_and_store_decorator:
         except ValueError:
             np.testing.assert_array_equal(network.results['test'][0], result)
             
-    @pytest.mark.parametrize('key', keys, ids=key_ids)
+    @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_returns_existing_analysis_key_with_param_and_results(self,
                                                                   mocker,
                                                                   network,
                                                                   key,
                                                                   result):
-        test_method = make_test_method_with_key(result, key)
+        test_method = make_test_method_with_key(result, 'test_key')
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         try:
@@ -373,14 +373,14 @@ class Test_check_and_store_decorator:
         except ValueError:
             np.testing.assert_array_equal(network.mean_input(key), result)
     
-    @pytest.mark.parametrize('key', keys, ids=key_ids)
+    @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_saves_new_param_and_results_for_existing_analysis_key(self,
                                                                    mocker,
                                                                    network,
                                                                    key,
                                                                    result):
-        test_method = make_test_method_with_key(result, key)
+        test_method = make_test_method_with_key(result, 'test_key')
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         network.mean_input(2 * key)
@@ -432,65 +432,6 @@ class Test_check_and_store_decorator:
         network.mean_input(omegas[1])
         assert len(network.analysis_params['test_key']) == 2
         assert len(network.results['test']) == 2
-        
-        
-meanfield_calls = dict(
-    firing_rates=[[], ['firing_rates']],
-    mean_input=[[], ['mean']],
-    std_input=[[], ['standard_deviation']],
-    delay_dist_matrix_multi=[[], ['delay_dist_matrix']],
-    delay_dist_matrix_single=[[1 * ureg.Hz], ['delay_dist_matrix']],
-    transfer_function_multi=[[], ['transfer_function']],
-    transfer_function_single=[[1 * ureg.Hz], ['transfer_function']],
-    sensitivity_measure=[[1 * ureg.Hz], ['transfer_function'],
-                         'delay_dist_matrix',
-                         'sensitivity_measure'],
-    power_spectra=[[], ['power_spectra']],
-    eigenvalue_spectra=[['MH'], ['eigen_spectra']],
-    r_eigenvec_spectra=[['MH'], ['eigen_spectra']],
-    l_eigenvec_spectra=[['MH'], ['eigen_spectra']],
-    additional_rates_for_fixed_input=[[], [
-        'additional_rates_for_fixed_input']],
-    fit_transfer_function=[[], ['fit_transfer_function'],
-                           'effective_coupling_strength'],
-    scan_fit_transfer_function_mean_std_input=[[], [
-        'scan_fit_transfer_function_mean_std_input']],
-    linear_interpolation_alpha=[[], ['linear_interpolation_alpha']],
-    compute_profile_characteristics=[[], ['xi_of_k',
-                                          'solve_chareq_rate_boxcar']],
-    )
-
-network_calls = dict(
-    working_point=['firing_rates', 'mean_input', 'std_input'],
-    transfer_function_multi=['mean_input', 'std_input'],
-    transfer_function_single=['mean_input', 'std_input'],
-    sensitivity_measure=['mean_input', 'std_input'],
-    power_spectra=['delay_dist_matrix', 'firing_rates', 'transfer_function'],
-    eigenvalue_spectra=['transfer_function', 'delay_dist_matrix'],
-    r_eigenvec_spectra=['transfer_function', 'delay_dist_matrix'],
-    l_eigenvec_spectra=['transfer_function', 'delay_dist_matrix'],
-    fit_transfer_function=['transfer_function', 'mean_input', 'std_input'],
-    linear_interpolation_alpha=['mean_input', 'std_input'],
-    )
-
-    
-methods = sorted(meanfield_calls.keys())
-args = [meanfield_calls[method][0] for method in methods]
-called_funcs = [meanfield_calls[method][1] for method in methods]
-
-
-simple_calls = dict(
-    firing_rates=['firing_rates'],
-    mean_input=['mean'],
-    std_input=['standard_deviation'],
-    delay_dist_matrix_multi=['delay_dist_matrix'],
-    transfer_function_multi=['transfer_function'],
-    power_spectra=['power_spectra'],
-    compute_profile_characteristics=['xi_of_k', 'solve_chareq_rate_boxcar'],
-    )
-
-simple_call_methods = sorted(simple_calls.keys())
-simple_call_callees = [simple_calls[method] for method in simple_call_methods]
 
 
 class Test_functionality:
@@ -701,30 +642,3 @@ class Test_functionality:
                                'solve_chareq_rate_boxcar')
         mock_xi.side_effect = 1, 2
         network.compute_profile_characteristics()
-    
-    # @pytest.mark.parametrize(
-    #     'method, arg, called_funcs', zip(methods, args, called_funcs),
-    #     ids=methods)
-    # def test_correct_meanfield_functions_are_called(self, mocker, network,
-    #                                                 method, arg, called_funcs):
-    #     mocked_funcs = []
-    #     for func in called_funcs:
-    #         mocked_funcs.append(mocker.patch(
-    #             'lif_meanfield_tools.meanfield_calcs.{}'.format(func)))
-    #     getattr(network, method)(*arg)
-    #     for mocked_func in mocked_funcs:
-    #         mocked_func.assert_called_once()
-    #
-    # @pytest.mark.parametrize(
-    #     'method, called_funcs', zip(network_calls.keys(),
-    #                                 network_calls.values()),
-    #     ids=network_calls.keys())
-    # def test_correct_network_functions_are_called(self, mocker, network,
-    #                                               method, called_funcs):
-    #     mocked_funcs = []
-    #     for func in called_funcs:
-    #         mocked_funcs.append(mocker.patch(
-    #             'lif_meanfield_tools.Network.{}'.format(func)))
-    #     getattr(network, method)()
-    #     for mocked_func in mocked_funcs:
-    #         mocked_func.assert_called_once()
