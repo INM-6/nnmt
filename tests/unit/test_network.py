@@ -435,27 +435,29 @@ class Test_check_and_store_decorator:
         
         
 meanfield_calls = dict(
-    firing_rates=['firing_rates'],
-    mean_input=['mean'],
-    std_input=['standard_deviation'],
-    delay_dist_matrix_multi=['delay_dist_matrix'],
-    delay_dist_matrix_single=['delay_dist_matrix'],
-    transfer_function_multi=['transfer_function'],
-    transfer_function_single=['transfer_function'],
-    sensitivity_measure=['transfer_function',
+    firing_rates=[[], ['firing_rates']],
+    mean_input=[[], ['mean']],
+    std_input=[[], ['standard_deviation']],
+    delay_dist_matrix_multi=[[], ['delay_dist_matrix']],
+    delay_dist_matrix_single=[[1 * ureg.Hz], ['delay_dist_matrix']],
+    transfer_function_multi=[[], ['transfer_function']],
+    transfer_function_single=[[1 * ureg.Hz], ['transfer_function']],
+    sensitivity_measure=[[1 * ureg.Hz], ['transfer_function'],
                          'delay_dist_matrix',
                          'sensitivity_measure'],
-    power_spectra=['power_spectra'],
-    eigenvalue_spectra=['eigen_spectra'],
-    r_eigenvec_spectra=['eigen_spectra'],
-    l_eigenvec_spectra=['eigen_spectra'],
-    additional_rates_for_fixed_input=['additional_rates_for_fixed_input'],
-    fit_transfer_function=['fit_transfer_function',
+    power_spectra=[[], ['power_spectra']],
+    eigenvalue_spectra=[['MH'], ['eigen_spectra']],
+    r_eigenvec_spectra=[['MH'], ['eigen_spectra']],
+    l_eigenvec_spectra=[['MH'], ['eigen_spectra']],
+    additional_rates_for_fixed_input=[[], [
+        'additional_rates_for_fixed_input']],
+    fit_transfer_function=[[], ['fit_transfer_function'],
                            'effective_coupling_strength'],
-    scan_fit_transfer_function_mean_std_input=[
-        'scan_fit_transfer_function_mean_std_input'],
-    linear_interpolation_alpha=['linear_interpolation_alpha'],
-    compute_profile_characteristics=['solve_chareq_rate_boxcar'],
+    scan_fit_transfer_function_mean_std_input=[[], [
+        'scan_fit_transfer_function_mean_std_input']],
+    linear_interpolation_alpha=[[], ['linear_interpolation_alpha']],
+    compute_profile_characteristics=[[], ['xi_of_k',
+                                          'solve_chareq_rate_boxcar']],
     )
 
 network_calls = dict(
@@ -463,28 +465,266 @@ network_calls = dict(
     transfer_function_multi=['mean_input', 'std_input'],
     transfer_function_single=['mean_input', 'std_input'],
     sensitivity_measure=['mean_input', 'std_input'],
-    power_spectra=['delay_dist_matrix', 'firing_rates', 'tranfser_function'],
+    power_spectra=['delay_dist_matrix', 'firing_rates', 'transfer_function'],
     eigenvalue_spectra=['transfer_function', 'delay_dist_matrix'],
     r_eigenvec_spectra=['transfer_function', 'delay_dist_matrix'],
     l_eigenvec_spectra=['transfer_function', 'delay_dist_matrix'],
     fit_transfer_function=['transfer_function', 'mean_input', 'std_input'],
     linear_interpolation_alpha=['mean_input', 'std_input'],
+    )
+
+    
+methods = sorted(meanfield_calls.keys())
+args = [meanfield_calls[method][0] for method in methods]
+called_funcs = [meanfield_calls[method][1] for method in methods]
+
+
+simple_calls = dict(
+    firing_rates=['firing_rates'],
+    mean_input=['mean'],
+    std_input=['standard_deviation'],
+    delay_dist_matrix_multi=['delay_dist_matrix'],
+    transfer_function_multi=['transfer_function'],
+    power_spectra=['power_spectra'],
     compute_profile_characteristics=['xi_of_k', 'solve_chareq_rate_boxcar'],
     )
-    
-    
+
+simple_call_methods = sorted(simple_calls.keys())
+simple_call_callees = [simple_calls[method] for method in simple_call_methods]
+
+
 class Test_functionality:
-    pass
+    
+    def test_firing_rates_calls_correctly(self, network, mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.firing_rates')
+        network.firing_rates()
+        mock.assert_called_once()
+    
+    def test_mean_input_calls_correctly(self, network, mocker):
+        mock_mean = mocker.patch('lif_meanfield_tools.meanfield_calcs.mean')
+        mock_fr = mocker.patch('lif_meanfield_tools.Network.firing_rates')
+        network.mean_input()
+        mock_mean.assert_called_once()
+        mock_fr.assert_called_once()
+    
+    def test_std_input_calls_correctly(self, network, mocker):
+        mock_std = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                                'standard_deviation')
+        mock_fr = mocker.patch('lif_meanfield_tools.Network.firing_rates')
+        network.std_input()
+        mock_std.assert_called_once()
+        mock_fr.assert_called_once()
+        
+    def test_working_point_calls_calls_correctly(self, network, mocker):
+        mock_fr = mocker.patch('lif_meanfield_tools.Network.firing_rates')
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        network.working_point()
+        mock_mean.assert_called_once()
+        mock_std.assert_called_once()
+        mock_fr.assert_called_once()
+        
+    def test_delay_dist_matrix_calls_delay_dist_matrix_multi(self,
+                                                             network,
+                                                             mocker):
+        mock = mocker.patch('lif_meanfield_tools.Network.'
+                            'delay_dist_matrix_multi')
+        network.delay_dist_matrix()
+        mock.assert_called_once()
+        
+    def test_delay_dist_matrix_calls_delay_dist_matrix_single(self,
+                                                              network,
+                                                              mocker):
+        mock = mocker.patch('lif_meanfield_tools.Network.'
+                            'delay_dist_matrix_single')
+        network.delay_dist_matrix(1 * ureg.Hz)
+        mock.assert_called_once()
+        
+    def test_delay_dist_matrix_multi_calls_correctly(self, network, mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                            'delay_dist_matrix')
+        network.delay_dist_matrix_multi()
+        mock.assert_called_once()
+        
+    def test_delay_dist_matrix_single_calls_correctly(self, network, mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                            'delay_dist_matrix')
+        network.delay_dist_matrix_single(1 * ureg.Hz)
+        mock.assert_called_once()
+        
+    def test_transfer_function_calls_transfer_function_multi(self,
+                                                             network,
+                                                             mocker):
+        mock = mocker.patch('lif_meanfield_tools.Network.'
+                            'transfer_function_multi')
+        network.transfer_function()
+        mock.assert_called_once()
+        
+    def test_transfer_function_calls_transfer_function_single(self,
+                                                              network,
+                                                              mocker):
+        mock = mocker.patch('lif_meanfield_tools.Network.'
+                            'transfer_function_single')
+        network.transfer_function(1 * ureg.Hz)
+        mock.assert_called_once()
+        
+    def test_transfer_function_multi_calls_correctly(self, network, mocker):
+        mock_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'transfer_function')
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        network.transfer_function_multi()
+        mock_tf.assert_called_once()
+        mock_mean.assert_called_once()
+        mock_std.assert_called_once()
+        
+    def test_transfer_function_single_calls_correctly(self, network, mocker):
+        mock_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'transfer_function')
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        network.transfer_function_single(1 * ureg.Hz)
+        mock_tf.assert_called_once()
+        mock_mean.assert_called_once()
+        mock_std.assert_called_once()
+        
+    def test_sensitivity_measure_calls_correctly(self, network, mocker):
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        mock_sm = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'sensitivity_measure')
+        mock_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'transfer_function')
+        mock_dd = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'delay_dist_matrix')
+        network.sensitivity_measure(1 * ureg.Hz)
+        mock_mean.assert_called_once()
+        mock_std.assert_called_once()
+        mock_sm.assert_called_once()
+        mock_tf.assert_called_once()
+        mock_dd.assert_called_once()
+        
+    def test_power_spectra_calls_correctly(self, network, mocker):
+        mock_ps = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'power_spectra')
+        mock_fr = mocker.patch('lif_meanfield_tools.Network.firing_rates')
+        mock_dd = mocker.patch('lif_meanfield_tools.Network.delay_dist_matrix')
+        mock_tf = mocker.patch('lif_meanfield_tools.Network.transfer_function')
+        network.power_spectra()
+        mock_ps.assert_called_once()
+        mock_fr.assert_called_once()
+        mock_dd.assert_called_once()
+        mock_tf.assert_called_once()
+        
+    def test_eigenvalue_spectra_calls_correctly(self, network, mocker):
+        mock_es = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'eigen_spectra')
+        mock_dd = mocker.patch('lif_meanfield_tools.Network.delay_dist_matrix')
+        mock_tf = mocker.patch('lif_meanfield_tools.Network.transfer_function')
+        network.eigenvalue_spectra('MH')
+        mock_es.assert_called_once()
+        mock_dd.assert_called_once()
+        mock_tf.assert_called_once()
+        
+    def test_r_eigenvec_spectra_calls_correctly(self, network, mocker):
+        mock_es = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'eigen_spectra')
+        mock_dd = mocker.patch('lif_meanfield_tools.Network.delay_dist_matrix')
+        mock_tf = mocker.patch('lif_meanfield_tools.Network.transfer_function')
+        network.r_eigenvec_spectra('MH')
+        mock_es.assert_called_once()
+        mock_dd.assert_called_once()
+        mock_tf.assert_called_once()
+        
+    def test_l_eigenvec_spectra_calls_correctly(self, network, mocker):
+        mock_es = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'eigen_spectra')
+        mock_dd = mocker.patch('lif_meanfield_tools.Network.delay_dist_matrix')
+        mock_tf = mocker.patch('lif_meanfield_tools.Network.transfer_function')
+        network.l_eigenvec_spectra('MH')
+        mock_es.assert_called_once()
+        mock_dd.assert_called_once()
+        mock_tf.assert_called_once()
+        
+    def test_additional_rates_for_fixed_input_calls_correctly(self, network,
+                                                              mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                            'additional_rates_for_fixed_input')
+        mock.return_value = 1, 2
+        network.additional_rates_for_fixed_input(1 * ureg.Hz, 2 * ureg.Hz)
+        mock.assert_called_once()
+        
+    def test_fit_transfer_function_calls_correctly(self, network, mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                            'fit_transfer_function')
+        mock.return_value = 1, 2, 3, 4
+        mock_ecs = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                                'effective_coupling_strength')
+        mock_ecs.return_value = 1
+        mock_tf = mocker.patch('lif_meanfield_tools.Network.transfer_function')
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        network.fit_transfer_function()
+        mock.assert_called_once()
+        mock_ecs.assert_called_once()
+        mock_tf.assert_called_once()
+        mock_mean.assert_called_once()
+        mock_std.assert_called_once()
+        
+    def test_scan_fit_transfer_function_mean_std_input_calls_correctly(self,
+                                                                       network,
+                                                                       mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                            'scan_fit_transfer_function_mean_std_input')
+        mock.return_value = 1, 2
+        network.scan_fit_transfer_function_mean_std_input(1, 2)
+        mock.assert_called_once()
+        
+    def test_linear_interpolation_alpha_called_correctly(self, network,
+                                                         mocker):
+        mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                            'linear_interpolation_alpha')
+        mock.return_value = 1, 2, 3, 4, 5, 6
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        network.linear_interpolation_alpha(1, 2)
+        mock.assert_called_once()
+        mock_mean.assert_called_once()
+        mock_std.assert_called_once()
+        
+    def test_compute_profile_characteristics_called_correctly(self, network,
+                                                              mocker):
+        mock_xi = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'xi_of_k')
+        mock_xi.return_value = 1, 2, 3, 4
+        mock_xi = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'solve_chareq_rate_boxcar')
+        mock_xi.side_effect = 1, 2
+        network.compute_profile_characteristics()
+    
     # @pytest.mark.parametrize(
-    #     'method, called_funcs', zip(meanfield_calls.keys(),
-    #                                 meanfield_calls.values()),
-    #     ids=meanfield_calls.keys())
+    #     'method, arg, called_funcs', zip(methods, args, called_funcs),
+    #     ids=methods)
     # def test_correct_meanfield_functions_are_called(self, mocker, network,
-    #                                                 method, called_funcs):
+    #                                                 method, arg, called_funcs):
     #     mocked_funcs = []
     #     for func in called_funcs:
     #         mocked_funcs.append(mocker.patch(
     #             'lif_meanfield_tools.meanfield_calcs.{}'.format(func)))
+    #     getattr(network, method)(*arg)
+    #     for mocked_func in mocked_funcs:
+    #         mocked_func.assert_called_once()
+    #
+    # @pytest.mark.parametrize(
+    #     'method, called_funcs', zip(network_calls.keys(),
+    #                                 network_calls.values()),
+    #     ids=network_calls.keys())
+    # def test_correct_network_functions_are_called(self, mocker, network,
+    #                                               method, called_funcs):
+    #     mocked_funcs = []
+    #     for func in called_funcs:
+    #         mocked_funcs.append(mocker.patch(
+    #             'lif_meanfield_tools.Network.{}'.format(func)))
     #     getattr(network, method)()
     #     for mocked_func in mocked_funcs:
     #         mocked_func.assert_called_once()
