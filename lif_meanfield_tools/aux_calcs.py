@@ -221,8 +221,8 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
-    if mu > V_th_rel:
-        raise ValueError('mu should be smaller than V_th_V_0! Use siegert2 if mu > (V_th-V_0).')
+    if mu > V_th_rel - 0.05 * abs(V_th_rel):
+        raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if mu > (V_th-V_0).')
     
 
     y_th = (V_th_rel - mu) / sigma
@@ -291,8 +291,9 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
-    if mu < V_th_rel:
-        raise ValueError('mu should be smaller than V_th-V_0! Use siegert1 if mu < (V_th-V_0).')
+    # why this threshold?
+    if mu < V_th_rel - 0.05 * abs(V_th_rel):
+        raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
     
     
     y_th = (V_th_rel - mu) / sigma
