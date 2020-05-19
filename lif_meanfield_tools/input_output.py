@@ -85,8 +85,6 @@ def quantities_to_val_unit(dict_of_quantities):
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
-        if quantity_key == 'additional_rates_for_fixed_input':
-            import pdb; pdb.set_trace()
         # lists of strings need to be treated seperately
         if isinstance(quantity, Iterable):
             if any(isinstance(part, str) for part in quantity):
