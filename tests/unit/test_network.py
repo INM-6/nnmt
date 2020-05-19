@@ -21,6 +21,20 @@ class Test_initialization:
     def test_correct_analysis_params_loaded(self, network, key, value):
         assert network.analysis_params[key] == value
     
+    def test_network_with_given_network_params_created(self):
+        network_params = dict(tau_m=10 * ureg.ms,
+                              tau_s=5 * ureg.ms)
+        network = lmt.Network(new_network_params=network_params,
+                              derive_params=False)
+        assert network.network_params == network_params
+    
+    def test_network_with_given_analysis_params_created(self):
+        analysis_params = dict(f_min=1 * ureg.Hz,
+                               f_max=10 * ureg.Hz)
+        network = lmt.Network(new_analysis_params=analysis_params,
+                              derive_params=False)
+        assert network.analysis_params == analysis_params
+    
     def test_network_params_updated_on_initialization(self,
                                                       network_params_yaml,
                                                       analysis_params_yaml):
@@ -544,6 +558,23 @@ class Test_functionality:
         mock_sm.assert_called_once()
         mock_tf.assert_called_once()
         mock_dd.assert_called_once()
+        
+    def test_transfer_function_is_conjugated_if_omega_negative(self, network,
+                                                               mocker):
+        mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
+        mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
+        mock_sm = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'sensitivity_measure')
+        mock_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'transfer_function')
+        mock_dd = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
+                               'delay_dist_matrix')
+        tf = np.array([[complex(1, 2), complex(3, 4)],
+                       [complex(5, 6), complex(7, 8)]])
+        mock_tf.return_value = tf
+        network.sensitivity_measure(- 1 * ureg.Hz)
+        np.testing.assert_array_equal(mock_sm.call_args[0][0],
+                                      np.conjugate(tf))
         
     def test_power_spectra_calls_correctly(self, network, mocker):
         mock_ps = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
