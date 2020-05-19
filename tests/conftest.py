@@ -3,8 +3,28 @@ import numpy as np
 
 from .utils import get_required_keys, get_required_params
 
+import lif_meanfield_tools as lmt
 from lif_meanfield_tools.input_output import load_h5
 from lif_meanfield_tools import ureg
+
+
+@pytest.fixture
+def network():
+    network = lmt.Network(
+        network_params='tests/fixtures/network_params_microcircuit.yaml',
+        analysis_params='tests/fixtures/analysis_params_test.yaml'
+        )
+    return network
+
+
+@pytest.fixture
+def network_params_yaml():
+    return 'tests/fixtures/network_params_microcircuit.yaml'
+
+
+@pytest.fixture
+def analysis_params_yaml():
+    return 'tests/fixtures/analysis_params_test.yaml'
 
 
 def calc_dep_params(params):
@@ -199,46 +219,49 @@ for i, regime in enumerate(regimes):
 def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                           ids_all_regimes=ids_all_regimes):
     """Define parametrization schemes for pos_keys and output_test_fixtures."""
-    func = metafunc.cls.func
+    
+    if metafunc.module.__name__ == 'tests.unit.test_meanfield_calcs':
+        
+        func = metafunc.cls.func
+        
+        if "pos_keys" in metafunc.fixturenames:
+            # test every pos_key required by func as arg separately
+            pos_keys = get_required_keys(func, all_pos_keys)
+            metafunc.parametrize("pos_keys", pos_keys)
 
-    if "pos_keys" in metafunc.fixturenames:
-        # test every pos_key required by func as arg separately
-        pos_keys = get_required_keys(func, all_pos_keys)
-        metafunc.parametrize("pos_keys", pos_keys)
+        elif "output_test_fixtures" in metafunc.fixturenames:
 
-    elif "output_test_fixtures" in metafunc.fixturenames:
+            if 'prop_inv' in metafunc.function.__name__:
+                # take out negative_firing_rate regime because prop is singular
+                singular_regime = 'negative_firing_rate'
+                indices = [i for i, params in enumerate(all_params)
+                           if params['regime'] != singular_regime]
+                all_params = [all_params[i] for i in indices]
+                results = [results[i] for i in indices]
+                ids_all_regimes = [ids_all_regimes[i] for i in indices]
 
-        if 'prop_inv' in metafunc.function.__name__:
-            # take out negative_firing_rate regime because prop is singular
-            singular_regime = 'negative_firing_rate'
-            indices = [i for i, params in enumerate(all_params)
-                       if params['regime'] != singular_regime]
-            all_params = [all_params[i] for i in indices]
-            results = [results[i] for i in indices]
-            ids_all_regimes = [ids_all_regimes[i] for i in indices]
+            # test every parameter regime seperately using all_params
+            params = [get_required_params(func, dict(params, **results))
+                      for params, results in zip(all_params, results)]
 
-        # test every parameter regime seperately using all_params
-        params = [get_required_params(func, dict(params, **results))
-                  for params, results in zip(all_params, results)]
+            try:
+                output_key = metafunc.cls.output_key
+                output = [result[output_key] for result in results]
+            except AttributeError:
+                output_keys = metafunc.cls.output_keys
+                output = [[result[output_key] for output_key in output_keys]
+                          for result in results]
 
-        try:
-            output_key = metafunc.cls.output_key
-            output = [result[output_key] for result in results]
-        except AttributeError:
-            output_keys = metafunc.cls.output_keys
-            output = [[result[output_key] for output_key in output_keys]
-                      for result in results]
+            if 'sensitivity_measure' in metafunc.cls.__name__:
+                for param, result in zip(params, results):
+                    # sensitivity measure requires special transfer function as arg
+                    param['transfer_function'] = result['transfer_function_'
+                                                        'single'][0]
+                    # sensitivity measure requires special delay_dist_matrix as arg
+                    param['delay_dist_matrix'] = result['delay_dist_single'][0]
 
-        if 'sensitivity_measure' in metafunc.cls.__name__:
-            for param, result in zip(params, results):
-                # sensitivity measure requires special transfer function as arg
-                param['transfer_function'] = result['transfer_function_'
-                                                    'single'][0]
-                # sensitivity measure requires special delay_dist_matrix as arg
-                param['delay_dist_matrix'] = result['delay_dist_single'][0]
+            fixtures = [dict(output=output, params=params) for output, params
+                        in zip(output, params)]
 
-        fixtures = [dict(output=output, params=params) for output, params
-                    in zip(output, params)]
-
-        metafunc.parametrize("output_test_fixtures", fixtures,
-                             ids=ids_all_regimes)
+            metafunc.parametrize("output_test_fixtures", fixtures,
+                                 ids=ids_all_regimes)
