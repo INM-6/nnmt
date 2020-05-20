@@ -149,7 +149,13 @@ class Test_quantities_to_val_unit:
         assert conv_item[0] == exp_item[0]
         assert conv_item[1]['unit'] == exp_item[1]['unit']
         np.testing.assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
-    
+        
+    def test_lits_of_quantities_with_several_units_raises_exception(self):
+        quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
+                                                 2 * ureg.s,
+                                                 3 * ureg.m])
+        with pytest.raises(ValueError):
+            io.quantities_to_val_unit(quantity_dict)
 
 
 class save_and_load_TestCase(unittest.TestCase):
