@@ -93,31 +93,6 @@ class Test_val_unit_to_quantities:
                 np.testing.assert_array_equal(conv_item[1], exp_item[1])
                 
 
-class quantities_to_val_unit_TestCase(unittest.TestCase):
-    
-    def setUp(self):
-        # integer
-        self.quantity_1 = 1 * ureg.Hz
-        # array
-        self.quantity_2 = np.array([2, 3, 4]) * ureg.mV
-        # list
-        self.quantity_3 = [5, 6, 7] * ureg.s
-        # list of quantities
-        self.list_of_quantites = [5 * ureg.s, 6.7 * ureg.m]
-        # list of strings
-        self.list_of_strings = ['list', 'of', 'strings']
-        # no quantity
-        self.no_quantity = 8
-
-        # build dictionary
-        self.test_quantity_dict = {'quantity_1': self.quantity_1,
-                                   'quantity_2': self.quantity_2,
-                                   'quantity_3': self.quantity_3,
-                                   'list_of_quantites': self.list_of_quantites,
-                                   'list_of_strings': self.list_of_strings,
-                                   'no_quantity': self.no_quantity}
-
-
 class Test_quantities_to_val_unit:
     
     @pytest.mark.parametrize('quantity_dict, val_unit_pair',
