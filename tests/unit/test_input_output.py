@@ -3,15 +3,13 @@
 Unit tests for the input output module.
 """
 
-import unittest
-import os
-import re
-
 import pytest
 import numpy as np
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
+
+from .checks import check_file_in_tmpdir, check_quantity_dicts_are_equal
 
 ureg = lmt.ureg
         
@@ -88,6 +86,7 @@ def param_test_dict():
                                                [7, 8, 9]]) * ureg.s
                 )
 
+
 class Test_val_unit_to_quantities:
     
     @pytest.mark.parametrize('val_unit_pair, quantity_dict',
@@ -163,7 +162,8 @@ class Test_quantities_to_val_unit:
         assert conv_item[1]['unit'] == exp_item[1]['unit']
         np.testing.assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
         
-    def test_lits_of_quantities_with_several_units_raises_exception(self):
+    @pytest.mark.xfail
+    def test_list_of_quantities_with_several_units_raises_exception(self):
         quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
                                                  2 * ureg.s,
                                                  3 * ureg.m])
@@ -181,14 +181,7 @@ class Test_load_params:
         
     def test_yaml_loaded_correctly(self, param_test_dict):
         params = io.load_params('tests/fixtures/test.yaml')
-        keys = sorted(param_test_dict.keys())
-        for key in keys:
-            assert key in params
-            try:
-                assert params[key] == param_test_dict[key]
-            except ValueError:
-                np.testing.assert_array_equal(params[key],
-                                              param_test_dict[key])
+        check_quantity_dicts_are_equal(params, param_test_dict)
                 
 
 class Test_save:
@@ -199,14 +192,7 @@ class Test_save:
         file_name = 'test.h5'
         with tmp_test.as_cwd():
             io.save(output_key, param_test_dict, file_name)
-        # results file name expression
-        exp = re.compile(r'.*{}'.format(file_name))
-        # file names in tmp dir
-        file_names = [str(obj) for obj in tmp_test.listdir()]
-        # file names matching exp
-        matches = list(filter(exp.match, file_names))
-        # pass test if test file created
-        assert any(matches)
+        check_file_in_tmpdir(file_name, tmp_test)
         
     @pytest.mark.xfail
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
@@ -234,56 +220,77 @@ class Test_create_hash:
         assert hash == 'c20ad4d76fe97759aa27a0c99bff6710'
 
 
-class save_and_load_TestCase(unittest.TestCase):
+class Test_load_h5:
     
-    def setUp(self):
-        self.test_dir = './lif_meanfield_tools/tests/unit/'
-        self.file_name = 'temporary_test_file.h5'
-        self.file_name_with_dir = self.test_dir + self.file_name
+    @pytest.mark.xfail
+    def test_raise_exception_if_filename_not_existing(self, tmpdir):
+        tmp_test = tmpdir.mkdir('tmp_test')
+        filename = 'test.h5'
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                io.load_h5(filename)
+    
+    def test_data_saved_and_loaded_correctly(self, tmpdir, param_test_dict):
+        tmp_test = tmpdir.mkdir('tmp_test')
+        filename = 'test.h5'
+        with tmp_test.as_cwd():
+            io.save('params', param_test_dict, filename)
+            params_h5 = io.load_h5(filename)
+            
+        params = params_h5['params']
+        check_quantity_dicts_are_equal(params, param_test_dict)
 
-        self.output_key = 'test_results'
-
-        # integer
-        self.quantity_1 = 1 * ureg.Hz
-        # array
-        self.quantity_2 = np.array([2, 3, 4]) * ureg.mV
-        # list
-        self.quantity_3 = [5, 6, 7] * ureg.s
-        # list of quantities
-        self.list_of_quantites = [5 * ureg.s, 6.7 * ureg.m]
-        # list of strings
-        self.list_of_strings = ['list', 'of', 'strings']
-        # no quantity
-        self.no_quantity = 8
-
-        # build dictionary
-        self.output = {'quantity_1': self.quantity_1,
-                       'quantity_2': self.quantity_2,
-                       'quantity_3': self.quantity_3,
-                       'list_of_quantites': self.list_of_quantites,
-                       'list_of_strings': self.list_of_strings,
-                       'no_quantity': self.no_quantity}
-
-    def test_save_and_load(self):
-        lmt.input_output.save(self.output_key,
-                              self.output,
-                              self.file_name_with_dir)
-
-        # check that file with correct file_name exists
-        self.assertTrue(self.file_name in os.listdir(self.test_dir))
-
-        loaded_data = lmt.input_output.load_h5(self.file_name_with_dir)
-
-        self.assertListEqual(sorted(list(loaded_data[self.output_key].keys())),
-                             sorted(list(self.output.keys())))
-
-        for val in loaded_data[self.output_key].values():
-            self.assertTrue(val is not None)
-            # checking the actual elements and values is covered by
-            # val_unit_to_quantities
-
-    def tearDown(self):
-        os.remove(self.test_dir + self.file_name)
+#
+# class save_and_load_TestCase(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.test_dir = './lif_meanfield_tools/tests/unit/'
+#         self.file_name = 'temporary_test_file.h5'
+#         self.file_name_with_dir = self.test_dir + self.file_name
+#
+#         self.output_key = 'test_results'
+#
+#         # integer
+#         self.quantity_1 = 1 * ureg.Hz
+#         # array
+#         self.quantity_2 = np.array([2, 3, 4]) * ureg.mV
+#         # list
+#         self.quantity_3 = [5, 6, 7] * ureg.s
+#         # list of quantities
+#         self.list_of_quantites = [5 * ureg.s, 6.7 * ureg.m]
+#         # list of strings
+#         self.list_of_strings = ['list', 'of', 'strings']
+#         # no quantity
+#         self.no_quantity = 8
+#
+#         # build dictionary
+#         self.output = {'quantity_1': self.quantity_1,
+#                        'quantity_2': self.quantity_2,
+#                        'quantity_3': self.quantity_3,
+#                        'list_of_quantites': self.list_of_quantites,
+#                        'list_of_strings': self.list_of_strings,
+#                        'no_quantity': self.no_quantity}
+#
+#     def test_save_and_load(self):
+#         lmt.input_output.save(self.output_key,
+#                               self.output,
+#                               self.file_name_with_dir)
+#
+#         # check that file with correct file_name exists
+#         self.assertTrue(self.file_name in os.listdir(self.test_dir))
+#
+#         loaded_data = lmt.input_output.load_h5(self.file_name_with_dir)
+#
+#         self.assertListEqual(sorted(list(loaded_data[self.output_key].keys())),
+#                              sorted(list(self.output.keys())))
+#
+#         for val in loaded_data[self.output_key].values():
+#             self.assertTrue(val is not None)
+#             # checking the actual elements and values is covered by
+#             # val_unit_to_quantities
+#
+#     def tearDown(self):
+#         os.remove(self.test_dir + self.file_name)
 
 
 if __name__ == '__main__':
