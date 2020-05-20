@@ -239,59 +239,50 @@ class Test_load_h5:
             
         params = params_h5['params']
         check_quantity_dicts_are_equal(params, param_test_dict)
-
-#
-# class save_and_load_TestCase(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.test_dir = './lif_meanfield_tools/tests/unit/'
-#         self.file_name = 'temporary_test_file.h5'
-#         self.file_name_with_dir = self.test_dir + self.file_name
-#
-#         self.output_key = 'test_results'
-#
-#         # integer
-#         self.quantity_1 = 1 * ureg.Hz
-#         # array
-#         self.quantity_2 = np.array([2, 3, 4]) * ureg.mV
-#         # list
-#         self.quantity_3 = [5, 6, 7] * ureg.s
-#         # list of quantities
-#         self.list_of_quantites = [5 * ureg.s, 6.7 * ureg.m]
-#         # list of strings
-#         self.list_of_strings = ['list', 'of', 'strings']
-#         # no quantity
-#         self.no_quantity = 8
-#
-#         # build dictionary
-#         self.output = {'quantity_1': self.quantity_1,
-#                        'quantity_2': self.quantity_2,
-#                        'quantity_3': self.quantity_3,
-#                        'list_of_quantites': self.list_of_quantites,
-#                        'list_of_strings': self.list_of_strings,
-#                        'no_quantity': self.no_quantity}
-#
-#     def test_save_and_load(self):
-#         lmt.input_output.save(self.output_key,
-#                               self.output,
-#                               self.file_name_with_dir)
-#
-#         # check that file with correct file_name exists
-#         self.assertTrue(self.file_name in os.listdir(self.test_dir))
-#
-#         loaded_data = lmt.input_output.load_h5(self.file_name_with_dir)
-#
-#         self.assertListEqual(sorted(list(loaded_data[self.output_key].keys())),
-#                              sorted(list(self.output.keys())))
-#
-#         for val in loaded_data[self.output_key].values():
-#             self.assertTrue(val is not None)
-#             # checking the actual elements and values is covered by
-#             # val_unit_to_quantities
-#
-#     def tearDown(self):
-#         os.remove(self.test_dir + self.file_name)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        
+        
+class Test_load_from_h5:
+    
+    @pytest.mark.xfail
+    def test_save_and_load_existing_results_without_anlysis_params(
+            self, tmpdir, param_test_dict):
+        param_test_dict['label'] = 'test_label'
+        hash = io.create_hash(param_test_dict, param_test_dict.keys())
+        filename = param_test_dict['label'] + '_' + hash + '.h5'
+        output_key = 'results'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save(output_key, param_test_dict, filename)
+            loaded_params = io.load_from_h5(param_test_dict)
+        params = loaded_params[output_key]
+        check_quantity_dicts_are_equal(params, param_test_dict)
+    
+    def test_save_and_load_existing_results_with_anlysis_params(
+            self, tmpdir, param_test_dict):
+        param_test_dict['label'] = 'test_label'
+        hash = io.create_hash(param_test_dict, param_test_dict.keys())
+        filename = param_test_dict['label'] + '_' + hash + '.h5'
+        
+        analysis_params = dict(omega=1 * ureg.Hz)
+        
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save('results', param_test_dict, filename)
+            io.save('analysis_params', analysis_params, filename)
+            loaded_analysis_params, loaded_results = io.load_from_h5(
+                param_test_dict)
+        check_quantity_dicts_are_equal(analysis_params, loaded_analysis_params)
+        check_quantity_dicts_are_equal(loaded_results, param_test_dict)
+    
+    def test_save_and_load_results_from_given_file_with_analysis_params(
+            self, tmpdir, param_test_dict):
+        filename = 'test.h5'
+        analysis_params = dict(omega=1 * ureg.Hz)
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save('results', param_test_dict, filename)
+            io.save('analysis_params', analysis_params, filename)
+            loaded_analysis_params, loaded_results = io.load_from_h5(
+                input_name=filename)
+        check_quantity_dicts_are_equal(analysis_params, loaded_analysis_params)
+        check_quantity_dicts_are_equal(loaded_results, param_test_dict)
