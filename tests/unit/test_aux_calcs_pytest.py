@@ -1,10 +1,12 @@
 import pytest
 import numpy as np
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.special import erf, zetac
 from scipy.integrate import quad
 
 from .checks import (check_pos_params_neg_raise_exception,
                      check_correct_output,
+                     check_almost_correct_output_for_several_mus_and_sigmas,
                      check_V_0_larger_V_th_raise_exception,
                      check_warning_is_given_if_k_is_critical,
                      check_exception_is_raised_if_k_is_too_large)
@@ -60,6 +62,7 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
 class Test_siegert1:
     
     func = staticmethod(siegert1)
+    precision = 10**-7
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -72,16 +75,16 @@ class Test_siegert1:
         with pytest.raises(ValueError):
             self.func(**std_params)
 
-    # def test_correct_output(self, output_test_fixtures):
-    #     params = output_test_fixtures.pop('params')
-    #     import pdb; pdb.set_trace()
-    #     output = [real_siegert(**param) for param in params]
-    #     check_correct_output(self.func, params, output)
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        check_almost_correct_output_for_several_mus_and_sigmas(
+            self.func, real_siegert, params, self.precision)
 
 
 class Test_siegert2:
     
     func = staticmethod(siegert2)
+    precision = 10**-7
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -93,14 +96,27 @@ class Test_siegert2:
         std_params['mu'] = 0.9 * std_params['V_th_rel']
         with pytest.raises(ValueError):
             self.func(**std_params)
-    #
-    # def test_correct_output_in_mean_driven_regime():
-    #     pass
-
+    
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        mus = params.pop('mu')
+        sigmas = params.pop('sigma')
+        for mu, sigma in zip(mus, sigmas):
+            params['mu'] = mu
+            params['sigma'] = sigma
+            if mu > 0.95 * params['V_th_rel']:
+                expected = real_siegert(**params)
+                result = self.func(**params)
+                assert_array_almost_equal(expected, result, self.precision)
+            else:
+                with pytest.raises(ValueError):
+                    self.func(**params)
+                    
 
 class Test_nu0_fb433:
     
     func = staticmethod(nu0_fb433)
+    precision = 10**-7
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -108,14 +124,16 @@ class Test_nu0_fb433:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
 
-    #
-    # def test_correct_output_in_mean_driven_regime():
-    #     pass
-    
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        check_almost_correct_output_for_several_mus_and_sigmas(
+            self.func, real_shifted_siegert, params, self.precision)
+
     
 class Test_nu0_fb:
     
     func = staticmethod(nu0_fb)
+    precision = 10**-7
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -123,9 +141,10 @@ class Test_nu0_fb:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
 
-    #
-    # def test_correct_output_in_mean_driven_regime():
-    #     pass
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        check_almost_correct_output_for_several_mus_and_sigmas(
+            self.func, real_shifted_siegert, params, self.precision)
 
 
 class Test_nu_0:

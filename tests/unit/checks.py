@@ -15,6 +15,19 @@ def check_correct_output(func, params, output, updates=None):
         params = params.copy()
         params.update(updates)
     np.testing.assert_array_equal(func(**params), output)
+    
+    
+def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
+                                                           params,
+                                                           precision):
+    mus = params.pop('mu')
+    sigmas = params.pop('sigma')
+    for mu, sigma in zip(mus, sigmas):
+        params['mu'] = mu
+        params['sigma'] = sigma
+        expected = alt_func(**params)
+        result = func(**params)
+        np.testing.assert_array_almost_equal(expected, result, precision)
 
 
 def check_V_0_larger_V_th_raise_exception(func, params):
