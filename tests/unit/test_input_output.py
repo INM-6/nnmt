@@ -18,31 +18,31 @@ ureg = lmt.ureg
         
 val_unit_pairs = [
     dict(numerical=1),
-    dict(quantity={'val': 1, 'unit': 'Hz'}),
+    dict(quantity={'val': 1, 'unit': 'hertz'}),
     dict(string='test'),
     dict(list_of_strings=['spam', 'ham']),
     dict(array=np.array([1, 2, 3])),
-    dict(quantity_array={'val': np.array([1, 2, 3]), 'unit': 's'}),
-    dict(list_of_quantities={'val': [1, 2, 3], 'unit': 's'}),
+    dict(quantity_array={'val': np.array([1, 2, 3]), 'unit': 'second'}),
+    dict(quantity_list={'val': [1, 2, 3], 'unit': 'second'}),
     dict(two_d_array=np.arange(9).reshape(3, 3)),
     dict(two_d_quantity_array={'val': np.arange(9).reshape(3, 3),
-                               'unit': 's'}),
+                               'unit': 'second'}),
     dict(two_d_list_of_quantites={'val': [[i for i in range(3)]
                                           for j in range(3)],
-                                  'unit': 's'}),
+                                  'unit': 'second'}),
     dict(numerical=1,
-         quantity={'val': 1, 'unit': 'Hz'},
+         quantity={'val': 1, 'unit': 'hertz'},
          string='test',
          list_of_strings=['spam', 'ham'],
          array=np.array([1, 2, 3]),
-         quantity_array={'val': np.array([1, 2, 3]), 'unit': 's'},
-         list_of_quantities={'val': [1, 2, 3], 'unit': 's'},
+         quantity_array={'val': np.array([1, 2, 3]), 'unit': 'second'},
+         quantity_list={'val': [1, 2, 3], 'unit': 'second'},
          two_d_array=np.arange(9).reshape(3, 3),
          two_d_quantity_array={'val': np.arange(9).reshape(3, 3),
-                               'unit': 's'},
+                               'unit': 'second'},
          two_d_list_of_quantites={'val': [[i for i in range(3)]
                                           for j in range(3)],
-                                  'unit': 's'},
+                                  'unit': 'second'},
          ),
     ]
 
@@ -53,7 +53,7 @@ quantity_dicts = [
     dict(list_of_strings=['spam', 'ham']),
     dict(array=np.array([1, 2, 3])),
     dict(quantity_array=np.array([1, 2, 3]) * ureg.s),
-    dict(list_of_quantities=np.array([1, 2, 3]) * ureg.s),
+    dict(quantity_list=np.array([1, 2, 3]) * ureg.s),
     dict(two_d_array=np.arange(9).reshape(3, 3)),
     dict(two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s),
     dict(two_d_list_of_quantites=[[i for i in range(3)]
@@ -64,7 +64,7 @@ quantity_dicts = [
          list_of_strings=['spam', 'ham'],
          array=np.array([1, 2, 3]),
          quantity_array=np.array([1, 2, 3]) * ureg.s,
-         list_of_quantities=np.array([1, 2, 3]) * ureg.s,
+         quantity_list=np.array([1, 2, 3]) * ureg.s,
          two_d_array=np.arange(9).reshape(3, 3),
          two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s,
          two_d_list_of_quantites=[[i for i in range(3)]
@@ -91,7 +91,7 @@ class Test_val_unit_to_quantities:
             except ValueError:
                 assert conv_item[0] == exp_item[0]
                 np.testing.assert_array_equal(conv_item[1], exp_item[1])
-
+                
 
 class quantities_to_val_unit_TestCase(unittest.TestCase):
     
@@ -117,50 +117,46 @@ class quantities_to_val_unit_TestCase(unittest.TestCase):
                                    'list_of_strings': self.list_of_strings,
                                    'no_quantity': self.no_quantity}
 
-    def test_quantity_to_val_unit(self):
-        val_unit_dict = lmt.input_output.quantities_to_val_unit(
-            self.test_quantity_dict)
 
-        # integer
-        self.assertEqual(val_unit_dict['quantity_1']['unit'],
-                         self.quantity_1.units)
-        assert_array_equal(val_unit_dict['quantity_1']['val'],
-                           self.quantity_1.magnitude)
-        # array
-        self.assertEqual(val_unit_dict['quantity_2']['unit'],
-                         self.quantity_2.units)
-        assert_array_equal(val_unit_dict['quantity_2']['val'],
-                           self.quantity_2.magnitude)
-        # list
-        self.assertNotIsInstance(self.test_quantity_dict['quantity_3'], list)
-        self.assertIsInstance(self.test_quantity_dict['quantity_3'],
-                              ureg.Quantity)
-        self.assertEqual(val_unit_dict['quantity_3']['unit'],
-                         self.quantity_3.units)
-        assert_array_equal(val_unit_dict['quantity_3']['val'],
-                           self.quantity_3.magnitude)
-
-        # list of quantities
-        self.assertIsInstance(self.list_of_quantites, list)
-        self.assertFalse(any(isinstance(part, str) for part
-                             in self.list_of_quantites))
-        # in this case the magnitudes are stacked
-        assert_array_equal(val_unit_dict['list_of_quantites']['val'],
-                           np.stack(val.magnitude for val
-                                    in self.list_of_quantites))
-        # and only the first appearing quantity-unit is taken
-        self.assertEqual(val_unit_dict['list_of_quantites']['unit'],
-                         self.list_of_quantites[0].units)
-
-        # list of strings
-        self.assertIsInstance(self.list_of_strings, list)
-        self.assertTrue(any(isinstance(part, str) for part
-                            in self.list_of_strings))
-        assert_array_equal(val_unit_dict['list_of_strings'],
-                           self.list_of_strings)
-
-        # no quantity
-        self.assertEqual(val_unit_dict['no_quantity'], self.no_quantity)
+class Test_quantities_to_val_unit:
+    
+    @pytest.mark.parametrize('quantity_dict, val_unit_pair',
+                             zip(quantity_dicts, val_unit_pairs),
+                             ids=ids)
+    def test_dict_of_quantities_is_converted_to_dict_of_val_unit_pairs(
+            self, quantity_dict, val_unit_pair):
+        converted = io.quantities_to_val_unit(quantity_dict)
+        while converted:
+            conv_item = converted.popitem()
+            exp_item = val_unit_pair.popitem()
+            assert conv_item[0] == exp_item[0]
+            print(conv_item)
+            try:
+                assert conv_item[1]['unit'] == exp_item[1]['unit']
+                try:
+                    assert conv_item[1]['val'] == exp_item[1]['val']
+                except ValueError:
+                    np.testing.assert_array_equal(conv_item[1]['val'],
+                                                  exp_item[1]['val'])
+            except (IndexError, TypeError):
+                try:
+                    assert conv_item[1] == conv_item[1]
+                except ValueError:
+                    np.testing.assert_array_equal(conv_item[1], exp_item[1])
+                    
+    def test_list_of_quantities(self):
+        quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
+                                                 2 * ureg.Hz,
+                                                 3 * ureg.Hz])
+        val_unit_pair = dict(list_of_quantities={'val': np.array([1, 2, 3]),
+                                                 'unit': 'hertz'})
+        converted = io.quantities_to_val_unit(quantity_dict)
+        conv_item = converted.popitem()
+        exp_item = val_unit_pair.popitem()
+        assert conv_item[0] == exp_item[0]
+        assert conv_item[1]['unit'] == exp_item[1]['unit']
+        np.testing.assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
+    
 
 
 class save_and_load_TestCase(unittest.TestCase):
