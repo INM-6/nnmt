@@ -5,6 +5,7 @@ Unit tests for the input output module.
 
 import unittest
 import os
+import re
 
 import pytest
 import numpy as np
@@ -72,6 +73,20 @@ quantity_dicts = [
 ids = [list(val_unit_pair.keys())[0] for val_unit_pair in val_unit_pairs[:-1]]
 ids.append('mixed')
 
+
+@pytest.fixture
+def param_test_dict():
+    return dict(string='test',
+                list_of_strings=['spam', 'ham'],
+                numerical=1,
+                list=[1, 2, 3],
+                two_d_array=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                quantity=1 * ureg.s,
+                quantity_list=np.array([1, 2, 3]) * ureg.s,
+                quantity_two_d_array=np.array([[1, 2, 3],
+                                               [4, 5, 6],
+                                               [7, 8, 9]]) * ureg.s
+                )
 
 class Test_val_unit_to_quantities:
     
@@ -164,26 +179,46 @@ class Test_load_params:
         io.load_params('tests/fixtures/test.yaml')
         mock.assert_called_once()
         
-    def test_yaml_loaded_correctly(self):
+    def test_yaml_loaded_correctly(self, param_test_dict):
         params = io.load_params('tests/fixtures/test.yaml')
-        exp_dict = dict(string='test',
-                        list_of_strings=['spam', 'ham'],
-                        numerical=1,
-                        list=[1, 2, 3],
-                        two_d_array=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                        quantity=1 * ureg.s,
-                        quantity_list=np.array([1, 2, 3]) * ureg.s,
-                        quantity_two_d_array=np.array([[1, 2, 3],
-                                                       [4, 5, 6],
-                                                       [7, 8, 9]]) * ureg.s
-                        )
-        keys = sorted(exp_dict.keys())
+        keys = sorted(param_test_dict.keys())
         for key in keys:
             assert key in params
             try:
-                assert params[key] == exp_dict[key]
+                assert params[key] == param_test_dict[key]
             except ValueError:
-                np.testing.assert_array_equal(params[key], exp_dict[key])
+                np.testing.assert_array_equal(params[key],
+                                              param_test_dict[key])
+                
+
+class Test_save:
+    
+    def test_h5_is_created(self, tmpdir, param_test_dict):
+        tmp_test = tmpdir.mkdir('tmp_test')
+        output_key = 'params'
+        file_name = 'test.h5'
+        with tmp_test.as_cwd():
+            io.save(output_key, param_test_dict, file_name)
+        # results file name expression
+        exp = re.compile(r'.*{}'.format(file_name))
+        # file names in tmp dir
+        file_names = [str(obj) for obj in tmp_test.listdir()]
+        # file names matching exp
+        matches = list(filter(exp.match, file_names))
+        # pass test if test file created
+        assert any(matches)
+        
+    @pytest.mark.xfail
+    def test_save_overwriting_existing_file_raises_error(self, tmpdir,
+                                                         param_test_dict):
+        file_name = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        output_key = 'params'
+        file_name = 'test.h5'
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                io.save(output_key, param_test_dict, file_name)
+                io.save(output_key, param_test_dict, file_name)
 
 
 class save_and_load_TestCase(unittest.TestCase):
