@@ -91,7 +91,25 @@ class Test_val_unit_to_quantities:
             except ValueError:
                 assert conv_item[0] == exp_item[0]
                 np.testing.assert_array_equal(conv_item[1], exp_item[1])
-                
+            
+    def test_unit_abbreviations_work_correctly(self):
+        val_unit_pairs = dict(
+            hertz={'val': 1, 'unit': 'Hz'},
+            second={'val': 1, 'unit': 's'},
+            meter={'val': 1, 'unit': 'm'},
+            volt={'val': 1, 'unit': 'V'},
+            ampere={'val': 1, 'unit': 'A'},
+            )
+        quantity_dict = dict(
+            hertz=1 * ureg.Hz,
+            second=1 * ureg.s,
+            meter=1 * ureg.m,
+            volt=1 * ureg.V,
+            ampere=1 * ureg.A,
+            )
+        converted = io.val_unit_to_quantities(val_unit_pairs)
+        assert converted == quantity_dict
+
 
 class Test_quantities_to_val_unit:
     
