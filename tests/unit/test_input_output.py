@@ -6,65 +6,91 @@ Unit tests for the input output module.
 import unittest
 import os
 
+import pytest
+
 import numpy as np
 from numpy.testing import assert_array_equal
 
 import lif_meanfield_tools as lmt
-from ... import ureg
+import lif_meanfield_tools.input_output as io
+
+ureg = lmt.ureg
+        
+val_unit_pairs = [
+    dict(numerical=1),
+    dict(quantity={'val': 1, 'unit': 'Hz'}),
+    dict(string='test'),
+    dict(list_of_strings=['spam', 'ham']),
+    dict(array=np.array([1, 2, 3])),
+    dict(quantity_array={'val': np.array([1, 2, 3]), 'unit': 's'}),
+    dict(list_of_quantities={'val': [1, 2, 3], 'unit': 's'}),
+    dict(two_d_array=np.arange(9).reshape(3, 3)),
+    dict(two_d_quantity_array={'val': np.arange(9).reshape(3, 3),
+                               'unit': 's'}),
+    dict(two_d_list_of_quantites={'val': [[i for i in range(3)]
+                                          for j in range(3)],
+                                  'unit': 's'}),
+    dict(numerical=1,
+         quantity={'val': 1, 'unit': 'Hz'},
+         string='test',
+         list_of_strings=['spam', 'ham'],
+         array=np.array([1, 2, 3]),
+         quantity_array={'val': np.array([1, 2, 3]), 'unit': 's'},
+         list_of_quantities={'val': [1, 2, 3], 'unit': 's'},
+         two_d_array=np.arange(9).reshape(3, 3),
+         two_d_quantity_array={'val': np.arange(9).reshape(3, 3),
+                               'unit': 's'},
+         two_d_list_of_quantites={'val': [[i for i in range(3)]
+                                          for j in range(3)],
+                                  'unit': 's'},
+         ),
+    ]
+
+quantity_dicts = [
+    dict(numerical=1),
+    dict(quantity=1 * ureg.Hz),
+    dict(string='test'),
+    dict(list_of_strings=['spam', 'ham']),
+    dict(array=np.array([1, 2, 3])),
+    dict(quantity_array=np.array([1, 2, 3]) * ureg.s),
+    dict(list_of_quantities=np.array([1, 2, 3]) * ureg.s),
+    dict(two_d_array=np.arange(9).reshape(3, 3)),
+    dict(two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s),
+    dict(two_d_list_of_quantites=[[i for i in range(3)]
+                                  for j in range(3)] * ureg.s),
+    dict(numerical=1,
+         quantity=1 * ureg.Hz,
+         string='test',
+         list_of_strings=['spam', 'ham'],
+         array=np.array([1, 2, 3]),
+         quantity_array=np.array([1, 2, 3]) * ureg.s,
+         list_of_quantities=np.array([1, 2, 3]) * ureg.s,
+         two_d_array=np.arange(9).reshape(3, 3),
+         two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s,
+         two_d_list_of_quantites=[[i for i in range(3)]
+                                  for j in range(3)] * ureg.s),
+    ]
+
+ids = [list(val_unit_pair.keys())[0] for val_unit_pair in val_unit_pairs[:-1]]
+ids.append('mixed')
 
 
-class val_unit_to_quantities_TestCase(unittest.TestCase):
+class Test_val_unit_to_quantities:
     
-    def setUp(self):
-        # integer
-        self.val_unit_1 = {'val': 1,
-                           'unit': 'Hz'}
-        # array
-        self.val_unit_2 = {'val': np.array([2, 3, 4]),
-                           'unit': 'mV'}
-        # list
-        self.val_unit_3 = {'val': [5, 6, 7],
-                           'unit': 's'}
-        # no unit given
-        self.val_unit_4 = {'val': 8}
-
-        # build dictionary
-        self.test_val_unit_dict = {'val_unit_1': self.val_unit_1,
-                                   'val_unit_2': self.val_unit_2,
-                                   'val_unit_3': self.val_unit_3,
-                                   'val_unit_4': self.val_unit_4}
-
-    def test_val_unit_to_quantities(self):
-        quantity_dict = lmt.input_output.val_unit_to_quantities(
-            self.test_val_unit_dict)
-
-        # integer
-        self.assertIsInstance(quantity_dict['val_unit_1'].magnitude, int)
-        self.assertEqual(quantity_dict['val_unit_1'].magnitude,
-                         self.val_unit_1['val'])
-        self.assertEqual(quantity_dict['val_unit_1'].units,
-                         ureg.parse_expression(self.val_unit_1['unit']))
-
-        # array
-        self.assertIsInstance(quantity_dict['val_unit_2'].magnitude,
-                              np.ndarray)
-        assert_array_equal(quantity_dict['val_unit_2'].magnitude,
-                           self.val_unit_2['val'])
-        self.assertEqual(quantity_dict['val_unit_2'].units,
-                         ureg.parse_expression(self.val_unit_2['unit']))
-
-        # list
-        self.assertIsInstance(quantity_dict['val_unit_3'].magnitude,
-                              np.ndarray)
-        assert_array_equal(list(quantity_dict['val_unit_3'].magnitude),
-                           self.val_unit_3['val'])
-        self.assertEqual(quantity_dict['val_unit_3'].units,
-                         ureg.parse_expression(self.val_unit_3['unit']))
-
-        #  no unit given
-        self.assertIsInstance(quantity_dict['val_unit_4'], dict)
-        self.assertEqual(quantity_dict['val_unit_4']['val'],
-                         self.val_unit_4['val'])
+    @pytest.mark.parametrize('val_unit_pair, quantity_dict',
+                             zip(val_unit_pairs, quantity_dicts),
+                             ids=ids)
+    def test_dict_of_val_unit_pairs_is_converted_to_dict_of_quantities(
+            self, val_unit_pair, quantity_dict):
+        converted = io.val_unit_to_quantities(val_unit_pair)
+        while converted:
+            conv_item = converted.popitem()
+            exp_item = quantity_dict.popitem()
+            try:
+                assert conv_item == exp_item
+            except ValueError:
+                assert conv_item[0] == exp_item[0]
+                np.testing.assert_array_equal(conv_item[1], exp_item[1])
 
 
 class quantities_to_val_unit_TestCase(unittest.TestCase):
