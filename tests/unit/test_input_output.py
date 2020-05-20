@@ -221,6 +221,19 @@ class Test_save:
                 io.save(output_key, param_test_dict, file_name)
 
 
+class Test_create_hash:
+    
+    def test_correct_hash(self):
+        params = dict(a=1, b=2)
+        hash = io.create_hash(params, ['a', 'b'])
+        assert hash == 'c20ad4d76fe97759aa27a0c99bff6710'
+        
+    def test_hash_only_reflects_given_keys(self):
+        params = dict(a=1, b=2, c=3)
+        hash = io.create_hash(params, ['a', 'b'])
+        assert hash == 'c20ad4d76fe97759aa27a0c99bff6710'
+
+
 class save_and_load_TestCase(unittest.TestCase):
     
     def setUp(self):
