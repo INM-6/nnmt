@@ -1,4 +1,4 @@
-""" 
+"""
 Only run this script, if you are sure that all functions in aux_calcs.py are correct!
 """
 
@@ -6,8 +6,8 @@ import numpy as np
 
 from mpmath import pcfu
 
-# temporarily add local version of lif_meanfield_tools to pythonpath 
-# this is necessary to create the data using the local version and not the 
+# temporarily add local version of lif_meanfield_tools to pythonpath
+# this is necessary to create the data using the local version and not the
 # installed module (important for debugging)
 import sys
 sys.path.insert(1, './')
@@ -40,9 +40,9 @@ class Fixtures():
         V_th_rels = np.repeat(V_th_rel, len(mus))
         V_0_rels = np.repeat(V_0_rel, len(mus))
 
-        self.parameters_noise_driven_regime = dict(mu=mus, sigma=sigmas, 
+        self.parameters_noise_driven_regime = dict(mu=mus, sigma=sigmas,
                                                    tau_m=tau_ms, tau_s=tau_ss,
-                                                   tau_r=tau_rs, 
+                                                   tau_r=tau_rs,
                                                    V_th_rel=V_th_rels,
                                                    V_0_rel=V_0_rels)
 
@@ -63,9 +63,9 @@ class Fixtures():
         V_th_rels = np.repeat(V_th_rel, len(mus))
         V_0_rels = np.repeat(V_0_rel, len(mus))
 
-        self.parameters_negative_firing_rate_regime = dict(mu=mus, sigma=sigmas, 
+        self.parameters_negative_firing_rate_regime = dict(mu=mus, sigma=sigmas,
                                                            tau_m=tau_ms, tau_s=tau_ss,
-                                                           tau_r=tau_rs, 
+                                                           tau_r=tau_rs,
                                                            V_th_rel=V_th_rels,
                                                            V_0_rel=V_0_rels)
 
@@ -86,9 +86,9 @@ class Fixtures():
         V_th_rels = np.repeat(V_th_rel, len(mus))
         V_0_rels = np.repeat(V_0_rel, len(mus))
 
-        self.parameters_mean_driven_regime =dict(mu=mus, sigma=sigmas, 
+        self.parameters_mean_driven_regime =dict(mu=mus, sigma=sigmas,
                                                  tau_m=tau_ms, tau_s=tau_ss,
-                                                 tau_r=tau_rs, 
+                                                 tau_r=tau_rs,
                                                  V_th_rel=V_th_rels,
                                                  V_0_rel=V_0_rels)
 
@@ -111,21 +111,21 @@ class Fixtures():
         
         function_name = 'white_noise_firing_rate_functions'
             
-        # noise driven regime 
+        # noise driven regime
         inputs = self.dict_without_key(self.parameters_noise_driven_regime, 'tau_s')
-        inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)   
+        inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)
         input_file = self.input_path + function_name + '_noise_driven_regime' + '.npy'
         np.save(input_file, inputs)
         
         # regime in which negative firing rates occured once
         inputs = self.dict_without_key(self.parameters_negative_firing_rate_regime, 'tau_s')
-        inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)    
+        inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)
         input_file = self.input_path + function_name + '_negative_firing_rate_regime' + '.npy'
-        np.save(input_file, inputs)        
+        np.save(input_file, inputs)
         
         # mean driven regime mu > V_th
         inputs = self.dict_without_key(self.parameters_mean_driven_regime, 'tau_s')
-        inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)    
+        inputs = self.convert_dict_of_lists_to_array_of_dicts(inputs)
         input_file = self.input_path + function_name + '_mean_driven_regime' + '.npy'
         np.save(input_file, inputs)
         
@@ -152,45 +152,44 @@ class Fixtures():
         
         function_name = 'Phi'
         
-        input_file = self.input_path + function_name + '.npy'
-        output_file = self.output_path + function_name + '.npy'
+        output_file = self.output_path + function_name + '.npz'
         
         lp = -5
         hp = 1.5
-        test_inputs = np.concatenate([-np.logspace(hp, lp),[0],np.logspace(lp, hp)])
-        
-        np.save(input_file, test_inputs)
+        test_inputs = np.concatenate([-np.logspace(hp, lp),
+                                      [0],
+                                      np.logspace(lp, hp)])
         
         results = []
         for test_input in test_inputs:
             results.append(Phi(test_input))
         
-        np.save(output_file, results)
+        np.savez(output_file, s_values=test_inputs, outputs=results)
 
     def Phi_prime_mu(self):
         
         function_name = 'Phi_prime_mu'
         
-        input_file = self.input_path + function_name + '.npz'
-        output_file = self.output_path + function_name + '.npy'
+        output_file = self.output_path + function_name + '.npz'
         
         lp = -5
         hp = 1.5
         steps = 20
-        ss = np.concatenate([-np.logspace(hp, lp, steps),[0],np.logspace(lp, hp, steps)])
+        s_values = np.concatenate([-np.logspace(hp, lp, steps),
+                                   [0],
+                                   np.logspace(lp, hp, steps)])
         sigmas = np.linspace(1, 100, 10)
         
-        ss, sigmas = np.meshgrid(ss, sigmas)
-        ss = ss.flatten()
+        s_values, sigmas = np.meshgrid(s_values, sigmas)
+        s_values = s_values.flatten()
         sigmas = sigmas.flatten()
         
-        np.savez(input_file, ss=ss, sigmas=sigmas)
-        
         results = []
-        for s, sigma in zip(ss, sigmas):
+        for s, sigma in zip(s_values, sigmas):
             results.append(Phi_prime_mu(s, sigma))
         
-        np.save(output_file, results)
+        np.savez(output_file, s_values=s_values, sigmas=sigmas,
+                 outputs=results)
         
     def d_nu_d_mu(self):
         
@@ -246,19 +245,19 @@ class Fixtures():
         function = d_nu_d_nu_in_fb
         
         j = np.repeat(0.1756 * ureg.mV, len(self.parameters_noise_driven_regime['mu']))
-        parameters_noise_driven_regime = self.dict_with_new_entry(self.parameters_noise_driven_regime, 'j', j) 
+        parameters_noise_driven_regime = self.dict_with_new_entry(self.parameters_noise_driven_regime, 'j', j)
         parameters_noise_driven_regime = self.convert_dict_of_lists_to_array_of_dicts(parameters_noise_driven_regime)
         input_file = self.input_path + function_name + '_noise_driven_regime' + '.npy'
         np.save(input_file, parameters_noise_driven_regime)
         
         j = np.repeat(-0.7024 * ureg.mV, len(self.parameters_noise_driven_regime['mu']))
-        parameters_mean_driven_regime = self.dict_with_new_entry(self.parameters_mean_driven_regime, 'j', j) 
+        parameters_mean_driven_regime = self.dict_with_new_entry(self.parameters_mean_driven_regime, 'j', j)
         parameters_mean_driven_regime = self.convert_dict_of_lists_to_array_of_dicts(parameters_mean_driven_regime)
         input_file = self.input_path + function_name + '_mean_driven_regime' + '.npy'
         np.save(input_file, parameters_mean_driven_regime)
         
         j = np.repeat(0.1756 * ureg.mV, len(self.parameters_noise_driven_regime['mu']))
-        parameters_negative_firing_rate_regime = self.dict_with_new_entry(self.parameters_negative_firing_rate_regime, 'j', j) 
+        parameters_negative_firing_rate_regime = self.dict_with_new_entry(self.parameters_negative_firing_rate_regime, 'j', j)
         parameters_negative_firing_rate_regime = self.convert_dict_of_lists_to_array_of_dicts(parameters_negative_firing_rate_regime)
         input_file = self.input_path + function_name + '_negative_firing_rate_regime' + '.npy'
         np.save(input_file, parameters_negative_firing_rate_regime)
@@ -394,17 +393,16 @@ class Fixtures():
     
 if __name__ == '__main__':
     
-    
-    input_path = 'tests/unit/fixtures/input/'
-    output_path = 'tests/unit/fixtures/output/'
+    input_path = 'tests/fixtures/'
+    output_path = 'tests/fixtures/'
 
     fixtures = Fixtures(input_path, output_path)
-    fixtures.white_noise_firing_rate_functions()
+    # fixtures.white_noise_firing_rate_functions()
     # fixtures.colored_noise_firing_rate_functions()
-    # fixtures.Phi()
-    # fixtures.Phi_prime_mu()
+    fixtures.Phi()
+    fixtures.Phi_prime_mu()
     # fixtures.d_nu_d_mu()
-    fixtures.d_nu_d_mu_fb433()
+    # fixtures.d_nu_d_mu_fb433()
     # fixtures.d_nu_d_nu_in_fb()
     # fixtures.Psi()
     # fixtures.d_Psi()

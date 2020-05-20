@@ -11,16 +11,23 @@ from .checks import (check_pos_params_neg_raise_exception,
                      check_warning_is_given_if_k_is_critical,
                      check_exception_is_raised_if_k_is_too_large)
 
+import lif_meanfield_tools as lmt
 from lif_meanfield_tools.aux_calcs import (
     siegert1,
     siegert2,
     nu0_fb433,
     nu0_fb,
     nu_0,
+    Phi,
+    Phi_prime_mu,
     d_nu_d_mu,
     d_nu_d_mu_fb433,
     d_nu_d_nu_in_fb,
     )
+
+ureg = lmt.ureg
+
+fixture_path = 'tests/fixtures/'
 
 
 def integrand(x):
@@ -164,6 +171,45 @@ class Test_nu_0:
         mock = mocker.patch('lif_meanfield_tools.aux_calcs.siegert2')
         self.func(**std_params)
         mock.assert_called_once()
+        
+        
+class Test_Phi:
+    
+    func = staticmethod(Phi)
+
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'Phi.npz')
+        s_values = fixtures['s_values']
+        outputs = fixtures['outputs']
+        for s, output in zip(s_values, outputs):
+            result = self.func(s)
+            assert result == output
+        
+        
+class Test_Phi_prime_mu:
+    
+    func = staticmethod(Phi_prime_mu)
+    
+    def test_negative_sigma_raises_error(self):
+        sigma = -1 * ureg.mV
+        s = 1
+        with pytest.raises(ValueError):
+            self.func(s, sigma)
+            
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'Phi_prime_mu.npz')
+        s_values = fixtures['s_values']
+        sigmas = fixtures['sigmas']
+        outputs = fixtures['outputs']
+        for s, sigma, output in zip(s_values, sigmas, outputs):
+            result = self.func(s, sigma)
+            assert result == output
+            
+    def test_zero_sigma_raises_error(self):
+        sigma = 0 * ureg.mV
+        s = 1
+        with pytest.raises(ZeroDivisionError):
+            self.func(s, sigma)
 
 
 class Test_d_nu_d_mu:
