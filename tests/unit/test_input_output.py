@@ -7,9 +7,7 @@ import unittest
 import os
 
 import pytest
-
 import numpy as np
-from numpy.testing import assert_array_equal
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
@@ -156,6 +154,36 @@ class Test_quantities_to_val_unit:
                                                  3 * ureg.m])
         with pytest.raises(ValueError):
             io.quantities_to_val_unit(quantity_dict)
+
+
+class Test_load_params:
+    
+    def test_val_unit_to_quantities_called(self, mocker):
+        mock = mocker.patch('lif_meanfield_tools.input_output.'
+                            'val_unit_to_quantities')
+        io.load_params('tests/fixtures/test.yaml')
+        mock.assert_called_once()
+        
+    def test_yaml_loaded_correctly(self):
+        params = io.load_params('tests/fixtures/test.yaml')
+        exp_dict = dict(string='test',
+                        list_of_strings=['spam', 'ham'],
+                        numerical=1,
+                        list=[1, 2, 3],
+                        two_d_array=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                        quantity=1 * ureg.s,
+                        quantity_list=np.array([1, 2, 3]) * ureg.s,
+                        quantity_two_d_array=np.array([[1, 2, 3],
+                                                       [4, 5, 6],
+                                                       [7, 8, 9]]) * ureg.s
+                        )
+        keys = sorted(exp_dict.keys())
+        for key in keys:
+            assert key in params
+            try:
+                assert params[key] == exp_dict[key]
+            except ValueError:
+                np.testing.assert_array_equal(params[key], exp_dict[key])
 
 
 class save_and_load_TestCase(unittest.TestCase):
