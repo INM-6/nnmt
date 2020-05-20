@@ -158,7 +158,7 @@ all_pos_keys = ['C',
                 'nu_ext',
                 'nu_e_ext',
                 'nu_i_ext',
-                'sigma'
+                'sigma',
                 'tau_m',
                 'tau_s',
                 'tau_r',
@@ -220,7 +220,8 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                           ids_all_regimes=ids_all_regimes):
     """Define parametrization schemes for pos_keys and output_test_fixtures."""
     
-    if metafunc.module.__name__ == 'tests.unit.test_meanfield_calcs':
+    if (metafunc.module.__name__ == 'tests.unit.test_meanfield_calcs'
+        or metafunc.module.__name__ == 'tests.unit.test_aux_calcs_pytest'):
         
         func = metafunc.cls.func
         
