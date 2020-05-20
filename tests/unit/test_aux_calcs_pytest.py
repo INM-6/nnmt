@@ -6,6 +6,7 @@ from scipy.integrate import quad
 
 from .checks import (check_pos_params_neg_raise_exception,
                      check_correct_output,
+                     check_correct_output_for_several_mus_and_sigmas,
                      check_almost_correct_output_for_several_mus_and_sigmas,
                      check_V_0_larger_V_th_raise_exception,
                      check_warning_is_given_if_k_is_critical,
@@ -215,32 +216,68 @@ class Test_Phi_prime_mu:
 class Test_d_nu_d_mu:
     
     func = staticmethod(d_nu_d_mu)
+    output_key = 'd_nu_d_mu'
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
-    
+        
+    def test_zero_sigma_raises_error(self, std_params):
+        std_params['sigma'] = 0
+        with pytest.raises(ZeroDivisionError):
+            self.func(**std_params)
+            
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        outputs = output_test_fixtures.pop('output')
+        check_correct_output_for_several_mus_and_sigmas(self.func, params,
+                                                        outputs)
+
 
 class Test_d_nu_d_mu_fb433:
     
     func = staticmethod(d_nu_d_mu_fb433)
+    output_key = 'd_nu_d_mu_fb433'
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
-    
+                
+    def test_zero_sigma_raises_error(self, std_params):
+        std_params['sigma'] = 0
+        with pytest.raises(ZeroDivisionError):
+            self.func(**std_params)
+            
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        outputs = output_test_fixtures.pop('output')
+        check_correct_output_for_several_mus_and_sigmas(self.func, params,
+                                                        outputs)
+                                                        
 
 class Test_d_nu_d_nu_in_fb:
     
     func = staticmethod(d_nu_d_nu_in_fb)
+    output_key = 'd_nu_d_nu_in_fb'
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
+        
+    def test_zero_sigma_raises_error(self, std_params):
+        std_params['sigma'] = 0
+        with pytest.raises(ZeroDivisionError):
+            self.func(**std_params)
+            
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        outputs = output_test_fixtures.pop('output')
+        check_correct_output_for_several_mus_and_sigmas(self.func, params,
+                                                        outputs)
     
