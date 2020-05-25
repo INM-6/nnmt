@@ -1,11 +1,25 @@
 import pytest
 import numpy as np
-
-from .utils import get_required_keys, get_required_params
+from inspect import signature
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.input_output import load_h5
 from lif_meanfield_tools import ureg
+
+
+def get_required_keys(func, all_keys):
+    """Checks arguments of func and returns corresponding parameters."""
+    arg_keys = list(signature(func).parameters)
+    required_keys = [key for key in all_keys if key in arg_keys]
+    return required_keys
+
+
+def get_required_params(func, all_params):
+    """Checks arguments of func and returns corresponding parameters."""
+    required_keys = list(signature(func).parameters)
+    required_params = {k: v for k, v in all_params.items()
+                       if k in required_keys}
+    return required_params
 
 
 @pytest.fixture
