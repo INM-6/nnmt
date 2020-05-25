@@ -43,6 +43,7 @@ ureg = lmt.ureg
 
 
 def fix_additional_rates_for_fixed_input(network, file):
+    """Call additional_rates_for_fixed_input and save results as h5."""
     nu_e_ext, nu_i_ext = network.additional_rates_for_fixed_input(
         network.network_params['mean_input_set'],
         network.network_params['std_input_set'])
@@ -52,6 +53,7 @@ def fix_additional_rates_for_fixed_input(network, file):
     
 
 def fix_d_nu_d_mu(network, file):
+    """Call d_nu_d_mu and save results using network.save() as h5."""
     params = network.network_params
     mus = network.mean_input()
     sigmas = network.std_input()
@@ -66,6 +68,7 @@ def fix_d_nu_d_mu(network, file):
 
 
 def fix_d_nu_d_mu_fb433(network, file):
+    """Call d_nu_d_mu_fb433 and save results using network.save() as h5."""
     params = network.network_params
     mus = network.mean_input()
     sigmas = network.std_input()
@@ -81,6 +84,7 @@ def fix_d_nu_d_mu_fb433(network, file):
 
 
 def fix_d_nu_d_nu_in_fb(network, file):
+    """Call d_nu_d_mu_in_fb and save results using network.save() as h5."""
     params = network.network_params
     mus = network.mean_input()
     sigmas = network.std_input()
@@ -98,7 +102,6 @@ def fix_d_nu_d_nu_in_fb(network, file):
     
 def fix_d_Psi(fixture_path):
     """Call d_Psi for a range of possible inputs and save result as fixture."""
-
     function_name = 'd_Psi'
     output_file = fixture_path + function_name + '.npz'
     
@@ -125,7 +128,6 @@ def fix_d_Psi(fixture_path):
     
 def fix_d_2_Psi(fixture_path):
     """Call d_2_Psi for a range of inputs and save result as fixture."""
-
     function_name = 'd_2_Psi'
     output_file = fixture_path + function_name + '.npz'
     
@@ -151,13 +153,13 @@ def fix_d_2_Psi(fixture_path):
     
     
 def fix_delay_dist_single(network, file):
-    """Calculate fixtures for all delay dist matrix options."""
+    """Calculate delay_dist_matrix for a single freq and save as h5."""
     network.delay_dist_matrix(network.analysis_params['omega'])
     network.save(file_name=file)
     
     
 def fix_delay_dist_matrix(network, file):
-    """Calculate fixtures for all delay dist matrix options."""
+    """Calculate fixtures for all delay dist matrix options and save as h5."""
     original_delay_dist = network.network_params['delay_dist']
     network.network_params['delay_dist'] = 'none'
     network.delay_dist_matrix()
@@ -176,6 +178,7 @@ def fix_delay_dist_matrix(network, file):
         
 
 def fix_eff_coupling_strength(network, file):
+    """Calc eff_coupling_strength and save as h5."""
     eff_coupling_strength = effective_coupling_strength(
         network.network_params['tau_m'],
         network.network_params['tau_s'],
@@ -190,6 +193,7 @@ def fix_eff_coupling_strength(network, file):
     
     
 def fix_eigenspectra(network, file):
+    """Calc eigenvalues, l and r eigenvecs and save as h5."""
     regime = network.network_params['regime']
     
     network.eigenvalue_spectra('MH')
@@ -215,7 +219,6 @@ def fix_eigenspectra(network, file):
     
 def fix_p_hat_boxcar(fixture_path):
     """Call p_hat_boxcar for a range of inputs and save result as fixture."""
-    
     function_name = 'p_hat_boxcar'
     output_file = fixture_path + function_name + '.npz'
     
@@ -241,7 +244,6 @@ def fix_p_hat_boxcar(fixture_path):
     
 def fix_Phi(fixture_path):
     """Call Phi for a range of possible inputs and save result as fixture."""
-    
     function_name = 'Phi'
     output_file = fixture_path + function_name + '.npz'
     
@@ -260,7 +262,6 @@ def fix_Phi(fixture_path):
 
 def fix_Phi_prime_mu(fixture_path):
     """Call Phi_prime_mu for a range of inputs and save result as fixture."""
-    
     function_name = 'Phi_prime_mu'
     output_file = fixture_path + function_name + '.npz'
     
@@ -291,7 +292,6 @@ def fix_power_spectra(network, file):
 
 def fix_Psi(fixture_path):
     """Call Psi for a range of possible inputs and save result as fixture."""
-
     function_name = 'Psi'
     output_file = fixture_path + function_name + '.npz'
     
@@ -318,6 +318,7 @@ def fix_Psi(fixture_path):
     
     
 def fix_sensitivity_measure(network, file):
+    """Calc sensitivity_measure and save as h5 using network.save()."""
     omega = network.analysis_params['omega']
     network.sensitivity_measure(omega)
     network.transfer_function(omega)
@@ -334,6 +335,7 @@ def fix_transfer_function(network, file):
     
 
 def fix_working_point(network, file):
+    """Calculate working_point and save results as h5 using network.save()."""
     network.working_point()
     network.save(file_name=file)
 
@@ -359,7 +361,6 @@ if __name__ == '__main__':
         fix_d_2_Psi(fixture_path)
         fix_p_hat_boxcar(fixture_path)
         
-        # fixtures that need a network, or network params to be calculated
         configs = dict(noise_driven=(config_path
                                      + 'network_params_microcircuit.yaml'),
                        negative_firing_rate=(config_path
@@ -375,6 +376,7 @@ if __name__ == '__main__':
             network = lmt.Network(param_file, analysis_param_file)
             network.network_params['regime'] = regime
             
+            # fixtures that need a network, or network params to be calculated
             fix_working_point(network, file_path)
             fix_transfer_function(network, file_path)
             fix_delay_dist_single(network, file_path)
