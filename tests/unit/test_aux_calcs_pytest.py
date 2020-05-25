@@ -24,6 +24,10 @@ from lif_meanfield_tools.aux_calcs import (
     d_nu_d_mu,
     d_nu_d_mu_fb433,
     d_nu_d_nu_in_fb,
+    Psi,
+    d_Psi,
+    d_2_Psi,
+    p_hat_boxcar,
     )
 
 ureg = lmt.ureg
@@ -280,4 +284,61 @@ class Test_d_nu_d_nu_in_fb:
         outputs = output_test_fixtures.pop('output')
         check_correct_output_for_several_mus_and_sigmas(self.func, params,
                                                         outputs)
+
+
+class Test_Psi:
     
+    func = staticmethod(Psi)
+
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'Psi.npz')
+        zs = fixtures['zs']
+        xs = fixtures['xs']
+        outputs = fixtures['outputs']
+        for z, x, output in zip(zs, xs, outputs):
+            result = self.func(z, x)
+            assert result == output
+
+
+class Test_d_Psi:
+    
+    func = staticmethod(d_Psi)
+
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'd_Psi.npz')
+        zs = fixtures['zs']
+        xs = fixtures['xs']
+        outputs = fixtures['outputs']
+        for z, x, output in zip(zs, xs, outputs):
+            result = self.func(z, x)
+            assert result == output
+
+
+class Test_d_2_Psi:
+    
+    func = staticmethod(d_2_Psi)
+
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'd_2_Psi.npz')
+        zs = fixtures['zs']
+        xs = fixtures['xs']
+        outputs = fixtures['outputs']
+        for z, x, output in zip(zs, xs, outputs):
+            result = self.func(z, x)
+            assert result == output
+
+
+class Test_determinant:
+    pass
+
+
+class Test_determinant_same_rows:
+    pass
+
+
+class Test_p_hat_boxcar:
+    pass
+
+
+class Test_solve_chareq_rate_boxcar:
+    pass

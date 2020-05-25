@@ -1,15 +1,15 @@
 """
-Only run this script, if you are sure that all functions in aux_calcs.py are correct!
+Only run this script, if you are sure that all functions in aux_calcs.py are
+correct!
 """
 
 import numpy as np
-
-from mpmath import pcfu
 
 # temporarily add local version of lif_meanfield_tools to pythonpath
 # this is necessary to create the data using the local version and not the
 # installed module (important for debugging)
 import sys
+import mpmath
 sys.path.insert(1, './')
 from lif_meanfield_tools.aux_calcs import *
 
@@ -283,12 +283,12 @@ class Fixtures():
         
         function_name = 'Psi'
         
-        input_file = self.input_path + function_name + '.npz'
-        output_file = self.output_path + function_name + '.npy'
+        output_file = self.output_path + function_name + '.npz'
         
-        z_range = np.concatenate([-np.logspace(2,-5, 4), [0], np.logspace(-5, 2, 4)])
+        z_range = np.concatenate([-np.logspace(2, -5, 4), [0],
+                                  np.logspace(-5, 2, 4)])
         a, b = np.meshgrid(z_range, z_range)
-        zs = a.flatten() + complex(0, 1)*b.flatten()
+        zs = a.flatten() + complex(0, 1) * b.flatten()
         xs = np.linspace(-10, 10, 8)
         
         zs, xs = np.meshgrid(zs, xs)
@@ -298,25 +298,23 @@ class Fixtures():
         pcfu_results = []
         for z, x in zip(zs, xs):
             pcfu_results.append(mpmath.pcfu(z, -x))
-            
-        np.savez(input_file, zs=zs, xs=xs, pcfu=pcfu_results)
 
         results = []
-        for z, x  in zip(zs, xs):
+        for z, x in zip(zs, xs):
             results.append(Psi(z, x))
         
-        np.save(output_file, results)
+        np.savez(output_file, zs=zs, xs=xs, pcfu=pcfu_results, outputs=results)
         
     def d_Psi(self):
         
         function_name = 'd_Psi'
         
-        input_file = self.input_path + function_name + '.npz'
-        output_file = self.output_path + function_name + '.npy'
+        output_file = self.output_path + function_name + '.npz'
         
-        z_range = np.concatenate([-np.logspace(2,-5, 4), [0], np.logspace(-5, 2, 4)])
+        z_range = np.concatenate([-np.logspace(2, -5, 4), [0],
+                                  np.logspace(-5, 2, 4)])
         a, b = np.meshgrid(z_range, z_range)
-        zs = a.flatten() + complex(0, 1)*b.flatten()
+        zs = a.flatten() + complex(0, 1) * b.flatten()
         xs = np.linspace(-10, 10, 8)
         
         zs, xs = np.meshgrid(zs, xs)
@@ -326,25 +324,23 @@ class Fixtures():
         psi_results = []
         for z, x in zip(zs, xs):
             psi_results.append(Psi(z + 1, x))
-            
-        np.savez(input_file, zs=zs, xs=xs, psi=psi_results)
-
+        
         results = []
-        for z, x  in zip(zs, xs):
+        for z, x in zip(zs, xs):
             results.append(d_Psi(z, x))
         
-        np.save(output_file, results)
+        np.savez(output_file, zs=zs, xs=xs, psi=psi_results, outputs=results)
         
     def d_2_Psi(self):
         
         function_name = 'd_2_Psi'
         
-        input_file = self.input_path + function_name + '.npz'
-        output_file = self.output_path + function_name + '.npy'
+        output_file = self.output_path + function_name + '.npz'
         
-        z_range = np.concatenate([-np.logspace(2,-5, 4), [0], np.logspace(-5, 2, 4)])
+        z_range = np.concatenate([-np.logspace(2, -5, 4), [0],
+                                  np.logspace(-5, 2, 4)])
         a, b = np.meshgrid(z_range, z_range)
-        zs = a.flatten() + complex(0, 1)*b.flatten()
+        zs = a.flatten() + complex(0, 1) * b.flatten()
         xs = np.linspace(-10, 10, 8)
         
         zs, xs = np.meshgrid(zs, xs)
@@ -355,25 +351,23 @@ class Fixtures():
         for z, x in zip(zs, xs):
             psi_results.append(Psi(z + 2, x))
             
-        np.savez(input_file, zs=zs, xs=xs, psi=psi_results)
-
         results = []
-        for z, x  in zip(zs, xs):
+        for z, x in zip(zs, xs):
             results.append(d_2_Psi(z, x))
         
-        np.save(output_file, results)
+        np.savez(output_file, zs=zs, xs=xs, psi=psi_results, outputs=results)
         
     def p_hat_boxcar(self):
         
         function_name = 'p_hat_boxcar'
         
-        input_file = self.input_path + function_name + '.npz'
-        output_file = self.output_path + function_name + '.npy'
+        output_file = self.output_path + function_name + '.npz'
         
         lp = -5
         hp = 5
         steps = 20
-        ks = np.concatenate([-np.logspace(hp, lp, steps),[0],np.logspace(lp, hp, steps)])
+        ks = np.concatenate([-np.logspace(hp, lp, steps), [0],
+                             np.logspace(lp, hp, steps)])
 
         widths = np.logspace(-5, 5)
         
@@ -381,14 +375,12 @@ class Fixtures():
         ks = ks.flatten()
         widths = widths.flatten()
         
-        np.savez(input_file, ks=ks, widths=widths)
-        
         results = []
         
         for k, width in zip(ks, widths):
             results.append(p_hat_boxcar(k, width))
             
-        np.save(output_file, results)
+        np.savez(output_file, ks=ks, widths=widths, outputs=results)
     
     
 if __name__ == '__main__':
@@ -399,12 +391,12 @@ if __name__ == '__main__':
     fixtures = Fixtures(input_path, output_path)
     # fixtures.white_noise_firing_rate_functions()
     # fixtures.colored_noise_firing_rate_functions()
-    fixtures.Phi()
-    fixtures.Phi_prime_mu()
+    # fixtures.Phi()
+    # fixtures.Phi_prime_mu()
     # fixtures.d_nu_d_mu()
     # fixtures.d_nu_d_mu_fb433()
     # fixtures.d_nu_d_nu_in_fb()
-    # fixtures.Psi()
-    # fixtures.d_Psi()
-    # fixtures.d_2_Psi()
-    # fixtures.p_hat_boxcar()
+    fixtures.Psi()
+    fixtures.d_Psi()
+    fixtures.d_2_Psi()
+    fixtures.p_hat_boxcar()
