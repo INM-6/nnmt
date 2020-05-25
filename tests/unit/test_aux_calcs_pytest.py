@@ -28,6 +28,8 @@ from lif_meanfield_tools.aux_calcs import (
     d_2_Psi,
     p_hat_boxcar,
     determinant,
+    determinant_same_rows,
+    solve_chareq_rate_boxcar
     )
 
 ureg = lmt.ureg
