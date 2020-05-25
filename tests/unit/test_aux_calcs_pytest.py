@@ -1,11 +1,10 @@
 import pytest
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal
 from scipy.special import erf, zetac
 from scipy.integrate import quad
 
 from .checks import (check_pos_params_neg_raise_exception,
-                     check_correct_output,
                      check_correct_output_for_several_mus_and_sigmas,
                      check_almost_correct_output_for_several_mus_and_sigmas,
                      check_V_0_larger_V_th_raise_exception,
@@ -28,6 +27,7 @@ from lif_meanfield_tools.aux_calcs import (
     d_Psi,
     d_2_Psi,
     p_hat_boxcar,
+    determinant,
     )
 
 ureg = lmt.ureg
@@ -81,7 +81,7 @@ class Test_siegert1:
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
-    
+                
     def test_mu_larger_V_th_raises_exception(self, std_params):
         std_params['mu'] = 1.1 * std_params['V_th_rel']
         with pytest.raises(ValueError):
@@ -135,6 +135,12 @@ class Test_nu0_fb433:
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
+        
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -152,6 +158,12 @@ class Test_nu0_fb:
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
+        
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
@@ -228,6 +240,12 @@ class Test_d_nu_d_mu:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
         
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
+        
     def test_zero_sigma_raises_error(self, std_params):
         std_params['sigma'] = 0
         with pytest.raises(ZeroDivisionError):
@@ -250,6 +268,12 @@ class Test_d_nu_d_mu_fb433:
 
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
+
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
                 
     def test_zero_sigma_raises_error(self, std_params):
         std_params['sigma'] = 0
@@ -274,6 +298,12 @@ class Test_d_nu_d_nu_in_fb:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
         
+    def test_warning_is_given_if_k_is_critical(self, std_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_params)
+
+    def test_exception_is_raised_if_k_is_too_large(self, std_params):
+        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
+        
     def test_zero_sigma_raises_error(self, std_params):
         std_params['sigma'] = 0
         with pytest.raises(ZeroDivisionError):
@@ -290,11 +320,14 @@ class Test_Psi:
     
     func = staticmethod(Psi)
 
-    def test_correct_output(self):
+    def test_correct_output(self, mocker):
         fixtures = np.load(fixture_path + 'Psi.npz')
         zs = fixtures['zs']
         xs = fixtures['xs']
+        pcfus = fixtures['pcfus']
         outputs = fixtures['outputs']
+        mock = mocker.patch('lif_meanfield_tools.aux_calcs.pcfu')
+        mock.side_effect = pcfus
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
             assert result == output
@@ -304,11 +337,14 @@ class Test_d_Psi:
     
     func = staticmethod(d_Psi)
 
-    def test_correct_output(self):
+    def test_correct_output(self, mocker):
         fixtures = np.load(fixture_path + 'd_Psi.npz')
         zs = fixtures['zs']
         xs = fixtures['xs']
+        psis = fixtures['psis']
         outputs = fixtures['outputs']
+        mock = mocker.patch('lif_meanfield_tools.aux_calcs.Psi')
+        mock.side_effect = psis
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
             assert result == output
@@ -318,27 +354,78 @@ class Test_d_2_Psi:
     
     func = staticmethod(d_2_Psi)
 
-    def test_correct_output(self):
+    def test_correct_output(self, mocker):
         fixtures = np.load(fixture_path + 'd_2_Psi.npz')
         zs = fixtures['zs']
         xs = fixtures['xs']
+        psis = fixtures['psis']
         outputs = fixtures['outputs']
+        mock = mocker.patch('lif_meanfield_tools.aux_calcs.Psi')
+        mock.side_effect = psis
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
             assert result == output
 
 
+@pytest.mark.xfail
 class Test_determinant:
-    pass
+    
+    func = staticmethod(determinant)
+    
+    def test_real_matrix_with_zero_determinant(self):
+        a = [1, 2, 3]
+        M = np.array([a, a, a])
+        result = self.func(M)
+        real_determinant = 0
+        assert result == real_determinant
+
+    def test_real_matrix_with_positive_determinant(self):
+        M = np.array([[1, 2, 3], [2, 1, 3], [3, 1, 2]])
+        result = self.func(M)
+        real_determinant = 6
+        assert result == real_determinant
+
+    def test_real_matrix_with_negative_determinant(self):
+        M = np.array([[1, 2, 3], [3, 1, 2], [2, 1, 3]])
+        result = self.func(M)
+        real_determinant = -6
+        assert result == real_determinant
+
+    def test_non_square_matrix(self):
+        M = np.array([[1, 2, 3], [2, 3, 1]])
+        with pytest.raises(np.linalg.LinAlgError):
+            self.func(M)
+
+    def test_matrix_with_imaginary_determinant(self):
+        M = np.array([[complex(0, 1), 1], [0, 1]])
+        real_determinant = np.linalg.det(M)
+        result = self.func(M)
+        assert result == real_determinant
 
 
 class Test_determinant_same_rows:
-    pass
+    
+    @pytest.mark.xfail
+    def test_something(self):
+        pass
 
 
 class Test_p_hat_boxcar:
-    pass
+    
+    func = staticmethod(p_hat_boxcar)
+
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'p_hat_boxcar.npz')
+        ks = fixtures['ks']
+        widths = fixtures['widths']
+        outputs = fixtures['outputs']
+        for z, x, output in zip(ks, widths, outputs):
+            result = self.func(z, x)
+            assert result == output
 
 
 class Test_solve_chareq_rate_boxcar:
-    pass
+    
+    @pytest.mark.xfail
+    def test_something(self):
+        pass

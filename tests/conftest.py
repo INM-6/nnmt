@@ -216,14 +216,32 @@ for i, regime in enumerate(regimes):
 #                                      V_0_rel=V_0_rels)
 
 
+def get_output_for_keys_of_metafunc(metafunc, results, params):
+    try:
+        output_key = metafunc.cls.output_key
+        return [result[output_key] for result in results]
+    except AttributeError:
+        pass
+    
+    try:
+        output_keys = metafunc.cls.output_keys
+        return [[result[output_key] for output_key in output_keys]
+                for result in results]
+    except AttributeError:
+        return [[] for i in range(len(params))]
+    
+
 def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                           ids_all_regimes=ids_all_regimes):
     """Define parametrization schemes for pos_keys and output_test_fixtures."""
     
     if (metafunc.module.__name__ == 'tests.unit.test_meanfield_calcs'
-        or metafunc.module.__name__ == 'tests.unit.test_aux_calcs_pytest'):
+            or metafunc.module.__name__ == 'tests.unit.test_aux_calcs_pytest'):
         
-        func = metafunc.cls.func
+        try:
+            func = metafunc.cls.func
+        except AttributeError:
+            return None
         
         if "pos_keys" in metafunc.fixturenames:
             # test every pos_key required by func as arg separately
@@ -245,13 +263,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
             params = [get_required_params(func, dict(params, **results))
                       for params, results in zip(all_params, results)]
 
-            try:
-                output_key = metafunc.cls.output_key
-                output = [result[output_key] for result in results]
-            except AttributeError:
-                output_keys = metafunc.cls.output_keys
-                output = [[result[output_key] for output_key in output_keys]
-                          for result in results]
+            output = get_output_for_keys_of_metafunc(metafunc, results, params)
 
             if 'sensitivity_measure' in metafunc.cls.__name__:
                 for param, result in zip(params, results):

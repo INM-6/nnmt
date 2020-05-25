@@ -303,7 +303,7 @@ class Fixtures():
         for z, x in zip(zs, xs):
             results.append(Psi(z, x))
         
-        np.savez(output_file, zs=zs, xs=xs, pcfu=pcfu_results, outputs=results)
+        np.savez(output_file, zs=zs, xs=xs, pcfus=pcfu_results, outputs=results)
         
     def d_Psi(self):
         
@@ -329,7 +329,7 @@ class Fixtures():
         for z, x in zip(zs, xs):
             results.append(d_Psi(z, x))
         
-        np.savez(output_file, zs=zs, xs=xs, psi=psi_results, outputs=results)
+        np.savez(output_file, zs=zs, xs=xs, psis=psi_results, outputs=results)
         
     def d_2_Psi(self):
         
@@ -355,7 +355,7 @@ class Fixtures():
         for z, x in zip(zs, xs):
             results.append(d_2_Psi(z, x))
         
-        np.savez(output_file, zs=zs, xs=xs, psi=psi_results, outputs=results)
+        np.savez(output_file, zs=zs, xs=xs, psis=psi_results, outputs=results)
         
     def p_hat_boxcar(self):
         
