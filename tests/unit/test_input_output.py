@@ -176,11 +176,11 @@ class Test_load_params:
     def test_val_unit_to_quantities_called(self, mocker):
         mock = mocker.patch('lif_meanfield_tools.input_output.'
                             'val_unit_to_quantities')
-        io.load_params('tests/fixtures/test.yaml')
+        io.load_params('tests/fixtures/config/test.yaml')
         mock.assert_called_once()
         
     def test_yaml_loaded_correctly(self, param_test_dict):
-        params = io.load_params('tests/fixtures/test.yaml')
+        params = io.load_params('tests/fixtures/config/test.yaml')
         check_quantity_dicts_are_equal(params, param_test_dict)
                 
 

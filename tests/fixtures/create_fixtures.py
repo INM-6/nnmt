@@ -107,6 +107,48 @@ def fixture_eff_coupling_strength(network):
     network.results['effective_coupling_strength'] = eff_coupling_strength
 
 
+def fixture_d_nu_d_mu(network):
+    params = network.network_params
+    mus = network.mean_input()
+    sigmas = network.std_input()
+    d_nu_d_mu = [lmt.aux_calcs.d_nu_d_mu(params['tau_m'],
+                                         params['tau_r'],
+                                         params['V_th_rel'],
+                                         params['V_0_rel'],
+                                         mu, sigma)
+                 for mu, sigma in zip(mus, sigmas)]
+    network.results['d_nu_d_mu'] = d_nu_d_mu
+
+
+def fixture_d_nu_d_mu_fb433(network):
+    params = network.network_params
+    mus = network.mean_input()
+    sigmas = network.std_input()
+    d_nu_d_mu_fb433 = [lmt.aux_calcs.d_nu_d_mu_fb433(params['tau_m'],
+                                                     params['tau_s'],
+                                                     params['tau_r'],
+                                                     params['V_th_rel'],
+                                                     params['V_0_rel'],
+                                                     mu, sigma)
+                       for mu, sigma in zip(mus, sigmas)]
+    network.results['d_nu_d_mu_fb433'] = d_nu_d_mu_fb433
+
+
+def fixture_d_nu_d_nu_in_fb(network):
+    params = network.network_params
+    mus = network.mean_input()
+    sigmas = network.std_input()
+    d_nu_d_nu_in_fb = [lmt.aux_calcs.d_nu_d_nu_in_fb(params['tau_m'],
+                                                     params['tau_s'],
+                                                     params['tau_r'],
+                                                     params['V_th_rel'],
+                                                     params['V_0_rel'],
+                                                     params['j'],
+                                                     mu, sigma)
+                       for mu, sigma in zip(mus, sigmas)]
+    network.results['d_nu_d_nu_in_fb'] = d_nu_d_nu_in_fb
+
+
 configs = dict(noise_driven='network_params_microcircuit.yaml',
                negative_firing_rate='minimal_negative.yaml',)
                # mean_driven='small_network.yaml')
@@ -128,7 +170,7 @@ if __name__ == '__main__':
             network = lmt.Network(param_file, analysis_param_file)
         
             network.network_params['regime'] = regime
-
+            #
             fixture_working_point(network)
             fixture_transfer_function(network)
             fixture_delay_dist_matrix(network)
@@ -136,5 +178,8 @@ if __name__ == '__main__':
             fixture_power_spectra(network)
             fixture_additional_rates_for_fixed_input(network)
             fixture_eff_coupling_strength(network)
-
-            network.save(file_name='{}_regime.h5'.format(regime))
+            fixture_d_nu_d_mu(network)
+            fixture_d_nu_d_mu_fb433(network)
+            fixture_d_nu_d_nu_in_fb(network)
+        
+            network.save(file_name='data/{}_regime.h5'.format(regime))

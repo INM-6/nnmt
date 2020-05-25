@@ -385,8 +385,8 @@ class Fixtures():
     
 if __name__ == '__main__':
     
-    input_path = 'tests/fixtures/'
-    output_path = 'tests/fixtures/'
+    input_path = 'tests/fixtures/data/'
+    output_path = 'tests/fixtures/data/'
 
     fixtures = Fixtures(input_path, output_path)
     # fixtures.white_noise_firing_rate_functions()

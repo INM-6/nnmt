@@ -32,7 +32,7 @@ from lif_meanfield_tools.aux_calcs import (
 
 ureg = lmt.ureg
 
-fixture_path = 'tests/fixtures/'
+fixture_path = 'tests/fixtures/data/'
 
 
 def integrand(x):
