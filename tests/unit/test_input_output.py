@@ -5,6 +5,7 @@ Unit tests for the input output module.
 
 import pytest
 import numpy as np
+from numpy.testing import assert_array_equal
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
@@ -102,7 +103,7 @@ class Test_val_unit_to_quantities:
                 assert conv_item == exp_item
             except ValueError:
                 assert conv_item[0] == exp_item[0]
-                np.testing.assert_array_equal(conv_item[1], exp_item[1])
+                assert_array_equal(conv_item[1], exp_item[1])
             
     def test_unit_abbreviations_work_correctly(self):
         val_unit_pairs = dict(
@@ -141,13 +142,12 @@ class Test_quantities_to_val_unit:
                 try:
                     assert conv_item[1]['val'] == exp_item[1]['val']
                 except ValueError:
-                    np.testing.assert_array_equal(conv_item[1]['val'],
-                                                  exp_item[1]['val'])
+                    assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
             except (IndexError, TypeError):
                 try:
                     assert conv_item[1] == conv_item[1]
                 except ValueError:
-                    np.testing.assert_array_equal(conv_item[1], exp_item[1])
+                    assert_array_equal(conv_item[1], exp_item[1])
                     
     def test_list_of_quantities(self):
         quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
@@ -160,7 +160,7 @@ class Test_quantities_to_val_unit:
         exp_item = val_unit_pair.popitem()
         assert conv_item[0] == exp_item[0]
         assert conv_item[1]['unit'] == exp_item[1]['unit']
-        np.testing.assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
+        assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
         
     @pytest.mark.xfail
     def test_list_of_quantities_with_several_units_raises_exception(self):

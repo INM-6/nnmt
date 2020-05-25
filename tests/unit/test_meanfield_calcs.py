@@ -1,5 +1,5 @@
 import pytest
-import numpy as np
+from numpy.testing import assert_array_equal
 
 from .checks import (check_pos_params_neg_raise_exception,
                      check_correct_output,
@@ -325,7 +325,7 @@ class Test_additional_rates_for_fixed_input:
     def test_correct_output_nu_e_ext(self, output_test_fixtures, key):
         params = output_test_fixtures['params']
         output = output_test_fixtures['output']
-        np.testing.assert_array_equal(self.func(**params)[key], output[key])
+        assert_array_equal(self.func(**params)[key], output[key])
 
 
 class Test_effective_coupling_strength:
