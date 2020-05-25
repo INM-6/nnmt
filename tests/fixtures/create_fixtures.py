@@ -4,9 +4,10 @@
 Creates fixtures for lif_meanfield_tools tests.
 
 WARNING: Only use this script, if your code is trustworthy! The script runs
-         the code to produce the fixtures that are then stored in h5 format.
-         If you run this script and your code is not working correctly, most
-         tests will pass despite your code giving wrong results.
+         the lif_meanfield_tools code to produce the fixtures that are then
+         stored in h5 format. If you run this script and your code is not
+         working correctly, a lot of tests will pass despite your code giving
+         wrong results.
 
 If you still want to run this script type: python create_fixtures.py -f
 
@@ -149,12 +150,6 @@ def fixture_d_nu_d_nu_in_fb(network):
     network.results['d_nu_d_nu_in_fb'] = d_nu_d_nu_in_fb
 
 
-configs = dict(noise_driven='network_params_microcircuit.yaml',
-               negative_firing_rate='minimal_negative.yaml',)
-               # mean_driven='small_network.yaml')
-
-analysis_param_file = 'analysis_params_test.yaml'
-
 if __name__ == '__main__':
     # always show help message if not invoked with -f option
     if len(sys.argv) == 1:
@@ -164,13 +159,17 @@ if __name__ == '__main__':
 
     # only run code if users are sure they want to do it
     if '--force' in args.keys():
+        fixture_path = 'tests/fixtures/data/'
+        configs = dict(noise_driven='network_params_microcircuit.yaml',
+                       negative_firing_rate='minimal_negative.yaml',
+                       # mean_driven='small_network.yaml',
+                       )
+        analysis_param_file = 'analysis_params_test.yaml'
 
         for regime, param_file in configs.items():
-            
             network = lmt.Network(param_file, analysis_param_file)
-        
             network.network_params['regime'] = regime
-            #
+            
             fixture_working_point(network)
             fixture_transfer_function(network)
             fixture_delay_dist_matrix(network)
@@ -182,4 +181,5 @@ if __name__ == '__main__':
             fixture_d_nu_d_mu_fb433(network)
             fixture_d_nu_d_nu_in_fb(network)
         
-            network.save(file_name='data/{}_regime.h5'.format(regime))
+            network.save(file_name='{}{}_regime.h5'.format(fixture_path,
+                                                           regime))
