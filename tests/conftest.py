@@ -11,6 +11,48 @@ config_path = 'tests/fixtures/config/'
 fixture_path = 'tests/fixtures/data/'
 
 
+# list of all always positive arguments
+all_pos_keys = ['C',
+                'K',
+                'K_ext',
+                'N',
+                'd_e',
+                'd_i',
+                'd_e_sd',
+                'd_i_sd',
+                'dimension',
+                'g',
+                'nu',
+                'nu_ext',
+                'nu_e_ext',
+                'nu_i_ext',
+                'sigma',
+                'tau_m',
+                'tau_s',
+                'tau_r',
+                'nu_ext',
+                ]
+
+
+regimes = ['noise_driven', 'negative_firing_rate']
+key_pairs = (('mean_input', 'mu'),
+             ('std_input', 'sigma'),
+             ('firing_rates', 'nu'),
+             ('delay_dist', 'delay_dist_matrix'))
+all_params = []
+results = []
+ids_all_regimes = []
+for i, regime in enumerate(regimes):
+    fixs = load_h5('{}{}_regime.h5'.format(fixture_path, regime))
+    all_params.append(dict(fixs['network_params'], **fixs['analysis_params']))
+    result = fixs['results']
+    # rename some keys, because some functions require diferent arg names
+    for old_key, new_key in key_pairs:
+        result[new_key] = result[old_key]
+    results.append(result)
+    ids_all_regimes.append('{}_regime'.format(regime))
+
+
 def get_required_keys(func, all_keys):
     """Checks arguments of func and returns corresponding parameters."""
     arg_keys = list(signature(func).parameters)
@@ -28,32 +70,32 @@ def get_required_params(func, all_params):
 
 @pytest.fixture
 def network():
+    """Returns standard microcircuit network."""
     network = lmt.Network(
-        network_params='{}network_params_microcircuit.yaml'.format(
-            config_path),
-        analysis_params='{}analysis_params_test.yaml'.format(
-            config_path)
+        network_params=(config_path + 'network_params_microcircuit.yaml'),
+        analysis_params=(config_path + 'analysis_params_test.yaml')
         )
     return network
 
 
 @pytest.fixture
 def network_params_yaml():
-    return '{}network_params_microcircuit.yaml'.format(config_path)
+    """Returns standard microcircuit network params."""
+    return config_path + 'network_params_microcircuit.yaml'
 
 
 @pytest.fixture
 def analysis_params_yaml():
-    return '{}analysis_params_test.yaml'.format(config_path)
+    """Returns some standard analysis params."""
+    return config_path + 'analysis_params_test.yaml'
 
 
 def calc_dep_params(params):
     """
-    Calcs dependend parameters derived from params.
+    Calcs dependend parameters derived from params and updates params.
 
     Taken from network.py.
     """
-
     # calculate dimension of system
     dim = len(params['populations'])
     params['dimension'] = dim
@@ -90,7 +132,6 @@ def calc_dep_params(params):
 
 @pytest.fixture
 def all_std_params():
-
     # standard params from first two populations of microcircuit
     firing_rates = np.array([0.71, 2.75]) * ureg.Hz
     mean_input = np.array([3.30, 7.03]) * ureg.mV
@@ -136,15 +177,18 @@ def all_std_params():
                   omegas=np.array([20]) * ureg.Hz,
                   w=87.8 * ureg.pA
                   )
-
     calc_dep_params(params)
-
     return params
 
 
 @pytest.fixture
 def std_params(request, all_std_params):
-    """Returns set of standard params needed for all tests."""
+    """
+    Returns set of standard params needed by requesting tested function.
+    
+    For using this fixture, the function test class needs to have a class
+    attribute `func`, which is the tested function as a staticmethod.
+    """
     return get_required_params(request.cls.func, all_std_params)
 
 
@@ -159,104 +203,54 @@ def std_params_tf(std_params):
 
 @pytest.fixture
 def std_params_eval_spectra(request, all_std_params):
-    """Returns set of standard params needed for all tests."""
+    """Returns set of standard params needed eigenvalue tests."""
     all_std_params['quantity'] = 'eigvals'
     return get_required_params(request.cls.func, all_std_params)
 
 
-all_pos_keys = ['C',
-                'K',
-                'K_ext',
-                'N',
-                'd_e',
-                'd_i',
-                'd_e_sd',
-                'd_i_sd',
-                'dimension',
-                'g',
-                'nu',
-                'nu_ext',
-                'nu_e_ext',
-                'nu_i_ext',
-                'sigma',
-                'tau_m',
-                'tau_s',
-                'tau_r',
-                'nu_ext',
-                ]
-
-
-regimes = ['noise_driven', 'negative_firing_rate']
-key_pairs = (('mean_input', 'mu'),
-             ('std_input', 'sigma'),
-             ('firing_rates', 'nu'),
-             ('delay_dist', 'delay_dist_matrix'))
-all_params = []
-results = []
-ids_all_regimes = []
-for i, regime in enumerate(regimes):
-    fixs = load_h5('{}{}_regime.h5'.format(fixture_path, regime))
-    all_params.append(dict(fixs['network_params'], **fixs['analysis_params']))
-    result = fixs['results']
-    # rename some keys, because some functions require diferent arg names
-    for old_key, new_key in key_pairs:
-        result[new_key] = result[old_key]
-    results.append(result)
-    ids_all_regimes.append('{}_regime'.format(regime))
-
-
-# # mean driven regime mu > V_th
-# # parameters taken from adjusted microcircuit example
-# params_mean_driven_regime = load_params(
-#                                 'tests/unit/fixtures/mean_driven_regime.yaml')
-# params_mean_driven_regime['nu'] = params_mean_driven_regime['firing_rates']
-
-# mus =  [741.89455754, 21.24112709, 35.86521795, 40.69297877,
-#         651.19761921] * ureg.mV
-# sigmas = [39.3139564, 6.17632725, 9.79196704, 10.64437979,
-#           37.84928217] * ureg.mV
-#
-# tau_m = 20. * ureg.ms
-# tau_s = 0.5 * ureg.ms
-# tau_r = 0.5 * ureg.ms
-# V_th_rel = 20 * ureg.mV
-# V_0_rel = 0 * ureg.mV
-#
-# tau_ms = np.repeat(tau_m, len(mus))
-# tau_ss = np.repeat(tau_s, len(mus))
-# tau_rs = np.repeat(tau_r, len(mus))
-# V_th_rels = np.repeat(V_th_rel, len(mus))
-# V_0_rels = np.repeat(V_0_rel, len(mus))
-#
-# _parameters_mean_driven_regime =dict(mu=mus, sigma=sigmas,
-#                                      tau_m=tau_ms, tau_s=tau_ss,
-#                                      tau_r=tau_rs,
-#                                      V_th_rel=V_th_rels,
-#                                      V_0_rel=V_0_rels)
-
-
 def get_output_for_keys_of_metafunc(metafunc, results, params):
-    try:
+    """
+    Returns output fixtures for output keys of the requesting test class.
+    
+    If a test class has `output_key` or `output_keys` as class attribute,
+    this function returns a list of the outputs for the given keys.
+    """
+    if hasattr(metafunc.cls, 'output_key'):
         output_key = metafunc.cls.output_key
         return [result[output_key] for result in results]
-    except AttributeError:
-        pass
-    
-    try:
+    elif hasattr(metafunc.cls, 'output_keys'):
         output_keys = metafunc.cls.output_keys
         return [[result[output_key] for output_key in output_keys]
                 for result in results]
-    except AttributeError:
+    else:
         return [[] for i in range(len(params))]
-    
+
 
 def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                           ids_all_regimes=ids_all_regimes):
-    """Define parametrization schemes for pos_keys and output_test_fixtures."""
+    """
+    Special pytest function defining parametrizations for certain fixtures.
     
-    try:
+    `pos_keys`:
+    If a test requires all positive keys contained in the list of arguments of
+    the tested function, the corresponding function test class needs to have a
+    class attribute `func`, which is the tested function as a staticmethod.
+    The pos keys are tested one after each other as a parametrization.
+    
+    `output_test_fixtures`:
+    If a test requires input arguments and outputs in different regimes for
+    comparison with the return values of the tested function, the corresponding
+    function test class needs a class attribute `func`, the tested function as
+    a staticmethod, and either a `output_key` attribute or a `output_keys`
+    attribute. The different parameter regimes are then tested one after each
+    other as a parametrization. There are some functions that need a special
+    treatment, like the sensitivity_measure (see code).
+    """
+    # check if requesting test class has class attribute func
+    if hasattr(metafunc.cls, 'func'):
         func = metafunc.cls.func
-    except AttributeError:
+    # if it does not, just return and don't parametrize
+    else:
         return None
     
     if "pos_keys" in metafunc.fixturenames:
