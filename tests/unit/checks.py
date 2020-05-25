@@ -1,6 +1,6 @@
-import numpy as np
 import pytest
 import re
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 
 def check_pos_params_neg_raise_exception(func, params, pos_key):
@@ -14,7 +14,17 @@ def check_correct_output(func, params, output, updates=None):
     if updates:
         params = params.copy()
         params.update(updates)
-    np.testing.assert_array_equal(func(**params), output)
+    assert_array_equal(func(**params), output)
+    
+    
+def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
+    mus = params.pop('mu')
+    sigmas = params.pop('sigma')
+    for mu, sigma, output in zip(mus, sigmas, outputs):
+        params['mu'] = mu
+        params['sigma'] = sigma
+        result = func(**params)
+        assert_array_equal(output, result)
     
     
 def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
@@ -27,7 +37,7 @@ def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
         params['sigma'] = sigma
         expected = alt_func(**params)
         result = func(**params)
-        np.testing.assert_array_almost_equal(expected, result, precision)
+        assert_array_almost_equal(expected, result, precision)
 
 
 def check_V_0_larger_V_th_raise_exception(func, params):
@@ -66,5 +76,4 @@ def check_quantity_dicts_are_equal(dict1, dict2):
         try:
             assert dict1[key] == dict2[key]
         except ValueError:
-            np.testing.assert_array_equal(dict1[key],
-                                          dict2[key])
+            assert_array_equal(dict1[key], dict2[key])
