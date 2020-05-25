@@ -240,12 +240,6 @@ class Test_d_nu_d_mu:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
         
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
-        
     def test_zero_sigma_raises_error(self, std_params):
         std_params['sigma'] = 0
         with pytest.raises(ZeroDivisionError):
@@ -326,7 +320,7 @@ class Test_Psi:
         xs = fixtures['xs']
         pcfus = fixtures['pcfus']
         outputs = fixtures['outputs']
-        mock = mocker.patch('lif_meanfield_tools.aux_calcs.pcfu')
+        mock = mocker.patch('lif_meanfield_tools.aux_calcs.mpmath.pcfu')
         mock.side_effect = pcfus
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
