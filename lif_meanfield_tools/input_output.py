@@ -11,7 +11,6 @@ Options:
 '''
 
 from __future__ import print_function
-from collections.abc import Iterable
 
 import numpy as np
 import yaml
@@ -85,15 +84,14 @@ def quantities_to_val_unit(dict_of_quantities):
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
+
         # lists of strings need to be treated seperately
-        if isinstance(quantity, Iterable):
+        if isinstance(quantity, list):
             if any(isinstance(part, str) for part in quantity):
                 converted_dict[quantity_key] = quantity
             elif any(isinstance(part, ureg.Quantity) for part in quantity):
                 converted_dict[quantity_key]['val'] = np.stack([array.magnitude for array in quantity])
                 converted_dict[quantity_key]['unit'] = str(quantity[0].units)
-            else:
-                converted_dict[quantity_key] = quantity
         # quantities are converted to val unit dictionary
         elif isinstance(quantity, ureg.Quantity):
             converted_dict[quantity_key]['val'] = quantity.magnitude

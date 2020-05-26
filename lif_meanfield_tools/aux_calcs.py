@@ -30,21 +30,8 @@ import scipy
 import numpy as np
 import math
 import mpmath
-import warnings
 
 from . import ureg
-
-
-def check_if_positive(parameters, parameter_names):
-    for parameter, parameter_name in zip(parameters, parameter_names):
-        try:
-            if any(p < 0 for p in parameter):
-                raise ValueError('{} should be larger than zero!'.format(
-                    parameter_name))
-        except TypeError:
-            if parameter < 0:
-                raise ValueError('{} should be larger than zero!'.format(
-                    parameter_name))
 
 
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -53,8 +40,8 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
-    deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
-    expansion around k = sqrt(tau_s/tau_m).
+    deviation sigma, using Eq. 433 in Fourcaud & Brunel (2002) with Taylor
+    expansion k = sqrt(tau_s/tau_m).
 
     Parameters:
     -----------
@@ -78,46 +65,20 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
-    pos_parameters = [tau_m, tau_s, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-
-    if V_th_rel < V_0_rel:
-        raise ValueError('V_th should be larger than V_0!')
-    
-    k = np.sqrt(tau_s / tau_m)
-
-    if (0.1 < k) & (k < 1):
-        k_warning = 'k=sqrt(tau_s/tau_m)={} might be too large for calculation of firing rates via Taylor expansion!'.format(k)
-        warnings.warn(k_warning)
-    if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of firing rates via Taylor expansion!')
-        
-    # use zetac function (zeta-1) because zeta is not giving finite values for arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
-    
-    # additional prefactor sqrt(2) because its x from Schuecker 2015
     x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
 
     # preventing overflow in np.exponent in Phi(s)
-    # note: this simply returns the white noise result... is this ok?
     if x_th > 20.0 / np.sqrt(2.):
         result = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
-        # white noise firing rate
         r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        
         dPhi = Phi(x_th) - Phi(x_r)
-        # colored noise firing rate (might this lead to negative rates?)
         result = (r - np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
                   * dPhi * (r * tau_m)**2)
-        
-    # why do we have this?
-    # if math.isnan(result):
-    #     print(mu, sigma, x_th, x_r)
-    #
+    if math.isnan(result):
+        print(mu, sigma, x_th, x_r)
     return result
 
 
@@ -145,20 +106,16 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
-    # why is this the threshold?
     if mu <= V_th_rel - 0.05 * abs(V_th_rel):
         return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
-def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """
-    Calculates stationary firing rates including synaptic filtering.
-    
-    Based on Fourcaud & Brunel 2002, using shift of the integration boundaries
-    in the white noise Siegert formula, as derived in Schuecker 2015.
+    Calculates stationary firing rates for filtered synapses based on
+    Fourcaud & Brunel 2002 (using the shift of the integration boundaries)
 
     Parameters:
     -----------
@@ -182,25 +139,19 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
-    pos_parameters = [tau_m, tau_s, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
 
-    # using zetac (zeta-1), because zeta is giving nan result for arguments smaller 1
     alpha = np.sqrt(2)*abs(zetac(0.5)+1)
     # effective threshold
-    # additional factor sigma is canceled in siegert
-    V_th1 = V_th_rel + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    V_th1 = V_th + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # effective reset
-    V_01 = V_0_rel + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    V_r1 = V_r + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # use standard Siegert with modified threshold and reset
-    return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma)
+    return nu_0(tau_m, tau_r, V_th1, V_r1, mu, sigma)
 
 
 def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    Calculates stationary firing rates for delta shaped PSCs for mu < V_th_rel.
+    Calculates stationary firing rates for delta shaped PSCs.
 
     Parameters:
     -----------
@@ -222,17 +173,7 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-
-    pos_parameters = [tau_m, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-    
-    if V_th_rel < V_0_rel:
-        raise ValueError('V_th should be larger than V_0!')
-    if mu > V_th_rel - 0.05 * abs(V_th_rel):
-        raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if mu > (V_th-V_0).')
-    
-
+    # for mu < V_th_rel
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
 
@@ -242,7 +183,6 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         else:
             return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th) * u)) / u
 
-    # find lower bound of integration, such that integrand is smaller than 1e-12 at lower bound
     lower_bound = y_th
     err_dn = 1.0
     while err_dn > 1e-12 and lower_bound > 1e-16:
@@ -250,7 +190,6 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         if err_dn > 1e-12:
             lower_bound /= 2
 
-    # find upper bound of integration, such that integrand is smaller than 1e-12 at lower bound
     upper_bound = y_th
     err_up = 1.0
     while err_up > 1e-12:
@@ -270,7 +209,7 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    Calculates stationary firing rates for delta shaped PSCs for mu > V_th_rel.
+    Calculates stationary firing rates for delta shaped PSCs.
 
     Parameters:
     -----------
@@ -292,18 +231,7 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
-    pos_parameters = [tau_m, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-
-    if V_th_rel < V_0_rel:
-        raise ValueError('V_th should be larger than V_0!')
-    # why this threshold?
-    if mu < V_th_rel - 0.05 * abs(V_th_rel):
-        raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
-    
-    
+    # for mu > V_th_rel
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
 
@@ -341,12 +269,6 @@ def Phi_prime_mu(s, sigma):
     """
     Derivative of the helper function Phi(s) with respect to the mean input
     """
-    
-    if sigma < 0:
-        raise ValueError('sigma needs to be larger than zero!')
-    if sigma == 0:
-        raise ZeroDivisionError('Function contains division by sigma!')
-    
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
     * (1 + erf(s / np.sqrt(2)))
     + np.sqrt(2) / np.sqrt(np.pi))
@@ -382,16 +304,8 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     Returns:
     --------
     float:
-        Zero frequency limit of colored noise transfer function in Hz/mV.
+        Something in Hz/mV.
     """
-    
-    pos_parameters = [tau_m, tau_s, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-    
-    if sigma == 0:
-        raise ZeroDivisionError('Function contains division by sigma!')
-    
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
     x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
@@ -429,93 +343,14 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     Returns:
     --------
     float:
-        Zero frequency limit of white noise transfer function in Hz/mV.
+        Something in Hz/mV.
     """
-    
-    pos_parameters = [tau_m, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-    
-    try:
-        if any(sigma == 0 for sigma in sigma):
-            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
-    except TypeError:
-        if sigma == 0:
-            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
-    
     y_th = (V_th_rel - mu)/sigma
     y_r = (V_0_rel - mu)/sigma
     nu0 = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     return (np.sqrt(np.pi) * tau_m * nu0**2 / sigma
             * (np.exp(y_th**2) * (1 + erf(y_th)) - np.exp(y_r**2)
                * (1 + erf(y_r))))
-    
-    
-def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
-    """
-    Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
-    Effective threshold and reset from Fourcaud & Brunel 2002.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_s: float
-        Synaptic time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float
-        Relative threshold potential in mV.
-    V_0_rel: float
-        Relative reset potential in mV.
-    j: float
-        Effective connectivity weight in mV.
-    mu: float
-        Mean neuron activity in mV.
-    sigma:
-        Standard deviation of neuron activity in mV.
-
-    Returns:
-    --------
-    float:
-        Derivative in Hz/mV (sum of linear (mu) and squared (sigma^2) contribution).
-    float:
-        Derivative in Hz/mV (linear (mu) contribution).
-    float:
-        Derivative in Hz/mV (squared (sigma^2) contribution).
-    """
-    
-    pos_parameters = [tau_m, tau_s, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-
-    try:
-        if any(sigma == 0 for sigma in sigma):
-            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
-    except TypeError:
-        if sigma == 0:
-            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
-    
-    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
-
-    y_th = (V_th_rel - mu) / sigma
-    y_r = (V_0_rel - mu) / sigma
-
-    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
-    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
-
-    nu0 = nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
-
-    # linear contribution
-    lin = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 +
-             erf(y_th_fb)) - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)))
-
-    # quadratic contribution
-    sqr = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) *\
-             0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
-
-    return lin + sqr, lin, sqr
-
 
 def Psi(z, x):
     """
@@ -557,6 +392,58 @@ def d2Psi_x_r(z, x, y):
     return d_2_Psi(z, x) - d_2_Psi(z, y)
 
 
+def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th, V_r, j, mu, sigma):
+    """
+    Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
+    Effective threshold and reset from Fourcaud & Brunel 2002.
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_s: float
+        Synaptic time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    j: float
+        Effective connectivity weight in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Derivative in Hz/mV (sum of linear (mu) and squared (sigma^2) contribution).
+    float:
+        Derivative in Hz/mV (linear (mu) contribution).
+    float:
+        Derivative in Hz/mV (squared (sigma^2) contribution).
+    """
+    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
+
+    y_th = (V_th - mu) / sigma
+    y_r = (V_r - mu) / sigma
+
+    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    nu0 = nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma)
+
+    # linear contribution
+    lin = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 +
+             erf(y_th_fb)) - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)))
+
+    # quadratic contribution
+    sqr = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) *\
+             0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
+
+    return lin + sqr, lin, sqr
 
 def determinant(matrix):
     """
@@ -618,8 +505,6 @@ def p_hat_boxcar(k, width):
     --------
     ft: float
     """
-    if width <= 0:
-        raise ValueError('boxcar width must be positive!')
     if k == 0:
         ft = 1.
     else:

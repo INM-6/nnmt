@@ -501,8 +501,7 @@ class Network(object):
         if freq == None:
             return self.delay_dist_matrix_multi()
         else:
-            omega = 2 * np.pi * freq
-            return self.delay_dist_matrix_single(omega)
+            return self.delay_dist_matrix_single(freq)
 
 
     @_check_and_store('delay_dist')
@@ -660,12 +659,7 @@ class Network(object):
             transfer_function = np.conjugate(transfer_function)
 
         # calculate needed delay distribution matrix
-        delay_dist_matrix = meanfield_calcs.delay_dist_matrix(
-            self.network_params['dimension'],
-            self.network_params['Delay'],
-            self.network_params['Delay_sd'],
-            self.network_params['delay_dist'],
-            [omega])[0]
+        delay_dist_matrix = self.delay_dist_matrix(omega)
 
         return meanfield_calcs.sensitivity_measure(transfer_function,
                                                    delay_dist_matrix,
