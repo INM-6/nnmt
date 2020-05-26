@@ -354,20 +354,18 @@ if __name__ == '__main__':
         config_path = 'tests/fixtures/config/'
         
         # purely numerical fixtures, that don't need any network
-        fix_Phi(fixture_path)
-        fix_Phi_prime_mu(fixture_path)
-        fix_Psi(fixture_path)
-        fix_d_Psi(fixture_path)
-        fix_d_2_Psi(fixture_path)
-        fix_p_hat_boxcar(fixture_path)
+        # fix_Phi(fixture_path)
+        # fix_Phi_prime_mu(fixture_path)
+        # fix_Psi(fixture_path)
+        # fix_d_Psi(fixture_path)
+        # fix_d_2_Psi(fixture_path)
+        # fix_p_hat_boxcar(fixture_path)
         
-        configs = dict(noise_driven=(config_path
-                                     + 'network_params_microcircuit.yaml'),
-                       negative_firing_rate=(config_path
-                                             + 'minimal_negative.yaml'),
-                       # mean_driven=(config_path
-                       #              + 'small_network.yaml'),
-                       )
+        configs = dict(
+            # noise_driven=(config_path + 'network_params_microcircuit.yaml'),
+            # negative_firing_rate=(config_path + 'minimal_negative.yaml'),
+            mean_driven=(config_path + 'mean_driven.yaml'),
+            )
         analysis_param_file = config_path + 'analysis_params_test.yaml'
         for regime, param_file in configs.items():
             
