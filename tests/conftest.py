@@ -35,7 +35,7 @@ all_pos_keys = ['C',
                 ]
 
 # list of tested parameter regimes for correct output tests
-regimes = ['noise_driven', 'negative_firing_rate']
+regimes = ['noise_driven', 'negative_firing_rate', 'mean_driven']
 
 # list of keys that have two different variable names
 key_pairs = (('mean_input', 'mu'),
