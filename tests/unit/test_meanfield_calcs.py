@@ -166,7 +166,8 @@ class Test_sensitivity_measure:
 
     # define tested function
     func = staticmethod(sensitivity_measure)
-    output_key = 'sensitivity_measure'
+    output_keys = ['sensitivity_measure', 'transfer_function_single',
+                   'delay_dist_single']
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params,
@@ -180,7 +181,10 @@ class Test_sensitivity_measure:
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
-        output = output_test_fixtures.pop('output')[0]
+        output = output_test_fixtures.pop('output')
+        params['transfer_function'] = output[1][0]
+        params['delay_dist_matrix'] = output[2][0]
+        output = output[0][0]
         check_correct_output(self.func, params, output)
 
 

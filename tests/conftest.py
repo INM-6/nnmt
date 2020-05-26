@@ -244,7 +244,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
     a staticmethod, and either a `output_key` attribute or a `output_keys`
     attribute. The different parameter regimes are then tested one after each
     other as a parametrization. There are some functions that need a special
-    treatment, like the sensitivity_measure (see code).
+    treatment, like the sensitivity_measure (see code below).
     """
     # check if requesting test class has class attribute func
     if hasattr(metafunc.cls, 'func'):
@@ -254,14 +254,18 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
         return None
     
     if "pos_keys" in metafunc.fixturenames:
-        # test every pos_key required by func as arg separately
         pos_keys = get_required_keys(func, all_pos_keys)
+        # define parametrization
         metafunc.parametrize("pos_keys", pos_keys)
 
     elif "output_test_fixtures" in metafunc.fixturenames:
-
+        
+        # This is a special case for tests of eigenspectrum functions
+        # in the negative firing rate regime as we are using it. The propagator
+        # is singular and therefore leads to errors when calculating the
+        # inverse propagator. This is why we are taking out these regimes for
+        # tests containing 'prop_inv' in their name.
         if 'prop_inv' in metafunc.function.__name__:
-            # take out negative_firing_rate regime because prop is singular
             singular_regime = 'negative_firing_rate'
             indices = [i for i, params in enumerate(all_params)
                        if params['regime'] != singular_regime]
@@ -269,22 +273,13 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
             results = [results[i] for i in indices]
             ids_all_regimes = [ids_all_regimes[i] for i in indices]
 
-        # test every parameter regime seperately using all_params
-        params = [get_required_params(func, dict(params, **results))
+        # list of input arguments for the tested function for each regime
+        params = [get_required_params(func, dict(results, **params))
                   for params, results in zip(all_params, results)]
-
+        # list of outputs for the tested function for each regime
         output = get_output_for_keys_of_metafunc(metafunc, results, params)
-
-        if 'sensitivity_measure' in metafunc.cls.__name__:
-            for param, result in zip(params, results):
-                # sensitivity measure requires special transfer function as arg
-                param['transfer_function'] = result['transfer_function_'
-                                                    'single'][0]
-                # sensitivity measure requires special delay_dist_matrix as arg
-                param['delay_dist_matrix'] = result['delay_dist_single'][0]
 
         fixtures = [dict(output=output, params=params) for output, params
                     in zip(output, params)]
-
         metafunc.parametrize("output_test_fixtures", fixtures,
                              ids=ids_all_regimes)
