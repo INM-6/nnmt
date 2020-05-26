@@ -7,9 +7,10 @@ from lif_meanfield_tools.input_output import load_h5
 from lif_meanfield_tools import ureg
 
 
+# path to network configuration files and analysis parameters
 config_path = 'tests/fixtures/config/'
+# path to fixtures
 fixture_path = 'tests/fixtures/data/'
-
 
 # list of all always positive arguments
 all_pos_keys = ['C',
@@ -33,24 +34,31 @@ all_pos_keys = ['C',
                 'nu_ext',
                 ]
 
-
+# list of tested parameter regimes for correct output tests
 regimes = ['noise_driven', 'negative_firing_rate']
+
+# list of keys that have two different variable names
 key_pairs = (('mean_input', 'mu'),
              ('std_input', 'sigma'),
              ('firing_rates', 'nu'),
              ('delay_dist', 'delay_dist_matrix'))
+
 all_params = []
 results = []
 ids_all_regimes = []
 for i, regime in enumerate(regimes):
+    # load fixtures corresponding to regimes defined above
+    # standard file name: `<regime_id>_regime.h5`
     fixs = load_h5('{}{}_regime.h5'.format(fixture_path, regime))
-    all_params.append(dict(fixs['network_params'], **fixs['analysis_params']))
     result = fixs['results']
     # add regime to results so test functions can use them as output keys
     result['regime'] = regime
-    # rename some keys, because some functions require diferent arg names
+    # rename some keys, because some functions require different arg names
     for old_key, new_key in key_pairs:
         result[new_key] = result[old_key]
+    # collect params, results and ids in lists
+    # combine network and analysis params in all_params
+    all_params.append(dict(fixs['network_params'], **fixs['analysis_params']))
     results.append(result)
     ids_all_regimes.append('{}_regime'.format(regime))
 
