@@ -34,10 +34,18 @@ import warnings
 
 from . import ureg
 
+
 def check_if_positive(parameters, parameter_names):
     for parameter, parameter_name in zip(parameters, parameter_names):
-        if parameter < 0:
-            raise ValueError('{} should be larger than zero!'.format(parameter_name))
+        try:
+            if any(p < 0 for p in parameter):
+                raise ValueError('{} should be larger than zero!'.format(
+                    parameter_name))
+        except TypeError:
+            if parameter < 0:
+                raise ValueError('{} should be larger than zero!'.format(
+                    parameter_name))
+
 
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
@@ -109,7 +117,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # why do we have this?
     # if math.isnan(result):
     #     print(mu, sigma, x_th, x_r)
-    # 
+    #
     return result
 
 
@@ -149,8 +157,8 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
     
-    Based on Fourcaud & Brunel 2002, using shift of the integration boundaries 
-    in the white noise Siegert formula, as derived in Schuecker 2015. 
+    Based on Fourcaud & Brunel 2002, using shift of the integration boundaries
+    in the white noise Siegert formula, as derived in Schuecker 2015.
 
     Parameters:
     -----------
@@ -428,8 +436,12 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
     
-    if sigma == 0:
-        raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    try:
+        if any(sigma == 0 for sigma in sigma):
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    except TypeError:
+        if sigma == 0:
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
     
     y_th = (V_th_rel - mu)/sigma
     y_r = (V_0_rel - mu)/sigma
@@ -476,9 +488,13 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
-    
-    if sigma == 0:
-        raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+
+    try:
+        if any(sigma == 0 for sigma in sigma):
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    except TypeError:
+        if sigma == 0:
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
     
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
 
