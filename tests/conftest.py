@@ -1,3 +1,22 @@
+"""
+Special pytest module containing defs of pytest fixtures and parametrizations.
+
+Fixtures:
+---------
+network: standard microcircuit network with testing analysis params.
+network_params: standard microcircuit network params.
+analysis_params: some standard test analysis params.
+all_std_params: standard params from first two populations of microcircuit.
+std_params: set of standard params needed by requesting tested function.
+std_params_tf: set of standard params for transfer function tests.
+std_params_eval_spectra: set of standard params for eval_spectra tests.
+
+Parametrization Schemes:
+------------------------
+pos_keys: parametrizes all pos params needed by requesting tested function.
+output_test_fixtures: parametrizes needed args and results for tested regimes.
+"""
+
 import pytest
 import numpy as np
 from inspect import signature
@@ -80,7 +99,7 @@ def get_required_params(func, all_params):
 
 @pytest.fixture
 def network():
-    """Returns standard microcircuit network."""
+    """Returns standard microcircuit network with testing analysis params."""
     network = lmt.Network(
         network_params=(config_path + 'network_params_microcircuit.yaml'),
         analysis_params=(config_path + 'analysis_params_test.yaml')
@@ -142,7 +161,7 @@ def calc_dep_params(params):
 
 @pytest.fixture
 def all_std_params():
-    # standard params from first two populations of microcircuit
+    """Standard params from first two populations of microcircuit."""
     firing_rates = np.array([0.71, 2.75]) * ureg.Hz
     mean_input = np.array([3.30, 7.03]) * ureg.mV
     std_input = np.array([6.19, 5.11]) * ureg.mV
