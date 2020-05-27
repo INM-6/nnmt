@@ -10,7 +10,9 @@ from numpy.testing import assert_array_equal
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
 
-from .checks import check_file_in_tmpdir, check_quantity_dicts_are_equal
+from .checks import (check_file_in_tmpdir,
+                     check_quantity_dicts_are_equal,
+                     assert_units_equal)
 
 ureg = lmt.ureg
         
@@ -104,6 +106,7 @@ class Test_val_unit_to_quantities:
             except ValueError:
                 assert conv_item[0] == exp_item[0]
                 assert_array_equal(conv_item[1], exp_item[1])
+                assert_units_equal(conv_item[1], exp_item[1])
             
     def test_unit_abbreviations_work_correctly(self):
         val_unit_pairs = dict(

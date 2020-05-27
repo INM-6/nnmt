@@ -3,6 +3,7 @@ from numpy.testing import assert_array_equal
 
 from .checks import (check_pos_params_neg_raise_exception,
                      check_correct_output,
+                     assert_units_equal,
                      check_V_0_larger_V_th_raise_exception,
                      check_warning_is_given_if_k_is_critical,
                      check_exception_is_raised_if_k_is_too_large)
@@ -358,7 +359,9 @@ class Test_additional_rates_for_fixed_input:
     def test_correct_output_nu_e_ext(self, output_test_fixtures, key):
         params = output_test_fixtures['params']
         output = output_test_fixtures['output']
-        assert_array_equal(self.func(**params)[key], output[key])
+        result = self.func(**params)[key]
+        assert_array_equal(result, output[key])
+        assert_units_equal(result, output[key])
 
 
 class Test_effective_coupling_strength:

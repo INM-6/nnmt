@@ -4,7 +4,8 @@ from numpy.testing import assert_array_almost_equal
 from scipy.special import erf, zetac
 from scipy.integrate import quad
 
-from .checks import (check_pos_params_neg_raise_exception,
+from .checks import (assert_units_equal,
+                     check_pos_params_neg_raise_exception,
                      check_correct_output_for_several_mus_and_sigmas,
                      check_almost_correct_output_for_several_mus_and_sigmas,
                      check_V_0_larger_V_th_raise_exception,
@@ -120,6 +121,7 @@ class Test_siegert2:
                 expected = real_siegert(**params)
                 result = self.func(**params)
                 assert_array_almost_equal(expected, result, self.precision)
+                assert_units_equal(expected, result)
             else:
                 with pytest.raises(ValueError):
                     self.func(**params)
