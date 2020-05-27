@@ -30,6 +30,7 @@ from lif_meanfield_tools import ureg
 config_path = 'tests/fixtures/config/'
 # path to fixtures
 fixture_path = 'tests/fixtures/data/'
+integration_fix_path = 'tests/fixtures/integration/data/'
 
 # list of all always positive arguments
 all_pos_keys = ['C',
@@ -99,12 +100,19 @@ def get_required_params(func, all_params):
 
 @pytest.fixture
 def network():
-    """Returns standard microcircuit network with testing analysis params."""
+    """Standard microcircuit network with testing analysis params."""
     network = lmt.Network(
         network_params=(config_path + 'network_params_microcircuit.yaml'),
         analysis_params=(config_path + 'analysis_params_test.yaml')
         )
     return network
+
+
+@pytest.fixture
+def std_results():
+    """Standard microcircuit network results for testing analysis params."""
+    results = load_h5(integration_fix_path + 'std_results.h5')
+    return results['results']
 
 
 @pytest.fixture
