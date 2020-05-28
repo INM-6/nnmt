@@ -168,33 +168,36 @@ class Test_Schuecker_2015_vs_lif_meanfield_toolbox(unittest.TestCase):
     def test_absolute_value(self):
         # define specific sigma and mu
         for index in self.indices:
-            sigma = self.network_params[f'sigma_{index}'].magnitude
-            for mu in self.network_params[f'mean_input_{index}'].magnitude:
+            with self.subTest(index=index):
+                sigma = self.network_params[f'sigma_{index}'].magnitude
+                for mu in self.network_params[f'mean_input_{index}'].magnitude:
 
-                ground_truth_data = (
-                    self.ground_truth_result['sigma'][sigma]['mu'][mu])
-                test_data = self.test_results['sigma'][sigma]['mu'][mu]
+                    ground_truth_data = (
+                        self.ground_truth_result['sigma'][sigma]['mu'][mu])
+                    test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
-                assert_allclose(test_data['absolute_value'],
-                                ground_truth_data['absolute_value'],
-                                atol=1e-14)
+                    assert_allclose(test_data['absolute_value'],
+                                    ground_truth_data['absolute_value'],
+                                    atol=1e-14)
+            
+                    if self.plot_comparison:
+                        # plot for debugging - compare with
+                        # fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
+                        plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
+                        plt.semilogx(self.frequencies,
+                                     ground_truth_data['absolute_value'],
+                                     label='ground truth')
 
-                if self.plot_comparison:
-                    # plot for debugging - compare with
-                    # fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
-                    plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
-                    plt.semilogx(self.frequencies,
-                                 ground_truth_data['absolute_value'],
-                                 label='ground truth')
-
-                    plt.semilogx(self.frequencies,
-                                 test_data['absolute_value'], ls='--',
-                                 label='test data')
-                    plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-                    plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad('
-                               '\mathrm{s}\,\mathrm{mV})^{-1}$', labelpad=0)
-                    plt.legend()
-                    plt.show()
+                        plt.semilogx(self.frequencies,
+                                     test_data['absolute_value'], ls='--',
+                                     label='test data')
+                        plt.xlabel(r'frequency $\omega/2\pi\quad(1/'
+                                   '\mathrm{s})$')
+                        plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad('
+                                   '\mathrm{s}\,\mathrm{mV})^{-1}$',
+                                   labelpad=0)
+                        plt.legend()
+                        plt.show()
 
     def test_phase(self):
         # define specific sigma and mu
