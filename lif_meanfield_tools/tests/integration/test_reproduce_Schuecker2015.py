@@ -12,7 +12,8 @@ import unittest
 from collections import defaultdict
 
 import numpy as np
-from numpy.testing import assert_array_equal,assert_array_almost_equal, assert_allclose
+from numpy.testing import (assert_array_equal,
+                           assert_allclose)
 
 import lif_meanfield_tools as lmt
 from ... import ureg
@@ -22,15 +23,18 @@ import h5py_wrapper.wrapper as h5
 # TODO remove plotting after debugging
 import matplotlib.pyplot as plt
 
+
 class SchueckerTestCase(unittest.TestCase):
+    
     def setUp(self):
         # Parameters to tweak the behavior of the test
-        self.plot_comparison=False
+        self.plot_comparison = False
 
         # Load ground truth data
-        self.path_to_fixtures = './lif_meanfield_tools/tests/integration/fixtures/'
-        self.ground_truth_result = h5.load(self.path_to_fixtures +
-                                           'Schuecker2015_data.h5')
+        self.path_to_fixtures = ('./lif_meanfield_tools/tests/integration/'
+                                 'fixtures/')
+        self.ground_truth_result = h5.load(self.path_to_fixtures
+                                           + 'Schuecker2015_data.h5')
 
         # Generate test data
         self.network_params = lmt.input_output.load_params(
@@ -50,9 +54,10 @@ class SchueckerTestCase(unittest.TestCase):
         self.test_results = defaultdict(str)
         self.test_results['sigma'] = defaultdict(dict)
 
-        for index in [1,2]:
+        for index in [1, 2]:
             sigma = self.network_params[f'sigma_{index}']
-            self.test_results['sigma'][sigma.magnitude]['mu'] = defaultdict(dict)
+            self.test_results['sigma'][sigma.magnitude]['mu'] = (
+                defaultdict(dict))
             for mu in self.network_params[f'mean_input_{index}']:
 
                 # Stationary firing rates for delta shaped PSCs.
@@ -106,14 +111,19 @@ class SchueckerTestCase(unittest.TestCase):
                     self.omegas,
                     synaptic_filter=False)
 
-                self.test_results['sigma'][sigma.magnitude]['mu'][mu.magnitude] = {
-                    'absolute_value': np.abs(transfer_function.magnitude.flatten()),
-                    'phase': np.angle(transfer_function.magnitude.flatten()) / 2 / np.pi * 360,
-                    'zero_freq': transfer_function_zero_freq.to(ureg.Hz/ureg.mV).magnitude,
+                self.test_results['sigma'][
+                    sigma.magnitude]['mu'][mu.magnitude] = {
+                    'absolute_value':
+                        np.abs(transfer_function.magnitude.flatten()),
+                    'phase':
+                        np.angle(transfer_function.magnitude.flatten())
+                        / 2 / np.pi * 360,
+                    'zero_freq':
+                        (transfer_function_zero_freq.to(ureg.Hz / ureg.mV)
+                         ).magnitude,
                     'nu_0': nu_0.to(ureg.Hz).magnitude,
                     'nu0_fb': nu0_fb.to(ureg.Hz).magnitude,
                     'nu0_fb433': nu0_fb433.to(ureg.Hz).magnitude}
-
 
     def test_frequencies(self):
         # take examplary frequencies for fixed sigma and mu
@@ -126,12 +136,13 @@ class SchueckerTestCase(unittest.TestCase):
 
     def test_absolute_value(self):
         # define specific sigma and mu
-        for index in [1,2]:
+        for index in [1, 2]:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
 
-                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                ground_truth_data = (
+                    self.ground_truth_result['sigma'][sigma]['mu'][mu])
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 print('absolute_value')
@@ -140,8 +151,8 @@ class SchueckerTestCase(unittest.TestCase):
                                 atol=1e-14)
 
                 if self.plot_comparison:
-                    # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
-                    fig = plt.figure()
+                    # plot for debugging - compare with
+                    # fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
                     plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
                     plt.semilogx(self.frequencies,
                                  ground_truth_data['absolute_value'],
@@ -151,18 +162,20 @@ class SchueckerTestCase(unittest.TestCase):
                                  test_data['absolute_value'], ls='--',
                                  label='test data')
                     plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-                    plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
+                    plt.ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad('
+                               '\mathrm{s}\,\mathrm{mV})^{-1}$', labelpad=0)
                     plt.legend()
                     plt.show()
 
     def test_phase(self):
         # define specific sigma and mu
-        for index in [1,2]:
+        for index in [1, 2]:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
 
-                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                ground_truth_data = (
+                    self.ground_truth_result['sigma'][sigma]['mu'][mu])
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 print('phase')
@@ -171,8 +184,8 @@ class SchueckerTestCase(unittest.TestCase):
                                 atol=1e-14)
 
                 if self.plot_comparison:
-                    # plot for debugging - compare with fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
-                    fig = plt.figure()
+                    # plot for debugging - compare with
+                    # fixtures/make_Schuecker_Fig4/PRE_Schuecker_Fig4.pdf
                     plt.title(f'$\mu$ = {mu}, $\sigma$ = {sigma}')
                     plt.semilogx(self.frequencies,
                                  ground_truth_data['phase'],
@@ -182,18 +195,20 @@ class SchueckerTestCase(unittest.TestCase):
                                  test_data['phase'], ls='--',
                                  label='test data')
                     plt.xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-                    plt.ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
+                    plt.ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',
+                               labelpad=2)
                     plt.legend()
                     plt.show()
 
     def test_stationary_firing_rates(self):
         # define specific sigma and mu
-        for index in [1,2]:
+        for index in [1, 2]:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
 
-                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                ground_truth_data = (
+                    self.ground_truth_result['sigma'][sigma]['mu'][mu])
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 for key in ['nu_0', 'nu0_fb', 'nu0_fb433']:
@@ -204,12 +219,13 @@ class SchueckerTestCase(unittest.TestCase):
 
     def test_zero_frequency_limit(self):
         # define specific sigma and mu
-        for index in [1,2]:
+        for index in [1, 2]:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
 
-                ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+                ground_truth_data = (
+                    self.ground_truth_result['sigma'][sigma]['mu'][mu])
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
                 key = 'zero_freq'
@@ -217,6 +233,7 @@ class SchueckerTestCase(unittest.TestCase):
                 assert_allclose(test_data[key],
                                 ground_truth_data[key],
                                 atol=1e-14)
+
 
 if __name__ == "__main__":
     unittest.main()
