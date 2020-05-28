@@ -26,104 +26,130 @@ import matplotlib.pyplot as plt
 
 class SchueckerTestCase(unittest.TestCase):
     
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # Parameters to tweak the behavior of the test
-        self.plot_comparison = False
+        cls.plot_comparison = False
 
         # Load ground truth data
-        self.path_to_fixtures = ('./lif_meanfield_tools/tests/integration/'
-                                 'fixtures/')
-        self.ground_truth_result = h5.load(self.path_to_fixtures
-                                           + 'Schuecker2015_data.h5')
+        cls.path_to_fixtures = ('./lif_meanfield_tools/tests/integration/'
+                                'fixtures/')
+        cls.ground_truth_result = h5.load(cls.path_to_fixtures
+                                          + 'Schuecker2015_data.h5')
 
         # Generate test data
-        self.network_params = lmt.input_output.load_params(
-            self.path_to_fixtures + 'Schuecker2015_parameters.yaml')
+        cls.network_params = lmt.input_output.load_params(
+            cls.path_to_fixtures + 'Schuecker2015_parameters.yaml')
 
         # Generate frequencies
-        self.frequencies = np.logspace(
-            self.network_params['f_start_exponent']['val'],
-            self.network_params['f_end_exponent']['val'],
-            self.network_params['n_freqs']['val']) * ureg.Hz
+        cls.frequencies = np.logspace(
+            cls.network_params['f_start_exponent']['val'],
+            cls.network_params['f_end_exponent']['val'],
+            cls.network_params['n_freqs']['val']) * ureg.Hz
 
-        self.omegas = 2 * np.pi * self.frequencies
-        self.network_params['dimension'] = 1
+        cls.omegas = 2 * np.pi * cls.frequencies
+        cls.network_params['dimension'] = 1
 
         # Loop over the different values for sigma and mu and save results
         # in a dictionary analogously to ground_truth_data
-        self.test_results = defaultdict(str)
-        self.test_results['sigma'] = defaultdict(dict)
-
-        for index in [1, 2]:
-            sigma = self.network_params[f'sigma_{index}']
-            self.test_results['sigma'][sigma.magnitude]['mu'] = (
+        cls.test_results = defaultdict(str)
+        cls.test_results['sigma'] = defaultdict(dict)
+        
+        cls.indices = [1, 2]
+        
+        cls.absolute_values = [[] for i in range(len(cls.indices))]
+        cls.phases = [[] for i in range(len(cls.indices))]
+        cls.zero_freqs = [[] for i in range(len(cls.indices))]
+        cls.nu_0s = [[] for i in range(len(cls.indices))]
+        cls.nu0_fbs = [[] for i in range(len(cls.indices))]
+        cls.nu0_fb433s = [[] for i in range(len(cls.indices))]
+        for i, index in enumerate(cls.indices):
+            sigma = cls.network_params[f'sigma_{index}']
+            cls.test_results['sigma'][sigma.magnitude]['mu'] = (
                 defaultdict(dict))
-            for mu in self.network_params[f'mean_input_{index}']:
-
+            for mu in cls.network_params[f'mean_input_{index}']:
                 # Stationary firing rates for delta shaped PSCs.
                 nu_0 = lmt.aux_calcs.nu_0(
-                    self.network_params['tau_m'],
-                    self.network_params['tau_r'],
-                    self.network_params['theta'],
-                    self.network_params['V_reset'],
+                    cls.network_params['tau_m'],
+                    cls.network_params['tau_r'],
+                    cls.network_params['theta'],
+                    cls.network_params['V_reset'],
                     mu,
                     sigma)
 
                 # Stationary firing rates for filtered synapses (via Taylor)
                 nu0_fb = lmt.aux_calcs.nu0_fb(
-                    self.network_params['tau_m'],
-                    self.network_params['tau_s'],
-                    self.network_params['tau_r'],
-                    self.network_params['theta'],
-                    self.network_params['V_reset'],
+                    cls.network_params['tau_m'],
+                    cls.network_params['tau_s'],
+                    cls.network_params['tau_r'],
+                    cls.network_params['theta'],
+                    cls.network_params['V_reset'],
                     mu,
                     sigma)
 
                 # Stationary firing rates for exp PSCs. (via shift)
                 nu0_fb433 = lmt.aux_calcs.nu0_fb433(
-                    self.network_params['tau_m'],
-                    self.network_params['tau_s'],
-                    self.network_params['tau_r'],
-                    self.network_params['theta'],
-                    self.network_params['V_reset'],
+                    cls.network_params['tau_m'],
+                    cls.network_params['tau_s'],
+                    cls.network_params['tau_r'],
+                    cls.network_params['theta'],
+                    cls.network_params['V_reset'],
                     mu,
                     sigma)
 
                 # colored noise zero-frequency limit of transfer function
                 transfer_function_zero_freq = lmt.aux_calcs.d_nu_d_mu_fb433(
-                    self.network_params['tau_m'],
-                    self.network_params['tau_s'],
-                    self.network_params['tau_r'],
-                    self.network_params['theta'],
-                    self.network_params['V_reset'],
+                    cls.network_params['tau_m'],
+                    cls.network_params['tau_s'],
+                    cls.network_params['tau_r'],
+                    cls.network_params['theta'],
+                    cls.network_params['V_reset'],
                     mu,
                     sigma)
 
                 transfer_function = lmt.meanfield_calcs.transfer_function(
                     [mu],
                     [sigma],
-                    self.network_params['tau_m'],
-                    self.network_params['tau_s'],
-                    self.network_params['tau_r'],
-                    self.network_params['theta'],
-                    self.network_params['V_reset'],
-                    self.network_params['dimension'],
-                    self.omegas,
+                    cls.network_params['tau_m'],
+                    cls.network_params['tau_s'],
+                    cls.network_params['tau_r'],
+                    cls.network_params['theta'],
+                    cls.network_params['V_reset'],
+                    cls.network_params['dimension'],
+                    cls.omegas,
                     synaptic_filter=False)
-
-                self.test_results['sigma'][
-                    sigma.magnitude]['mu'][mu.magnitude] = {
-                    'absolute_value':
-                        np.abs(transfer_function.magnitude.flatten()),
-                    'phase':
-                        np.angle(transfer_function.magnitude.flatten())
-                        / 2 / np.pi * 360,
-                    'zero_freq':
-                        (transfer_function_zero_freq.to(ureg.Hz / ureg.mV)
-                         ).magnitude,
-                    'nu_0': nu_0.to(ureg.Hz).magnitude,
-                    'nu0_fb': nu0_fb.to(ureg.Hz).magnitude,
-                    'nu0_fb433': nu0_fb433.to(ureg.Hz).magnitude}
+                
+                absolute_value = np.abs(transfer_function.magnitude.flatten())
+                phase = (np.angle(transfer_function.magnitude.flatten())
+                         / 2 / np.pi * 360)
+                zero_freq = (transfer_function_zero_freq.to(ureg.Hz / ureg.mV)
+                             ).magnitude,
+                nu_0 = nu_0.to(ureg.Hz).magnitude
+                nu0_fb = nu0_fb.to(ureg.Hz).magnitude
+                nu0_fb433.to(ureg.Hz).magnitude
+                
+                cls.absolute_values[i].append(absolute_value)
+                cls.phases[i].append(phase)
+                cls.zero_freqs[i].append(zero_freq)
+                cls.nu_0s[i].append(nu_0)
+                cls.nu0_fbs[i].append(nu0_fb)
+                cls.nu0_fb433s[i].append(nu0_fb433)
+    
+    def setUp(self):
+        for i, index in enumerate(self.indices):
+            sigma = self.network_params[f'sigma_{index}']
+            self.test_results['sigma'][sigma.magnitude]['mu'] = (
+                defaultdict(dict))
+            for j, mu in enumerate(self.network_params[f'mean_input_{index}']):
+                self.test_results[
+                    'sigma'][sigma.magnitude][
+                    'mu'][mu.magnitude] = {
+                        'absolute_value': self.absolute_values[i][j],
+                        'phase': self.phases[i][j],
+                        'zero_freq': self.zero_freqs[i][j],
+                        'nu_0': self.nu_0s[i][j],
+                        'nu0_fb': self.nu0_fbs[i][j],
+                        'nu0_fb433': self.nu0_fb433s[i][j]}
 
     def test_frequencies(self):
         # take examplary frequencies for fixed sigma and mu
@@ -136,7 +162,7 @@ class SchueckerTestCase(unittest.TestCase):
 
     def test_absolute_value(self):
         # define specific sigma and mu
-        for index in [1, 2]:
+        for index in self.indices:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
@@ -169,7 +195,7 @@ class SchueckerTestCase(unittest.TestCase):
 
     def test_phase(self):
         # define specific sigma and mu
-        for index in [1, 2]:
+        for index in self.indices:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
@@ -202,7 +228,7 @@ class SchueckerTestCase(unittest.TestCase):
 
     def test_stationary_firing_rates(self):
         # define specific sigma and mu
-        for index in [1, 2]:
+        for index in self.indices:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
@@ -219,7 +245,7 @@ class SchueckerTestCase(unittest.TestCase):
 
     def test_zero_frequency_limit(self):
         # define specific sigma and mu
-        for index in [1, 2]:
+        for index in self.indices:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
                 print(sigma, mu)
