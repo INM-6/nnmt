@@ -12,11 +12,10 @@ import pytest
 from collections import defaultdict
 
 import numpy as np
-from numpy.testing import (assert_array_equal,
-                           assert_allclose)
+from numpy.testing import assert_array_equal, assert_allclose
 
 import lif_meanfield_tools as lmt
-from ... import ureg
+from lif_meanfield_tools import ureg
 
 import h5py_wrapper.wrapper as h5
 
