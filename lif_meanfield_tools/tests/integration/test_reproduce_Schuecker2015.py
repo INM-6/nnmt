@@ -24,7 +24,7 @@ import h5py_wrapper.wrapper as h5
 import matplotlib.pyplot as plt
 
 
-class SchueckerTestCase(unittest.TestCase):
+class Test_Schuecker_2015_vs_lif_meanfield_toolbox(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
@@ -37,7 +37,7 @@ class SchueckerTestCase(unittest.TestCase):
         cls.ground_truth_result = h5.load(cls.path_to_fixtures
                                           + 'Schuecker2015_data.h5')
 
-        # Generate test data
+        # Load parameters for creation of test data
         cls.network_params = lmt.input_output.load_params(
             cls.path_to_fixtures + 'Schuecker2015_parameters.yaml')
 
@@ -46,17 +46,13 @@ class SchueckerTestCase(unittest.TestCase):
             cls.network_params['f_start_exponent']['val'],
             cls.network_params['f_end_exponent']['val'],
             cls.network_params['n_freqs']['val']) * ureg.Hz
-
         cls.omegas = 2 * np.pi * cls.frequencies
+        
         cls.network_params['dimension'] = 1
 
-        # Loop over the different values for sigma and mu and save results
-        # in a dictionary analogously to ground_truth_data
-        cls.test_results = defaultdict(str)
-        cls.test_results['sigma'] = defaultdict(dict)
-        
         cls.indices = [1, 2]
         
+        # calculate lif_meanfield_tools results for different mus and sigmas
         cls.absolute_values = [[] for i in range(len(cls.indices))]
         cls.phases = [[] for i in range(len(cls.indices))]
         cls.zero_freqs = [[] for i in range(len(cls.indices))]
@@ -65,8 +61,6 @@ class SchueckerTestCase(unittest.TestCase):
         cls.nu0_fb433s = [[] for i in range(len(cls.indices))]
         for i, index in enumerate(cls.indices):
             sigma = cls.network_params[f'sigma_{index}']
-            cls.test_results['sigma'][sigma.magnitude]['mu'] = (
-                defaultdict(dict))
             for mu in cls.network_params[f'mean_input_{index}']:
                 # Stationary firing rates for delta shaped PSCs.
                 nu_0 = lmt.aux_calcs.nu_0(
@@ -119,6 +113,7 @@ class SchueckerTestCase(unittest.TestCase):
                     cls.omegas,
                     synaptic_filter=False)
                 
+                # calculate properties plotted in Schuecker 2015
                 absolute_value = np.abs(transfer_function.magnitude.flatten())
                 phase = (np.angle(transfer_function.magnitude.flatten())
                          / 2 / np.pi * 360)
@@ -128,6 +123,7 @@ class SchueckerTestCase(unittest.TestCase):
                 nu0_fb = nu0_fb.to(ureg.Hz).magnitude
                 nu0_fb433.to(ureg.Hz).magnitude
                 
+                # collect all results
                 cls.absolute_values[i].append(absolute_value)
                 cls.phases[i].append(phase)
                 cls.zero_freqs[i].append(zero_freq)
@@ -136,6 +132,10 @@ class SchueckerTestCase(unittest.TestCase):
                 cls.nu0_fb433s[i].append(nu0_fb433)
     
     def setUp(self):
+        # Loop over the different values for sigma and mu and save results
+        # in a dictionary analogously to ground_truth_data
+        self.test_results = defaultdict(str)
+        self.test_results['sigma'] = defaultdict(dict)
         for i, index in enumerate(self.indices):
             sigma = self.network_params[f'sigma_{index}']
             self.test_results['sigma'][sigma.magnitude]['mu'] = (
@@ -151,12 +151,17 @@ class SchueckerTestCase(unittest.TestCase):
                         'nu0_fb': self.nu0_fbs[i][j],
                         'nu0_fb433': self.nu0_fb433s[i][j]}
 
-    def test_frequencies(self):
-        # take examplary frequencies for fixed sigma and mu
+    def test_frequencies_used_for_comparison_1_are_equal(self):
         sigma = self.network_params['sigma_1'].magnitude
         mu = self.network_params['mean_input_1'][0].magnitude
         ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
+        assert_array_equal(self.frequencies.magnitude,
+                           ground_truth_data['frequencies'])
 
+    def test_frequencies_used_for_comparison_2_are_equal(self):
+        sigma = self.network_params['sigma_2'].magnitude
+        mu = self.network_params['mean_input_2'][0].magnitude
+        ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
         assert_array_equal(self.frequencies.magnitude,
                            ground_truth_data['frequencies'])
 
@@ -165,13 +170,11 @@ class SchueckerTestCase(unittest.TestCase):
         for index in self.indices:
             sigma = self.network_params[f'sigma_{index}'].magnitude
             for mu in self.network_params[f'mean_input_{index}'].magnitude:
-                print(sigma, mu)
 
                 ground_truth_data = (
                     self.ground_truth_result['sigma'][sigma]['mu'][mu])
                 test_data = self.test_results['sigma'][sigma]['mu'][mu]
 
-                print('absolute_value')
                 assert_allclose(test_data['absolute_value'],
                                 ground_truth_data['absolute_value'],
                                 atol=1e-14)
