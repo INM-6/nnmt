@@ -151,12 +151,16 @@ class Test_Schuecker_2015_vs_lif_meanfield_toolbox(unittest.TestCase):
                         'nu0_fb': self.nu0_fbs[i][j],
                         'nu0_fb433': self.nu0_fb433s[i][j]}
 
-    def test_frequencies_used_for_comparison_1_are_equal(self):
-        sigma = self.network_params['sigma_1'].magnitude
-        mu = self.network_params['mean_input_1'][0].magnitude
-        ground_truth_data = self.ground_truth_result['sigma'][sigma]['mu'][mu]
-        assert_array_equal(self.frequencies.magnitude,
-                           ground_truth_data['frequencies'])
+    def test_frequencies_used_for_comparison_are_equal(self):
+        for index in self.indices:
+            with self.subTest(index=index):
+                sigma = self.network_params['sigma_{}'.format(index)].magnitude
+                mu = self.network_params[
+                    'mean_input_{}'.format(index)][0].magnitude
+                ground_truth_data = self.ground_truth_result[
+                    'sigma'][sigma]['mu'][mu]
+                assert_array_equal(self.frequencies.magnitude,
+                                   ground_truth_data['frequencies'])
 
     def test_frequencies_used_for_comparison_2_are_equal(self):
         sigma = self.network_params['sigma_2'].magnitude
