@@ -169,7 +169,7 @@ def test_result(pre_results, network_params):
     return test_results
 
 
-class Test_my_version:
+class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
     
     @pytest.mark.parametrize('index', indices)
     def test_frequencies_used_for_comparison_are_equal(self, index,
