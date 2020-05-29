@@ -40,10 +40,14 @@ def bos_code_result():
 
 
 @pytest.fixture(scope='class')
-def network(bos_code_result):
+def exemplary_frequency_idx(bos_code_result):
+    return bos_code_result['exemplary_frequency_idx']
+
+
+@pytest.fixture(scope='class')
+def network(exemplary_frequency_idx):
     network = lmt.Network(fix_path + 'Bos2016_network_params.yaml',
                           fix_path + 'Bos2016_analysis_params.yaml')
-    exemplary_frequency_idx = bos_code_result['exemplary_frequency_idx']
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
     return network
@@ -85,7 +89,6 @@ def transfer_function(network):
     return network.transfer_function()
 
 
-@pytest.mark.select
 @pytest.mark.parametrize('lmt_key, bos_key', [['populations', 'populations'],
                                               ['N', 'N'],
                                               ['C', 'C'],
@@ -119,6 +122,20 @@ def test_network_parameters(network_params, bos_params,
         assert network_param == bos_param
     except ValueError:
         assert_array_equal(network_param, bos_param)
+        
+        
+def test_analysis_frequencies(ground_truth_result, bos_code_result, freqs,
+                              exemplary_frequency_idx):
+    ground_truth_data = ground_truth_result['fig_microcircuit']['freq_ana']
+    bos_code_data = bos_code_result['omegas'] / 2. / np.pi
+    test_data = freqs
+    # check ground truth data vs data generated via old code
+    assert_array_equal(bos_code_data, ground_truth_data)
+    # check ground truth data vs data generated via lmt
+    assert_array_equal(test_data, ground_truth_data)
+    # check that the exemplary frequency is correct
+    assert (test_data[exemplary_frequency_idx]
+            == bos_code_data[exemplary_frequency_idx])
 
 
 class BosTestCase(unittest.TestCase):
