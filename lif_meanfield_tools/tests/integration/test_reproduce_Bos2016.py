@@ -112,12 +112,12 @@ def test_network_parameters(network_params, bos_params,
     network_param = network_params[lmt_key]
     bos_param = bos_params[bos_key]
     if lmt_key == 'w':
-        network_param *= 2
+        bos_param *= 2
     if isinstance(network_param, ureg.Quantity):
         network_param = network_param.magnitude
     try:
-        network_param == bos_param
-    except AssertionError:
+        assert network_param == bos_param
+    except ValueError:
         assert_array_equal(network_param, bos_param)
 
 
