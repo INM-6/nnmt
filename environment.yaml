@@ -1,6 +1,7 @@
-name: lmt
+name: lmt_temp
 channels:
   - conda-forge
+  - anaconda
   - defaults
 dependencies:
   - numpy
@@ -12,6 +13,10 @@ dependencies:
   - mpmath
   - decorator
   - pint
+  - pytest
+  - pytest-cov
+  - pytest-mock 
   - matplotlib
+  - pip
   - pip:
     - h5py-wrapper
