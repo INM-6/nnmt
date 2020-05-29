@@ -136,6 +136,29 @@ def test_analysis_frequencies(ground_truth_result, bos_code_result, freqs,
     # check that the exemplary frequency is correct
     assert (test_data[exemplary_frequency_idx]
             == bos_code_data[exemplary_frequency_idx])
+    
+
+def test_firing_rates(network, ground_truth_result, bos_code_result):
+    ground_truth_data = ground_truth_result['fig_microcircuit']['rates_calc']
+    bos_code_data = bos_code_result['firing_rates']
+    test_data = network.firing_rates().to(ureg.Hz).magnitude
+    # check ground truth data vs data generated via old code
+    assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
+    # check ground truth data vs data generated via lmt
+    assert_array_almost_equal(test_data, ground_truth_data, decimal=5)
+    
+    
+@pytest.mark.select
+def test_delay_distribution_at_single_frequency(network, bos_code_result):
+    # ground truth data does not exist, but as regenerated bos_code_data
+    # passes all comparisons to ground truth data, this can be assumed to
+    # be fine
+    bos_code_data = bos_code_result['delay_dist']
+    omega = network.analysis_params['omega']
+    test_data = network.delay_dist_matrix_single(omega)
+    assert_array_equal(test_data.shape, bos_code_data.shape)
+    assert_array_equal(test_data.magnitude, bos_code_data)
+
 
 
 class BosTestCase(unittest.TestCase):
