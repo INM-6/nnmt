@@ -89,76 +89,97 @@ def transfer_function(network):
     return network.transfer_function()
 
 
-@pytest.mark.parametrize('lmt_key, bos_key', [['populations', 'populations'],
-                                              ['N', 'N'],
-                                              ['C', 'C'],
-                                              ['tau_m', 'taum'],
-                                              ['tau_r', 'taur'],
-                                              ['tau_s', 'tauf'],
-                                              ['V_th_abs', 'Vth'],
-                                              ['V_0_abs', 'V0'],
-                                              ['d_e', 'de'],
-                                              ['d_i', 'di'],
-                                              ['d_e_sd', 'de_sd'],
-                                              ['d_i_sd', 'di_sd'],
-                                              ['delay_dist', 'delay_dist'],
-                                              ['w', 'w'],
-                                              ['K', 'I'],
-                                              ['g', 'g'],
-                                              ['nu_ext', 'v_ext'],
-                                              ['K_ext', 'Next'],
-                                              ['Delay', 'Delay'],
-                                              ['Delay_sd', 'Delay_sd'],
-                                              ])
-def test_network_parameters(network_params, bos_params,
-                            lmt_key, bos_key):
-    network_param = network_params[lmt_key]
-    bos_param = bos_params[bos_key]
-    if lmt_key == 'w':
-        bos_param *= 2
-    if isinstance(network_param, ureg.Quantity):
-        network_param = network_param.magnitude
-    try:
-        assert network_param == bos_param
-    except ValueError:
-        assert_array_equal(network_param, bos_param)
-        
-        
-def test_analysis_frequencies(ground_truth_result, bos_code_result, freqs,
-                              exemplary_frequency_idx):
-    ground_truth_data = ground_truth_result['fig_microcircuit']['freq_ana']
-    bos_code_data = bos_code_result['omegas'] / 2. / np.pi
-    test_data = freqs
-    # check ground truth data vs data generated via old code
-    assert_array_equal(bos_code_data, ground_truth_data)
-    # check ground truth data vs data generated via lmt
-    assert_array_equal(test_data, ground_truth_data)
-    # check that the exemplary frequency is correct
-    assert (test_data[exemplary_frequency_idx]
-            == bos_code_data[exemplary_frequency_idx])
-    
+class Test_lif_meanfield_toolbox_vs_Bos_2016:
 
-def test_firing_rates(network, ground_truth_result, bos_code_result):
-    ground_truth_data = ground_truth_result['fig_microcircuit']['rates_calc']
-    bos_code_data = bos_code_result['firing_rates']
-    test_data = network.firing_rates().to(ureg.Hz).magnitude
-    # check ground truth data vs data generated via old code
-    assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
-    # check ground truth data vs data generated via lmt
-    assert_array_almost_equal(test_data, ground_truth_data, decimal=5)
-    
-    
-@pytest.mark.select
-def test_delay_distribution_at_single_frequency(network, bos_code_result):
-    # ground truth data does not exist, but as regenerated bos_code_data
-    # passes all comparisons to ground truth data, this can be assumed to
-    # be fine
-    bos_code_data = bos_code_result['delay_dist']
-    omega = network.analysis_params['omega']
-    test_data = network.delay_dist_matrix_single(omega)
-    assert_array_equal(test_data.shape, bos_code_data.shape)
-    assert_array_equal(test_data.magnitude, bos_code_data)
+    @pytest.mark.parametrize('lmt_key, bos_key', [['populations', 'populations'],
+                                                  ['N', 'N'],
+                                                  ['C', 'C'],
+                                                  ['tau_m', 'taum'],
+                                                  ['tau_r', 'taur'],
+                                                  ['tau_s', 'tauf'],
+                                                  ['V_th_abs', 'Vth'],
+                                                  ['V_0_abs', 'V0'],
+                                                  ['d_e', 'de'],
+                                                  ['d_i', 'di'],
+                                                  ['d_e_sd', 'de_sd'],
+                                                  ['d_i_sd', 'di_sd'],
+                                                  ['delay_dist', 'delay_dist'],
+                                                  ['w', 'w'],
+                                                  ['K', 'I'],
+                                                  ['g', 'g'],
+                                                  ['nu_ext', 'v_ext'],
+                                                  ['K_ext', 'Next'],
+                                                  ['Delay', 'Delay'],
+                                                  ['Delay_sd', 'Delay_sd'],
+                                                  ])
+    def test_network_parameters(self, network_params, bos_params,
+                                lmt_key, bos_key):
+        network_param = network_params[lmt_key]
+        bos_param = bos_params[bos_key]
+        if lmt_key == 'w':
+            bos_param *= 2
+        if isinstance(network_param, ureg.Quantity):
+            network_param = network_param.magnitude
+        try:
+            assert network_param == bos_param
+        except ValueError:
+            assert_array_equal(network_param, bos_param)
+            
+    def test_analysis_frequencies(self, ground_truth_result, bos_code_result,
+                                  freqs, exemplary_frequency_idx):
+        ground_truth_data = ground_truth_result['fig_microcircuit']['freq_ana']
+        bos_code_data = bos_code_result['omegas'] / 2. / np.pi
+        test_data = freqs
+        # check ground truth data vs data generated via old code
+        assert_array_equal(bos_code_data, ground_truth_data)
+        # check ground truth data vs data generated via lmt
+        assert_array_equal(test_data, ground_truth_data)
+        # check that the exemplary frequency is correct
+        assert (test_data[exemplary_frequency_idx]
+                == bos_code_data[exemplary_frequency_idx])
 
+    def test_firing_rates(self, network, ground_truth_result, bos_code_result):
+        ground_truth_data = ground_truth_result[
+            'fig_microcircuit']['rates_calc']
+        bos_code_data = bos_code_result['firing_rates']
+        test_data = network.firing_rates().to(ureg.Hz).magnitude
+        # check ground truth data vs data generated via old code
+        assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
+        # check ground truth data vs data generated via lmt
+        assert_array_almost_equal(test_data, ground_truth_data, decimal=5)
+        
+    def test_delay_distribution_at_single_frequency(self, network,
+                                                    bos_code_result):
+        # ground truth data does not exist, but as regenerated bos_code_data
+        # passes all comparisons to ground truth data, this can be assumed to
+        # be fine
+        bos_code_data = bos_code_result['delay_dist']
+        omega = network.analysis_params['omega']
+        test_data = network.delay_dist_matrix_single(omega)
+        assert_array_equal(test_data.shape, bos_code_data.shape)
+        assert_array_equal(test_data.magnitude, bos_code_data)
+        
+    def test_effective_connectivity_at_single_frequency(self,
+                                                        network,
+                                                        bos_code_result):
+        # ground truth data does not exist, but as regenerated bos_code_data
+        # passes all comparisons to ground truth data, this can be assumed to
+        # be fine
+        bos_code_data = bos_code_result['MH']
+        omega = network.analysis_params['omega']
+
+        tf = network.transfer_function(omega / 2 / np.pi, method='taylor')[0]
+        test_data = lmt.meanfield_calcs._effective_connectivity(
+            omega,
+            tf,
+            network.network_params['tau_m'],
+            network.network_params['J'],
+            network.network_params['K'],
+            network.network_params['dimension'],
+            network.delay_dist_matrix_single(omega))
+        
+        assert_array_almost_equal(test_data.to_base_units(), bos_code_data,
+                                  decimal=5)
 
 
 class BosTestCase(unittest.TestCase):
@@ -319,7 +340,7 @@ class BosTestCase(unittest.TestCase):
         bos_code_data = self.bos_code_result['MH']
         omega = self.network.analysis_params[
             'omegas'][self.exemplary_frequency_idx]
-
+        
         if not self.use_saved_data:
             self.transfer_functions = self.network.transfer_function(
                 method='taylor')
@@ -332,7 +353,7 @@ class BosTestCase(unittest.TestCase):
             self.network.network_params['K'],
             self.network.network_params['dimension'],
             self.network.delay_dist_matrix_single(omega))
-
+        
         assert_array_almost_equal(test_data.to_base_units(), bos_code_data,
                                   decimal=5)
 
