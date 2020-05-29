@@ -9,6 +9,7 @@ Microcircuit. PLoS Comput. Biol. 12, 1–34 (2016).
 """
 
 import unittest
+import pytest
 from collections import defaultdict
 
 import numpy as np
@@ -21,6 +22,103 @@ import h5py_wrapper.wrapper as h5
 
 # TODO remove plotting after debugging
 import matplotlib.pyplot as plt
+
+
+fix_path = './lif_meanfield_tools/tests/integration/fixtures/'
+
+
+@pytest.fixture(scope='class')
+def ground_truth_result():
+    result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+    return result
+
+
+@pytest.fixture(scope='class')
+def bos_code_result():
+    data = h5.load(fix_path + 'Bos2016_data.h5')
+    return data
+
+
+@pytest.fixture(scope='class')
+def network(bos_code_result):
+    network = lmt.Network(fix_path + 'Bos2016_network_params.yaml',
+                          fix_path + 'Bos2016_analysis_params.yaml')
+    exemplary_frequency_idx = bos_code_result['exemplary_frequency_idx']
+    omega = network.analysis_params['omegas'][exemplary_frequency_idx]
+    network.analysis_params['omega'] = omega
+    return network
+
+
+@pytest.fixture
+def network_params(network):
+    params = network.network_params.copy()
+    return params
+    
+
+@pytest.fixture
+def bos_params(bos_code_result):
+    params = bos_code_result['params'].copy()
+    return params
+    
+
+@pytest.fixture(scope='class')
+def freqs(network):
+    fs = network.analysis_params['omegas'].to(ureg.Hz).magnitude / 2. / np.pi
+    return fs
+
+
+@pytest.fixture(scope='class')
+def firing_rates(network):
+    rates = network.firing_rates()
+    return rates
+
+
+@pytest.fixture(scope='class')
+def delay_dist(network, bos_data):
+    omega = network.analysis_params['omega']
+    delay_dist = network.delay_dist_matrix(omega)
+    return delay_dist
+
+
+@pytest.fixture(scope='class')
+def transfer_function(network):
+    return network.transfer_function()
+
+
+@pytest.mark.select
+@pytest.mark.parametrize('lmt_key, bos_key', [['populations', 'populations'],
+                                              ['N', 'N'],
+                                              ['C', 'C'],
+                                              ['tau_m', 'taum'],
+                                              ['tau_r', 'taur'],
+                                              ['tau_s', 'tauf'],
+                                              ['V_th_abs', 'Vth'],
+                                              ['V_0_abs', 'V0'],
+                                              ['d_e', 'de'],
+                                              ['d_i', 'di'],
+                                              ['d_e_sd', 'de_sd'],
+                                              ['d_i_sd', 'di_sd'],
+                                              ['delay_dist', 'delay_dist'],
+                                              ['w', 'w'],
+                                              ['K', 'I'],
+                                              ['g', 'g'],
+                                              ['nu_ext', 'v_ext'],
+                                              ['K_ext', 'Next'],
+                                              ['Delay', 'Delay'],
+                                              ['Delay_sd', 'Delay_sd'],
+                                              ])
+def test_network_parameters(network_params, bos_params,
+                            lmt_key, bos_key):
+    network_param = network_params[lmt_key]
+    bos_param = bos_params[bos_key]
+    if lmt_key == 'w':
+        network_param *= 2
+    if isinstance(network_param, ureg.Quantity):
+        network_param = network_param.magnitude
+    try:
+        network_param == bos_param
+    except AssertionError:
+        assert_array_equal(network_param, bos_param)
 
 
 class BosTestCase(unittest.TestCase):
@@ -90,7 +188,6 @@ class BosTestCase(unittest.TestCase):
     def test_network_parameters(self):
         bos_code_data = self.bos_code_result['params']
         test_data = self.network.network_params
-
         assert_array_equal(test_data['populations'],
                            bos_code_data['populations'])
         # number of neurons in populations
