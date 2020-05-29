@@ -1,0 +1,52 @@
+---
+# membrane time constant
+tau_m:
+  val: 20.0
+  unit: ms
+
+# synaptic time constant
+tau_s:
+  val: 0.5
+  unit: ms
+
+# refractory time
+tau_r:
+  val: 0.0
+  unit: ms
+
+# relative reset potential
+V_reset:
+  val: 15.0
+  unit: mV
+
+# relative threshold of membrane potential
+theta:
+  val: 20.0
+  unit: mV
+
+mean_input_1:
+  val: [16.42, 19.66]
+  unit: mV
+
+sigma_1:
+  val: 4.0
+  unit: mV
+
+mean_input_2:
+  val: [18.94, 20.96]
+  unit: mV
+
+sigma_2:
+  val: 1.5
+  unit: mV
+
+# frequencies
+f_start_exponent:
+  val: -1
+
+f_end_exponent:
+  val: 2.8
+
+n_freqs:
+  val: 500
+...

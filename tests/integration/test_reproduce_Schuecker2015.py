@@ -20,7 +20,8 @@ from lif_meanfield_tools import ureg
 import h5py_wrapper.wrapper as h5
 
 
-fix_path = './lif_meanfield_tools/tests/integration/fixtures/'
+config_path = 'tests/fixtures/integration/config/'
+fix_path = 'tests/fixtures/integration/data/'
 
 indices = [1, 2]
 
@@ -34,7 +35,7 @@ def ground_truth_result():
 @pytest.fixture(scope='class')
 def network_params():
     params = lmt.input_output.load_params(
-        fix_path + 'Schuecker2015_parameters.yaml')
+        config_path + 'Schuecker2015_parameters.yaml')
     params['dimension'] = 1
     return params
 

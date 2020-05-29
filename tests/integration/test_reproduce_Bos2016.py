@@ -15,16 +15,17 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import lif_meanfield_tools as lmt
-from ... import ureg
+from lif_meanfield_tools import ureg
 
 import h5py_wrapper.wrapper as h5
 
 
-fix_path = './lif_meanfield_tools/tests/integration/fixtures/'
+config_path = 'tests/fixtures/integration/config/'
+fix_path = 'tests/fixtures/integration/data/'
 
 # options for debugging
 save_data = True
-use_saved_data = False
+use_saved_data = True
 
 
 @pytest.fixture(scope='class')
@@ -46,8 +47,8 @@ def exemplary_frequency_idx(bos_code_result):
 
 @pytest.fixture(scope='class')
 def network(exemplary_frequency_idx):
-    network = lmt.Network(fix_path + 'Bos2016_network_params.yaml',
-                          fix_path + 'Bos2016_analysis_params.yaml')
+    network = lmt.Network(config_path + 'Bos2016_network_params.yaml',
+                          config_path + 'Bos2016_analysis_params.yaml')
     
     if use_saved_data:
         try:
@@ -221,7 +222,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         assert_array_equal(test_data.shape, ground_truth_data.shape)
         assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
     
-    def test_eigenvalue_trajectories(self, network, ground_truth_data,
+    def test_eigenvalue_trajectories(self, network, ground_truth_result,
                                      bos_code_result):
         eigenvalue_spectra = network.eigenvalue_spectra('MH', method='taylor')
         ground_truth_data = ground_truth_result[
