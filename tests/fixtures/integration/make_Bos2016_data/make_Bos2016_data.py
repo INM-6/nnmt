@@ -49,15 +49,18 @@ if __name__ == '__main__':
 
     for i, trans_func in enumerate(transfer_function):
         for j, value in enumerate(trans_func):
-            transfer_function_with_synaptic_filter[i,j] = value / complex(1., omegas[j] * tau_s)
+            transfer_function_with_synaptic_filter[i, j] = (
+                value / complex(1., omegas[j] * tau_s))
 
-    eigenvalue_spectra_freqs, eigenvalue_spectra = circ.create_eigenvalue_spectra('MH')
+    eigenvalue_spectra_freqs, eigenvalue_spectra = (
+        circ.create_eigenvalue_spectra('MH'))
 
     h5.add_to_h5(filename, {'params': circ.params,
                             'omegas': circ.omegas,
                             'firing_rates': circ.th_rates,
                             'transfer_function': transfer_function,
-                            'transfer_function_with_synaptic_filter': transfer_function_with_synaptic_filter,
+                            'transfer_function_with_synaptic_filter':
+                                transfer_function_with_synaptic_filter,
                             'power_spectra': power_spectra,
                             'H': H,
                             'MH': MH,
@@ -66,7 +69,6 @@ if __name__ == '__main__':
                             'exemplary_frequency_idx': exemplary_frequency_idx
                             }
                  )
-
 
     # frequencies = [64, 241, 263, 267, 284]
     #

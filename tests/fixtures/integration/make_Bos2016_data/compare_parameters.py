@@ -14,7 +14,6 @@ Options:
 
 import plot_helpers
 import meanfield.circuit as circuit
-import numpy as np
 from docopt import docopt
 import sys
 
@@ -55,7 +54,7 @@ if __name__ == '__main__':
     print('new:')
     print(circ_params_new[attribute][2][3])
     print('diff = 15 %:')
-    print(circ_params_old[attribute][2][3]/100*15)
+    print(circ_params_old[attribute][2][3] / 100 * 15)
     print('\n')
 
     file.close()
