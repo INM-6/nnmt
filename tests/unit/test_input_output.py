@@ -266,7 +266,7 @@ class Test_load_from_h5:
         params = loaded_params[output_key]
         check_quantity_dicts_are_equal(params, param_test_dict)
     
-    def test_save_and_load_existing_results_with_anlysis_params(
+    def test_save_and_load_existing_results_with_analysis_params(
             self, tmpdir, param_test_dict):
         param_test_dict['label'] = 'test_label'
         hash = io.create_hash(param_test_dict, param_test_dict.keys())
