@@ -146,6 +146,7 @@ class Test_quantities_to_val_unit:
             assert conv_item[0] == exp_item[0]
             print(conv_item)
             try:
+                # check dict value which is a val_unit_dict
                 assert conv_item[1]['unit'] == exp_item[1]['unit']
                 try:
                     assert conv_item[1]['val'] == exp_item[1]['val']
