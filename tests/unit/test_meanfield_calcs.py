@@ -238,7 +238,6 @@ class Test_eigen_spectra_eval:
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'eigvals'
         params['matrix'] = 'prop_inv'
-        # import pdb; pdb.set_trace()
         output = output_test_fixtures.pop('output')
         regime = output[1]
         if regime != 'negative_firing_rate':
