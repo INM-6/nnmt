@@ -142,6 +142,7 @@ class Test_quantities_to_val_unit:
         while converted:
             conv_item = converted.popitem()
             exp_item = val_unit_pair.popitem()
+            # check key
             assert conv_item[0] == exp_item[0]
             print(conv_item)
             try:
