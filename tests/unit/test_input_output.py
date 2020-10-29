@@ -253,7 +253,7 @@ class Test_load_h5:
 class Test_load_from_h5:
     
     @pytest.mark.xfail
-    def test_save_and_load_existing_results_without_anlysis_params(
+    def test_save_and_load_existing_results_without_analysis_params(
             self, tmpdir, param_test_dict):
         param_test_dict['label'] = 'test_label'
         hash = io.create_hash(param_test_dict, param_test_dict.keys())
