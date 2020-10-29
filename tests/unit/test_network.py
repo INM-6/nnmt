@@ -328,7 +328,6 @@ analysis_key_types = dict(numerical=1,
                                               3 * ureg.s],
                           )
 result_ids = sorted(result_types.keys())
-result_ids = sorted(result_types.keys())
 key_names = sorted(analysis_key_types.keys())
 test_methods = [make_test_method(result_types[key])
                 for key in result_ids]
