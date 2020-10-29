@@ -241,7 +241,7 @@ pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_outpu
 ```
 See the `pytest` documentation for all available options.
 
-The `tests` directory has the following structure:
+## Test Directory Structure
 ```
 tests/
   conftest.py
@@ -270,7 +270,7 @@ collection of custom assert functions.
 
 ## Test Design
 
-Many test classes define the tested function as `staticmethod` because the
+Many test classes define the tested function as `staticmethod`, because the
 function itself is not tightly related to class, but we still want to attach it
 to the class for later reference. This allows calling function as an 'unbound function', without passing the instance to the function:
  `self.func()` = `func()` != `func(self)`.
