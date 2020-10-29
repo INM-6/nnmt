@@ -102,6 +102,7 @@ class Test_val_unit_to_quantities:
             conv_item = converted.popitem()
             exp_item = quantity_dict.popitem()
             try:
+                # dict value has just one element
                 assert conv_item == exp_item
             except ValueError:
                 assert conv_item[0] == exp_item[0]
