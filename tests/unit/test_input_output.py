@@ -139,7 +139,6 @@ class Test_quantities_to_val_unit:
             conv_item = converted.popitem()
             exp_item = val_unit_pair.popitem()
             assert conv_item[0] == exp_item[0]
-            print(conv_item)
             try:
                 assert conv_item[1]['unit'] == exp_item[1]['unit']
                 try:

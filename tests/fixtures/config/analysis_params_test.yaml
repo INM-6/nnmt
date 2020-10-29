@@ -9,7 +9,6 @@ f_max:
   unit: Hz
 
 df:
-  # 1/(2*pi)
   val: 30
   unit: Hz
 
