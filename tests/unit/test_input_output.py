@@ -105,7 +105,10 @@ class Test_val_unit_to_quantities:
                 # dict value has just one element
                 assert conv_item == exp_item
             except ValueError:
+                # dict value has more than one element
+                # check key
                 assert conv_item[0] == exp_item[0]
+                # check value
                 assert_array_equal(conv_item[1], exp_item[1])
                 assert_units_equal(conv_item[1], exp_item[1])
             
