@@ -102,9 +102,13 @@ class Test_val_unit_to_quantities:
             conv_item = converted.popitem()
             exp_item = quantity_dict.popitem()
             try:
+                # dict value has just one element
                 assert conv_item == exp_item
             except ValueError:
+                # dict value has more than one element
+                # check key
                 assert conv_item[0] == exp_item[0]
+                # check value
                 assert_array_equal(conv_item[1], exp_item[1])
                 assert_units_equal(conv_item[1], exp_item[1])
             
@@ -138,8 +142,10 @@ class Test_quantities_to_val_unit:
         while converted:
             conv_item = converted.popitem()
             exp_item = val_unit_pair.popitem()
+            # check key
             assert conv_item[0] == exp_item[0]
             try:
+                # check dict value which is a val_unit_dict
                 assert conv_item[1]['unit'] == exp_item[1]['unit']
                 try:
                     assert conv_item[1]['val'] == exp_item[1]['val']
@@ -246,7 +252,7 @@ class Test_load_h5:
 class Test_load_from_h5:
     
     @pytest.mark.xfail
-    def test_save_and_load_existing_results_without_anlysis_params(
+    def test_save_and_load_existing_results_without_analysis_params(
             self, tmpdir, param_test_dict):
         param_test_dict['label'] = 'test_label'
         hash = io.create_hash(param_test_dict, param_test_dict.keys())
@@ -259,7 +265,7 @@ class Test_load_from_h5:
         params = loaded_params[output_key]
         check_quantity_dicts_are_equal(params, param_test_dict)
     
-    def test_save_and_load_existing_results_with_anlysis_params(
+    def test_save_and_load_existing_results_with_analysis_params(
             self, tmpdir, param_test_dict):
         param_test_dict['label'] = 'test_label'
         hash = io.create_hash(param_test_dict, param_test_dict.keys())
