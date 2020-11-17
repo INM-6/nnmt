@@ -779,12 +779,9 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     nu_i_ext: Quantity(np.ndarray, 'hertz')
         additional external inhibitory rate needed for fixed input
     """
-    target_rates = np.zeros(len(mu_set))
-    for i in np.arange(len(mu_set)):
-        # target rates for set mean and standard deviation of input
-        target_rates[i] = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r,
-                                              V_th_rel, V_0_rel,
-                                              mu_set[i], sigma_set[i])
+    # target rates for set mean and standard deviation of input
+    target_rates = aux_calcs.nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                                    mu_set, sigma_set)
 
     # additional external rates set to 0 for local-only contributions
     mu_loc =_mean(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
