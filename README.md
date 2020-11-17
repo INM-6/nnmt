@@ -230,7 +230,7 @@ publication in Physical Review Research):
 # Testing
 
 We have an extensive test suite using the `pytest` framework. If you want to
-run all the tests, you can simply do so by installing and activating the conda environment specified in the provided `environmen.yaml` file, and running
+run all the tests, you can simply do so by installing and activating the conda environment specified in the provided `environment.yaml` file, and running
 ```
 pytest
 ```
@@ -257,9 +257,8 @@ tests/
     test_meafield_calcs.py
 ```
 
-`conftest.py` is a special `pytest` file that allows defining custom fixtures
-and special `pytest` functions, especially the `pytest_generate_tests`
-function, which allows complex parametrizations of tests.
+`conftest.py` is a special `pytest` file, in which custom fixtures
+and special `pytest` functions are defined. We, in particular, make use of the `pytest_generate_tests` function, which considerably simplifies complex parametrizations of tests.
 
 `fixtures/` contains all the data that is used for tests comparing real and
 expected output of functions, as well as the file that creates the data
@@ -272,7 +271,7 @@ collection of custom assert functions.
 
 Many test classes define the tested function as `staticmethod`, because the
 function itself is not tightly related to class, but we still want to attach it
-to the class for later reference. This allows calling function as an 'unbound function', without passing the instance to the function:
+to the class for later reference. This allows us to call the function as an 'unbound function', without passing the instance to the function:
  `self.func()` = `func()` != `func(self)`.
  
 There are two special fixtures that are definded in `conftest.py`:
@@ -285,7 +284,7 @@ arguments is defined within `conftest.py`.
 If a test requires `output_test_fixtures`, pytest will pass the output fixtures
 corresponding to the `output_key` defined as a test class variable. Those
 output key results need to be created beforehand (see `create_fixtures.py`).
-This allows to parametrize the test such that the function is tested in
+This allows us to parametrize the test such that the function is tested in
 different parameter regimes (e.g. mean-driven regime vs. fluctuation-driven
 regime).
 
