@@ -6,8 +6,8 @@ consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
 mean-field theory of neuronal networks. That is why this package is called
 __lif_meanfield_tools (LMT)__.
 
-The package provides implementations used in the same or a similar version in 
-the following scientific publications: [Fourcaud & Brunel (2002)](https://doi.org/10.1162/089976602320264015), 
+The package provides implementations used in the same or a similar version in
+the following scientific publications: [Fourcaud & Brunel (2002)](https://doi.org/10.1162/089976602320264015),
 [Schuecker et al. (2014)](https://arxiv.org/abs/1410.8799),
 [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119),
 [Schuecker et al. (2017)]( https://doi.org/10.1371/journal.pcbi.1005179),
@@ -102,15 +102,15 @@ be aware of:
   This actually is not a real issue, but you should be aware that the current
   implementation is only accurate for moderate frequencies. This is expected
   from the theory implemented. In the future we might add a support for high
-  frequencies (see [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119) 
+  frequencies (see [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119)
   for further discussion).
 
 - [__Accuracy of transfer function depends on ratio of synaptic and membrane time
   constant__](https://github.com/INM-6/lif_meanfield_tools/issues/37): This
   is a part of the theory as well. It is only accurate for small values of
   <img src="https://render.githubusercontent.com/render/math?math=\sqrt{\tau_s/\tau_m}">
-  which is used as a perturbation parameter in the analysis (see 
-  [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119) for 
+  which is used as a perturbation parameter in the analysis (see
+  [Schuecker et al. (2015)](https://doi.org/10.1103/PhysRevE.92.052119) for
   further discussion).
 
 # How to Use This Package
@@ -207,7 +207,7 @@ Network methods:
   Eq. (18) in [Bos et al. (2016)](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132).
 - __eigen_spectra__: Calculate the eigenvalue spectrum, or left of right
   eigenvectors of the effective connectivity matrix (Eq. 4), the propagator
-  Eq. (16) or the inverse propagator in the frequency domain as defined in 
+  Eq. (16) or the inverse propagator in the frequency domain as defined in
   [Bos et al. (2016)](https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132).
 
 The following additional Network methods have been used in Senk et al.
@@ -230,6 +230,73 @@ publication in Physical Review Research):
 - __xi_of_k__: Effective spatial profile (see Fig. 3(b) and (d)).
 - __solve_chareq_rate_boxcar__: Analytical solution of the characteristic
   equation for a neural-field model with boxcar-shaped connectivity kernels.
+  
+# Testing
+
+We have an extensive test suite using the `pytest` framework. If you want to
+run all the tests, you can simply do so by installing and activating the conda environment specified in the provided `environment.yaml` file, and running
+```
+pytest
+```
+from the root directory (the one containing `tests` and `lif_meanfield_tools`).
+If you want to be more specific, you can run single tests as well
+```
+pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_output
+```
+See the `pytest` documentation for all available options.
+
+Note that some tests currently fail. This points towards pieces of code that still need to be improved (see current issues).
+
+Note that `pytest` distinguishes between failures and errors:
+- A failure occurs if a test did not run successfully.
+- An error occurs if an exception happened outside of the test function, for example inside a fixture.
+
+## Test Directory Structure
+```
+tests/
+  conftest.py
+  fixtures/
+    create_fixtures.py
+    config/
+    data/
+  unit/
+    checks.py
+    test_input_output.py
+    test_network.py
+    test_aux_calcs.py
+    test_meafield_calcs.py
+```
+
+`conftest.py` is a special `pytest` file, in which custom fixtures
+and special `pytest` functions are defined. We, in particular, make use of the `pytest_generate_tests` function, which considerably simplifies complex parametrizations of tests.
+
+`fixtures/` contains all the data that is used for tests comparing real and
+expected output of functions, as well as the file that creates the data
+`create_fixtures.py` using the parameters defined in `config/`.
+
+`unit/` contains all unit tests as well as a file `checks.py` which is a
+collection of custom assert functions.
+
+## Test Design
+
+Many test classes define the tested function as `staticmethod`, because the
+function itself is not tightly related to class, but we still want to attach it
+to the class for later reference. This allows us to call the function as an 'unbound function', without passing the instance to the function:
+ `self.func()` = `func()` != `func(self)`.
+ 
+There are two special fixtures that are definded in `conftest.py`:
+
+If a test requires the `pos_keys` fixture, it will be parametrized such that
+it tests all positive arguments the tested function (defined as a
+`staticmethod` of the test class) takes. The list of all possible positive
+arguments is defined within `conftest.py`.
+
+If a test requires `output_test_fixtures`, pytest will pass the output fixtures
+corresponding to the `output_key` defined as a test class variable. Those
+output key results need to be created beforehand (see `create_fixtures.py`).
+This allows us to parametrize the test such that the function is tested in
+different parameter regimes (e.g. mean-driven regime vs. fluctuation-driven
+regime).
 
 # History of this Project
 
