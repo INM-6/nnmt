@@ -7,7 +7,7 @@ dependencies:
   - ipython
   - numpy
   - scipy
-  - cython 
+  - cython
   - matplotlib
   - h5py
   - pyyaml

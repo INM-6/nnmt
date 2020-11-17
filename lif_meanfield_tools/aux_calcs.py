@@ -33,7 +33,8 @@ import mpmath
 
 from . import ureg
 
-
+@ureg.wraps(ureg.Hz,
+           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs
@@ -65,6 +66,10 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+
+    return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
@@ -80,7 +85,6 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     if math.isnan(result):
         print(mu, sigma, x_th, x_r)
     return result
-
 
 def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
@@ -111,7 +115,8 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     else:
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
-
+@ureg.wraps(ureg.Hz,
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """
     Calculates stationary firing rates for filtered synapses based on
@@ -273,7 +278,8 @@ def Phi_prime_mu(s, sigma):
     * (1 + erf(s / np.sqrt(2)))
     + np.sqrt(2) / np.sqrt(np.pi))
 
-
+@ureg.wraps(ureg.Hz/ureg.mV,
+           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Derivative of the stationary firing rates with synaptic filtering
