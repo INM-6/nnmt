@@ -25,8 +25,8 @@ solve_chareq_rate_boxcar
 
 from __future__ import print_function
 from scipy.special import erf, zetac, lambertw, erfcx, dawsn, roots_legendre
+from scipy.integrate import quad
 
-import scipy
 import numpy as np
 import math
 import mpmath
@@ -82,7 +82,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     return result
 
 
-def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, gl_order=100):
+def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
@@ -113,6 +113,10 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, gl_order=100):
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
 
+    # determine order of quadrature
+    params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
+    gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
+
     # separate domains
     mask_exc = y_th < 0
     mask_inh = 0 < y_r
@@ -135,7 +139,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, gl_order=100):
         return nu
 
 
-def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma, gl_order=100):
+def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma):
     """
     Calculates stationary firing rates for filtered synapses based on
     Fourcaud & Brunel 2002 (using the shift of the integration boundaries)
@@ -169,7 +173,30 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma, gl_order=100):
     # effective reset
     V_r1 = V_r + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
     # use standard Siegert with modified threshold and reset
-    return nu_0(tau_m, tau_r, V_th1, V_r1, mu, sigma, gl_order)
+    return nu_0(tau_m, tau_r, V_th1, V_r1, mu, sigma)
+
+
+def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
+    """Determine order of Gauss-Legendre quadrature for erfcx integral."""
+    # determine maximal integration range
+    a = min(np.abs(y_th).min(), np.abs(y_r).min())
+    b = max(np.abs(y_th).max(), np.abs(y_r).max())
+
+    # adaptive quadrature from scipy.integrate for comparison
+    I_quad = quad(erfcx, a, b, epsabs=0, epsrel=epsrel)[0]
+
+    # increase order to reach desired accuracy
+    order = start_order
+    for _ in range(maxiter):
+        I_gl = _erfcx_integral(a, b, order=order)[0]
+        rel_error = np.abs(I_gl/I_quad - 1)
+        if rel_error < epsrel:
+            return order
+        else:
+            order *= 2
+    msg = f'Failed to converge after {maxiter} iterations. '
+    msg += f'Last relative error {rel_error}.'
+    raise RuntimeError(msg)
 
 
 def _erfcx_integral(a, b, order):

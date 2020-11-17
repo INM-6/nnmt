@@ -50,10 +50,9 @@ from . import ureg
 from . import aux_calcs
 
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
-                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz,
-                      None))
+                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, gl_order=100):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -103,15 +102,15 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                                     g, nu_e_ext, nu_i_ext)
 
         new_nu = aux_calcs.nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                  sigma, gl_order)
+                                  sigma)
 
         return -nu + new_nu
 
     # do iteration procedure, until stationary firing rates are found
-    t_max = 100
+    t_max = 1000
     y = np.zeros(int(dimension))
     eps = 1
-    while eps >= 1.49e-08:
+    while eps >= 1e-12:
         sol = sint.solve_ivp(get_rate_difference, [0, t_max], y,
                              t_eval=[t_max-1, t_max], method='LSODA')
         eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
