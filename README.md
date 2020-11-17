@@ -76,6 +76,10 @@ An alternative is to install directly from GitHub:
 ```
 pip install git+https://github.com/INM-6/lif_meanfield_tools.git
 ```
+If you are using [conda](https://conda.io/), you can create an environment including LMT:
+```
+conda env create -f lif_meanfield_tools.yml
+```
 
 # Current Issues
 
