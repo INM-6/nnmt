@@ -50,9 +50,10 @@ from . import ureg
 from . import aux_calcs
 
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
-                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
+                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz,
+                      None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, gl_order=100):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -92,11 +93,6 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     Quantity(np.ndarray, 'hertz')
         Array of firing rates of each population in hertz.
     '''
-    def rate_function(mu, sigma):
-        """ calculate stationary firing rate with given parameters """
-        return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                   sigma)
-
     def get_rate_difference(nu):
         """ calculate difference between new iteration step and previous one """
         ### new mean
@@ -106,7 +102,8 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
                                     g, nu_e_ext, nu_i_ext)
 
-        new_nu = np.array([x for x in list(map(rate_function, mu, sigma))])
+        new_nu = aux_calcs.nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                  sigma, gl_order)
 
         return -nu + new_nu
 
