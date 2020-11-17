@@ -1,4 +1,4 @@
-name: lif_meanfield_tools
+name: lmt
 channels:
   - defaults
 dependencies:
@@ -11,6 +11,9 @@ dependencies:
   - matplotlib
   - h5py
   - pyyaml
+  - pytest=5.4.*
+  - pytest-cov=2.9.*
+  - pytest-mock=3.1.*
   - mpmath
   - decorator
   - requests
