@@ -27,9 +27,9 @@ from lif_meanfield_tools import ureg
 
 
 # path to network configuration files and analysis parameters
-config_path = 'tests/fixtures/config/'
+config_path = 'tests/fixtures/unit/config/'
 # path to fixtures
-fixture_path = 'tests/fixtures/data/'
+fixture_path = 'tests/fixtures/unit/data/'
 integration_fix_path = 'tests/fixtures/integration/data/'
 
 # list of all always positive arguments

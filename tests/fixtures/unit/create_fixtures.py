@@ -350,8 +350,8 @@ if __name__ == '__main__':
     # only run code if users are sure they want to do it
     if '--force' in args.keys():
 
-        fixture_path = 'tests/fixtures/data/'
-        config_path = 'tests/fixtures/config/'
+        fixture_path = 'tests/fixtures/unit/data/'
+        config_path = 'tests/fixtures/unit/config/'
         
         # purely numerical fixtures, that don't need any network
         # fix_Phi(fixture_path)
