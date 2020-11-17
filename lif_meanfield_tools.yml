@@ -1,0 +1,21 @@
+name: lif_meanfield_tools
+channels:
+  - defaults
+dependencies:
+  - python
+  - pip
+  - ipython
+  - numpy
+  - scipy
+  - cython 
+  - matplotlib
+  - h5py
+  - pyyaml
+  - mpmath
+  - decorator
+  - requests
+  - setuptools
+  - pip:
+    - pint
+    - h5py_wrapper
+    - -e .
