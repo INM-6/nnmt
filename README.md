@@ -241,6 +241,12 @@ pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_outpu
 ```
 See the `pytest` documentation for all available options.
 
+Note that some tests currently fail. This points towards pieces of code that still need to be improved (see current issues).
+
+Note that `pytest` distinguished between failures and errors:
+- A failure occurs if a test did not run successfully.
+- An error occurs if an exception happened outside of the test function, for example in a fixture.
+
 ## Test Directory Structure
 ```
 tests/
