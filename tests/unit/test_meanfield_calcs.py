@@ -3,6 +3,7 @@ from numpy.testing import assert_array_equal
 
 from .checks import (check_pos_params_neg_raise_exception,
                      check_correct_output,
+                     assert_units_equal,
                      check_V_0_larger_V_th_raise_exception,
                      check_warning_is_given_if_k_is_critical,
                      check_exception_is_raised_if_k_is_too_large)
@@ -21,13 +22,7 @@ from lif_meanfield_tools.meanfield_calcs import (
 
 
 class Test_firing_rates:
-    """Tests firing rates function. Probably this is a functional test."""
 
-    # Def function as staticmethod because it is not tightly related to class,
-    # but we still want to attach it to the class for later reference. This
-    # allows calling function as an 'unbound function', without passing the
-    # instance to the function:
-    # `self.func()` = `func()` != `func(self)`.
     func = staticmethod(firing_rates)
     output_key = 'firing_rates'
 
@@ -45,7 +40,6 @@ class Test_firing_rates:
 
 class Test_mean:
 
-    # further explanation see Test_firing_rates
     func = staticmethod(mean)
     output_key = 'mean_input'
 
@@ -60,7 +54,6 @@ class Test_mean:
 
 class Test_standard_deviation:
 
-    # further explanation see Test_firing_rates
     func = staticmethod(standard_deviation)
     output_key = 'std_input'
 
@@ -75,7 +68,6 @@ class Test_standard_deviation:
 
 class Test_transfer_function:
 
-    # define tested function
     func = staticmethod(transfer_function)
     methods = ['shift', 'taylor']
 
@@ -90,7 +82,6 @@ class Test_transfer_function:
 
 class Test_transfer_function_1p_shift():
 
-    # define tested function
     func = staticmethod(transfer_function)
     output_key = 'tf_shift'
 
@@ -113,7 +104,6 @@ class Test_transfer_function_1p_shift():
 
 class Test_transfer_function_1p_taylor():
 
-    # define tested function
     func = staticmethod(transfer_function)
     output_key = 'tf_taylor'
 
@@ -136,7 +126,6 @@ class Test_transfer_function_1p_taylor():
 
 class Test_delay_dist_matrix:
 
-    # define tested function
     func = staticmethod(delay_dist_matrix)
 
     def test_delay_dist_matrix_single_is_called(self, mocker, std_params):
@@ -148,7 +137,6 @@ class Test_delay_dist_matrix:
 
 class Test_delay_dist_matrix_single:
 
-    # define tested function
     func = staticmethod(delay_dist_matrix)
     ids = ['none', 'truncated_gaussian', 'gaussian']
     output_keys = ['delay_dist_{}'.format(id) for id in ids]
@@ -164,7 +152,6 @@ class Test_delay_dist_matrix_single:
 
 class Test_sensitivity_measure:
 
-    # define tested function
     func = staticmethod(sensitivity_measure)
     # need transfer_function_single and delay_dist_single as input arguments
     output_keys = ['sensitivity_measure', 'transfer_function_single',
@@ -191,7 +178,6 @@ class Test_sensitivity_measure:
 
 class Test_power_spectra:
 
-    # define tested function
     func = staticmethod(power_spectra)
     output_key = 'power_spectra'
 
@@ -213,7 +199,6 @@ class Test_power_spectra:
 
 class Test_eigen_spectra_eval:
 
-    # define tested function
     func = staticmethod(eigen_spectra)
     output_keys = ['eigenvalue_spectra', 'regime']
 
@@ -237,7 +222,6 @@ class Test_eigen_spectra_eval:
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'eigvals'
         params['matrix'] = 'prop_inv'
-        # import pdb; pdb.set_trace()
         output = output_test_fixtures.pop('output')
         regime = output[1]
         if regime != 'negative_firing_rate':
@@ -274,7 +258,6 @@ class Test_eigen_spectra_eval:
 
 class Test_eigen_spectra_reigvecs:
 
-    # define tested function
     func = staticmethod(eigen_spectra)
     output_keys = ['r_eigenvec_spectra', 'regime']
     
@@ -307,7 +290,6 @@ class Test_eigen_spectra_reigvecs:
 
 class Test_eigen_spectra_leigvecs:
 
-    # define tested function
     func = staticmethod(eigen_spectra)
     output_keys = ['l_eigenvec_spectra', 'regime']
 
@@ -340,7 +322,6 @@ class Test_eigen_spectra_leigvecs:
 
 class Test_additional_rates_for_fixed_input:
 
-    # define tested function
     func = staticmethod(additional_rates_for_fixed_input)
     output_keys = ['add_nu_e_ext', 'add_nu_i_ext']
 
@@ -358,7 +339,9 @@ class Test_additional_rates_for_fixed_input:
     def test_correct_output_nu_e_ext(self, output_test_fixtures, key):
         params = output_test_fixtures['params']
         output = output_test_fixtures['output']
-        assert_array_equal(self.func(**params)[key], output[key])
+        result = self.func(**params)[key]
+        assert_array_equal(result, output[key])
+        assert_units_equal(result, output[key])
 
 
 class Test_effective_coupling_strength:
