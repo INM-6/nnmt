@@ -270,8 +270,8 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         for eig_index, eig_results in sensitivity_dict.items():
             if eig_results['critical_frequency'] == fmax:
                 eigenvalue_index = eig_index
-                print(f'eigenvalue that contributes most to identified peak at'
-                      ' {fmax}: {eigenvalue_index}')
+                print(f"eigenvalue that contributes most to identified peak "
+                      f"at {fmax}: {eigenvalue_index}")
 
         # see lines 224 ff in make_Bos2016_data/sensitivity_measure.py
         assert eigenvalue_index == 1
