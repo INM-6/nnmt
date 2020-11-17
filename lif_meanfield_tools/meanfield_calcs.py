@@ -93,7 +93,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     Quantity(np.ndarray, 'hertz')
         Array of firing rates of each population in hertz.
     '''
-    def get_rate_difference(nu):
+    def get_rate_difference(_, nu):
         """ calculate difference between new iteration step and previous one """
         ### new mean
         mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
@@ -108,17 +108,16 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         return -nu + new_nu
 
     # do iteration procedure, until stationary firing rates are found
-    dt = 0.05
-    y = np.zeros((2, int(dimension)))
-    eps = 1.0
-    while eps >= 1e-5:
-        delta_y = get_rate_difference(y[0])
-        y[1] = y[0] + delta_y*dt
-        epsilon = (y[1] - y[0])
-        eps = max(np.abs(epsilon))
-        y[0] = y[1]
+    t_max = 100
+    y = np.zeros(int(dimension))
+    eps = 1
+    while eps >= 1.49e-08:
+        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y,
+                             t_eval=[t_max-1, t_max], method='LSODA')
+        eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
+        y = sol.y[:, 1]
 
-    return y[1]
+    return y
 
 
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
