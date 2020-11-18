@@ -107,16 +107,22 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         return -nu + new_nu
 
     # do iteration procedure, until stationary firing rates are found
+    eps_tol = 1e-12
     t_max = 1000
-    y = np.zeros(int(dimension))
-    eps = 1
-    while eps >= 1e-12:
-        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y,
+    maxiter = 1000
+    y0 = np.zeros(int(dimension))
+    for _ in range(maxiter):
+        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
                              t_eval=[t_max-1, t_max], method='LSODA')
+        assert sol.success is True
         eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
-        y = sol.y[:, 1]
-
-    return y
+        if eps < eps_tol:
+            return sol.y[:, 1]
+        else:
+            y0 = sol.y[:, 1]
+    msg = f'Rate iteration failed to converge after {maxiter} iterations. '
+    msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
+    raise RuntimeError(msg)
 
 
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,

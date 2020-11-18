@@ -194,8 +194,8 @@ def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
             return order
         else:
             order *= 2
-    msg = f'Failed to converge after {maxiter} iterations. '
-    msg += f'Last relative error {rel_error}.'
+    msg = f'Quadrature search failed to converge after {maxiter} iterations. '
+    msg += f'Last relative error {rel_error:e}, desired {epsrel:e}.'
     raise RuntimeError(msg)
 
 
