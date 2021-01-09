@@ -48,6 +48,7 @@ from scipy.special import zetac, erf
 from . import ureg
 from . import aux_calcs
 
+
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
                       ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
@@ -93,16 +94,16 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     '''
 
     def rate_function(mu, sigma):
-        """ calculate stationary firing rate with given parameters """
+        """Calculate stationary firing rate with given parameters"""
         return aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                   sigma)
+                                    sigma)
 
     def get_rate_difference(nu):
-        """ calculate difference between new iteration step and previous one """
-        ### new mean
+        """Calculate difference between new iteration step and previous one"""
+        # new mean
         mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
 
-        ### new std
+        # new std
         sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
                                     g, nu_e_ext, nu_i_ext)
 
@@ -116,7 +117,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     eps = 1.0
     while eps >= 1e-5:
         delta_y = get_rate_difference(y[0])
-        y[1] = y[0] + delta_y*dt
+        y[1] = y[0] + delta_y * dt
         epsilon = (y[1] - y[0])
         eps = max(np.abs(epsilon))
         y[0] = y[1]
@@ -170,7 +171,7 @@ def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     # contribution from external sources
     m_ext = tau_m * j * K_ext * nu_ext
     # contribution from additional excitatory and inhibitory Poisson input
-    m_ext_add =  tau_m * j * (nu_e_ext - g * nu_i_ext)
+    m_ext_add = tau_m * j * (nu_e_ext - g * nu_i_ext)
     # add them up
     m = m0 + m_ext + m_ext_add
 
@@ -179,7 +180,8 @@ def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
 
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
                       None, ureg.Hz, ureg.Hz))
-def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
+                       nu_i_ext):
     '''
     Calc standard devs of inputs to populations as function of firing rates
 
@@ -217,14 +219,15 @@ def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
                                g, nu_e_ext, nu_i_ext)
 
 
-def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
+                        nu_i_ext):
     """ Compute standard_deviation() without quantities. """
     # contribution from within the network to variance
     var0 = tau_m * np.dot(K * J**2, nu)
     # contribution from external sources to variance
     var_ext = tau_m * j**2 * K_ext * nu_ext
     # contribution from additional excitatory and inhibitory Poisson input
-    var_ext_add =  tau_m * j**2 * (nu_e_ext + g**2 * nu_i_ext)
+    var_ext_add = tau_m * j**2 * (nu_e_ext + g**2 * nu_i_ext)
     # add them up
     var = var0 + var_ext + var_ext_add
     # standard deviation is square root of variance
@@ -232,8 +235,8 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext
     return sigma
 
 
-@ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
-                              ureg.mV, ureg.mV, ureg.Hz, None))
+@ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
+                                ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                 V_0_rel, omega, synaptic_filter=True):
     """
@@ -283,12 +286,12 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega - 0.) < 1e-15:
-        result = aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                                           mu, sigma)
+        result = aux_calcs.d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel,
+                                           V_0_rel, mu, sigma)
     else:
         nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        nu0_fb = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                     sigma)
+        nu0_fb = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                                      mu, sigma)
         x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
         z = complex(-0.5, complex(omega * tau_m))
@@ -297,8 +300,10 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         A = alpha * tau_m * nu0 * k / np.sqrt(2)
         a0 = aux_calcs.Psi_x_r(z, x_t, x_r)
         a1 = aux_calcs.dPsi_x_r(z, x_t, x_r) / a0
-        a3 = A / tau_m / nu0_fb * (-a1**2 + aux_calcs.d2Psi_x_r(z, x_t, x_r)/a0)
-        result = (np.sqrt(2.) / sigma * nu0_fb / complex(1., omega * tau_m)* (a1 + a3))
+        a3 = A / tau_m / nu0_fb * (-a1**2
+                                   + aux_calcs.d2Psi_x_r(z, x_t, x_r) / a0)
+        result = (np.sqrt(2.) / sigma * nu0_fb
+                  / complex(1., omega * tau_m) * (a1 + a3))
 
     if synaptic_filter:
         # additional low-pass filter due to perturbation to the input current
@@ -306,8 +311,8 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
-@ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV,
-                              ureg.mV, ureg.Hz, None))
+@ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
+                                ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                V_0_rel, omega, synaptic_filter=True):
     """
@@ -346,8 +351,9 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     --------
     Quantity(float, 'hertz/millivolt')
     """
-    return _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
-                                       V_0_rel, omega, synaptic_filter)
+    return _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r,
+                                       V_th_rel, V_0_rel, omega,
+                                       synaptic_filter)
 
 
 def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -384,7 +390,7 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         frac = aux_calcs.dPsi_x_r(z, x_t, x_r) / aux_calcs.Psi_x_r(z, x_t, x_r)
 
         result = (np.sqrt(2.) / sigma * nu
-                  / (1. + complex(0., complex(omega*tau_m))) * frac)
+                  / (1. + complex(0., complex(omega * tau_m))) * frac)
 
     if synaptic_filter:
         # additional low-pass filter due to perturbation to the input current
@@ -430,24 +436,24 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     """
 
     if method == 'shift':
-        transfer_functions = [[transfer_function_1p_shift(mu[i], sigma[i], tau_m,
-                                                          tau_s, tau_r, V_th_rel,
-                                                          V_0_rel, omega,
-                                                          synaptic_filter)
-                               for i in range(dimension)]
-                              for omega in omegas]
+        transfer_functions = [
+            [transfer_function_1p_shift(mu[i], sigma[i], tau_m, tau_s, tau_r,
+                                        V_th_rel, V_0_rel, omega,
+                                        synaptic_filter)
+             for i in range(dimension)]
+            for omega in omegas]
     if method == 'taylor':
-        transfer_functions = [[transfer_function_1p_taylor(mu[i], sigma[i], tau_m,
-                                                          tau_s, tau_r, V_th_rel,
-                                                          V_0_rel, omega,
-                                                          synaptic_filter)
-                               for i in range(dimension)]
-                              for omega in omegas]
+        transfer_functions = [
+            [transfer_function_1p_taylor(mu[i], sigma[i], tau_m, tau_s, tau_r,
+                                         V_th_rel, V_0_rel, omega,
+                                         synaptic_filter)
+             for i in range(dimension)]
+            for omega in omegas]
 
-
-    # convert list of list of quantities to list of quantities containing np.ndarray
+    # convert list of list of quantities to list of quantities containing
+    # np.ndarray
     tf_magnitudes = np.array([np.array([tf.magnitude for tf in tf_population])
-                     for tf_population in transfer_functions])
+                              for tf_population in transfer_functions])
     tf_unit = transfer_functions[0][0].units
 
     return tf_magnitudes * tf_unit
@@ -487,28 +493,30 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
 
     if delay_dist == 'none':
         D = np.ones((int(dimension), int(dimension)))
-        return D*np.exp(-np.complex(0,omega)*Delay)
+        return D * np.exp(-np.complex(0, omega) * Delay)
 
     elif delay_dist == 'truncated_gaussian':
-        a0 = 0.5 * (1 + erf((-Delay/Delay_sd+1j*omega*Delay_sd) / np.sqrt(2)))
-        a1 = 0.5 * (1 + erf((-Delay/Delay_sd) / np.sqrt(2)))
-        b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
-        b1 = np.exp(-np.complex(0,omega)*Delay)
-        return (1.0-a0)/(1.0-a1)*b0*b1
+        a0 = 0.5 * (1 + erf((-Delay / Delay_sd + 1j * omega * Delay_sd)
+                            / np.sqrt(2)))
+        a1 = 0.5 * (1 + erf((-Delay / Delay_sd) / np.sqrt(2)))
+        b0 = np.exp(-0.5 * np.power(Delay_sd * omega, 2))
+        b1 = np.exp(-np.complex(0, omega) * Delay)
+        return (1.0 - a0) / (1.0 - a1) * b0 * b1
 
     elif delay_dist == 'gaussian':
-        b0 = np.exp(-0.5*np.power(Delay_sd*omega,2))
-        b1 = np.exp(-np.complex(0,omega)*Delay)
-        return b0*b1
+        b0 = np.exp(-0.5 * np.power(Delay_sd * omega, 2))
+        b1 = np.exp(-np.complex(0, omega) * Delay)
+        return b0 * b1
 
 
 def delay_dist_matrix(dimension, Delay, Delay_sd, delay_dist, omegas):
     """ Calculates delay distribution matrices for all omegas. """
-    ddms = [delay_dist_matrix_single(dimension, Delay, Delay_sd,
-                                             delay_dist, omega)
-                           for omega in omegas]
+    ddms = [delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist,
+                                     omega)
+            for omega in omegas]
 
-    # convert list of list of quantities to list of quantities containing np.ndarray
+    # convert list of list of quantities to list of quantities containing
+    # np.ndarray
     delay_dist_matrices = np.array([ddm.magnitude for ddm in ddms])
     ddm_unit = ddms[0].units
 
@@ -543,7 +551,7 @@ def _effective_connectivity(omega, transfer_function, tau_m, J, K, dimension,
         Effective connectivity matrix.
     """
     # matrix of equal columns
-    tf = np.tile(transfer_function, (dimension,1)).T
+    tf = np.tile(transfer_function, (dimension, 1)).T
 
     eff_conn = tau_m * J * K * tf * delay_term
 
@@ -574,11 +582,10 @@ def _effective_connectivity_rate(omega, tau, W_rate, delay_term=1):
     return eff_conn
 
 
-
-@ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
-                                 None, ureg.s, ureg.s, None, ureg.Hz))
-def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s,
-                        dimension, omega):
+@ureg.wraps(ureg.dimensionless, (ureg.Hz / ureg.mV, ureg.dimensionless,
+                                 ureg.mV, None, ureg.s, ureg.s, None, ureg.Hz))
+def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m,
+                        tau_s, dimension, omega):
     """
     Calculates sensitivity measure as in Eq. 21 in Bos et al. (2015).
 
@@ -615,19 +622,20 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s
     index = None
     if index is None:
         # find eigenvalue closest to one
-        index = np.argmin(np.abs(e-1))
-    T = np.outer(U_inv[index],U[:,index])
-    T /= np.dot(U_inv[index],U[:,index])
+        index = np.argmin(np.abs(e - 1))
+    T = np.outer(U_inv[index], U[:, index])
+    T /= np.dot(U_inv[index], U[:, index])
     T *= MH
 
     return T
 
-@ureg.wraps(ureg.Hz, (ureg.s, ureg.s, None, ureg.mV, None, ureg.dimensionless, None,
-                   ureg.Hz, ureg.Hz/ureg.mV, ureg.Hz))
+
+@ureg.wraps(ureg.Hz, (ureg.s, ureg.s, None, ureg.mV, None, ureg.dimensionless,
+                      None, ureg.Hz, ureg.Hz / ureg.mV, ureg.Hz))
 def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
                   firing_rates, transfer_function, omegas):
     """
-    Calculates vector of power spectra for all populations at given frequencies.
+    Calcs vector of power spectra for all populations at given frequencies.
 
     See: Eq. 18 in Bos et al. (2016)
     Shape of output: (len(populations), len(omegas))
@@ -668,23 +676,22 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
         MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
                                      dimension, delay_dist_matrix)
 
-        Q = np.linalg.inv(np.identity(dimension)-MH)
+        Q = np.linalg.inv(np.identity(dimension) - MH)
         D = (np.diag(np.ones(dimension)) * firing_rates / N)
         C = np.dot(Q, np.dot(D, np.transpose(np.conjugate(Q))))
         spec = np.absolute(np.diag(C))
         return spec
 
-    power = np.array([power_spectra_single_freq(tau_m, tau_s, transfer_function[i],
-                                       dimension, J, K, delay_dist_matrix[i],
-                                       firing_rates, N, omega)
-             for i,omega in enumerate(omegas)])
-
+    power = np.array([
+        power_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                  dimension, J, K, delay_dist_matrix[i],
+                                  firing_rates, N, omega)
+        for i, omega in enumerate(omegas)])
 
     return np.transpose(power)
 
 
-
-@ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None, None,
+@ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz / ureg.mV, None, None,
                                  ureg.mV, None, ureg.Hz, None, None))
 def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
                   delay_dist_matrix, J, K, omegas, quantity, matrix):
@@ -746,17 +753,20 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
         return eig, np.transpose(vr), vl
 
     if quantity == 'eigvals':
-        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i], dimension,
-                                         delay_dist_matrix[i], J, K, omega, matrix)[0]
-               for i,omega in enumerate(omegas)]
+        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                         dimension, delay_dist_matrix[i], J, K,
+                                         omega, matrix)[0]
+               for i, omega in enumerate(omegas)]
     elif quantity == 'reigvecs':
-        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i], dimension,
-                                         delay_dist_matrix[i], J, K, omega, matrix)[1]
-                           for i,omega in enumerate(omegas)]
+        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                         dimension, delay_dist_matrix[i], J, K,
+                                         omega, matrix)[1]
+               for i, omega in enumerate(omegas)]
     elif quantity == 'leigvecs':
-        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i], dimension,
-                                         delay_dist_matrix[i], J, K, omega, matrix)[2]
-                          for i,omega in enumerate(omegas)]
+        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                         dimension, delay_dist_matrix[i], J, K,
+                                         omega, matrix)[2]
+               for i, omega in enumerate(omegas)]
 
     return np.transpose(eig)
 
@@ -819,11 +829,10 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
                                               mu_set[i], sigma_set[i])
 
     # additional external rates set to 0 for local-only contributions
-    mu_loc =_mean(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
-                  nu_ext=nu_ext, K_ext=K_ext,
-                  g=g, nu_e_ext=0., nu_i_ext=0.)
-    sigma_loc = _standard_deviation(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
-                                    nu_ext=nu_ext, K_ext=K_ext,
+    mu_loc = _mean(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
+                   nu_ext=nu_ext, K_ext=K_ext, g=g, nu_e_ext=0., nu_i_ext=0.)
+    sigma_loc = _standard_deviation(nu=target_rates, K=K, J=J, j=j,
+                                    tau_m=tau_m, nu_ext=nu_ext, K_ext=K_ext,
                                     g=g, nu_e_ext=0., nu_i_ext=0.)
 
     mu_temp = (mu_set - mu_loc) / (tau_m * j)
@@ -833,14 +842,15 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     nu_i_ext = (sigma_temp_2 - mu_temp) / (g * (1. + g))
 
     if np.any(np.array([nu_e_ext, nu_i_ext]) < 0):
-        warn = 'Negative rate detected:\n\tnu_e_ext=' + str(nu_e_ext) + '\n\tnu_i_ext=' + str(nu_i_ext)
+        warn = ('Negative rate detected:\n\tnu_e_ext=' + str(nu_e_ext)
+                + '\n\tnu_i_ext=' + str(nu_i_ext))
         warnings.warn(warn)
 
     return nu_e_ext, nu_i_ext
 
 
-@ureg.wraps((ureg.ms, None, None, ureg.Hz/ureg.mV),
-            (ureg.Hz/ureg.mV, ureg.Hz, ureg.s, ureg.mV, None))
+@ureg.wraps((ureg.ms, None, None, ureg.Hz / ureg.mV),
+            (ureg.Hz / ureg.mV, ureg.Hz, ureg.s, ureg.mV, None))
 def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     """
     Fit the absolute value of the LIF transfer function to the one of a
@@ -877,7 +887,7 @@ def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     W_rate_sim = h0 * tau_m * J
     W_rate = np.multiply(W_rate_sim, K)
 
-    return tau_rate*1.E3, W_rate, W_rate_sim, fit_tf
+    return tau_rate * 1.E3, W_rate, W_rate_sim, fit_tf
 
 
 def _fit_transfer_function(transfer_function, omegas):
@@ -906,26 +916,25 @@ def _fit_transfer_function(transfer_function, omegas):
     """
     def func(omega, tau, h0):
         return h0 / (1. + 1j * omega * tau)
+    
     # absolute value for fitting
     def func_abs(omega, tau, h0):
         return np.abs(func(omega, tau, h0))
 
-    fit_tf = np.zeros(np.shape(transfer_function), dtype=np.complex_)
+    fit_tf = np.zeros(np.shape(transfer_function), dtype=np.complex)
     dim = np.shape(transfer_function)[1]
     tau_rate = np.zeros(dim)
     h0 = np.zeros(dim)
     err_tau = np.zeros(dim)
     err_h0 = np.zeros(dim)
 
-    bounds = [[0., -np.inf],[np.inf, np.inf]]
+    bounds = [[0., -np.inf], [np.inf, np.inf]]
     for i in np.arange(np.shape(fit_tf)[1]):
-        fitParams, fitCovariances = sopt.curve_fit(func_abs,
-                                                   omegas,
-                                                   np.abs(transfer_function[:,i]),
-                                                   bounds=bounds)
+        fitParams, fitCovariances = sopt.curve_fit(
+            func_abs, omegas, np.abs(transfer_function[:, i]), bounds=bounds)
         tau_rate[i] = fitParams[0]
         h0[i] = fitParams[1]
-        fit_tf[:,i] = func(omegas, tau_rate[i], h0[i])
+        fit_tf[:, i] = func(omegas, tau_rate[i], h0[i])
 
         # 1 standard deviation
         fit_err = np.sqrt(np.diag(fitCovariances))
@@ -966,35 +975,35 @@ def scan_fit_transfer_function_mean_std_input(mean_inputs, std_inputs,
     Returns:
     --------
     errs_tau: np.ndarray
-        Relative error on fitted tau for each combination of mean and std of input.
+        Rel. error on fitted tau for each combination of mean and std of input.
     errs_h0: np.ndarray
-        Relative error on fitted h0 for each combination of mean and std of input.
+        Rel. error on fitted h0 for each combination of mean and std of input.
     """
     dims = (len(mean_inputs), len(std_inputs))
     errs_tau = np.zeros(dims)
     errs_h0 = np.zeros(dims)
 
-    for i,mu in enumerate(mean_inputs):
-        for j,sigma in enumerate(std_inputs):
+    for i, mu in enumerate(mean_inputs):
+        for j, sigma in enumerate(std_inputs):
             tfs = [[transfer_function_1p_shift(mu, sigma, tau_m,
-                                              tau_s, tau_r, V_th_rel,
-                                              V_0_rel, omega)]
-                                    for omega in omegas]
+                                               tau_s, tau_r, V_th_rel,
+                                               V_0_rel, omega)]
+                   for omega in omegas]
             tf_magnitudes = [[tf[0].magnitude] for tf in tfs]
             tf_unit = tfs[0][0].units
             transfer_function = tf_magnitudes * tf_unit
 
-            fit_tf, tau_rate, h0, err_tau, err_h0 = \
-                _fit_transfer_function( \
-                    transfer_function.to(ureg.Hz / ureg.mV).magnitude,
-                    omegas.to(ureg.Hz).magnitude)
+            fit_tf, tau_rate, h0, err_tau, err_h0 = (_fit_transfer_function(
+                transfer_function.to(ureg.Hz / ureg.mV).magnitude,
+                omegas.to(ureg.Hz).magnitude))
 
-            errs_tau[i,j] = err_tau[0]
-            errs_h0[i,j] = err_h0[0]
+            errs_tau[i, j] = err_tau[0]
+            errs_h0[i, j] = err_h0[0]
     return errs_tau, errs_h0
 
 
-@ureg.wraps(None, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
+@ureg.wraps(None, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV,
+                   ureg.mV))
 def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
                                 mean_input, std_input):
     """
@@ -1030,20 +1039,22 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
     w_ecs = np.zeros((dim, dim))
     for pre in np.arange(dim):
         for post in np.arange(dim):
+            # linear (mu) contribution
             w_ecs[post][pre] = aux_calcs.d_nu_d_nu_in_fb(
                 tau_m, tau_s, tau_r, V_th_rel, V_0_rel, J[post][pre],
-                mean_input[pre], std_input[pre])[1] # linear (mu) contribution
+                mean_input[pre], std_input[pre])[1]
     return w_ecs
 
 
-@ureg.wraps((None, (1/ureg.s).units, (1/ureg.s).units, (1/ureg.m).units,
-             (1/ureg.s).units, (1/ureg.s).units),
-            ((1/ureg.m).units, None, ureg.s, None, ureg.m, ureg.s, ureg.s,
+@ureg.wraps((None, (1 / ureg.s).units, (1 / ureg.s).units, (1 / ureg.m).units,
+             (1 / ureg.s).units, (1 / ureg.s).units),
+            ((1 / ureg.m).units, None, ureg.s, None, ureg.m, ureg.s, ureg.s,
              ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV,
              ureg.mV, None, None))
-def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
-        d_e, d_i, mean_inputs, std_inputs, tau_m, tau_s, tau_r, V_0_rel, V_th_rel,
-        J, K, dimension):
+def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate,
+                               width, d_e, d_i, mean_inputs, std_inputs, tau_m,
+                               tau_s, tau_r, V_0_rel, V_th_rel, J, K,
+                               dimension):
     """
     Linear interpolation between analytically solved characteristic equation
     for linear rate model and equation solved for lif model.
@@ -1097,44 +1108,50 @@ def linear_interpolation_alpha(k_wavenumbers, branches, tau_rate, W_rate, width,
     eigenval_max: Quantity(complex, '1/s')
     eigenvals: Quantity(np.ndarray, '1/s')
     """
-    assert len(np.unique(tau_rate)) == 1, 'Linear interpolation requires equal tau_rate.'
+    assert len(np.unique(tau_rate)) == 1, ('Linear interpolation requires '
+                                           'equal tau_rate.')
     tau = tau_rate[0]
     assert d_e == d_i, 'Linear interpolation requires equal delay.'
     delay = d_e
-    assert len(np.unique(mean_inputs)) == 1, 'Linear interpolation requires same mean input.'
+    assert len(np.unique(mean_inputs)) == 1, ('Linear interpolation requires '
+                                              'same mean input.')
     mu = mean_inputs[0]
-    assert len(np.unique(mean_inputs)) == 1, 'Linear interpolation requires same std input.'
+    assert len(np.unique(mean_inputs)) == 1, ('Linear interpolation requires '
+                                              'same std input.')
     sigma = std_inputs[0]
 
     # ground truth at alpha = 0 from rate model
-    k_eig_max, idx_k_eig_max, eigenval_max, eigenvals = \
-        eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay)
+    k_eig_max, idx_k_eig_max, eigenval_max, eigenvals = (
+        eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width,
+                                delay))
 
     # first alpha must be 0 for integrate.odeint! (initial condition)
     alphas = np.linspace(0, 1, 5)
     lambdas_integral = np.zeros((len(branches), (len(alphas))), dtype=complex)
     lambdas_chareq = np.zeros((len(branches), len(alphas)), dtype=complex)
-    for i,branch in enumerate(branches):
-
-        # evaluate all eigenvalues at k_eig_max (wavenumbers with largest real part
-        # of eigenvalue from theory)
+    for i, branch in enumerate(branches):
+        # evaluate all eigenvalues at k_eig_max (wavenumbers with largest real
+        # part of eigenvalue from theory)
         lambda0 = eigenvals[i, idx_k_eig_max]
         print(branch, lambda0)
         # 1. solution by solving the characteristic equation numerically
-        for j,alpha in enumerate(alphas):
-            lambdas_chareq[i,j] = \
-                _solve_chareq_numerically_alpha(lambda0, alpha, k_eig_max, delay, mu, sigma,
-                                                tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                                                J, K, dimension, tau, W_rate, width)
+        for j, alpha in enumerate(alphas):
+            lambdas_chareq[i, j] = (
+                _solve_chareq_numerically_alpha(lambda0, alpha, k_eig_max,
+                                                delay, mu, sigma, tau_m, tau_s,
+                                                tau_r, V_th_rel, V_0_rel, J, K,
+                                                dimension, tau, W_rate, width))
 
         # 2. solution by solving the integral
-        lambdas_integral[i,:] = _lambda_of_alpha_integral(alphas, lambda0, k_eig_max, delay,
-            mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
-            tau, W_rate, width)
-    return alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals
+        lambdas_integral[i, :] = _lambda_of_alpha_integral(
+            alphas, lambda0, k_eig_max, delay, mu, sigma, tau_m, tau_s, tau_r,
+            V_0_rel, V_th_rel, J, K, dimension, tau, W_rate, width)
+    return (alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max,
+            eigenvals)
 
 
-def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
+def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width,
+                            delay):
     """
     Compute in the linearized rate model for each branch the eigenvalues by
     solving the characteristic equation analytically.
@@ -1166,16 +1183,19 @@ def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
 
     for i, branch in enumerate(branches):
         for j, k_wavenumber in enumerate(k_wavenumbers):
-            eigenvals[i,j] = aux_calcs.solve_chareq_rate_boxcar( \
+            eigenvals[i, j] = aux_calcs.solve_chareq_rate_boxcar(
                 branch, k_wavenumber, tau, W_rate, width, delay)
 
     # index of eigenvalue with maximum real part
-    idx_max = list(np.unravel_index(np.argmax(eigenvals.real), eigenvals.shape))
+    idx_max = list(np.unravel_index(np.argmax(eigenvals.real),
+                                    eigenvals.shape))
 
     # if max at branch -1, swap with 0
     if branches[idx_max[0]] == -1:
-        idx_n1 = idx_max[0] # index of current branch -1
-        idx_0 = list(branches).index(0) # index of current branch 0
+        # index of current branch -1
+        idx_n1 = idx_max[0]
+        # index of current branch 0
+        idx_0 = list(branches).index(0)
         eigenvals[[idx_n1, idx_0], [idx_0, idx_n1]]
         idx_max[0] = idx_0
 
@@ -1185,9 +1205,9 @@ def eigenvals_branches_rate(k_wavenumbers, branches, tau, W_rate, width, delay):
     return k_eig_max, idx_k_eig_max, eigenval_max, eigenvals
 
 
-def _lambda_of_alpha_integral(alphas, lambda0, k, delay,
-        mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
-        tau, W_rate, width):
+def _lambda_of_alpha_integral(alphas, lambda0, k, delay, mu, sigma, tau_m,
+                              tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
+                              tau, W_rate, width):
     """
     Compute lambda of alpha by solving the integral.
     Requires a spatially organized network with boxcar connectivity profile.
@@ -1237,28 +1257,27 @@ def _lambda_of_alpha_integral(alphas, lambda0, k, delay,
     lambda0_list = [lambda0.real, lambda0.imag]
 
     def derivative(lambda_list, a0):
-        l = complex(lambda_list[0], lambda_list[1])
-        deriv = _d_lambda_d_alpha(l, a0, k, delay,
-                mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
-                tau, W_rate, width)
+        llist = complex(lambda_list[0], lambda_list[1])
+        deriv = _d_lambda_d_alpha(llist, a0, k, delay, mu, sigma, tau_m, tau_s,
+                                  tau_r, V_0_rel, V_th_rel, J, K, dimension,
+                                  tau, W_rate, width)
         return [deriv.real, deriv.imag]
 
-    llist =  sint.odeint(func=derivative, y0=lambda0_list, t=alphas)
+    llist = sint.odeint(func=derivative, y0=lambda0_list, t=alphas)
 
-    lambdas_of_alpha = [complex(l[0], l[1]) for l in llist]
+    lambdas_of_alpha = [complex(_l[0], _l[1]) for _l in llist]
     return lambdas_of_alpha
 
 
-def _d_lambda_d_alpha(l, alpha, k, delay,
-        mu, sigma, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J, K, dimension,
-        tau, W_rate, width):
+def _d_lambda_d_alpha(eval, alpha, k, delay, mu, sigma, tau_m, tau_s, tau_r,
+                      V_0_rel, V_th_rel, J, K, dimension, tau, W_rate, width):
     """
     Compute the derivative of lambda with respect to alpha.
     Requires a spatially organized network with boxcar connectivity profile.
 
     Parameters:
     -----------
-    l: complex
+    eval: complex
         Eigenvalue.
     alpha: float
         Interpolation parameters.
@@ -1297,21 +1316,22 @@ def _d_lambda_d_alpha(l, alpha, k, delay,
     --------
     deriv: complex
     """
-    xi_eff_s = _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                         J, K, dimension, width)
-    xi_eff_r = _xi_eff_r(l, k, tau, W_rate, width)
+    xi_eff_s = _xi_eff_s(eval, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                         V_0_rel, J, K, dimension, width)
+    xi_eff_r = _xi_eff_r(eval, k, tau, W_rate, width)
 
     xi_eff_sr = xi_eff_s - xi_eff_r
 
-    xi_eff_alpha = alpha * xi_eff_s + (1.-alpha) * xi_eff_r
+    xi_eff_alpha = alpha * xi_eff_s + (1. - alpha) * xi_eff_r
 
-    d_xi_eff_s_d_lambda = _d_xi_eff_s_d_lambda(l, k, mu, sigma, tau_m, tau_s,
-                                               tau_r, V_th_rel, V_0_rel,
+    d_xi_eff_s_d_lambda = _d_xi_eff_s_d_lambda(eval, k, mu, sigma, tau_m,
+                                               tau_s, tau_r, V_th_rel, V_0_rel,
                                                J, K, dimension, width)
 
-    d_xi_eff_r_d_lambda = _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width)
+    d_xi_eff_r_d_lambda = _d_xi_eff_r_d_lambda(eval, k, tau, W_rate, width)
 
-    d_xi_eff_alpha_d_lambda = alpha * d_xi_eff_s_d_lambda + (1.-alpha) * d_xi_eff_r_d_lambda
+    d_xi_eff_alpha_d_lambda = (alpha * d_xi_eff_s_d_lambda
+                               + (1. - alpha) * d_xi_eff_r_d_lambda)
 
     nominator = xi_eff_sr
     denominator = d_xi_eff_alpha_d_lambda - delay * xi_eff_alpha
@@ -1320,7 +1340,7 @@ def _d_lambda_d_alpha(l, alpha, k, delay,
     return deriv
 
 
-def _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+def _xi_eff_s(eval, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
               J, K, dimension, width):
     """
     Compute xi_eff for the lif neuron model.
@@ -1328,7 +1348,7 @@ def _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
 
     Parameters:
     -----------
-    l: complex
+    eval: complex
         Eigenvalue.
     k: float
         Wavenumber in 1/m.
@@ -1359,24 +1379,25 @@ def _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     --------
     xi_eff_s: complex
     """
-    omega = complex(0, -l)
-    transfer_func = _transfer_function_1p_shift( \
+    omega = complex(0, -eval)
+    transfer_func = _transfer_function_1p_shift(
         mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, omega)
 
-    MH_s = _effective_connectivity(omega, transfer_func, tau_m, J, K, dimension)
+    MH_s = _effective_connectivity(omega, transfer_func, tau_m, J, K,
+                                   dimension)
     P_hat = aux_calcs.p_hat_boxcar(k, width)
     xi_eff_s = aux_calcs.determinant(MH_s * P_hat)
     return xi_eff_s
 
 
-def _xi_eff_r(l, k, tau, W_rate, width):
+def _xi_eff_r(eval, k, tau, W_rate, width):
     """
     Compute xi_eff for the linearized rate model.
     Requires a spatially organized network with boxcar connectivity profile.
 
     Parameters:
     -----------
-    l: complex
+    eval: complex
         Eigenvalue.
     k: float
         Wavenumber in 1/m.
@@ -1391,15 +1412,15 @@ def _xi_eff_r(l, k, tau, W_rate, width):
     --------
     xi_eff_r: complex
     """
-    omega = complex(0, -l)
+    omega = complex(0, -eval)
     MH_r = _effective_connectivity_rate(omega, tau, W_rate)
     P_hat = aux_calcs.p_hat_boxcar(k, width)
     xi_eff_r = aux_calcs.determinant_same_rows(MH_r * P_hat)
     return xi_eff_r
 
 
-def _d_xi_eff_s_d_lambda(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
-                         J, K, dimension, width):
+def _d_xi_eff_s_d_lambda(eval, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel,
+                         V_0_rel, J, K, dimension, width):
     """
     Computes the derivative of He_lif wrt lambda,
     numerically.
@@ -1407,7 +1428,7 @@ def _d_xi_eff_s_d_lambda(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
 
     Parameters:
     -----------
-    l: complex
+    eval: complex
         Eigenvalue.
     k: float
         Wavenumber in 1/m.
@@ -1439,15 +1460,17 @@ def _d_xi_eff_s_d_lambda(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
     deriv: complex
     """
     def f(x):
-        omega = complex(0, -l)
-        return _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel, V_0_rel,
-                         J, K, dimension, width)
+        # why is this omega never used?
+        omega = complex(0, -eval)
+        return _xi_eff_s(eval, k, mu, sigma, tau_m, tau_s, tau_r, Vth_rel,
+                         V_0_rel, J, K, dimension, width)
 
-    deriv = smisc.derivative(func=f, x0=l, dx=1e-10) # TODO: check precision
+    # TODO: check precision
+    deriv = smisc.derivative(func=f, x0=eval, dx=1e-10)
     return deriv
 
 
-def _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width):
+def _d_xi_eff_r_d_lambda(eval, k, tau, W_rate, width):
     """
     Computes the derivative of He_rate wrt lambda,
     analytical expression.
@@ -1455,7 +1478,7 @@ def _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width):
 
     Parameters:
     -----------
-    l: complex
+    eval: complex
         Eigenvalue.
     k: float
         Wavenumber in 1/m.
@@ -1470,7 +1493,7 @@ def _d_xi_eff_r_d_lambda(l, k, tau, W_rate, width):
     --------
     xi_eff_r: complex
     """
-    lp = 1. / (1. + l * tau)
+    lp = 1. / (1. + eval * tau)
     deriv = -1. * lp**2 * tau * \
         aux_calcs.determinant(W_rate * aux_calcs.p_hat_boxcar(k, width))
     return deriv
@@ -1527,14 +1550,14 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
 
     """
     def fsolve_complex(l_re_im):
-        l = complex(l_re_im[0], l_re_im[1])
+        eval = complex(l_re_im[0], l_re_im[1])
 
-        xi_eff_s = _xi_eff_s(l, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                             J, K, dimension, width)
-        xi_eff_r = _xi_eff_r(l, k, tau, W_rate, width)
+        xi_eff_s = _xi_eff_s(eval, k, mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                             V_0_rel, J, K, dimension, width)
+        xi_eff_r = _xi_eff_r(eval, k, tau, W_rate, width)
 
-        xi_eff_alpha = alpha * xi_eff_s + (1.-alpha) * xi_eff_r
-        roots = xi_eff_alpha * np.exp(-l * delay) - 1.
+        xi_eff_alpha = alpha * xi_eff_s + (1. - alpha) * xi_eff_r
+        roots = xi_eff_alpha * np.exp(-eval * delay) - 1.
 
         return [roots.real, roots.imag]
 
@@ -1543,8 +1566,9 @@ def _solve_chareq_numerically_alpha(lambda_guess, alpha, k, delay, mu, sigma,
     lamb = complex(l_opt[0], l_opt[1])
     return lamb
 
-@ureg.wraps((None, None, (1/ureg.mm).units, (1/ureg.mm).units),
-            ((1/ureg.mm).units, None, ureg.mm))
+
+@ureg.wraps((None, None, (1 / ureg.mm).units, (1 / ureg.mm).units),
+            ((1 / ureg.mm).units, None, ureg.mm))
 def xi_of_k(ks, W_rate, width):
     """
     Compute minimum and maximum of spatial profile xi of k
@@ -1568,7 +1592,7 @@ def xi_of_k(ks, W_rate, width):
     k_max: Quantity(float, '1/mm')
     """
     xis = np.zeros(len(ks))
-    for i,k in enumerate(ks):
+    for i, k in enumerate(ks):
         P_hat = aux_calcs.p_hat_boxcar(k, width)
         xis[i] = aux_calcs.determinant(W_rate * P_hat)
 
@@ -1583,8 +1607,8 @@ def xi_of_k(ks, W_rate, width):
     return xi_min, xi_max, k_min, k_max
 
 
-@ureg.wraps((1/ureg.s).units,
-            (None, (1/ureg.mm).units, ureg.s, None, ureg.mm, ureg.s))
+@ureg.wraps((1 / ureg.s).units,
+            (None, (1 / ureg.mm).units, ureg.s, None, ureg.mm, ureg.s))
 def solve_chareq_rate_boxcar(branch, k_wavenumber, tau, W_rate, width, delay):
     """
     Solve the characteristic equation for the linearized rate model for
