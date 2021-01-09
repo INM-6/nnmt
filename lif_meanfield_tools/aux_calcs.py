@@ -1,5 +1,6 @@
 """
-This module contains lots of auxiliary calculations. It is sometimes called by meanfield_calcs.
+This module contains lots of auxiliary calculations. It is sometimes called by
+meanfield_calcs.
 
 Functions:
 nu0_fb433
@@ -26,9 +27,7 @@ solve_chareq_rate_boxcar
 from __future__ import print_function
 from scipy.integrate import quad
 from scipy.special import erf, zetac, lambertw
-import scipy
 import numpy as np
-import math
 import mpmath
 import warnings
 
@@ -91,18 +90,21 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     k = np.sqrt(tau_s / tau_m)
 
     if (0.1 < k) & (k < 1):
-        k_warning = 'k=sqrt(tau_s/tau_m)={} might be too large for calculation of firing rates via Taylor expansion!'.format(k)
+        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
+                     'calculation of firing rates via Taylor expansion!'
+                     ).format(k)
         warnings.warn(k_warning)
     if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of firing rates via Taylor expansion!')
+        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of '
+                         'firing rates via Taylor expansion!')
         
-    # use zetac function (zeta-1) because zeta is not giving finite values for arguments smaller 1.
-
     return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
 def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     
+    # use zetac function (zeta-1) because zeta is not giving finite values for
+    # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     
     # additional prefactor sqrt(2) because its x from Schuecker 2015
@@ -121,11 +123,7 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         # colored noise firing rate (might this lead to negative rates?)
         result = (r - np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
                   * dPhi * (r * tau_m)**2)
-        
-    # why do we have this?
-    # if math.isnan(result):
-    #     print(mu, sigma, x_th, x_r)
-    #
+
     return result
 
 
@@ -197,13 +195,14 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
 
-    # using zetac (zeta-1), because zeta is giving nan result for arguments smaller 1
-    alpha = np.sqrt(2)*abs(zetac(0.5)+1)
+    # using zetac (zeta-1), because zeta is giving nan result for arguments
+    # smaller 1
+    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
     # effective threshold
     # additional factor sigma is canceled in siegert
-    V_th1 = V_th_rel + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    V_th1 = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # effective reset
-    V_01 = V_0_rel + sigma*alpha/2.*np.sqrt(tau_s/tau_m)
+    V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # use standard Siegert with modified threshold and reset
     return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma)
 
@@ -240,7 +239,8 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
     if mu > V_th_rel - 0.05 * abs(V_th_rel):
-        raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if mu > (V_th-V_0).')
+        raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if '
+                         'mu > (V_th-V_0).')
 
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
@@ -249,9 +249,11 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         if u == 0:
             return np.exp(-y_th**2) * 2 * (y_th - y_r)
         else:
-            return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th) * u)) / u
+            return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th)
+                                                          * u)) / u
 
-    # find lower bound of integration, such that integrand is smaller than 1e-12 at lower bound
+    # find lower bound of integration, such that integrand is smaller than
+    # 1e-12 at lower bound
     lower_bound = y_th
     err_dn = 1.0
     while err_dn > 1e-12 and lower_bound > 1e-16:
@@ -259,7 +261,8 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         if err_dn > 1e-12:
             lower_bound /= 2
 
-    # find upper bound of integration, such that integrand is smaller than 1e-12 at lower bound
+    # find upper bound of integration, such that integrand is smaller than
+    # 1e-12 at lower bound
     upper_bound = y_th
     err_up = 1.0
     while err_up > 1e-12:
@@ -310,8 +313,8 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         raise ValueError('V_th should be larger than V_0!')
     # why this threshold?
     if mu < V_th_rel - 0.05 * abs(V_th_rel):
-        raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
-    
+        raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * '
+                         'abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
     
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
@@ -320,7 +323,8 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         if u == 0:
             return 2 * (y_th - y_r)
         else:
-            return (np.exp(2 * y_th * u - u**2) - np.exp(2 * y_r * u - u**2)) / u
+            return (np.exp(2 * y_th * u - u**2) - np.exp(2 * y_r * u - u**2)
+                    ) / u
 
     upper_bound = 1.0
     err = 1.0
@@ -343,7 +347,8 @@ def Phi(s):
     Reduction of colored noise in excitable systems to white
     noise and dynamic boundary conditions. 1–23 (2014).
     """
-    return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.) * (1 + erf(s / np.sqrt(2))))
+    return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
+                                  * (1 + erf(s / np.sqrt(2))))
 
 
 def Phi_prime_mu(s, sigma):
@@ -357,12 +362,12 @@ def Phi_prime_mu(s, sigma):
         raise ZeroDivisionError('Function contains division by sigma!')
     
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
-                                    * (1 + erf(s / np.sqrt(2)))
-                                    + np.sqrt(2) / np.sqrt(np.pi))
+                                      * (1 + erf(s / np.sqrt(2)))
+                                      + np.sqrt(2) / np.sqrt(np.pi))
+    
 
-
-@ureg.wraps(ureg.Hz/ureg.mV,
-           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
+@ureg.wraps(ureg.Hz / ureg.mV,
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Derivative of the stationary firing rates with synaptic filtering
@@ -454,8 +459,8 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         if sigma == 0:
             raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
     
-    y_th = (V_th_rel - mu)/sigma
-    y_r = (V_0_rel - mu)/sigma
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
     nu0 = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     return (np.sqrt(np.pi) * tau_m * nu0**2 / sigma
             * (np.exp(y_th**2) * (1 + erf(y_th)) - np.exp(y_r**2)
@@ -489,7 +494,7 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     Returns:
     --------
     float:
-        Derivative in Hz/mV (sum of linear (mu) and squared (sigma^2) contribution).
+        Derivative in Hz/mV (sum of mu and sigma^2 contribution).
     float:
         Derivative in Hz/mV (linear (mu) contribution).
     float:
@@ -518,12 +523,15 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     nu0 = nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
     # linear contribution
-    lin = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 +
-             erf(y_th_fb)) - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)))
+    lin = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
+           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) - np.exp(y_r_fb**2)
+              * (1 + erf(y_r_fb))))
 
     # quadratic contribution
-    sqr = np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) *\
-             0.5 * y_th * j / sigma - np.exp(y_r_fb**2) * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma)
+    sqr = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
+           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb))
+              * 0.5 * y_th * j / sigma - np.exp(y_r_fb**2)
+              * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma))
 
     return lin + sqr, lin, sqr
 
@@ -532,7 +540,7 @@ def Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
     """
-    return np.exp(0.25*x**2) * complex(mpmath.pcfu(z, -x))
+    return np.exp(0.25 * x**2) * complex(mpmath.pcfu(z, -x))
 
 
 def d_Psi(z, x):
@@ -568,7 +576,6 @@ def d2Psi_x_r(z, x, y):
     return d_2_Psi(z, x) - d_2_Psi(z, y)
 
 
-
 def determinant(matrix):
     """
     Solve
@@ -590,8 +597,9 @@ def determinant(matrix):
     all_res = np.linalg.eigvals(matrix)
 
     idx = np.where(np.abs(all_res) > 1.E-10)[0]
-    if len(idx) !=1 : raise Exception
-    #assert len(idx) == 1, 'Multiple non-trivial solutions exist.'
+    if len(idx) != 1:
+        raise Exception
+    # assert len(idx) == 1, 'Multiple non-trivial solutions exist.'
     res = all_res[idx[0]]
 
     return res
@@ -670,6 +678,6 @@ def solve_chareq_rate_boxcar(branch, k, tau, W_rate, width, delay):
     M = W_rate * p_hat_boxcar(k, width)
     xi = determinant(M)
 
-    eigenval = -1./tau + 1./delay * \
-        lambertw(xi * delay/tau * np.exp(delay/tau), branch)
+    eigenval = (-1. / tau + 1. / delay
+                * lambertw(xi * delay / tau * np.exp(delay / tau), branch))
     return eigenval
