@@ -47,6 +47,8 @@ def check_if_positive(parameters, parameter_names):
                     parameter_name))
 
 
+@ureg.wraps(ureg.Hz,
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs
@@ -78,7 +80,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
+
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -95,6 +97,12 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of firing rates via Taylor expansion!')
         
     # use zetac function (zeta-1) because zeta is not giving finite values for arguments smaller 1.
+
+    return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+
+def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     
     # additional prefactor sqrt(2) because its x from Schuecker 2015
@@ -153,6 +161,8 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
+@ureg.wraps(ureg.Hz,
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
@@ -231,7 +241,6 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         raise ValueError('V_th should be larger than V_0!')
     if mu > V_th_rel - 0.05 * abs(V_th_rel):
         raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if mu > (V_th-V_0).')
-    
 
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
@@ -348,10 +357,12 @@ def Phi_prime_mu(s, sigma):
         raise ZeroDivisionError('Function contains division by sigma!')
     
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
-    * (1 + erf(s / np.sqrt(2)))
-    + np.sqrt(2) / np.sqrt(np.pi))
+                                    * (1 + erf(s / np.sqrt(2)))
+                                    + np.sqrt(2) / np.sqrt(np.pi))
 
 
+@ureg.wraps(ureg.Hz/ureg.mV,
+           (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Derivative of the stationary firing rates with synaptic filtering

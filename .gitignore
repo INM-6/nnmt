@@ -109,3 +109,6 @@ venv.bak/
 
 # Result files
 *.h5
+
+# Data folder in make_Bos2016_data
+data/

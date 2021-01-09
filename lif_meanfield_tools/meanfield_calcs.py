@@ -94,7 +94,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
 
     def rate_function(mu, sigma):
         """ calculate stationary firing rate with given parameters """
-        return aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+        return aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                    sigma)
 
     def get_rate_difference(nu):
@@ -233,9 +233,9 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext
 
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
-                              ureg.mV, ureg.mV, ureg.Hz))
+                              ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
-                                V_0_rel, omega):
+                                V_0_rel, omega, synaptic_filter=True):
     """
     Calcs value of transfer func for one population at given frequency omega.
 
@@ -287,7 +287,7 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                            mu, sigma)
     else:
         nu0 = aux_calcs.nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        nu0_fb = aux_calcs.nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+        nu0_fb = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                      sigma)
         x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
@@ -300,14 +300,16 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         a3 = A / tau_m / nu0_fb * (-a1**2 + aux_calcs.d2Psi_x_r(z, x_t, x_r)/a0)
         result = (np.sqrt(2.) / sigma * nu0_fb / complex(1., omega * tau_m)* (a1 + a3))
 
-    # additional low-pass filter due to perturbation to the input current
-    return result / complex(1., omega * tau_s)
+    if synaptic_filter:
+        # additional low-pass filter due to perturbation to the input current
+        return result / complex(1., omega * tau_s)
+    return result
 
 
 @ureg.wraps(ureg.Hz/ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s, ureg.mV,
-                              ureg.mV, ureg.Hz))
+                              ureg.mV, ureg.Hz, None))
 def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
-                               V_0_rel, omega):
+                               V_0_rel, omega, synaptic_filter=True):
     """
     Calcs value of transfer func for one population at given frequency omega.
 
@@ -345,11 +347,11 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     Quantity(float, 'hertz/millivolt')
     """
     return _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
-                                       V_0_rel, omega)
+                                       V_0_rel, omega, synaptic_filter)
 
 
 def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
-                                V_0_rel, omega):
+                                V_0_rel, omega, synaptic_filter=True):
     """ Compute transfer_function_1p_shift() without quantities """
     
     k = np.sqrt(tau_s / tau_m)
@@ -384,12 +386,14 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         result = (np.sqrt(2.) / sigma * nu
                   / (1. + complex(0., complex(omega*tau_m))) * frac)
 
-    # additional low-pass filter due to perturbation to the input current
-    return result / complex(1., omega * tau_s)
+    if synaptic_filter:
+        # additional low-pass filter due to perturbation to the input current
+        return result / complex(1., omega * tau_s)
+    return result
 
 
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                      dimension, omegas, method='shift'):
+                      dimension, omegas, method='shift', synaptic_filter=True):
     """
     Returns transfer functions for all populations based on
     transfer_function_1p_shift() (default) or transfer_function_1p_taylor()
@@ -428,13 +432,15 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     if method == 'shift':
         transfer_functions = [[transfer_function_1p_shift(mu[i], sigma[i], tau_m,
                                                           tau_s, tau_r, V_th_rel,
-                                                          V_0_rel, omega)
+                                                          V_0_rel, omega,
+                                                          synaptic_filter)
                                for i in range(dimension)]
                               for omega in omegas]
     if method == 'taylor':
         transfer_functions = [[transfer_function_1p_taylor(mu[i], sigma[i], tau_m,
                                                           tau_s, tau_r, V_th_rel,
-                                                          V_0_rel, omega)
+                                                          V_0_rel, omega,
+                                                          synaptic_filter)
                                for i in range(dimension)]
                               for omega in omegas]
 
@@ -569,8 +575,8 @@ def _effective_connectivity_rate(omega, tau, W_rate, delay_term=1):
 
 
 
-@ureg.wraps(None, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV, None, ureg.s, ureg.s,
-                   None, ureg.Hz))
+@ureg.wraps(ureg.dimensionless, (ureg.Hz/ureg.mV, ureg.dimensionless, ureg.mV,
+                                 None, ureg.s, ureg.s, None, ureg.Hz))
 def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s,
                         dimension, omega):
     """
@@ -678,8 +684,8 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
 
 
 
-@ureg.wraps(None, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None, None, ureg.mV, None,
-                   ureg.Hz, None, None))
+@ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz/ureg.mV, None, None,
+                                 ureg.mV, None, ureg.Hz, None, None))
 def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
                   delay_dist_matrix, J, K, omegas, quantity, matrix):
     """

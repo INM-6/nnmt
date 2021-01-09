@@ -565,7 +565,7 @@ class Network(object):
         if freq == None:
             return self.transfer_function_multi(method)
         else:
-            return self.transfer_function_single(freq)
+            return self.transfer_function_single(freq, method)
 
 
     @_check_and_store('transfer_function')
