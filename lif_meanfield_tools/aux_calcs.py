@@ -35,6 +35,7 @@ from . import ureg
 
 
 def check_if_positive(parameters, parameter_names):
+    """Check that will raise an error if parameters are negative."""
     for parameter, parameter_name in zip(parameters, parameter_names):
         try:
             if any(p < 0 for p in parameter):
@@ -79,7 +80,6 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -102,7 +102,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 
 def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
-    
+    """Helper function implementing nu0_fb433 without quantities."""
     # use zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
@@ -151,7 +151,6 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
     # why is this the threshold?
     if mu <= V_th_rel - 0.05 * abs(V_th_rel):
         return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
@@ -190,7 +189,6 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -231,7 +229,6 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-
     pos_parameters = [tau_m, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -304,7 +301,6 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
-    
     pos_parameters = [tau_m, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -355,7 +351,6 @@ def Phi_prime_mu(s, sigma):
     """
     Derivative of the helper function Phi(s) with respect to the mean input
     """
-    
     if sigma < 0:
         raise ValueError('sigma needs to be larger than zero!')
     if sigma == 0:
@@ -400,7 +395,6 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Zero frequency limit of colored noise transfer function in Hz/mV.
     """
-    
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -447,7 +441,6 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Zero frequency limit of white noise transfer function in Hz/mV.
     """
-    
     pos_parameters = [tau_m, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -500,7 +493,6 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     float:
         Derivative in Hz/mV (squared (sigma^2) contribution).
     """
-    
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -674,7 +666,6 @@ def solve_chareq_rate_boxcar(branch, k, tau, W_rate, width, delay):
     delay, tau must be floats, W,
     width is vector
     """
-
     M = W_rate * p_hat_boxcar(k, width)
     xi = determinant(M)
 
