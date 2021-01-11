@@ -20,6 +20,7 @@ import h5py_wrapper.wrapper as h5
 
 from . import ureg
 
+
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """
     Convert a dictionary of value-unit pairs to a dictionary of quantities
@@ -55,7 +56,8 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     for key, value in dict_of_val_unit_dicts.items():
         # if dictionary with keys val and unit, convert to quantity
         if isinstance(value, dict) and set(('val', 'unit')) == value.keys():
-            converted_dict[key] = (formatval(value['val']) * ureg.parse_expression(value['unit']))
+            converted_dict[key] = (formatval(value['val'])
+                                   * ureg.parse_expression(value['unit']))
         else:
             converted_dict[key] = formatval(value)
     return converted_dict
@@ -68,8 +70,8 @@ def quantities_to_val_unit(dict_of_quantities):
     Split up value and unit of each quantiy and save them in a dictionary
     of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
 
-    Lists of quantities are handled seperately. Anything else but quantities, is
-    stored just the way it is given.
+    Lists of quantities are handled seperately. Anything else but quantities,
+    is stored just the way it is given.
 
     Parameters:
     -----------
@@ -90,7 +92,8 @@ def quantities_to_val_unit(dict_of_quantities):
             if any(isinstance(part, str) for part in quantity):
                 converted_dict[quantity_key] = quantity
             elif any(isinstance(part, ureg.Quantity) for part in quantity):
-                converted_dict[quantity_key]['val'] = np.stack([array.magnitude for array in quantity])
+                converted_dict[quantity_key]['val'] = np.stack(
+                    [array.magnitude for array in quantity])
                 converted_dict[quantity_key]['unit'] = str(quantity[0].units)
             else:
                 converted_dict[quantity_key] = quantity
@@ -108,9 +111,9 @@ def load_params(file_path):
     """
     Load and convert parameters from yaml file
 
-    Load parameters from yaml file and convert them from value unit dictionaries
-    (used in yaml file) to quantities (used in implementation of functions in
-    meanfield_calcs.py).
+    Load parameters from yaml file and convert them from value unit
+    dictionaries (used in yaml file) to quantities (used in implementation of
+    functions in meanfield_calcs.py).
 
     Parameters:
     -----------
@@ -126,7 +129,6 @@ def load_params(file_path):
     dict
         dictionary containing all converted parameters as quantities
     """
-
     # try to load yaml file
     with open(file_path, 'r') as stream:
         try:
@@ -200,7 +202,7 @@ def save(output_key, output, file_name):
 
 def load_from_h5(network_params={}, param_keys=[], input_name=''):
     """
-    Load existing results and analysis_params for given parameters from h5 file.
+    Load existing results and analysis_params for given params from h5 file.
 
     Loads results from h5 files named with the standard format
     <label>_<hash>.h5, if this file already exists. Or uses given list of
@@ -214,7 +216,8 @@ def load_from_h5(network_params={}, param_keys=[], input_name=''):
     param_keys: list
         List of parameters used in file hash.
     input_name: str
-        optional string specifying input file name (default: <label>_<hash>.h5).
+        optional string specifying input file name
+        (default: <label>_<hash>.h5).
 
     Returns:
     --------
@@ -223,7 +226,6 @@ def load_from_h5(network_params={}, param_keys=[], input_name=''):
     results: dict
         Dictionary containing all found results.
     """
-
     # if no input file name is specified
     if not input_name:
         # create hash from given parameters
