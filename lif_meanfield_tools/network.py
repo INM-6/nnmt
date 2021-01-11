@@ -43,7 +43,6 @@ _check_and_store
 
 from __future__ import print_function
 import numpy as np
-import functools
 from decorator import decorator
 
 from . import ureg
@@ -77,8 +76,9 @@ class Network(object):
         can be false if a complete set of network parameters is given
     """
 
-    def __init__(self, network_params=None, analysis_params=None, new_network_params={},
-                 new_analysis_params={}, derive_params=True):
+    def __init__(self, network_params=None, analysis_params=None,
+                 new_network_params={}, new_analysis_params={},
+                 derive_params=True):
         """
         Initiate Network class.
 
@@ -89,9 +89,8 @@ class Network(object):
         Calculate parameters which are derived from given parameters.
         #Try to load existing results.
         """
-
         # no yaml file for network parameters given
-        if network_params==None:
+        if network_params is None:
             self.network_params_yaml = ''
             self.network_params = new_network_params
         else:
@@ -101,7 +100,7 @@ class Network(object):
             self.network_params.update(new_network_params)
 
         # no yaml file for analysis parameters given
-        if analysis_params==None:
+        if analysis_params is None:
             self.analysis_params_yaml = ''
             self.analysis_params = new_analysis_params
         else:
@@ -111,11 +110,13 @@ class Network(object):
 
         if derive_params:
             # calculate dependend network parameters
-            derived_network_params = self._calculate_dependent_network_parameters()
+            derived_network_params = (
+                self._calculate_dependent_network_parameters())
             self.network_params.update(derived_network_params)
 
             # calculate dependend analysis parameters
-            derived_analysis_params = self._calculate_dependent_analysis_parameters()
+            derived_analysis_params = (
+                self._calculate_dependent_analysis_parameters())
             self.analysis_params.update(derived_analysis_params)
 
         # calc hash
@@ -130,9 +131,9 @@ class Network(object):
         # CORRESPOND TO THE RESULTS
 
         # load already existing results
-        # stored_analysis_params, self.results = io.load_from_h5(self.network_params)
+        # stored_analysis_params, self.results = (
+        #     io.load_from_h5(self.network_params))
         # self.analysis_params.update(stored_analysis_params)
-
 
     def _calculate_dependent_network_parameters(self):
         """
@@ -143,7 +144,6 @@ class Network(object):
         dict
             dictionary containing all derived network parameters
         """
-
         derived_params = {}
 
         # calculate dimension of system
@@ -157,10 +157,11 @@ class Network(object):
 
         # convert weights in pA (current) to weights in mV (voltage)
         tau_s_div_C = self.network_params['tau_s'] / self.network_params['C']
-        derived_params['j'] = (tau_s_div_C * self.network_params['w']).to(ureg.mV)
+        derived_params['j'] = (tau_s_div_C
+                               * self.network_params['w']).to(ureg.mV)
 
         # weight matrix in pA (current)
-        W = np.ones((dim,dim))*self.network_params['w']
+        W = np.ones((dim, dim)) * self.network_params['w']
         W[1:dim:2] *= -self.network_params['g']
         W = np.transpose(W)
         derived_params['W'] = W
@@ -169,14 +170,14 @@ class Network(object):
         derived_params['J'] = (tau_s_div_C * derived_params['W']).to(ureg.mV)
 
         # delay matrix
-        D = np.ones((dim,dim))*self.network_params['d_e']
-        D[1:dim:2] = np.ones(dim)*self.network_params['d_i']
+        D = np.ones((dim, dim)) * self.network_params['d_e']
+        D[1:dim:2] = np.ones(dim) * self.network_params['d_i']
         D = np.transpose(D)
         derived_params['Delay'] = D
 
         # delay standard deviation matrix
-        D = np.ones((dim,dim))*self.network_params['d_e_sd']
-        D[1:dim:2] = np.ones(dim)*self.network_params['d_i_sd']
+        D = np.ones((dim, dim)) * self.network_params['d_e_sd']
+        D[1:dim:2] = np.ones(dim) * self.network_params['d_i_sd']
         D = np.transpose(D)
         derived_params['Delay_sd'] = D
 
@@ -192,7 +193,6 @@ class Network(object):
 
         return derived_params
 
-
     def _calculate_dependent_analysis_parameters(self):
         """
         Calculate all analysis parameters derived from parameters in yaml file
@@ -202,13 +202,12 @@ class Network(object):
         dict
             dictionary containing derived parameters
         """
-
         derived_params = {}
 
         # convert regular to angular frequencies
-        w_min = 2*np.pi*self.analysis_params['f_min']
-        w_max = 2*np.pi*self.analysis_params['f_max']
-        dw = 2*np.pi*self.analysis_params['df']
+        w_min = 2 * np.pi * self.analysis_params['f_min']
+        w_max = 2 * np.pi * self.analysis_params['f_max']
+        dw = 2 * np.pi * self.analysis_params['df']
 
         # enable usage of quantities
         @ureg.wraps(ureg.Hz, (ureg.Hz, ureg.Hz, ureg.Hz))
@@ -218,19 +217,18 @@ class Network(object):
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
 
-
-        @ureg.wraps((1/ureg.mm).units,
-                    ((1/ureg.mm).units, (1/ureg.mm).units, (1/ureg.mm).units))
+        @ureg.wraps((1 / ureg.mm).units,
+                    ((1 / ureg.mm).units, (1 / ureg.mm).units,
+                     (1 / ureg.mm).units))
         def calc_evaluated_wavenumbers(k_min, k_max, dk):
             return np.arange(k_min, k_max, dk)
 
-        derived_params['k_wavenumbers'] = calc_evaluated_wavenumbers( \
-                                          self.analysis_params['k_min'],
-                                          self.analysis_params['k_max'],
-                                          self.analysis_params['dk'])
+        derived_params['k_wavenumbers'] = (
+            calc_evaluated_wavenumbers(self.analysis_params['k_min'],
+                                       self.analysis_params['k_max'],
+                                       self.analysis_params['dk']))
 
         return derived_params
-
 
     def _check_and_store(result_key, analysis_key=''):
         """
@@ -275,18 +273,22 @@ class Network(object):
                 if analysis_key in analysis_params.keys():
                     if analysis_param in analysis_params[analysis_key]:
                         # get index of analysis_key
-                        index = list(analysis_params[analysis_key]).index(analysis_param)
+                        index = list(analysis_params[analysis_key]
+                                     ).index(analysis_param)
                         # return corresponding result
                         return results[result_key][index]
                     else:
                         # store analysis_param in corresponding list
                         if isinstance(analysis_param, ureg.Quantity):
-                            analysis_params[analysis_key] = (np.append(analysis_params[analysis_key].magnitude,
-                                                                       analysis_param.magnitude)
-                                                             * analysis_param.units)
+                            analysis_params[analysis_key] = (
+                                np.append(
+                                    analysis_params[analysis_key].magnitude,
+                                    analysis_param.magnitude)
+                                * analysis_param.units)
                         else:
-                            analysis_params[analysis_key] = (np.append(analysis_params[analysis_key],
-                                                                       analysis_param))
+                            analysis_params[analysis_key] = (
+                                np.append(analysis_params[analysis_key],
+                                          analysis_param))
 
                         setattr(self, 'analysis_params', analysis_params)
                         # calculate new results
@@ -301,10 +303,12 @@ class Network(object):
                 else:
                     # store analysis_params
                     if isinstance(analysis_param, ureg.Quantity):
-                        analysis_params[analysis_key] = (np.array([analysis_param.magnitude])
-                                                         * analysis_param.units)
+                        analysis_params[analysis_key] = (
+                            np.array([analysis_param.magnitude])
+                            * analysis_param.units)
                     else:
-                        analysis_params[analysis_key] = np.array([analysis_param])
+                        analysis_params[analysis_key] = (
+                            np.array([analysis_param]))
                     setattr(self, 'analysis_params', analysis_params)
                     # calculate new results
                     new_result = func(self, *args, **kwargs)
@@ -330,11 +334,10 @@ class Network(object):
             # return wrapper_check_and_store
         return decorator_check_and_store
 
-
     def save(self, output_key='', output={}, file_name=''):
         """
-        Saves results and parameters to h5 file. If output is specified, this is
-        saved to h5 file.
+        Saves results and parameters to h5 file. If output is specified, this
+        is saved to h5 file.
 
         Parameters:
         -----------
@@ -349,7 +352,6 @@ class Network(object):
         --------
         None
         """
-
         # if no file name is specified use standard version
         if not file_name:
             file_name = '{}_{}.h5'.format(self.network_params['label'],
@@ -365,11 +367,9 @@ class Network(object):
             io.save('network_params', self.network_params, file_name)
             io.save('analysis_params', self.analysis_params, file_name)
 
-
     def show(self):
         """ Returns which results have already been calculated """
         return sorted(list(self.results.keys()))
-
 
     def change_parameters(self, changed_network_params={},
                           changed_analysis_params={}):
@@ -394,8 +394,6 @@ class Network(object):
         return Network(self.network_params_yaml, self.analysis_params_yaml,
                        new_network_params, new_analysis_params)
 
-
-
     def extend_analysis_frequencies(self, f_min, f_max):
         """
         Extend analysis frequencies and calculate all results for new ranges.
@@ -407,9 +405,8 @@ class Network(object):
         f_max: Quantity(float, 'Hz')
             Maximal frequency analysed.
         """
-
-
-
+        pass
+    
     @_check_and_store('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
@@ -428,7 +425,6 @@ class Network(object):
                                             self.network_params['nu_e_ext'],
                                             self.network_params['nu_i_ext'])
 
-
     @_check_and_store('mean_input')
     def mean_input(self):
         """ Calculates mean """
@@ -446,17 +442,17 @@ class Network(object):
     @_check_and_store('std_input')
     def std_input(self):
         """ Calculates variance """
-        return meanfield_calcs.standard_deviation(self.firing_rates(),
-                                                  self.network_params['K'],
-                                                  self.network_params['J'],
-                                                  self.network_params['j'],
-                                                  self.network_params['tau_m'],
-                                                  self.network_params['nu_ext'],
-                                                  self.network_params['K_ext'],
-                                                  self.network_params['g'],
-                                                  self.network_params['nu_e_ext'],
-                                                  self.network_params['nu_i_ext'])
-
+        return meanfield_calcs.standard_deviation(
+            self.firing_rates(),
+            self.network_params['K'],
+            self.network_params['J'],
+            self.network_params['j'],
+            self.network_params['tau_m'],
+            self.network_params['nu_ext'],
+            self.network_params['K_ext'],
+            self.network_params['g'],
+            self.network_params['nu_e_ext'],
+            self.network_params['nu_i_ext'])
 
     def working_point(self):
         """
@@ -478,8 +474,6 @@ class Network(object):
 
         return working_point
 
-
-
     def delay_dist_matrix(self, freq=None):
         """
         Calculates delay dist matrix either for all frequencies or given one.
@@ -497,13 +491,11 @@ class Network(object):
             dimension) for a given frequency, or shape(dimension, dimension,
             len(omegas)) for no specified frequency.
         """
-
-        if freq == None:
+        if freq is None:
             return self.delay_dist_matrix_multi()
         else:
             omega = 2 * np.pi * freq
             return self.delay_dist_matrix_single(omega)
-
 
     @_check_and_store('delay_dist')
     def delay_dist_matrix_multi(self):
@@ -516,11 +508,12 @@ class Network(object):
             Delay distribution matrix.
         """
 
-        return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
-                                                 self.network_params['Delay'],
-                                                 self.network_params['Delay_sd'],
-                                                 self.network_params['delay_dist'],
-                                                 self.analysis_params['omegas'])
+        return meanfield_calcs.delay_dist_matrix(
+            self.network_params['dimension'],
+            self.network_params['Delay'],
+            self.network_params['Delay_sd'],
+            self.network_params['delay_dist'],
+            self.analysis_params['omegas'])
 
     @_check_and_store('delay_dist_single', 'delay_dist_freqs')
     def delay_dist_matrix_single(self, omega):
@@ -536,13 +529,12 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless'):
             Delay distribution matrix.
         """
-        return meanfield_calcs.delay_dist_matrix(self.network_params['dimension'],
-                                                 self.network_params['Delay'],
-                                                 self.network_params['Delay_sd'],
-                                                 self.network_params['delay_dist'],
-                                                 [omega])[0]
-
-
+        return meanfield_calcs.delay_dist_matrix(
+            self.network_params['dimension'],
+            self.network_params['Delay'],
+            self.network_params['Delay_sd'],
+            self.network_params['delay_dist'],
+            [omega])[0]
 
     def transfer_function(self, freq=None, method='shift'):
         """
@@ -561,12 +553,10 @@ class Network(object):
             given frequency, or shape(dimension, len(omegas)) for no specified
             frequency.
         """
-
-        if freq == None:
+        if freq is None:
             return self.transfer_function_multi(method)
         else:
             return self.transfer_function_single(freq, method)
-
 
     @_check_and_store('transfer_function')
     def transfer_function_multi(self, method='shift'):
@@ -579,21 +569,19 @@ class Network(object):
             Transfer functions for all populations evaluated at specified
             omegas.
         """
-
-        transfer_functions = meanfield_calcs.transfer_function(self.mean_input(),
-                                                 self.std_input(),
-                                                 self.network_params['tau_m'],
-                                                 self.network_params['tau_s'],
-                                                 self.network_params['tau_r'],
-                                                 self.network_params['V_th_rel'],
-                                                 self.network_params['V_0_rel'],
-                                                 self.network_params['dimension'],
-                                                 self.analysis_params['omegas'],
-                                                 method=method)
+        transfer_functions = meanfield_calcs.transfer_function(
+            self.mean_input(),
+            self.std_input(),
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.network_params['tau_r'],
+            self.network_params['V_th_rel'],
+            self.network_params['V_0_rel'],
+            self.network_params['dimension'],
+            self.analysis_params['omegas'],
+            method=method)
 
         return transfer_functions
-
-
 
     @_check_and_store('transfer_function_single', 'transfer_freqs')
     def transfer_function_single(self, freq, method='shift'):
@@ -606,23 +594,21 @@ class Network(object):
             Transfer functions for all populations evaluated at specified
             omegas.
         """
-
         omega = freq * 2 * np.pi
 
-        transfer_functions = meanfield_calcs.transfer_function(self.mean_input(),
-                                                 self.std_input(),
-                                                 self.network_params['tau_m'],
-                                                 self.network_params['tau_s'],
-                                                 self.network_params['tau_r'],
-                                                 self.network_params['V_th_rel'],
-                                                 self.network_params['V_0_rel'],
-                                                 self.network_params['dimension'],
-                                                 [omega],
-                                                 method=method)
+        transfer_functions = meanfield_calcs.transfer_function(
+            self.mean_input(),
+            self.std_input(),
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.network_params['tau_r'],
+            self.network_params['V_th_rel'],
+            self.network_params['V_0_rel'],
+            self.network_params['dimension'],
+            [omega],
+            method=method)
 
         return transfer_functions
-
-
 
     @_check_and_store('sensitivity_measure', 'sensitivity_freqs')
     def sensitivity_measure(self, freq, method='shift'):
@@ -641,21 +627,22 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Sensitivity measure.
         """
-
         # convert regular frequency to angular frequeny
         omega = freq * 2 * np.pi
 
         # calculate needed transfer_function
-        transfer_function = meanfield_calcs.transfer_function(self.mean_input(),
-                                                              self.std_input(),
-                                                              self.network_params['tau_m'],
-                                                              self.network_params['tau_s'],
-                                                              self.network_params['tau_r'],
-                                                              self.network_params['V_th_rel'],
-                                                              self.network_params['V_0_rel'],
-                                                              self.network_params['dimension'],
-                                                              [omega],
-                                                              method=method)
+        transfer_function = meanfield_calcs.transfer_function(
+            self.mean_input(),
+            self.std_input(),
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.network_params['tau_r'],
+            self.network_params['V_th_rel'],
+            self.network_params['V_0_rel'],
+            self.network_params['dimension'],
+            [omega],
+            method=method)
+        
         if omega.magnitude < 0:
             transfer_function = np.conjugate(transfer_function)
 
@@ -667,34 +654,32 @@ class Network(object):
             self.network_params['delay_dist'],
             [omega])[0]
 
-        return meanfield_calcs.sensitivity_measure(transfer_function,
-                                                   delay_dist_matrix,
-                                                   self.network_params['J'],
-                                                   self.network_params['K'],
-                                                   self.network_params['tau_m'],
-                                                   self.network_params['tau_s'],
-                                                   self.network_params['dimension'],
-                                                   omega)
-
+        return meanfield_calcs.sensitivity_measure(
+            transfer_function,
+            delay_dist_matrix,
+            self.network_params['J'],
+            self.network_params['K'],
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.network_params['dimension'],
+            omega)
 
     @_check_and_store('power_spectra')
     def power_spectra(self, method='shift'):
         """
         Calculates power spectra.
         """
-
-        return meanfield_calcs.power_spectra(self.network_params['tau_m'],
-                                             self.network_params['tau_s'],
-                                             self.network_params['dimension'],
-                                             self.network_params['J'],
-                                             self.network_params['K'],
-                                             self.delay_dist_matrix(),
-                                             self.network_params['N'],
-                                             self.firing_rates(),
-                                             self.transfer_function(method=method),
-                                             self.analysis_params['omegas'])
-
-
+        return meanfield_calcs.power_spectra(
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.network_params['dimension'],
+            self.network_params['J'],
+            self.network_params['K'],
+            self.delay_dist_matrix(),
+            self.network_params['N'],
+            self.firing_rates(),
+            self.transfer_function(method=method),
+            self.analysis_params['omegas'])
 
     @_check_and_store('eigenvalue_spectra', 'eigenvalue_matrix')
     def eigenvalue_spectra(self, matrix, method='shift'):
@@ -713,17 +698,17 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Eigenvalues.
         """
-
-        return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
-                                              self.network_params['tau_s'],
-                                              self.transfer_function(method=method),
-                                              self.network_params['dimension'],
-                                              self.delay_dist_matrix(),
-                                              self.network_params['J'],
-                                              self.network_params['K'],
-                                              self.analysis_params['omegas'],
-                                              'eigvals',
-                                              matrix)
+        return meanfield_calcs.eigen_spectra(
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.transfer_function(method=method),
+            self.network_params['dimension'],
+            self.delay_dist_matrix(),
+            self.network_params['J'],
+            self.network_params['K'],
+            self.analysis_params['omegas'],
+            'eigvals',
+            matrix)
 
     @_check_and_store('r_eigenvec_spectra', 'r_eigenvec_matrix')
     def r_eigenvec_spectra(self, matrix):
@@ -742,18 +727,17 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Right eigenvectors.
         """
-        return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
-                                                   self.network_params['tau_s'],
-                                                   self.transfer_function(),
-                                                   self.network_params['dimension'],
-                                                   self.delay_dist_matrix(),
-                                                   self.network_params['J'],
-                                                   self.network_params['K'],
-                                                   self.analysis_params['omegas'],
-                                                   'reigvecs',
-                                                   matrix)
-
-
+        return meanfield_calcs.eigen_spectra(
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.transfer_function(),
+            self.network_params['dimension'],
+            self.delay_dist_matrix(),
+            self.network_params['J'],
+            self.network_params['K'],
+            self.analysis_params['omegas'],
+            'reigvecs',
+            matrix)
 
     @_check_and_store('l_eigenvec_spectra', 'l_eigenvec_matrix')
     def l_eigenvec_spectra(self, matrix):
@@ -772,17 +756,17 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Left eigenvectors.
         """
-        return  meanfield_calcs.eigen_spectra(self.network_params['tau_m'],
-                                                   self.network_params['tau_s'],
-                                                   self.transfer_function(),
-                                                   self.network_params['dimension'],
-                                                   self.delay_dist_matrix(),
-                                                   self.network_params['J'],
-                                                   self.network_params['K'],
-                                                   self.analysis_params['omegas'],
-                                                   'leigvecs',
-                                                   matrix)
-
+        return meanfield_calcs.eigen_spectra(
+            self.network_params['tau_m'],
+            self.network_params['tau_s'],
+            self.transfer_function(),
+            self.network_params['dimension'],
+            self.delay_dist_matrix(),
+            self.network_params['J'],
+            self.network_params['K'],
+            self.analysis_params['omegas'],
+            'leigvecs',
+            matrix)
 
     def additional_rates_for_fixed_input(self, mean_input_set, std_input_set):
         """
@@ -805,7 +789,7 @@ class Network(object):
             additional external inhibitory rate needed for fixed input
         """
         nu_e_ext, nu_i_ext = \
-            meanfield_calcs.additional_rates_for_fixed_input( \
+            meanfield_calcs.additional_rates_for_fixed_input(
                 mean_input_set, std_input_set,
                 self.network_params['tau_m'],
                 self.network_params['tau_s'],
@@ -820,13 +804,12 @@ class Network(object):
                 self.network_params['g'])
         return nu_e_ext, nu_i_ext
 
-
     def fit_transfer_function(self):
         """
         Fit the absolute value of the LIF transfer function to the one of a
-        first-order low-pass filter. Compute the time constants and weight matrices
-        for an equivalent rate model. Compute the effective coupling strength
-        for comparison.
+        first-order low-pass filter. Compute the time constants and weight
+        matrices for an equivalent rate model. Compute the effective coupling
+        strength for comparison.
 
         Returns:
         --------
@@ -842,14 +825,15 @@ class Network(object):
         tf0_ecs: Quantity(np.ndarray, 'hertz/millivolt')
             Effective coupling strength scaled to transfer function.
         """
-        tau_rate, W_rate, W_rate_sim, fit_tf = \
-            meanfield_calcs.fit_transfer_function(self.transfer_function(),
-                                                  self.analysis_params['omegas'],
-                                                  self.network_params['tau_m'],
-                                                  self.network_params['J'],
-                                                  self.network_params['K'])
+        tau_rate, W_rate, W_rate_sim, fit_tf = (
+            meanfield_calcs.fit_transfer_function(
+                self.transfer_function(),
+                self.analysis_params['omegas'],
+                self.network_params['tau_m'],
+                self.network_params['J'],
+                self.network_params['K']))
 
-        w_ecs = meanfield_calcs.effective_coupling_strength( \
+        w_ecs = meanfield_calcs.effective_coupling_strength(
             self.network_params['tau_m'],
             self.network_params['tau_s'],
             self.network_params['tau_r'],
@@ -860,17 +844,17 @@ class Network(object):
             self.std_input())
 
         # scale to transfer function and adapt unit
-        tf0_ecs = (w_ecs / (self.network_params['J'] \
-            * self.network_params['tau_m'])).to(ureg.Hz / ureg.mV)
+        tf0_ecs = (w_ecs / (self.network_params['J']
+                   * self.network_params['tau_m'])).to(ureg.Hz / ureg.mV)
 
         return tau_rate, W_rate, W_rate_sim, fit_tf, tf0_ecs
 
-
-    def scan_fit_transfer_function_mean_std_input(self, mean_inputs, std_inputs):
+    def scan_fit_transfer_function_mean_std_input(self, mean_inputs,
+                                                  std_inputs):
         """
-        Scan all combinations of mean_inputs and std_inputs: Compute and fit the
-        transfer function for each case and return the relative fit errors on
-        tau and h0.
+        Scan all combinations of mean_inputs and std_inputs: Compute and fit
+        the transfer function for each case and return the relative fit errors
+        on tau and h0.
 
         Parameters:
         -----------
@@ -882,29 +866,32 @@ class Network(object):
         Returns:
         --------
         errs_tau: np.ndarray
-            Relative error on fitted tau for each combination of mean and std of input.
+            Relative error on fitted tau for each combination of mean and std
+            of input.
         errs_h0: np.ndarray
-            Relative error on fitted h0 for each combination of mean and std of input.
+            Relative error on fitted h0 for each combination of mean and std
+            of input.
         """
-        errs_tau, errs_h0 = \
-            meanfield_calcs.scan_fit_transfer_function_mean_std_input( \
+        errs_tau, errs_h0 = (
+            meanfield_calcs.scan_fit_transfer_function_mean_std_input(
                 mean_inputs, std_inputs,
                 self.network_params['tau_m'],
                 self.network_params['tau_s'],
                 self.network_params['tau_r'],
                 self.network_params['V_0_rel'],
                 self.network_params['V_th_rel'],
-                self.analysis_params['omegas'])
+                self.analysis_params['omegas']))
+        
         return errs_tau, errs_h0
-
 
     def linear_interpolation_alpha(self, k_wavenumbers, network):
         """
-        Linear interpolation between analytically solved characteristic equation
-        for linear rate model and equation solved for lif model.
+        Linear interpolation between analytically solved characteristic
+        equation for linear rate model and equation solved for lif model.
         Eigenvalues lambda are computed by solving the characteristic equation
         numerically or by solving an integral.
-        Reguires a spatially organized network with boxcar connectivity profile.
+        Reguires a spatially organized network with boxcar connectivity
+        profile.
 
         Parameters:
         -----------
@@ -922,8 +909,9 @@ class Network(object):
         eigenval_max: Quantity(complex, '1/s')
         eigenvals: Quantity(np.ndarray, '1/s')
         """
-        alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals = \
-            meanfield_calcs.linear_interpolation_alpha( \
+        (alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max,
+         eigenvals) = (
+            meanfield_calcs.linear_interpolation_alpha(
                 k_wavenumbers,
                 self.analysis_params['branches'],
                 self.network_params['tau_rate'],
@@ -941,28 +929,29 @@ class Network(object):
                 self.network_params['J'],
                 self.network_params['K'],
                 self.network_params['dimension'],
-                )
-        return alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max, eigenvals
-
+                ))
+         
+        return (alphas, lambdas_chareq, lambdas_integral, k_eig_max,
+                eigenval_max, eigenvals)
 
     def compute_profile_characteristics(self):
         """
         """
-        xi_min, xi_max, k_min, k_max = \
+        xi_min, xi_max, k_min, k_max = (
             meanfield_calcs.xi_of_k(self.analysis_params['k_wavenumbers'],
                                     self.network_params['W_rate'],
-                                    self.network_params['width'])
+                                    self.network_params['width']))
 
-        lambda_min = meanfield_calcs.solve_chareq_rate_boxcar( \
-            0, # branch
+        lambda_min = meanfield_calcs.solve_chareq_rate_boxcar(
+            0,  # branch
             k_min,
             self.network_params['tau_rate'][0],
             self.network_params['W_rate'],
             self.network_params['width'],
             self.network_params['d_e']
             )
-        lambda_max = meanfield_calcs.solve_chareq_rate_boxcar( \
-            0, # branch
+        lambda_max = meanfield_calcs.solve_chareq_rate_boxcar(
+            0,  # branch
             k_max,
             self.network_params['tau_rate'][0],
             self.network_params['W_rate'],
@@ -971,21 +960,22 @@ class Network(object):
             )
 
         self.results.update({
-            'rho' : self.network_params['width'][1].to(ureg.mm).magnitude / \
-                    self.network_params['width'][0].to(ureg.mm).magnitude,
-            'eta' : -1 * self.network_params['W_rate'][0,1] / \
-                    self.network_params['W_rate'][0,0],
-            'xi_min' : xi_min,
-            'xi_max' : xi_max,
-            'k_min' : k_min,
-            'k_f_min' : k_min / (2.*np.pi),
-            'k_max' : k_max,
-            'k_f_max' : k_max / (2.*np.pi),
-            'tau_delay' : self.network_params['tau_rate'][0].to(ureg.ms).magnitude /  \
-                          self.network_params['d_e'].to(ureg.ms).magnitude,
-            'lambda_min' : lambda_min,
-            'lambda_max' : lambda_max,
-            'lambda_f_min' : np.imag(lambda_min) / (2.*np.pi),
-            'speed' : np.imag(lambda_min.to(1/ureg.s)) / k_min.to(1/ureg.m),
+            'rho': (self.network_params['width'][1].to(ureg.mm).magnitude
+                    / self.network_params['width'][0].to(ureg.mm).magnitude),
+            'eta': (-1 * self.network_params['W_rate'][0, 1]
+                    / self.network_params['W_rate'][0, 0]),
+            'xi_min': xi_min,
+            'xi_max': xi_max,
+            'k_min': k_min,
+            'k_f_min': k_min / (2. * np.pi),
+            'k_max': k_max,
+            'k_f_max': k_max / (2. * np.pi),
+            'tau_delay':
+                (self.network_params['tau_rate'][0].to(ureg.ms).magnitude
+                 / self.network_params['d_e'].to(ureg.ms).magnitude),
+            'lambda_min': lambda_min,
+            'lambda_max': lambda_max,
+            'lambda_f_min': np.imag(lambda_min) / (2. * np.pi),
+            'speed': np.imag(lambda_min.to(1 / ureg.s)) / k_min.to(1 / ureg.m),
             })
         return
