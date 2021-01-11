@@ -90,6 +90,9 @@ class Test_siegert1:
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
+        if any(params['mu'] > params['V_th_rel']):
+            pytest.skip("Parameters out of range the function is intended "
+                        "for.")
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_siegert, params, self.precision)
 
