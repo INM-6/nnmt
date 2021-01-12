@@ -141,8 +141,10 @@ class Test_nu0_fb433:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
         
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
+    def test_warning_is_given_if_k_is_critical(self,
+                                               std_params_single_population):
+        check_warning_is_given_if_k_is_critical(self.func,
+                                                std_params_single_population)
 
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
@@ -164,8 +166,10 @@ class Test_nu0_fb:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
         
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
+    def test_warning_is_given_if_k_is_critical(self,
+                                               std_params_single_population):
+        check_warning_is_given_if_k_is_critical(self.func,
+                                                std_params_single_population)
 
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
@@ -268,8 +272,10 @@ class Test_d_nu_d_mu_fb433:
     def test_V_0_larger_V_th_raise_exception(self, std_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
+    def test_warning_is_given_if_k_is_critical(self,
+                                               std_params_single_population):
+        check_warning_is_given_if_k_is_critical(self.func,
+                                                std_params_single_population)
 
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)

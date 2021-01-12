@@ -47,6 +47,19 @@ def check_if_positive(parameters, parameter_names):
                     parameter_name))
 
 
+def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
+    """ Check whether we are in fast synaptic regime."""
+    k = np.sqrt(tau_s / tau_m)
+    if (0.1 < k) & (k < 1):
+        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
+                     'calculation of firing rates via Taylor expansion!'
+                     ).format(k)
+        warnings.warn(k_warning)
+    if 1 <= k:
+        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of '
+                         'firing rates via Taylor expansion!')
+
+
 @ureg.wraps(ureg.Hz,
             (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -87,16 +100,7 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
     
-    k = np.sqrt(tau_s / tau_m)
-
-    if (0.1 < k) & (k < 1):
-        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
-                     'calculation of firing rates via Taylor expansion!'
-                     ).format(k)
-        warnings.warn(k_warning)
-    if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of '
-                         'firing rates via Taylor expansion!')
+    check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
         
     return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
@@ -192,7 +196,8 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
-
+    check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
+    
     # using zetac (zeta-1), because zeta is giving nan result for arguments
     # smaller 1
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
@@ -248,7 +253,6 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         else:
             return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th)
                                                           * u)) / u
-
     # find lower bound of integration, such that integrand is smaller than
     # 1e-12 at lower bound
     lower_bound = y_th
@@ -398,6 +402,7 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
+    check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
     
     if sigma == 0:
         raise ZeroDivisionError('Function contains division by sigma!')
