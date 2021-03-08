@@ -2,6 +2,8 @@ import pytest
 import re
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
+import lif_meanfield_tools as lmt
+ureg = lmt.ureg
 
 def assert_units_equal(var_1, var_2):
     """Checks whether unit of var_1 and of var_2 conincide."""
@@ -10,6 +12,12 @@ def assert_units_equal(var_1, var_2):
     except AttributeError:
         pass
 
+def assert_dimensionality_equal(var_1, var_2):
+    """Checks whether unit of var_1 and of var_2 have same dimensionality."""
+    try:
+        assert var_1.dimensionality == var_2.dimensionality
+    except AttributeError:
+        pass
 
 def check_pos_params_neg_raise_exception(func, params, pos_key):
     """Test whether exception is raised if always pos param gets negative."""
@@ -34,21 +42,25 @@ def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
         params['mu'] = mu
         params['sigma'] = sigma
         result = func(**params)
+        if isinstance(result, ureg.Quantity):
+            result.ito(output.units)
         assert_array_equal(output, result)
         assert_units_equal(output, result)
 
 
 def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
                                                            params,
-                                                           precision):
+                                                           decimal):
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
     for mu, sigma in zip(mus, sigmas):
         params['mu'] = mu
         params['sigma'] = sigma
-        expected = alt_func(**params)
         result = func(**params)
-        assert_array_almost_equal(expected, result, precision)
+        expected = alt_func(**params)
+        if isinstance(result, ureg.Quantity):
+            expected.ito(result.units)
+        assert_array_almost_equal(expected, result, decimal)
         assert_units_equal(expected, result)
 
 

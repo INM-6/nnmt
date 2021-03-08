@@ -69,8 +69,8 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     k = np.sqrt(tau_s / tau_m)
 
-    V_th_eff = V_th_rel + sigma * alpha * k / 2
-    V_0_eff = V_0_rel + sigma * alpha * k / 2
+    V_th_eff = V_th_rel + sigma * alpha * k / np.sqrt(2)
+    V_0_eff = V_0_rel + sigma * alpha * k / np.sqrt(2)
 
     nu = real_siegert(tau_m, tau_r, V_th_eff, V_0_eff, mu, sigma)
 
@@ -80,7 +80,7 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
 class Test_siegert1:
 
     func = staticmethod(siegert1)
-    precision = 10**-7
+    decimal = 6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -99,13 +99,13 @@ class Test_siegert1:
             pytest.skip("Parameters out of range the function is intended "
                         "for.")
         check_almost_correct_output_for_several_mus_and_sigmas(
-            self.func, real_siegert, params, self.precision)
+            self.func, real_siegert, params, self.decimal)
 
 
 class Test_siegert2:
 
     func = staticmethod(siegert2)
-    precision = 10**-7
+    decimal = 6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -128,7 +128,7 @@ class Test_siegert2:
             if mu > 0.95 * params['V_th_rel']:
                 expected = real_siegert(**params)
                 result = self.func(**params)
-                assert_array_almost_equal(expected, result, self.precision)
+                assert_array_almost_equal(expected, result, self.decimal)
                 assert_units_equal(expected, result)
             else:
                 with pytest.raises(ValueError):
@@ -138,7 +138,7 @@ class Test_siegert2:
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
-    precision = 10**-7
+    decimal = 6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -157,13 +157,13 @@ class Test_nu0_fb433:
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
-            self.func, real_shifted_siegert, params, self.precision)
+            self.func, real_shifted_siegert, params, self.decimal)
 
 
 class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
-    precision = 10**-7
+    decimal = 6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -182,7 +182,7 @@ class Test_nu0_fb:
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
-            self.func, real_shifted_siegert, params, self.precision)
+            self.func, real_shifted_siegert, params, self.decimal)
 
 
 class Test_nu_0:
