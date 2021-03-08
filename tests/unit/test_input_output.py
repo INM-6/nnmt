@@ -15,7 +15,9 @@ from .checks import (check_file_in_tmpdir,
                      assert_units_equal)
 
 ureg = lmt.ureg
-        
+
+path_to_fixtures = 'tests/fixtures/unit/config/'
+
 val_unit_pairs = [
     dict(numerical=1),
     dict(quantity={'val': 1, 'unit': 'hertz'}),
@@ -91,7 +93,7 @@ def param_test_dict():
 
 
 class Test_val_unit_to_quantities:
-    
+
     @pytest.mark.parametrize('val_unit_pair, quantity_dict',
                              zip(val_unit_pairs, quantity_dicts),
                              ids=ids)
@@ -111,7 +113,7 @@ class Test_val_unit_to_quantities:
                 # check value
                 assert_array_equal(conv_item[1], exp_item[1])
                 assert_units_equal(conv_item[1], exp_item[1])
-            
+
     def test_unit_abbreviations_work_correctly(self):
         val_unit_pairs = dict(
             hertz={'val': 1, 'unit': 'Hz'},
@@ -132,7 +134,7 @@ class Test_val_unit_to_quantities:
 
 
 class Test_quantities_to_val_unit:
-    
+
     @pytest.mark.parametrize('quantity_dict, val_unit_pair',
                              zip(quantity_dicts, val_unit_pairs),
                              ids=ids)
@@ -156,7 +158,7 @@ class Test_quantities_to_val_unit:
                     assert conv_item[1] == conv_item[1]
                 except ValueError:
                     assert_array_equal(conv_item[1], exp_item[1])
-                    
+
     def test_list_of_quantities(self):
         quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
                                                  2 * ureg.Hz,
@@ -169,7 +171,7 @@ class Test_quantities_to_val_unit:
         assert conv_item[0] == exp_item[0]
         assert conv_item[1]['unit'] == exp_item[1]['unit']
         assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
-        
+
     @pytest.mark.xfail
     def test_list_of_quantities_with_several_units_raises_exception(self):
         quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
@@ -180,20 +182,20 @@ class Test_quantities_to_val_unit:
 
 
 class Test_load_params:
-    
+
     def test_val_unit_to_quantities_called(self, mocker):
         mock = mocker.patch('lif_meanfield_tools.input_output.'
                             'val_unit_to_quantities')
-        io.load_params('tests/fixtures/config/test.yaml')
+        io.load_params(f'{path_to_fixtures}test.yaml')
         mock.assert_called_once()
-        
+
     def test_yaml_loaded_correctly(self, param_test_dict):
-        params = io.load_params('tests/fixtures/config/test.yaml')
+        params = io.load_params(f'{path_to_fixtures}test.yaml')
         check_quantity_dicts_are_equal(params, param_test_dict)
-                
+
 
 class Test_save:
-    
+
     def test_h5_is_created(self, tmpdir, param_test_dict):
         tmp_test = tmpdir.mkdir('tmp_test')
         output_key = 'params'
@@ -201,7 +203,7 @@ class Test_save:
         with tmp_test.as_cwd():
             io.save(output_key, param_test_dict, file_name)
         check_file_in_tmpdir(file_name, tmp_test)
-        
+
     @pytest.mark.xfail
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
                                                          param_test_dict):
@@ -216,12 +218,12 @@ class Test_save:
 
 
 class Test_create_hash:
-    
+
     def test_correct_hash(self):
         params = dict(a=1, b=2)
         hash = io.create_hash(params, ['a', 'b'])
         assert hash == 'c20ad4d76fe97759aa27a0c99bff6710'
-        
+
     def test_hash_only_reflects_given_keys(self):
         params = dict(a=1, b=2, c=3)
         hash = io.create_hash(params, ['a', 'b'])
@@ -229,7 +231,7 @@ class Test_create_hash:
 
 
 class Test_load_h5:
-    
+
     @pytest.mark.xfail
     def test_raise_exception_if_filename_not_existing(self, tmpdir):
         tmp_test = tmpdir.mkdir('tmp_test')
@@ -237,20 +239,20 @@ class Test_load_h5:
         with tmp_test.as_cwd():
             with pytest.raises(IOError):
                 io.load_h5(filename)
-    
+
     def test_data_saved_and_loaded_correctly(self, tmpdir, param_test_dict):
         tmp_test = tmpdir.mkdir('tmp_test')
         filename = 'test.h5'
         with tmp_test.as_cwd():
             io.save('params', param_test_dict, filename)
             params_h5 = io.load_h5(filename)
-            
+
         params = params_h5['params']
         check_quantity_dicts_are_equal(params, param_test_dict)
-        
-        
+
+
 class Test_load_from_h5:
-    
+
     @pytest.mark.xfail
     def test_save_and_load_existing_results_without_analysis_params(
             self, tmpdir, param_test_dict):
@@ -264,15 +266,15 @@ class Test_load_from_h5:
             loaded_params = io.load_from_h5(param_test_dict)
         params = loaded_params[output_key]
         check_quantity_dicts_are_equal(params, param_test_dict)
-    
+
     def test_save_and_load_existing_results_with_analysis_params(
             self, tmpdir, param_test_dict):
         param_test_dict['label'] = 'test_label'
         hash = io.create_hash(param_test_dict, param_test_dict.keys())
         filename = param_test_dict['label'] + '_' + hash + '.h5'
-        
+
         analysis_params = dict(omega=1 * ureg.Hz)
-        
+
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             io.save('results', param_test_dict, filename)
@@ -281,7 +283,7 @@ class Test_load_from_h5:
                 param_test_dict)
         check_quantity_dicts_are_equal(analysis_params, loaded_analysis_params)
         check_quantity_dicts_are_equal(loaded_results, param_test_dict)
-    
+
     def test_save_and_load_results_from_given_file_with_analysis_params(
             self, tmpdir, param_test_dict):
         filename = 'test.h5'
