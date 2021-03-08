@@ -42,6 +42,7 @@ _check_and_store
 """
 
 from __future__ import print_function
+import collections
 import numpy as np
 from decorator import decorator
 
@@ -273,8 +274,13 @@ class Network(object):
                 if analysis_key in analysis_params.keys():
                     if analysis_param in analysis_params[analysis_key]:
                         # get index of analysis_key
-                        index = list(analysis_params[analysis_key]
-                                     ).index(analysis_param)
+                        if (isinstance(analysis_param, collections.Iterable)
+                            and not isinstance(analysis_param, str)):
+                            index = [i for i, param in enumerate(analysis_params[analysis_key])
+                                     if (param==analysis_param).all()][0]
+                        else:
+                            index = list(analysis_params[analysis_key]
+                                         ).index(analysis_param)
                         # return corresponding result
                         return results[result_key][index]
                     else:
@@ -406,7 +412,7 @@ class Network(object):
             Maximal frequency analysed.
         """
         pass
-    
+
     @_check_and_store('firing_rates')
     def firing_rates(self):
         """ Calculates firing rates """
@@ -642,7 +648,7 @@ class Network(object):
             self.network_params['dimension'],
             [omega],
             method=method)
-        
+
         if omega.magnitude < 0:
             transfer_function = np.conjugate(transfer_function)
 
@@ -881,7 +887,7 @@ class Network(object):
                 self.network_params['V_0_rel'],
                 self.network_params['V_th_rel'],
                 self.analysis_params['omegas']))
-        
+
         return errs_tau, errs_h0
 
     def linear_interpolation_alpha(self, k_wavenumbers, network):
@@ -930,7 +936,7 @@ class Network(object):
                 self.network_params['K'],
                 self.network_params['dimension'],
                 ))
-         
+
         return (alphas, lambdas_chareq, lambdas_integral, k_eig_max,
                 eigenval_max, eigenvals)
 
