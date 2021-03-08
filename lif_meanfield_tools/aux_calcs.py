@@ -99,9 +99,9 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
-    
+
     check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
-        
+
     return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
@@ -110,7 +110,7 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # use zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
-    
+
     # additional prefactor sqrt(2) because its x from Schuecker 2015
     x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
@@ -122,7 +122,7 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     else:
         # white noise firing rate
         r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        
+
         dPhi = Phi(x_th) - Phi(x_r)
         # colored noise firing rate (might this lead to negative rates?)
         result = (r - np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
@@ -167,7 +167,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
-    
+
     Based on Fourcaud & Brunel 2002, using shift of the integration boundaries
     in the white noise Siegert formula, as derived in Schuecker 2015.
 
@@ -197,7 +197,7 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
     check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
-    
+
     # using zetac (zeta-1), because zeta is giving nan result for arguments
     # smaller 1
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
@@ -237,7 +237,7 @@ def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameters = [tau_m, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
-    
+
     if V_th_rel < V_0_rel:
         raise ValueError('V_th should be larger than V_0!')
     if mu > V_th_rel - 0.05 * abs(V_th_rel):
@@ -315,7 +315,7 @@ def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     if mu < V_th_rel - 0.05 * abs(V_th_rel):
         raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * '
                          'abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
-    
+
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
 
@@ -359,11 +359,11 @@ def Phi_prime_mu(s, sigma):
         raise ValueError('sigma needs to be larger than zero!')
     if sigma == 0:
         raise ZeroDivisionError('Function contains division by sigma!')
-    
+
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
                                       * (1 + erf(s / np.sqrt(2)))
                                       + np.sqrt(2) / np.sqrt(np.pi))
-    
+
 
 @ureg.wraps(ureg.Hz / ureg.mV,
             (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
@@ -403,10 +403,10 @@ def d_nu_d_mu_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
     check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
-    
+
     if sigma == 0:
         raise ZeroDivisionError('Function contains division by sigma!')
-    
+
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
     x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
@@ -449,22 +449,22 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameters = [tau_m, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
-    
+
     try:
         if any(sigma == 0 for sigma in sigma):
             raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
     except TypeError:
         if sigma == 0:
             raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
-    
+
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
     nu0 = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
     return (np.sqrt(np.pi) * tau_m * nu0**2 / sigma
             * (np.exp(y_th**2) * (1 + erf(y_th)) - np.exp(y_r**2)
                * (1 + erf(y_r))))
-    
-    
+
+
 def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     """
     Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
@@ -509,7 +509,7 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     except TypeError:
         if sigma == 0:
             raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
-    
+
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
 
     y_th = (V_th_rel - mu) / sigma
@@ -522,14 +522,14 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
 
     # linear contribution
     lin = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
-           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb)) - np.exp(y_r_fb**2)
-              * (1 + erf(y_r_fb))))
+           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb.magnitude)) - np.exp(y_r_fb**2)
+              * (1 + erf(y_r_fb.magnitude))))
 
     # quadratic contribution
     sqr = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
-           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb))
+           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb.magnitude))
               * 0.5 * y_th * j / sigma - np.exp(y_r_fb**2)
-              * (1 + erf(y_r_fb)) * 0.5 * y_r * j / sigma))
+              * (1 + erf(y_r_fb.magnitude)) * 0.5 * y_r * j / sigma))
 
     return lin + sqr, lin, sqr
 

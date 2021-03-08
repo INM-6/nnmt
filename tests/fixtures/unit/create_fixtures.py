@@ -376,7 +376,7 @@ if __name__ == '__main__':
             network = lmt.Network(param_file, analysis_param_file)
             network.network_params['regime'] = regime
 
-            fixtures that need a network, or network params to be calculated
+            # fixtures that need a network, or network params to be calculated
             fix_working_point(network, file_path)
             fix_transfer_function(network, file_path)
             fix_delay_dist_single(network, file_path)
