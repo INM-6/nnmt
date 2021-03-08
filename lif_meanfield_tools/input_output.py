@@ -87,8 +87,12 @@ def quantities_to_val_unit(dict_of_quantities):
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
+        # quantities are converted to val unit dictionary
+        if isinstance(quantity, ureg.Quantity):
+            converted_dict[quantity_key]['val'] = quantity.magnitude
+            converted_dict[quantity_key]['unit'] = str(quantity.units)
         # lists of strings need to be treated seperately
-        if isinstance(quantity, Iterable):
+        elif isinstance(quantity, Iterable):
             if any(isinstance(part, str) for part in quantity):
                 converted_dict[quantity_key] = quantity
             elif any(isinstance(part, ureg.Quantity) for part in quantity):
@@ -97,10 +101,6 @@ def quantities_to_val_unit(dict_of_quantities):
                 converted_dict[quantity_key]['unit'] = str(quantity[0].units)
             else:
                 converted_dict[quantity_key] = quantity
-        # quantities are converted to val unit dictionary
-        elif isinstance(quantity, ureg.Quantity):
-            converted_dict[quantity_key]['val'] = quantity.magnitude
-            converted_dict[quantity_key]['unit'] = str(quantity.units)
         # anything else is stored the way it is
         else:
             converted_dict[quantity_key] = quantity
