@@ -309,12 +309,12 @@ def fix_Psi(fixture_path):
 
     pcfu_outputs = []
     for z, x in zip(zs, xs):
-        pcfu_outputs.append(mpmath.pcfu(z, -x))
+        result = mpmath.pcfu(z, -x)
+        pcfu_outputs.append(complex(result.real, result.imag))
 
     outputs = []
     for z, x in zip(zs, xs):
         outputs.append(Psi(z, x))
-
     np.savez(output_file, zs=zs, xs=xs, pcfus=pcfu_outputs,
              outputs=outputs)
 
