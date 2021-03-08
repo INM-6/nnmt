@@ -265,6 +265,52 @@ def all_std_params_single_population():
 
 
 @pytest.fixture
+def all_std_params_single_population_unitless():
+    """Standard params from first population of microcircuit."""
+    firing_rates = 0.71
+    mean_input = 3.30
+    std_input = 6.19
+    params = dict(C=250,
+                  K=2199,
+                  K_ext=1600,
+                  N=20683,
+                  V_th_abs=-50,
+                  V_0_abs=-65,
+                  d_e=1.5,
+                  d_i=0.75,
+                  d_e_sd=0.75,
+                  d_i_sd=0.375,
+                  delay_dist=None,
+                  delay_dist_matrix=complex(1.000,
+                                            -0.005),
+                  firing_rates=firing_rates,
+                  g=4,
+                  label='microcircuit',
+                  matrix='MH',
+                  mean_input=mean_input,
+                  mu=mean_input,
+                  mu_set=np.array([3]),
+                  nu=firing_rates,
+                  nu_ext=8,
+                  nu_e_ext=0,
+                  nu_i_ext=0,
+                  populations=['23E'],
+                  sigma=std_input,
+                  sigma_set=6,
+                  std_input=std_input,
+                  tau_m=10,
+                  tau_s=0.5,
+                  tau_r=2.0,
+                  transfer_function=complex(0.653),
+                  omega=20,
+                  omegas=20,
+                  w=87.8
+                  )
+    calc_dep_params(params)
+    return params
+
+
+@pytest.fixture
 def std_params(request, all_std_params):
     """
     Returns set of standard params needed by requesting tested function.
@@ -285,6 +331,25 @@ def std_params_single_population(request, all_std_params_single_population):
     """
     return get_required_params(request.cls.func,
                                all_std_params_single_population)
+
+
+@pytest.fixture
+def std_params_single_population_unitless(
+        request, all_std_params_single_population):
+    """
+    Returns set of standard params needed by requesting tested function.
+    
+    For using this fixture, the function test class needs to have a class
+    attribute `func`, which is the tested function as a staticmethod.
+    """
+    params = get_required_params(request.cls.func,
+                                 all_std_params_single_population)
+    for key, value in params.items():
+        try:
+            params[key] = value.magnitude
+        except AttributeError:
+            pass
+    return params
 
 
 @pytest.fixture

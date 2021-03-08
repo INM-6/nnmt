@@ -25,8 +25,8 @@ def check_correct_output(func, params, output, updates=None):
     result = func(**params)
     assert_array_equal(result, output)
     assert_units_equal(result, output)
-    
-    
+
+
 def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
@@ -36,8 +36,8 @@ def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
         result = func(**params)
         assert_array_equal(output, result)
         assert_units_equal(output, result)
-        
-    
+
+
 def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
                                                            params,
                                                            precision):
@@ -68,8 +68,8 @@ def check_exception_is_raised_if_k_is_too_large(func, params):
     params['tau_s'] = 2 * params['tau_m']
     with pytest.raises(ValueError):
         func(**params)
-        
-        
+
+
 def check_file_in_tmpdir(filename, tmp_dir):
     # results file name expression
     exp = re.compile(r'.*{}'.format(filename))

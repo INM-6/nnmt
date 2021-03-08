@@ -501,6 +501,7 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
+    check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
 
     try:
         if any(sigma == 0 for sigma in sigma):
