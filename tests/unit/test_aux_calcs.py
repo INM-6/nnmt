@@ -310,10 +310,9 @@ class Test_d_nu_d_nu_in_fb:
         check_V_0_larger_V_th_raise_exception(self.func, std_params)
 
     def test_warning_is_given_if_k_is_critical(
-            self, std_params_single_population_unitless, mocker):
-        mock = mocker.patch('lif_meanfield_tools.aux_calcs.nu0_fb')
+            self, std_params_single_population):
         check_warning_is_given_if_k_is_critical(
-            self.func, std_params_single_population_unitless)
+            self.func, std_params_single_population)
 
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
