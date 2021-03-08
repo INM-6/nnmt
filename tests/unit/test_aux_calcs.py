@@ -36,6 +36,11 @@ ureg = lmt.ureg
 fixture_path = 'tests/fixtures/unit/data/'
 
 
+def strip_units_from_quantity_dict(d):
+    """ Returns dictionary only containing magnitudes. """
+    return {key: value.magnitude for key, value in d.items()}
+
+
 def integrand(x):
     return np.exp(x**2) * (1 + erf(x))
 
@@ -256,6 +261,7 @@ class Test_d_nu_d_mu:
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
+        params = strip_units_from_quantity_dict(params)
         outputs = output_test_fixtures.pop('output')
         check_correct_output_for_several_mus_and_sigmas(self.func, params,
                                                         outputs)
