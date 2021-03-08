@@ -11,33 +11,33 @@ ureg = lmt.ureg
 
 
 class Test_initialization:
-    
+
     @pytest.mark.parametrize('key, value', [('tau_m', 10 * ureg.ms),
                                             ('d_i_sd', 0.375 * ureg.ms),
                                             ('label', 'microcircuit')])
     def test_correct_network_params_loaded(self, network, key, value):
         assert network.network_params[key] == value
-    
+
     @pytest.mark.parametrize('key, value', [('f_min', 0.1 * ureg.Hz),
                                             ('omega', 20 * ureg.Hz),
                                             ('k_max', 100.5 / ureg.mm)])
     def test_correct_analysis_params_loaded(self, network, key, value):
         assert network.analysis_params[key] == value
-    
+
     def test_network_with_given_network_params_created(self):
         network_params = dict(tau_m=10 * ureg.ms,
                               tau_s=5 * ureg.ms)
         network = lmt.Network(new_network_params=network_params,
                               derive_params=False)
         assert network.network_params == network_params
-    
+
     def test_network_with_given_analysis_params_created(self):
         analysis_params = dict(f_min=1 * ureg.Hz,
                                f_max=10 * ureg.Hz)
         network = lmt.Network(new_analysis_params=analysis_params,
                               derive_params=False)
         assert network.analysis_params == analysis_params
-    
+
     def test_network_params_updated_on_initialization(self,
                                                       network_params_yaml,
                                                       analysis_params_yaml):
@@ -46,7 +46,7 @@ class Test_initialization:
                               analysis_params_yaml,
                               new_network_params=dict(tau_m=tau_m))
         assert network.network_params['tau_m'] == tau_m
-    
+
     def test_analysis_params_updated_on_initialization(self,
                                                        network_params_yaml,
                                                        analysis_params_yaml):
@@ -55,12 +55,12 @@ class Test_initialization:
                               analysis_params_yaml,
                               new_analysis_params=dict(df=df))
         assert network.analysis_params['df'] == df
-    
+
     @pytest.mark.xfail
     def test_warning_is_given_if_necessary_parameters_are_missing(self):
         """What are necessary parameters? For what?"""
         raise NotImplementedError
-    
+
     def test_if_derive_params_false_no_calculation_of_derived_params(
             self, mocker, network_params_yaml, analysis_params_yaml):
         mocker.patch.object(lmt.Network,
@@ -77,40 +77,40 @@ class Test_initialization:
 
     def test_hash_is_created(self, network):
         assert hasattr(network, 'hash')
-    
+
     @pytest.mark.xfail
     def test_loading_of_existing_results(self):
         """How do we want them to be loaded?"""
         raise NotImplementedError
-    
+
     def test_result_dict_is_created(self, network):
         assert hasattr(network, 'results')
-    
+
 
 class Test_calculation_of_dependent_network_params:
     """
     Depends strongly on network_params_microcircuit.yaml in tests/fixtures.
     """
-    
+
     def test_dimension(self, network):
         assert network.network_params['dimension'] == 8
-    
+
     def test_V0_rel(self, network):
         assert network.network_params['V_0_rel'] == 0 * ureg.mV
-    
+
     def test_V_th_rel(self, network):
         assert network.network_params['V_th_rel'] == 15 * ureg.mV
-    
+
     def test_j(self, network):
         assert network.network_params['j'] == 0.1756 * ureg.mV
-    
+
     def test_W(self, network):
         W = [[87.8, -351.2, 87.8, -351.2, 87.8, -351.2, 87.8, -351.2]
              for i in range(network.network_params['dimension'])] * ureg.pA
         W[0][2] *= 2
         assert_array_equal(network.network_params['W'], W)
         assert_units_equal(network.network_params['W'], W)
-    
+
     def test_J(self, network):
         J = [[0.1756, -0.7024, 0.1756, -0.7024, 0.1756, -0.7024, 0.1756,
               -0.7024] for i in range(network.network_params['dimension'])
@@ -132,11 +132,11 @@ class Test_calculation_of_dependent_network_params:
                     ] * ureg.ms
         assert_array_equal(network.network_params['Delay_sd'], Delay_sd)
         assert_units_equal(network.network_params['Delay_sd'], Delay_sd)
-    
+
 
 class Test_calculation_of_dependent_analysis_params:
     """Depends strongly on analysis_params_test.yaml in tests/fixtures."""
-    
+
     def test_omegas(self, network):
         omegas = [6.28318531e-01,
                   1.89123878e+02,
@@ -152,17 +152,17 @@ class Test_calculation_of_dependent_analysis_params:
                         omegas.magnitude, 1e-5)
         assert_units_equal(network.analysis_params['omegas'].magnitude,
                            omegas.magnitude)
-    
+
     def test_k_wavenumbers(self, network):
         k_wavenumbers = [1, 11, 21, 31, 41, 51, 61, 71, 81, 91] * (1 / ureg.mm)
         assert_array_equal(network.analysis_params['k_wavenumbers'],
                            k_wavenumbers)
         assert_units_equal(network.analysis_params['k_wavenumbers'],
                            k_wavenumbers)
-    
+
 
 class Test_saving_and_loading:
-    
+
     def test_save_creates_h5_file(self, tmpdir, network):
         # create temp directory
         tmp_test = tmpdir.mkdir('tmp_test')
@@ -178,7 +178,7 @@ class Test_saving_and_loading:
         matches = list(filter(exp.match, file_names))
         # pass test if test file created
         assert any(matches)
-                
+
     def test_save_with_given_file_name(self, tmpdir, network):
         file_name = 'my_file_name.h5'
         # create temp directory
@@ -195,7 +195,7 @@ class Test_saving_and_loading:
         matches = list(filter(exp.match, file_names))
         # pass test if test file created
         assert any(matches)
-    
+
     @pytest.mark.improve
     def test_save_passed_output(self, tmpdir, network):
         """
@@ -218,7 +218,7 @@ class Test_saving_and_loading:
         matches = list(filter(exp.match, file_names))
         # pass test if test file created
         assert any(matches)
-        
+
     @pytest.mark.xfail
     def test_save_passed_output_without_key_raises_exception(self,
                                                              tmpdir,
@@ -229,7 +229,7 @@ class Test_saving_and_loading:
         with tmp_test.as_cwd():
             with pytest.raises(IOError):
                 network.save(output=output, file_name=file_name)
-        
+
     @pytest.mark.xfail
     def test_save_passed_output_without_output_raises_exception(self,
                                                                 tmpdir,
@@ -240,7 +240,7 @@ class Test_saving_and_loading:
         with tmp_test.as_cwd():
             with pytest.raises(IOError):
                 network.save(output_key=output_key, file_name=file_name)
-    
+
     @pytest.mark.xfail
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
                                                          network):
@@ -251,7 +251,7 @@ class Test_saving_and_loading:
                 network.mean_input()
                 network.save(file_name=file_name)
                 network.save(file_name=file_name)
-                
+
     @pytest.mark.improve
     @pytest.mark.xfail
     def test_save_overwrites_existing_file_if_explicitely_told(self, tmpdir,
@@ -266,10 +266,10 @@ class Test_saving_and_loading:
             network.save(file_name=file_name, overwrite=True)
             network.load(file_name=file_name)
             assert network.results['mean_input'] == new_mean
-    
-    
+
+
 class Test_meta_functions:
-        
+
     def test_show(self, network):
         assert network.show() == []
         network.mean_input()
@@ -286,7 +286,7 @@ class Test_meta_functions:
         update = dict(df=new_df)
         network.change_parameters(changed_analysis_params=update)
         assert network.analysis_params['df'] == new_df
-    
+
     @pytest.mark.xfail
     def test_extend_analysis_frequencies(self):
         raise NotImplementedError
@@ -304,7 +304,7 @@ def make_test_method_with_key(output, key):
     def test_method(self, key):
         return output
     return test_method
-        
+
 
 result_types = dict(numerical=1,
                     quantity=1 * ureg.s,
@@ -347,7 +347,7 @@ class Test_check_and_store_decorator:
         except ValueError:
             assert_array_equal(network.results['test'], result)
             assert_units_equal(network.results['test'], result)
-        
+
     @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
                              ids=result_ids)
     def test_returns_existing_result(self, mocker, network, test_method,
@@ -359,14 +359,14 @@ class Test_check_and_store_decorator:
         except ValueError:
             assert_array_equal(network.mean_input(), result)
             assert_units_equal(network.mean_input(), result)
-            
+
     def test_result_not_calculated_twice(self, mocker, network):
         mocked = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                               'firing_rates')
         network.firing_rates()
         network.firing_rates()
         mocked.assert_called_once()
-                 
+
     @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_saves_new_analysis_key_with_param_and_results(self,
@@ -374,7 +374,7 @@ class Test_check_and_store_decorator:
                                                            network,
                                                            key,
                                                            result):
-        test_method = make_test_method_with_key(result, 'test_key')
+        test_method = make_test_method_with_key(result, ['test_key'])
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         try:
@@ -382,7 +382,7 @@ class Test_check_and_store_decorator:
         except ValueError:
             assert_array_equal(network.results['test'][0], result)
             assert_units_equal(network.results['test'][0], result)
-            
+
     @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_returns_existing_analysis_key_with_param_and_results(self,
@@ -390,7 +390,7 @@ class Test_check_and_store_decorator:
                                                                   network,
                                                                   key,
                                                                   result):
-        test_method = make_test_method_with_key(result, 'test_key')
+        test_method = make_test_method_with_key(result, ['test_key'])
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         try:
@@ -398,7 +398,8 @@ class Test_check_and_store_decorator:
         except ValueError:
             assert_array_equal(network.mean_input(key), result)
             assert_units_equal(network.mean_input(key), result)
-    
+
+
     @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_saves_new_param_and_results_for_existing_analysis_key(self,
@@ -406,7 +407,7 @@ class Test_check_and_store_decorator:
                                                                    network,
                                                                    key,
                                                                    result):
-        test_method = make_test_method_with_key(result, 'test_key')
+        test_method = make_test_method_with_key(result, ['test_key'])
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         network.mean_input(2 * key)
@@ -415,11 +416,11 @@ class Test_check_and_store_decorator:
         except ValueError:
             assert_array_equal(network.results['test'][1], result)
             assert_units_equal(network.results['test'][1], result)
-        
+
     def test_returns_existing_key_param_results_for_second_param(self,
                                                                  mocker,
                                                                  network):
-        @lmt.Network._check_and_store('test', 'test_key')
+        @lmt.Network._check_and_store('test', ['test_key'])
         def test_method(self, key):
             return key
         mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
@@ -427,7 +428,7 @@ class Test_check_and_store_decorator:
         network.mean_input(omegas[0])
         network.mean_input(omegas[1])
         assert network.mean_input(omegas[1]) == omegas[1]
-    
+
     def test_result_not_calculated_twice_for_same_key(self,
                                                       mocker,
                                                       network):
@@ -436,7 +437,7 @@ class Test_check_and_store_decorator:
         network.delay_dist_matrix(10 * ureg.Hz)
         network.delay_dist_matrix(10 * ureg.Hz)
         mocked.assert_called_once()
-    
+
     def test_result_not_calculated_twice_for_second_key(self,
                                                         mocker,
                                                         network):
@@ -446,11 +447,11 @@ class Test_check_and_store_decorator:
         network.delay_dist_matrix(11 * ureg.Hz)
         network.delay_dist_matrix(11 * ureg.Hz)
         assert mocked.call_count == 2
-    
+
     def test_result_calculated_twice_for_differing_keys(self,
                                                         mocker,
                                                         network):
-        @lmt.Network._check_and_store('test', 'test_key')
+        @lmt.Network._check_and_store('test', ['test_key'])
         def test_method(self, key):
             return key
         mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
@@ -462,19 +463,19 @@ class Test_check_and_store_decorator:
 
 
 class Test_functionality:
-    
+
     def test_firing_rates_calls_correctly(self, network, mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.firing_rates')
         network.firing_rates()
         mock.assert_called_once()
-    
+
     def test_mean_input_calls_correctly(self, network, mocker):
         mock_mean = mocker.patch('lif_meanfield_tools.meanfield_calcs.mean')
         mock_fr = mocker.patch('lif_meanfield_tools.Network.firing_rates')
         network.mean_input()
         mock_mean.assert_called_once()
         mock_fr.assert_called_once()
-    
+
     def test_std_input_calls_correctly(self, network, mocker):
         mock_std = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                 'standard_deviation')
@@ -482,7 +483,7 @@ class Test_functionality:
         network.std_input()
         mock_std.assert_called_once()
         mock_fr.assert_called_once()
-        
+
     def test_working_point_calls_calls_correctly(self, network, mocker):
         mock_fr = mocker.patch('lif_meanfield_tools.Network.firing_rates')
         mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
@@ -491,7 +492,7 @@ class Test_functionality:
         mock_mean.assert_called_once()
         mock_std.assert_called_once()
         mock_fr.assert_called_once()
-        
+
     def test_delay_dist_matrix_calls_delay_dist_matrix_multi(self,
                                                              network,
                                                              mocker):
@@ -499,7 +500,7 @@ class Test_functionality:
                             'delay_dist_matrix_multi')
         network.delay_dist_matrix()
         mock.assert_called_once()
-        
+
     def test_delay_dist_matrix_calls_delay_dist_matrix_single(self,
                                                               network,
                                                               mocker):
@@ -507,19 +508,19 @@ class Test_functionality:
                             'delay_dist_matrix_single')
         network.delay_dist_matrix(1 * ureg.Hz)
         mock.assert_called_once()
-        
+
     def test_delay_dist_matrix_multi_calls_correctly(self, network, mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                             'delay_dist_matrix')
         network.delay_dist_matrix_multi()
         mock.assert_called_once()
-        
+
     def test_delay_dist_matrix_single_calls_correctly(self, network, mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                             'delay_dist_matrix')
         network.delay_dist_matrix_single(1 * ureg.Hz)
         mock.assert_called_once()
-        
+
     def test_transfer_function_calls_transfer_function_multi(self,
                                                              network,
                                                              mocker):
@@ -527,7 +528,7 @@ class Test_functionality:
                             'transfer_function_multi')
         network.transfer_function()
         mock.assert_called_once()
-        
+
     def test_transfer_function_calls_transfer_function_single(self,
                                                               network,
                                                               mocker):
@@ -535,7 +536,7 @@ class Test_functionality:
                             'transfer_function_single')
         network.transfer_function(1 * ureg.Hz)
         mock.assert_called_once()
-        
+
     def test_transfer_function_multi_calls_correctly(self, network, mocker):
         mock_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                'transfer_function')
@@ -545,7 +546,7 @@ class Test_functionality:
         mock_tf.assert_called_once()
         mock_mean.assert_called_once()
         mock_std.assert_called_once()
-        
+
     def test_transfer_function_single_calls_correctly(self, network, mocker):
         mock_tf = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                'transfer_function')
@@ -555,7 +556,7 @@ class Test_functionality:
         mock_tf.assert_called_once()
         mock_mean.assert_called_once()
         mock_std.assert_called_once()
-        
+
     def test_sensitivity_measure_calls_correctly(self, network, mocker):
         mock_mean = mocker.patch('lif_meanfield_tools.Network.mean_input')
         mock_std = mocker.patch('lif_meanfield_tools.Network.std_input')
@@ -571,7 +572,7 @@ class Test_functionality:
         mock_sm.assert_called_once()
         mock_tf.assert_called_once()
         mock_dd.assert_called_once()
-        
+
     def test_transfer_function_is_conjugated_if_omega_negative(self, network,
                                                                mocker):
         mocker.patch('lif_meanfield_tools.Network.mean_input')
@@ -586,7 +587,7 @@ class Test_functionality:
         mock_tf.return_value = tf
         network.sensitivity_measure(- 1 * ureg.Hz)
         assert_array_equal(mock_sm.call_args[0][0], np.conjugate(tf))
-        
+
     def test_power_spectra_calls_correctly(self, network, mocker):
         mock_ps = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                'power_spectra')
@@ -598,7 +599,7 @@ class Test_functionality:
         mock_fr.assert_called_once()
         mock_dd.assert_called_once()
         mock_tf.assert_called_once()
-        
+
     def test_eigenvalue_spectra_calls_correctly(self, network, mocker):
         mock_es = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                'eigen_spectra')
@@ -608,7 +609,7 @@ class Test_functionality:
         mock_es.assert_called_once()
         mock_dd.assert_called_once()
         mock_tf.assert_called_once()
-        
+
     def test_r_eigenvec_spectra_calls_correctly(self, network, mocker):
         mock_es = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                'eigen_spectra')
@@ -618,7 +619,7 @@ class Test_functionality:
         mock_es.assert_called_once()
         mock_dd.assert_called_once()
         mock_tf.assert_called_once()
-        
+
     def test_l_eigenvec_spectra_calls_correctly(self, network, mocker):
         mock_es = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                                'eigen_spectra')
@@ -628,7 +629,7 @@ class Test_functionality:
         mock_es.assert_called_once()
         mock_dd.assert_called_once()
         mock_tf.assert_called_once()
-        
+
     def test_additional_rates_for_fixed_input_calls_correctly(self, network,
                                                               mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
@@ -636,7 +637,7 @@ class Test_functionality:
         mock.return_value = 1, 2
         network.additional_rates_for_fixed_input(1 * ureg.Hz, 2 * ureg.Hz)
         mock.assert_called_once()
-        
+
     def test_fit_transfer_function_calls_correctly(self, network, mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
                             'fit_transfer_function')
@@ -653,7 +654,7 @@ class Test_functionality:
         mock_tf.assert_called_once()
         mock_mean.assert_called_once()
         mock_std.assert_called_once()
-        
+
     def test_scan_fit_transfer_function_mean_std_input_calls_correctly(self,
                                                                        network,
                                                                        mocker):
@@ -662,7 +663,7 @@ class Test_functionality:
         mock.return_value = 1, 2
         network.scan_fit_transfer_function_mean_std_input(1, 2)
         mock.assert_called_once()
-        
+
     def test_linear_interpolation_alpha_called_correctly(self, network,
                                                          mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
@@ -674,7 +675,7 @@ class Test_functionality:
         mock.assert_called_once()
         mock_mean.assert_called_once()
         mock_std.assert_called_once()
-        
+
     @pytest.mark.xfail
     def test_compute_profile_characteristics_called_correctly(self, network,
                                                               mocker):
