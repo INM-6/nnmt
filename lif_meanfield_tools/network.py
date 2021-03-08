@@ -126,6 +126,8 @@ class Network(object):
 
         # empty results
         self.results = {}
+        self.results_hash_dict = {}
+        self.analysis_params_hash_dict = {}
 
         # TODO: LOAD RESULTS ONLY IF THE ANALYSIS PARAMS ARE THE SAME
         # OTHERWISE DANGER THAT EITHER ANALYSIS PARAMS GET OVERWRITTEN OR DON'T
@@ -231,7 +233,7 @@ class Network(object):
 
         return derived_params
 
-    def _check_and_store(result_key, analysis_key=''):
+    def _check_and_store_old(result_key, analysis_key=''):
         """
         Decorator function that checks whether result are already existing.
 
@@ -338,6 +340,88 @@ class Network(object):
                     return results[result_key]
 
             # return wrapper_check_and_store
+        return decorator_check_and_store
+
+    def _check_and_store(result_key, analysis_keys=None):
+        """
+        Decorator function that checks whether result are already existing.
+
+        This decorator serves as a wrapper for functions that calculate
+        quantities which are to be stored in self.results. First it checks,
+        whether the result already has been stored in self.results. If this is
+        the case, it returns that result. If not, the calculation is executed,
+        the result is stored in self.results and the result is returned.
+        Additionally results are stored in self.results_hash_dict to simplify
+        searching.
+
+        If the wrapped function gets additional parameters passed, one should
+        also include an analysis key, under which the new analysis parameters
+        should be stored in the dictionary self.analysis_params. Then, the
+        decorator first checks, whether the given parameters have been used
+        before and returns the corresponding results.
+
+        Parameters:
+        -----------
+        result_key: str
+            Specifies under which key the result should be stored.
+        analysis_key: list
+            Specifies under which key the analysis_parameters should be stored.
+
+        Returns:
+        --------
+        func
+            decorator function
+        """
+
+        @decorator
+        def decorator_check_and_store(func, self, *args, **kwargs):
+            """ Decorator with given parameters, returns expected results. """
+            # collect analysis_params
+            analysis_params = getattr(self, 'analysis_params')
+            analysis_params_hash_dict = getattr(self, 'analysis_params_hash_dict')
+
+            # collect results
+            results = getattr(self, 'results')
+            results_hash_dict = getattr(self, 'results_hash_dict')
+
+            # convert new params to list
+            new_params = []
+            if not analysis_keys is None:
+                for i, key in enumerate(analysis_keys):
+                    new_params.append(args[i])
+
+            # calculate hash from result and analysis keys and analysis params
+            h = hash(str(result_key) + str(analysis_keys) + str(new_params))
+            # check if hash exists and return existing result if true
+            if h in results_hash_dict.keys():
+                return results_hash_dict[h]
+            else:
+                # if not, calculate new result
+                result = func(self, *args, **kwargs)
+                analysis_params_hash_dict[h] = new_params
+
+                # store keys and results and update dictionaries
+                if analysis_keys:
+                    for key, param in zip(analysis_keys, new_params):
+                        if key in analysis_params.keys():
+                            analysis_params[key].append(param)
+                            results[result_key].append(result)
+                        else:
+                            analysis_params[key] = [param]
+                            results[result_key] = [result]
+                else:
+                    results[result_key] = result
+                results_hash_dict[h] = result
+
+                # update self.results and self.results_hash_dict
+                setattr(self, 'results', results)
+                setattr(self, 'results_hash_dict', results_hash_dict)
+                setattr(self, 'analysis_params', analysis_params)
+                setattr(self, 'analysis_params_hash_dict', analysis_params_hash_dict)
+
+                # return new_result
+                return result
+
         return decorator_check_and_store
 
     def save(self, output_key='', output={}, file_name=''):
@@ -521,7 +605,7 @@ class Network(object):
             self.network_params['delay_dist'],
             self.analysis_params['omegas'])
 
-    @_check_and_store('delay_dist_single', 'delay_dist_freqs')
+    @_check_and_store('delay_dist_single', ['delay_dist_freqs'])
     def delay_dist_matrix_single(self, omega):
         """
         Calculates delay distribution matrix for one omega.
@@ -589,7 +673,7 @@ class Network(object):
 
         return transfer_functions
 
-    @_check_and_store('transfer_function_single', 'transfer_freqs')
+    @_check_and_store('transfer_function_single', ['transfer_freqs'])
     def transfer_function_single(self, freq, method='shift'):
         """
         Calculates transfer function for each population.
@@ -616,7 +700,7 @@ class Network(object):
 
         return transfer_functions
 
-    @_check_and_store('sensitivity_measure', 'sensitivity_freqs')
+    @_check_and_store('sensitivity_measure', ['sensitivity_freqs'])
     def sensitivity_measure(self, freq, method='shift'):
         """
         Calculates the sensitivity measure for the given frequency.
@@ -687,7 +771,7 @@ class Network(object):
             self.transfer_function(method=method),
             self.analysis_params['omegas'])
 
-    @_check_and_store('eigenvalue_spectra', 'eigenvalue_matrix')
+    @_check_and_store('eigenvalue_spectra', ['eigenvalue_matrix'])
     def eigenvalue_spectra(self, matrix, method='shift'):
         """
         Calculates the eigenvalues of the specified matrix at given frequency.
@@ -716,7 +800,7 @@ class Network(object):
             'eigvals',
             matrix)
 
-    @_check_and_store('r_eigenvec_spectra', 'r_eigenvec_matrix')
+    @_check_and_store('r_eigenvec_spectra', ['r_eigenvec_matrix'])
     def r_eigenvec_spectra(self, matrix):
         """
         Calculates the right eigenvecs of the specified matrix at given freq.
@@ -745,7 +829,7 @@ class Network(object):
             'reigvecs',
             matrix)
 
-    @_check_and_store('l_eigenvec_spectra', 'l_eigenvec_matrix')
+    @_check_and_store('l_eigenvec_spectra', ['l_eigenvec_matrix'])
     def l_eigenvec_spectra(self, matrix):
         """
         Calculates the left eigenvecs of the specified matrix at given freq.
