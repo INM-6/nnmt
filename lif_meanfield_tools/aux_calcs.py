@@ -29,35 +29,9 @@ from scipy.integrate import quad
 from scipy.special import erf, zetac, lambertw
 import numpy as np
 import mpmath
-import warnings
 
 from . import ureg
-
-
-def check_if_positive(parameters, parameter_names):
-    """Check that will raise an error if parameters are negative."""
-    for parameter, parameter_name in zip(parameters, parameter_names):
-        try:
-            if any(p < 0 for p in parameter):
-                raise ValueError('{} should be larger than zero!'.format(
-                    parameter_name))
-        except TypeError:
-            if parameter < 0:
-                raise ValueError('{} should be larger than zero!'.format(
-                    parameter_name))
-
-
-def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
-    """ Check whether we are in fast synaptic regime."""
-    k = np.sqrt(tau_s / tau_m)
-    if (0.1 < k) & (k < 1):
-        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
-                     'calculation of firing rates via Taylor expansion!'
-                     ).format(k)
-        warnings.warn(k_warning)
-    if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of '
-                         'firing rates via Taylor expansion!')
+from .utils import check_if_positive, check_for_valid_k_in_fast_synaptic_regime
 
 
 @ureg.wraps(ureg.Hz,

@@ -48,6 +48,7 @@ from decorator import decorator
 from . import ureg
 from . import input_output as io
 from . import meanfield_calcs
+from .utils import pint_append, pint_array_of_dimension_plus_one
 
 
 class Network(object):
@@ -268,40 +269,6 @@ class Network(object):
         func
             decorator function
         """
-        
-        def pint_append(array, quantity, axis=0):
-            """
-            Append quantity to np.array quantity. Handles units correctly.
-            
-            Parameters:
-            -----------
-            array: pint Quantity with np.array magnitude or just np.array
-                Array to which quantity should be appended.
-            quantity: pint Quantity or just something unitless
-                Quantity which should be appended to array.
-            axis: num
-                Axis along which to append quantity to array.
-                
-            Returns:
-            --------
-            pint Quantity with np.array magnitude
-            """
-            if isinstance(quantity, ureg.Quantity):
-                return np.append(array.magnitude,
-                                 [quantity.magnitude],
-                                 axis=axis) * array.units
-            else:
-                return np.append(array, [quantity], axis=axis)
-            
-        def pint_array_of_dimension_plus_one(quantity):
-            """
-            Create quantity with magnitude np.array with one more dimension.
-            than quantity. Handles units correctly.
-            """
-            if isinstance(quantity, ureg.Quantity):
-                return np.array([quantity.magnitude]) * quantity.units
-            else:
-                return np.array([quantity])
 
         @decorator
         def decorator_check_and_store(func, self, *args, **kwargs):

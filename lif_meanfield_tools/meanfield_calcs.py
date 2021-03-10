@@ -47,8 +47,10 @@ from scipy.special import zetac, erf
 
 from . import ureg
 from . import aux_calcs
+from .utils import check_positive_params
 
 
+@check_positive_params
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
                       ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
@@ -125,6 +127,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     return y[1]
 
 
+@check_positive_params
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
                       None, ureg.Hz, ureg.Hz))
 def mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
@@ -178,6 +181,7 @@ def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     return m
 
 
+@check_positive_params
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,
                       None, ureg.Hz, ureg.Hz))
 def standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
@@ -235,6 +239,7 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
     return sigma
 
 
+@check_positive_params
 @ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                 ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -311,6 +316,7 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
+@check_positive_params
 @ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                 ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -398,6 +404,7 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
+@check_positive_params
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omegas, method='shift', synaptic_filter=True):
     """
@@ -459,6 +466,7 @@ def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     return tf_magnitudes * tf_unit
 
 
+@check_positive_params
 @ureg.wraps(ureg.dimensionless, (None, ureg.s, ureg.s, None, ureg.Hz))
 def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
     '''
@@ -582,6 +590,7 @@ def _effective_connectivity_rate(omega, tau, W_rate, delay_term=1):
     return eff_conn
 
 
+@check_positive_params
 @ureg.wraps(ureg.dimensionless, (ureg.Hz / ureg.mV, ureg.dimensionless,
                                  ureg.mV, None, ureg.s, ureg.s, None, ureg.Hz))
 def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m,
@@ -630,6 +639,7 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m,
     return T
 
 
+@check_positive_params
 @ureg.wraps(ureg.Hz, (ureg.s, ureg.s, None, ureg.mV, None, ureg.dimensionless,
                       None, ureg.Hz, ureg.Hz / ureg.mV, ureg.Hz))
 def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
@@ -691,6 +701,7 @@ def power_spectra(tau_m, tau_s, dimension, J, K, delay_dist_matrix, N,
     return np.transpose(power)
 
 
+@check_positive_params
 @ureg.wraps(ureg.dimensionless, (ureg.s, ureg.s, ureg.Hz / ureg.mV, None, None,
                                  ureg.mV, None, ureg.Hz, None, None))
 def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
@@ -771,6 +782,7 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
     return np.transpose(eig)
 
 
+@check_positive_params
 @ureg.wraps((ureg.Hz, ureg.Hz), (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                  ureg.mV, ureg.mV,
                                  None, ureg.mV, ureg.mV, ureg.Hz, None, None))
@@ -849,6 +861,7 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     return nu_e_ext, nu_i_ext
 
 
+@check_positive_params
 @ureg.wraps((ureg.ms, None, None, ureg.Hz / ureg.mV),
             (ureg.Hz / ureg.mV, ureg.Hz, ureg.s, ureg.mV, None))
 def fit_transfer_function(transfer_function, omegas, tau_m, J, K):
@@ -1002,6 +1015,7 @@ def scan_fit_transfer_function_mean_std_input(mean_inputs, std_inputs,
     return errs_tau, errs_h0
 
 
+@check_positive_params
 @ureg.wraps(None, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV,
                    ureg.mV))
 def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
@@ -1046,6 +1060,7 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
     return w_ecs
 
 
+@check_positive_params
 @ureg.wraps((None, (1 / ureg.s).units, (1 / ureg.s).units, (1 / ureg.m).units,
              (1 / ureg.s).units, (1 / ureg.s).units),
             ((1 / ureg.m).units, None, ureg.s, None, ureg.m, ureg.s, ureg.s,
