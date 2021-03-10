@@ -310,22 +310,14 @@ result_types = dict(numerical=1,
                     quantity=1 * ureg.s,
                     array=np.array([1, 2, 3]),
                     quantity_array=np.array([1, 2, 3]) * ureg.s,
-                    list_of_quantities=[1 * ureg.s, 2 * ureg.s, 3 * ureg.s],
                     two_d_array=np.arange(9).reshape(3, 3),
                     two_d_quantity_array=np.arange(9).reshape(3, 3) * ureg.s,
-                    two_d_list_of_quantites=[[i * ureg.s for i in range(3)]
-                                             for j in range(3)],
-                    tuple_of_quantity_arrays=(np.array([1, 2, 3]) * ureg.s,
-                                              np.array([4, 5, 6]) * ureg.m),
                     )
 analysis_key_types = dict(numerical=1,
                           quantity=1 * ureg.s,
                           string='test_string',
                           array=np.array([1, 2, 3]),
                           quantity_array=np.array([1, 2, 3]) * ureg.s,
-                          list_of_quantities=[1 * ureg.s,
-                                              2 * ureg.s,
-                                              3 * ureg.s],
                           )
 result_ids = sorted(result_types.keys())
 key_names = sorted(analysis_key_types.keys())

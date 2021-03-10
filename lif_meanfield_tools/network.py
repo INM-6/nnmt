@@ -42,7 +42,6 @@ _check_and_store
 """
 
 from __future__ import print_function
-import collections
 import numpy as np
 from decorator import decorator
 
@@ -233,115 +232,6 @@ class Network(object):
 
         return derived_params
 
-    def _check_and_store_old(result_key, analysis_key=''):
-        """
-        Decorator function that checks whether result are already existing.
-
-        This decorator serves as a wrapper for functions that calculate
-        quantities which are to be stored in self.results. First it checks,
-        whether the result already has been stored in self.results. If this is
-        the case, it returns that result. If not, the calculation is executed,
-        the result is stored in self.results and the result is returned.
-
-        If the wrapped function gets additional parameters passed, one should
-        also include an analysis key, under which the new analysis parameters
-        should be stored in the dictionary self.analysis_params. Then, the
-        decorator first checks, whether the given parameters have been used
-        before and returns the corresponding results.
-
-        Parameters:
-        -----------
-        result_key: str
-            Specifies under which key the result should be stored.
-        analysis_key: str
-            Specifies under which key the analysis_parameter should be stored.
-
-        Returns:
-        --------
-        func
-            decorator function
-        """
-        @decorator
-        def decorator_check_and_store(func, self, *args, **kwargs):
-            """ Decorator with given parameters, returns expected results. """
-            # collect analysis_params
-            analysis_params = getattr(self, 'analysis_params')
-            # collect results
-            results = getattr(self, 'results')
-
-            if analysis_key:
-                # collect input
-                analysis_param = args[0]
-                # are analysis_keys and analysis_params already existing?
-                if analysis_key in analysis_params.keys():
-                    if analysis_param in analysis_params[analysis_key]:
-                        # get index of analysis_key
-                        if (isinstance(analysis_param, collections.Iterable)
-                            and not isinstance(analysis_param, str)):
-                            index = [i for i, param in enumerate(analysis_params[analysis_key])
-                                     if (param==analysis_param).all()][0]
-                        else:
-                            index = list(analysis_params[analysis_key]
-                                         ).index(analysis_param)
-                        # return corresponding result
-                        return results[result_key][index]
-                    else:
-                        # store analysis_param in corresponding list
-                        if isinstance(analysis_param, ureg.Quantity):
-                            analysis_params[analysis_key] = (
-                                np.append(
-                                    analysis_params[analysis_key].magnitude,
-                                    analysis_param.magnitude)
-                                * analysis_param.units)
-                        else:
-                            analysis_params[analysis_key] = (
-                                np.append(analysis_params[analysis_key],
-                                          analysis_param))
-
-                        setattr(self, 'analysis_params', analysis_params)
-                        # calculate new results
-                        new_result = func(self, *args, **kwargs)
-                        # save new results
-                        results[result_key] = list(results[result_key])
-                        results[result_key].append(new_result)
-                        setattr(self, 'results', results)
-                        # return new result
-                        return new_result
-
-                else:
-                    # store analysis_params
-                    if isinstance(analysis_param, ureg.Quantity):
-                        analysis_params[analysis_key] = (
-                            np.array([analysis_param.magnitude])
-                            * analysis_param.units)
-                    else:
-                        analysis_params[analysis_key] = (
-                            np.array([analysis_param]))
-                    setattr(self, 'analysis_params', analysis_params)
-                    # calculate new results
-                    new_result = func(self, *args, **kwargs)
-                    results[result_key] = [new_result]
-                    # save new results
-                    setattr(self, 'results', results)
-                    # return new result
-                    return new_result
-
-            else:
-                # check if new result is already stored in self.results
-                if result_key in results.keys():
-                    # if so, return already calcualted result
-                    return results[result_key]
-                else:
-                    # if not, calculate new result
-                    results[result_key] = func(self, *args, **kwargs)
-                    # update self.results
-                    setattr(self, 'results', results)
-                    # return new_result
-                    return results[result_key]
-
-            # return wrapper_check_and_store
-        return decorator_check_and_store
-
     def _check_and_store(result_key, analysis_keys=None):
         """
         Decorator function that checks whether result are already existing.
@@ -359,6 +249,12 @@ class Network(object):
         should be stored in the dictionary self.analysis_params. Then, the
         decorator first checks, whether the given parameters have been used
         before and returns the corresponding results.
+        
+        This function can only handle unitless objects or quantities. Lists or
+        arrays of quantites are not allowed. Use quantity arrays instead (a
+        quantity with array magnitude and a unit).
+
+        TODO: Implement possibility to pass list of result_keys
 
         Parameters:
         -----------
@@ -372,13 +268,48 @@ class Network(object):
         func
             decorator function
         """
+        
+        def pint_append(array, quantity, axis=0):
+            """
+            Append quantity to np.array quantity. Handles units correctly.
+            
+            Parameters:
+            -----------
+            array: pint Quantity with np.array magnitude or just np.array
+                Array to which quantity should be appended.
+            quantity: pint Quantity or just something unitless
+                Quantity which should be appended to array.
+            axis: num
+                Axis along which to append quantity to array.
+                
+            Returns:
+            --------
+            pint Quantity with np.array magnitude
+            """
+            if isinstance(quantity, ureg.Quantity):
+                return np.append(array.magnitude,
+                                 [quantity.magnitude],
+                                 axis=axis) * array.units
+            else:
+                return np.append(array, [quantity], axis=axis)
+            
+        def pint_array_of_dimension_plus_one(quantity):
+            """
+            Create quantity with magnitude np.array with one more dimension.
+            than quantity. Handles units correctly.
+            """
+            if isinstance(quantity, ureg.Quantity):
+                return np.array([quantity.magnitude]) * quantity.units
+            else:
+                return np.array([quantity])
 
         @decorator
         def decorator_check_and_store(func, self, *args, **kwargs):
             """ Decorator with given parameters, returns expected results. """
             # collect analysis_params
             analysis_params = getattr(self, 'analysis_params')
-            analysis_params_hash_dict = getattr(self, 'analysis_params_hash_dict')
+            analysis_params_hash_dict = getattr(self,
+                                                'analysis_params_hash_dict')
 
             # collect results
             results = getattr(self, 'results')
@@ -386,7 +317,7 @@ class Network(object):
 
             # convert new params to list
             new_params = []
-            if not analysis_keys is None:
+            if analysis_keys is not None:
                 for i, key in enumerate(analysis_keys):
                     new_params.append(args[i])
 
@@ -404,11 +335,15 @@ class Network(object):
                 if analysis_keys:
                     for key, param in zip(analysis_keys, new_params):
                         if key in analysis_params.keys():
-                            analysis_params[key].append(param)
-                            results[result_key].append(result)
+                            analysis_params[key] = (
+                                pint_append(analysis_params[key], param))
+                            results[result_key] = (
+                                pint_append(results[result_key], result))
                         else:
-                            analysis_params[key] = [param]
-                            results[result_key] = [result]
+                            analysis_params[key] = (
+                                pint_array_of_dimension_plus_one(param))
+                            results[result_key] = (
+                                pint_array_of_dimension_plus_one(result))
                 else:
                     results[result_key] = result
                 results_hash_dict[h] = result
@@ -417,13 +352,14 @@ class Network(object):
                 setattr(self, 'results', results)
                 setattr(self, 'results_hash_dict', results_hash_dict)
                 setattr(self, 'analysis_params', analysis_params)
-                setattr(self, 'analysis_params_hash_dict', analysis_params_hash_dict)
+                setattr(self, 'analysis_params_hash_dict',
+                        analysis_params_hash_dict)
 
                 # return new_result
                 return result
 
         return decorator_check_and_store
-
+    
     def save(self, output_key='', output={}, file_name=''):
         """
         Saves results and parameters to h5 file. If output is specified, this
@@ -648,7 +584,7 @@ class Network(object):
         else:
             return self.transfer_function_single(freq, method)
 
-    @_check_and_store('transfer_function')
+    @_check_and_store('transfer_function', ['transfer_multi_method'])
     def transfer_function_multi(self, method='shift'):
         """
         Calculates transfer function for each population.
@@ -673,7 +609,8 @@ class Network(object):
 
         return transfer_functions
 
-    @_check_and_store('transfer_function_single', ['transfer_freqs'])
+    @_check_and_store('transfer_function_single', ['transfer_freqs',
+                                                   'transfer_single_method'])
     def transfer_function_single(self, freq, method='shift'):
         """
         Calculates transfer function for each population.
