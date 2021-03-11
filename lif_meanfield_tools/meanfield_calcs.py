@@ -47,7 +47,7 @@ from scipy.special import zetac, erf
 
 from . import ureg
 from . import aux_calcs
-from .utils import check_positive_params
+from .utils import check_positive_params, check_k_in_fast_synaptic_regime
 
 
 @check_positive_params
@@ -239,6 +239,7 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
     return sigma
 
 
+@check_k_in_fast_synaptic_regime
 @check_positive_params
 @ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                 ureg.mV, ureg.mV, ureg.Hz, None))
@@ -277,17 +278,6 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     --------
     Quantity(float, 'hertz/millivolt')
     """
-
-    k = np.sqrt(tau_s / tau_m)
-    if (0.1 < k) & (k < 1):
-        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
-                     'calculation of firing rates via Taylor expansion!'
-                     ).format(k)
-        warnings.warn(k_warning)
-    if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation '
-                         'of firing rates via Taylor expansion!')
-
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.abs(omega - 0.) < 1e-15:
@@ -316,6 +306,7 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
+@check_k_in_fast_synaptic_regime
 @check_positive_params
 @ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                 ureg.mV, ureg.mV, ureg.Hz, None))
@@ -365,17 +356,6 @@ def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                 V_0_rel, omega, synaptic_filter=True):
     """ Compute transfer_function_1p_shift() without quantities """
-    
-    k = np.sqrt(tau_s / tau_m)
-    if (0.1 < k) & (k < 1):
-        k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
-                     'calculation of firing rates via Taylor expansion!'
-                     ).format(k)
-        warnings.warn(k_warning)
-    if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation '
-                         'of firing rates via Taylor expansion!')
-
     # effective threshold and reset
     alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
     V_th_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
@@ -404,6 +384,7 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
+@check_k_in_fast_synaptic_regime
 @check_positive_params
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omegas, method='shift', synaptic_filter=True):
