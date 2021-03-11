@@ -161,12 +161,6 @@ class Test_sensitivity_measure:
         check_pos_params_neg_raise_exception(self.func, std_params,
                                              pos_keys)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-        
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
-
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
@@ -185,12 +179,6 @@ class Test_power_spectra:
         check_pos_params_neg_raise_exception(self.func, std_params,
                                              pos_keys)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-        
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
-
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
@@ -207,15 +195,6 @@ class Test_eigen_spectra_eval:
         check_pos_params_neg_raise_exception(self.func,
                                              std_params_eval_spectra,
                                              pos_keys)
-
-    def test_warning_is_given_if_k_is_critical(self, std_params_eval_spectra):
-        check_warning_is_given_if_k_is_critical(self.func,
-                                                std_params_eval_spectra)
-
-    def test_exception_is_raised_if_k_is_too_large(self,
-                                                   std_params_eval_spectra):
-        check_exception_is_raised_if_k_is_too_large(self.func,
-                                                    std_params_eval_spectra)
 
     def test_exception_is_raised_if_prop_is_singular_and_inv_prop_is_requested(
             self, output_test_fixtures):
@@ -327,12 +306,6 @@ class Test_additional_rates_for_fixed_input:
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     @pytest.mark.parametrize('key', [0, 1],
                              ids=['nu_e_ext', 'nu_i_ext'])
