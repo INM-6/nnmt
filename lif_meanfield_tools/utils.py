@@ -72,6 +72,23 @@ def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
     if 1 <= k:
         raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of '
                          'firing rates via Taylor expansion!')
+        
+        
+def check_k_in_fast_synaptic_regime(func):
+    @wraps(func)
+    def decorator_check(*args, **kwargs):
+        signature = inspect.signature(func)
+        if len(args) != 0:
+            tau_m = [args[i] for i, param in enumerate(signature.parameters)
+                     if param == 'tau_m'][0]
+            tau_s = [args[i] for i, param in enumerate(signature.parameters)
+                     if param == 'tau_s'][0]
+        else:
+            tau_m = kwargs['tau_m']
+            tau_s = kwargs['tau_s']
+        check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
+        return func(*args, **kwargs)
+    return decorator_check
 
 
 def pint_append(array, quantity, axis=0):
