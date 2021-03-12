@@ -168,6 +168,50 @@ def create_hash(params, param_keys):
     return hl.md5(label.encode('utf-8')).hexdigest()
 
 
+def save_hash_dict(file_name, hash_dict):
+    """
+    Saves results_hash_dict to h5 file and handles quantity conversion.
+    
+    Parameters:
+    -----------
+    file_name: str
+        Name of output file. Should not already exists.
+    hash_dict: dict
+        results_hash_dict of Network object.
+    """
+    for hash, result in hash_dict.items():
+        if 'analysis_params' in result.keys():
+            result['analysis_params'] = quantities_to_val_unit(
+                result['analysis_params'])
+        hash_dict[hash] = quantities_to_val_unit(result)
+    h5.save(file_name, hash_dict, overwrite_dataset=False)
+    
+    
+def load_hash_dict(file_name):
+    """
+    Loads results_hash_dict from h5 file and handles quantity conversion.
+    
+    Parameters:
+    -----------
+    file_name: str
+        Name of input file that contains results_hash_dict of Network object.
+    """
+    try:
+        hash_dict = h5.load(file_name)
+    # if not existing OSError is raised by h5py_wrapper, then return empty dict
+    except OSError:
+        print(f'File {file_name} not found!')
+        hash_dict = {}
+        
+    for hash, result in hash_dict.items():
+        result = val_unit_to_quantities(result)
+        if 'analysis_params' in result.keys():
+            result['analysis_params'] = val_unit_to_quantities(
+                result['analysis_params'])
+        hash_dict[hash] = result
+    return hash_dict
+
+
 def save(output_key, output, file_name):
     """
     Save data and given parameters in h5 file.
@@ -186,10 +230,6 @@ def save(output_key, output, file_name):
         Dictionary containing analysis parameters as quantities.
     file_name: str
         String specifying output file name.
-
-    Returns:
-    --------
-    None
     """
     # convert data into format usable in h5 file
     output = quantities_to_val_unit(output)
