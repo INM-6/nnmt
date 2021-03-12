@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 
-from .checks import assert_units_equal
+from .checks import assert_units_equal, check_quantity_dicts_are_equal
 
 import lif_meanfield_tools as lmt
 
@@ -169,9 +169,9 @@ class Test_saving_and_loading:
         # calculate and save mean_input in tmp dir
         with tmp_test.as_cwd():
             network.mean_input()
-            network.save()
+            network.save('test.h5')
         # results file name expression
-        exp = re.compile(r'.*microcircuit.*\.h5')
+        exp = re.compile(r'.*\.h5')
         # file names in tmp dir
         file_names = [str(obj) for obj in tmp_test.listdir()]
         # file names matching exp
@@ -196,7 +196,7 @@ class Test_saving_and_loading:
         # pass test if test file created
         assert any(matches)
 
-    @pytest.mark.improve
+    @pytest.mark.xfail
     def test_save_passed_output(self, tmpdir, network):
         """
         This checks if some file is created, but doesn't check its content!
@@ -370,10 +370,10 @@ class Test_check_and_store_decorator:
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(key)
         try:
-            assert network.results['test'][0] == result
+            assert network.results['test'] == result
         except ValueError:
-            assert_array_equal(network.results['test'][0], result)
-            assert_units_equal(network.results['test'][0], result)
+            assert_array_equal(network.results['test'], result)
+            assert_units_equal(network.results['test'], result)
 
     @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
@@ -404,10 +404,10 @@ class Test_check_and_store_decorator:
         network.mean_input(key)
         network.mean_input(2 * key)
         try:
-            assert network.results['test'][1] == result
+            assert network.results['test'] == result
         except ValueError:
-            assert_array_equal(network.results['test'][1], result)
-            assert_units_equal(network.results['test'][1], result)
+            assert_array_equal(network.results['test'], result)
+            assert_units_equal(network.results['test'], result)
 
     def test_returns_existing_key_param_results_for_second_param(self,
                                                                  mocker,
@@ -450,10 +450,31 @@ class Test_check_and_store_decorator:
         omegas = [10 * ureg.Hz, 11 * ureg.Hz]
         network.mean_input(omegas[0])
         network.mean_input(omegas[1])
-        assert len(network.analysis_params['test_key']) == 2
-        assert len(network.results['test']) == 2
-
-
+        assert len(network.results_hash_dict) == 2
+        
+    def test_updates_results_and_analysis_params(self, mocker, network):
+        @lmt.Network._check_and_store('test', ['test_key'])
+        def test_method(self, key):
+            return key
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        omegas = [10 * ureg.Hz, 11 * ureg.Hz]
+        network.mean_input(omegas[0])
+        results0 = network.results.copy()
+        analysis_params0 = network.analysis_params.copy()
+        network.mean_input(omegas[1])
+        results1 = network.results.copy()
+        analysis_params1 = network.analysis_params.copy()
+        network.mean_input(omegas[0])
+        results2 = network.results.copy()
+        analysis_params2 = network.analysis_params.copy()
+        check_quantity_dicts_are_equal(results0, results2)
+        with pytest.raises(AssertionError):
+            check_quantity_dicts_are_equal(results0, results1)
+        check_quantity_dicts_are_equal(analysis_params0, analysis_params2)
+        with pytest.raises(AssertionError):
+            check_quantity_dicts_are_equal(analysis_params0, analysis_params1)
+            
+            
 class Test_functionality:
 
     def test_firing_rates_calls_correctly(self, network, mocker):

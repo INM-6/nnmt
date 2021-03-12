@@ -196,25 +196,22 @@ class Test_load_params:
 
 class Test_save:
 
-    def test_h5_is_created(self, tmpdir, param_test_dict):
+    def test_h5_is_created(self, tmpdir, network):
         tmp_test = tmpdir.mkdir('tmp_test')
-        output_key = 'params'
         file_name = 'test.h5'
         with tmp_test.as_cwd():
-            io.save(output_key, param_test_dict, file_name)
+            io.save_network(file_name, network)
         check_file_in_tmpdir(file_name, tmp_test)
 
-    @pytest.mark.xfail
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
-                                                         param_test_dict):
+                                                         network):
         file_name = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
-        output_key = 'params'
         file_name = 'test.h5'
         with tmp_test.as_cwd():
-            with pytest.raises(IOError):
-                io.save(output_key, param_test_dict, file_name)
-                io.save(output_key, param_test_dict, file_name)
+            with pytest.raises(KeyError):
+                io.save_network(file_name, network)
+                io.save_network(file_name, network)
 
 
 class Test_create_hash:
@@ -240,32 +237,36 @@ class Test_load_h5:
             with pytest.raises(IOError):
                 io.load_h5(filename)
 
-    def test_data_saved_and_loaded_correctly(self, tmpdir, param_test_dict):
+    def test_data_saved_and_loaded_correctly(self, tmpdir, network):
         tmp_test = tmpdir.mkdir('tmp_test')
         filename = 'test.h5'
+        network.working_point()
         with tmp_test.as_cwd():
-            io.save('params', param_test_dict, filename)
-            params_h5 = io.load_h5(filename)
-
-        params = params_h5['params']
-        check_quantity_dicts_are_equal(params, param_test_dict)
+            io.save_network(filename, network)
+            (network_params, analysis_params, results, results_hash_dict
+             ) = io.load_network(filename)
+        check_quantity_dicts_are_equal(network_params, network.network_params)
+        check_quantity_dicts_are_equal(analysis_params,
+                                       network.analysis_params)
+        check_quantity_dicts_are_equal(results, network.results)
+        check_quantity_dicts_are_equal(results_hash_dict,
+                                       network.results_hash_dict)
 
 
 class Test_load_from_h5:
 
     @pytest.mark.xfail
     def test_save_and_load_existing_results_without_analysis_params(
-            self, tmpdir, param_test_dict):
-        param_test_dict['label'] = 'test_label'
-        hash = io.create_hash(param_test_dict, param_test_dict.keys())
-        filename = param_test_dict['label'] + '_' + hash + '.h5'
-        output_key = 'results'
+            self, tmpdir, network):
+        network.firing_rate()
+        file_name = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            io.save(output_key, param_test_dict, filename)
-            loaded_params = io.load_from_h5(param_test_dict)
-        params = loaded_params[output_key]
-        check_quantity_dicts_are_equal(params, param_test_dict)
+            io.save_network(file_name, network)
+            dicts = io.load_network(file_name)
+        results_hash_dict = dicts[3]
+        check_quantity_dicts_are_equal(results_hash_dict,
+                                       network.results_hash_dict)
 
     def test_save_and_load_existing_results_with_analysis_params(
             self, tmpdir, param_test_dict):
@@ -277,8 +278,8 @@ class Test_load_from_h5:
 
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            io.save('results', param_test_dict, filename)
-            io.save('analysis_params', analysis_params, filename)
+            io.save_params('results', param_test_dict, filename)
+            io.save_params('analysis_params', analysis_params, filename)
             loaded_analysis_params, loaded_results = io.load_from_h5(
                 param_test_dict)
         check_quantity_dicts_are_equal(analysis_params, loaded_analysis_params)
@@ -290,8 +291,8 @@ class Test_load_from_h5:
         analysis_params = dict(omega=1 * ureg.Hz)
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            io.save('results', param_test_dict, filename)
-            io.save('analysis_params', analysis_params, filename)
+            io.save_params('results', param_test_dict, filename)
+            io.save_params('analysis_params', analysis_params, filename)
             loaded_analysis_params, loaded_results = io.load_from_h5(
                 input_name=filename)
         check_quantity_dicts_are_equal(analysis_params, loaded_analysis_params)
