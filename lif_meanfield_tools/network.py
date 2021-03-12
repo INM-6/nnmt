@@ -284,33 +284,37 @@ class Network(object):
             # calculate hash from result and analysis keys and analysis params
             label = str(result_key) + str(analysis_keys) + str(new_params)
             h = hashlib.md5(label.encode('utf-8')).hexdigest()
-            # h = hash(str(result_key) + str(analysis_keys) + str(new_params))
-            # check if hash exists and return existing result if true
+            # check if hash already exists and get corresponding result
             if h in results_hash_dict.keys():
-                return results_hash_dict[h]['result']
+                result = results_hash_dict[h]['result']
             else:
                 # if not, calculate new result
                 result = func(self, *args, **kwargs)
 
-                # store keys and results and update dictionaries
-                results[result_key] = result
+                # create new hash dict entry
                 hash_dict = dict(result=result,
                                  result_key=result_key)
                 if analysis_keys:
                     analysis_dict = {}
                     for key, param in zip(analysis_keys, new_params):
-                        analysis_params[key] = param
                         analysis_dict[key] = param
                     hash_dict['analysis_params'] = analysis_dict
                 results_hash_dict[h] = hash_dict
                 
-                # update self.results and self.results_hash_dict
-                setattr(self, 'results', results)
-                setattr(self, 'results_hash_dict', results_hash_dict)
-                setattr(self, 'analysis_params', analysis_params)
+            # create new results and analysis_params entries
+            results[result_key] = result
+            if analysis_keys:
+                analysis_dict = {}
+                for key, param in zip(analysis_keys, new_params):
+                    analysis_params[key] = param
+                
+            # update self.results and self.results_hash_dict
+            setattr(self, 'results', results)
+            setattr(self, 'results_hash_dict', results_hash_dict)
+            setattr(self, 'analysis_params', analysis_params)
 
-                # return new_result
-                return result
+            # return new result
+            return result
 
         return decorator_check_and_store
     
