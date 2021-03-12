@@ -166,43 +166,18 @@ def create_hash(params, param_keys):
         label += str(params[key])
     # create and return hash (label must be encoded)
     return hl.md5(label.encode('utf-8')).hexdigest()
-
-
-def save_hash_dict(file_name, hash_dict):
-    """
-    Saves results_hash_dict to h5 file and handles quantity conversion.
     
-    Parameters:
-    -----------
-    file_name: str
-        Name of output file. Should not already exists.
-    hash_dict: dict
-        results_hash_dict of Network object.
-    """
+    
+def convert_results_hash_dict_quantities_to_val_unit(hash_dict):
     for hash, result in hash_dict.items():
         if 'analysis_params' in result.keys():
             result['analysis_params'] = quantities_to_val_unit(
                 result['analysis_params'])
         hash_dict[hash] = quantities_to_val_unit(result)
-    h5.save(file_name, hash_dict, overwrite_dataset=False)
-    
-    
-def load_hash_dict(file_name):
-    """
-    Loads results_hash_dict from h5 file and handles quantity conversion.
-    
-    Parameters:
-    -----------
-    file_name: str
-        Name of input file that contains results_hash_dict of Network object.
-    """
-    try:
-        hash_dict = h5.load(file_name)
-    # if not existing OSError is raised by h5py_wrapper, then return empty dict
-    except OSError:
-        print(f'File {file_name} not found!')
-        hash_dict = {}
-        
+    return hash_dict
+
+
+def convert_results_hash_dict_val_unit_to_quantities(hash_dict):
     for hash, result in hash_dict.items():
         result = val_unit_to_quantities(result)
         if 'analysis_params' in result.keys():
@@ -211,8 +186,75 @@ def load_hash_dict(file_name):
         hash_dict[hash] = result
     return hash_dict
 
+    
+def save_network(file_name, network, overwrite_dataset=False):
+    """
+    Save network to h5 file.
+    
+    The networks' dictionaires (network_params, analysis_params, results,
+    results_hash_dict) are stored. Quantities are converted to value-unit
+    dictionaries.
+    
+    Parameters:
+    -----------
+    file_name: str
+        Output file name.
+    network: Network object
+        The network to be saved.
+    overwrite_dataset: bool
+        Whether to overwrite an existing h5 file or not. If there already is
+        one h5py tries to update the h5 dictionary.
+    """
+    network_params = quantities_to_val_unit(network.network_params)
+    analysis_params = quantities_to_val_unit(network.analysis_params)
+    results = quantities_to_val_unit(network.results)
+    results_hash_dict = convert_results_hash_dict_quantities_to_val_unit(
+        network.results_hash_dict)
+    
+    output = {'network_params': network_params,
+              'analysis_params': analysis_params,
+              'results': results,
+              'results_hash_dict': results_hash_dict}
+    h5.save(file_name, output, overwrite_dataset=overwrite_dataset)
+    
+    
+def load_network(file_name):
+    """
+    Load network from h5 file.
+    
+    Parameters:
+    -----------
+    file_name: str
+        Output file name.
+    
+    Returns:
+    --------
+    network_params: dict
+        Network parameters.
+    analysis_params: dict
+        Analysis parameters.
+    results: dict
+        Dictionary containing most recently calculated results.
+    results_hash_dict: dict
+        Dictionary where all calculated results are stored.
+    """
+    try:
+        input = h5.load(file_name)
+    # if not existing OSError is raised by h5py_wrapper, then return empty dict
+    except OSError:
+        print(f'File {file_name} not found!')
+        return {}, {}, {}, {}
+    
+    network_params = val_unit_to_quantities(input['network_params'])
+    analysis_params = val_unit_to_quantities(input['analysis_params'])
+    results = val_unit_to_quantities(input['results'])
+    results_hash_dict = convert_results_hash_dict_val_unit_to_quantities(
+        input['results_hash_dict'])
+    
+    return network_params, analysis_params, results, results_hash_dict
 
-def save(output_key, output, file_name):
+
+def save_params(output_key, output, file_name):
     """
     Save data and given parameters in h5 file.
 
