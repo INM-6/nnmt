@@ -100,7 +100,17 @@ K_ext:
   - 500
   - 300
 
-
+mu_set:
+  unit: millivolt
+  val:
+    - 10
+    - 20
+    
+sigma_set:
+  unit: millivolt
+  val:
+    - 10
+    - 10
 
 # rates of additional external excitatory and inhibitory Poisson input
 nu_e_ext:
