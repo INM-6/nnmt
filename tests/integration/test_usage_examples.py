@@ -108,9 +108,9 @@ class Test_instantiate_calculate_check_change_params_calculate_check:
         assert_quantity_array_equal(network.results['firing_rates'],
                                     std_results['firing_rates'])
         
-    def test_change_params(self, network):
+    def test_change_parameters(self, network):
         tau_m = network.network_params['tau_m']
-        network.changed_params(changed_network_params=dict(tau_m=2 * tau_m))
+        network.change_parameters(changed_network_params=dict(tau_m=2 * tau_m))
         assert network.network_params['tau_m'] == 2 * tau_m
         
     def test_calculate_something_again_get_different_results(self,
