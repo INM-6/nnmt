@@ -44,11 +44,11 @@ _check_and_store
 from __future__ import print_function
 import numpy as np
 from decorator import decorator
+import hashlib
 
 from . import ureg
 from . import input_output as io
 from . import meanfield_calcs
-from .utils import pint_append, pint_array_of_dimension_plus_one
 
 
 class Network(object):
@@ -75,11 +75,13 @@ class Network(object):
     derive_params: bool
         whether parameters shall be derived from existing ones
         can be false if a complete set of network parameters is given
+    file: str
+        file name of h5 file from which network can be loaded
     """
 
     def __init__(self, network_params=None, analysis_params=None,
                  new_network_params={}, new_analysis_params={},
-                 derive_params=True):
+                 derive_params=True, file=None):
         """
         Initiate Network class.
 
@@ -90,53 +92,46 @@ class Network(object):
         Calculate parameters which are derived from given parameters.
         #Try to load existing results.
         """
-        # no yaml file for network parameters given
-        if network_params is None:
-            self.network_params_yaml = ''
-            self.network_params = new_network_params
+        if file:
+            self.load(file)
         else:
-            self.network_params_yaml = network_params
-            # read from yaml and convert to quantities
-            self.network_params = io.load_params(network_params)
-            self.network_params.update(new_network_params)
+            # no yaml file for network parameters given
+            if network_params is None:
+                self.network_params_yaml = ''
+                self.network_params = new_network_params
+            else:
+                self.network_params_yaml = network_params
+                # read from yaml and convert to quantities
+                self.network_params = io.load_params(network_params)
+                self.network_params.update(new_network_params)
 
-        # no yaml file for analysis parameters given
-        if analysis_params is None:
-            self.analysis_params_yaml = ''
-            self.analysis_params = new_analysis_params
-        else:
-            self.analysis_params_yaml = analysis_params
-            self.analysis_params = io.load_params(analysis_params)
-            self.analysis_params.update(new_analysis_params)
+            # no yaml file for analysis parameters given
+            if analysis_params is None:
+                self.analysis_params_yaml = ''
+                self.analysis_params = new_analysis_params
+            else:
+                self.analysis_params_yaml = analysis_params
+                self.analysis_params = io.load_params(analysis_params)
+                self.analysis_params.update(new_analysis_params)
 
-        if derive_params:
-            # calculate dependend network parameters
-            derived_network_params = (
-                self._calculate_dependent_network_parameters())
-            self.network_params.update(derived_network_params)
+            if derive_params:
+                # calculate dependend network parameters
+                derived_network_params = (
+                    self._calculate_dependent_network_parameters())
+                self.network_params.update(derived_network_params)
 
-            # calculate dependend analysis parameters
-            derived_analysis_params = (
-                self._calculate_dependent_analysis_parameters())
-            self.analysis_params.update(derived_analysis_params)
+                # calculate dependend analysis parameters
+                derived_analysis_params = (
+                    self._calculate_dependent_analysis_parameters())
+                self.analysis_params.update(derived_analysis_params)
 
-        # calc hash
-        self.hash = io.create_hash(self.network_params,
-                                   self.network_params.keys())
-
-        # empty results
-        self.results = {}
-        self.results_hash_dict = {}
-        self.analysis_params_hash_dict = {}
-
-        # TODO: LOAD RESULTS ONLY IF THE ANALYSIS PARAMS ARE THE SAME
-        # OTHERWISE DANGER THAT EITHER ANALYSIS PARAMS GET OVERWRITTEN OR DON'T
-        # CORRESPOND TO THE RESULTS
-
-        # load already existing results
-        # stored_analysis_params, self.results = (
-        #     io.load_from_h5(self.network_params))
-        # self.analysis_params.update(stored_analysis_params)
+            # calc hash
+            self.hash = io.create_hash(self.network_params,
+                                       self.network_params.keys())
+            
+            # empty results
+            self.results = {}
+            self.results_hash_dict = {}
 
     def _calculate_dependent_network_parameters(self):
         """
@@ -275,8 +270,6 @@ class Network(object):
             """ Decorator with given parameters, returns expected results. """
             # collect analysis_params
             analysis_params = getattr(self, 'analysis_params')
-            analysis_params_hash_dict = getattr(self,
-                                                'analysis_params_hash_dict')
 
             # collect results
             results = getattr(self, 'results')
@@ -289,45 +282,74 @@ class Network(object):
                     new_params.append(args[i])
 
             # calculate hash from result and analysis keys and analysis params
-            h = hash(str(result_key) + str(analysis_keys) + str(new_params))
+            label = str(result_key) + str(analysis_keys) + str(new_params)
+            h = hashlib.md5(label.encode('utf-8')).hexdigest()
+            # h = hash(str(result_key) + str(analysis_keys) + str(new_params))
             # check if hash exists and return existing result if true
             if h in results_hash_dict.keys():
-                return results_hash_dict[h]
+                return results_hash_dict[h]['result']
             else:
                 # if not, calculate new result
                 result = func(self, *args, **kwargs)
-                analysis_params_hash_dict[h] = new_params
 
                 # store keys and results and update dictionaries
+                results[result_key] = result
+                hash_dict = dict(result=result,
+                                 result_key=result_key)
                 if analysis_keys:
+                    analysis_dict = {}
                     for key, param in zip(analysis_keys, new_params):
-                        if key in analysis_params.keys():
-                            analysis_params[key] = (
-                                pint_append(analysis_params[key], param))
-                            results[result_key] = (
-                                pint_append(results[result_key], result))
-                        else:
-                            analysis_params[key] = (
-                                pint_array_of_dimension_plus_one(param))
-                            results[result_key] = (
-                                pint_array_of_dimension_plus_one(result))
-                else:
-                    results[result_key] = result
-                results_hash_dict[h] = result
-
+                        analysis_params[key] = param
+                        analysis_dict[key] = param
+                    hash_dict['analysis_params'] = analysis_dict
+                results_hash_dict[h] = hash_dict
+                
                 # update self.results and self.results_hash_dict
                 setattr(self, 'results', results)
                 setattr(self, 'results_hash_dict', results_hash_dict)
                 setattr(self, 'analysis_params', analysis_params)
-                setattr(self, 'analysis_params_hash_dict',
-                        analysis_params_hash_dict)
 
                 # return new_result
                 return result
 
         return decorator_check_and_store
     
-    def save(self, output_key='', output={}, file_name=''):
+    def save(self, file_name, overwrite_dataset=False):
+        """
+        Save network to h5 file.
+        
+        The networks' dictionaires (network_params, analysis_params, results,
+        results_hash_dict) are stored. Quantities are converted to value-unit
+        dictionaries.
+        
+        Parameters:
+        -----------
+        file_name: str
+            Output file name.
+        overwrite_dataset: bool
+            Whether to overwrite an existing h5 file or not. If there already
+            is one, h5py tries to update the h5 dictionary.
+        """
+        io.save_network(file_name, self, overwrite_dataset)
+    
+    def load(self, file_name):
+        """
+        Load network from h5 file.
+        
+        The networks' dictionaires (network_params, analysis_params, results,
+        results_hash_dict) are loaded.
+        
+        Parameters:
+        -----------
+        file_name: str
+            Input file name.
+        """
+        (self.network_params,
+         self.analysis_params,
+         self.results,
+         self.results_hash_dict) = io.load_network(file_name)
+    
+    def save_results(self, output_key='', output={}, file_name=''):
         """
         Saves results and parameters to h5 file. If output is specified, this
         is saved to h5 file.
