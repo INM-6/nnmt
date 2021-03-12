@@ -5,12 +5,14 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
+
 def assert_units_equal(var_1, var_2):
     """Checks whether unit of var_1 and of var_2 conincide."""
     try:
         assert var_1.units == var_2.units
     except AttributeError:
         pass
+    
 
 def assert_dimensionality_equal(var_1, var_2):
     """Checks whether unit of var_1 and of var_2 have same dimensionality."""
@@ -18,6 +20,7 @@ def assert_dimensionality_equal(var_1, var_2):
         assert var_1.dimensionality == var_2.dimensionality
     except AttributeError:
         pass
+    
 
 def check_pos_params_neg_raise_exception(func, params, pos_key):
     """Test whether exception is raised if always pos param gets negative."""
@@ -100,5 +103,8 @@ def check_quantity_dicts_are_equal(dict1, dict2):
         try:
             assert dict1[key] == dict2[key]
         except ValueError:
-            assert_array_equal(dict1[key], dict2[key])
-            assert_units_equal(dict1[key], dict2[key])
+            if isinstance(dict1[key], dict):
+                check_quantity_dicts_are_equal(dict1[key], dict2[key])
+            else:
+                assert_array_equal(dict1[key], dict2[key])
+                assert_units_equal(dict1[key], dict2[key])
