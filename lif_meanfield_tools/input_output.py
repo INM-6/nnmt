@@ -12,6 +12,7 @@ Options:
 
 from __future__ import print_function
 from collections.abc import Iterable
+import copy
 
 import numpy as np
 import yaml
@@ -169,6 +170,20 @@ def create_hash(params, param_keys):
     
     
 def convert_results_hash_dict_quantities_to_val_unit(hash_dict):
+    """
+    Converts hash_dict of quantities to val-unit pairs.
+    
+    Parameters:
+    -----------
+    hash_dict: dict
+        A dictionary with the following structure:
+        {'<hash>': {'result': <result>, 'result_key': <result_key>,
+                    ['analysis_params': {'<analysis_key1>': <analysis_param1>,
+                                         '<analysis_key2>': <analysis_param2>}]
+                    },
+         ...}
+    """
+    hash_dict = copy.deepcopy(hash_dict)
     for hash, result in hash_dict.items():
         if 'analysis_params' in result.keys():
             result['analysis_params'] = quantities_to_val_unit(
@@ -178,6 +193,22 @@ def convert_results_hash_dict_quantities_to_val_unit(hash_dict):
 
 
 def convert_results_hash_dict_val_unit_to_quantities(hash_dict):
+    """
+    Converts hash_dict of val-unit pairs to quantities.
+    
+    Parameters:
+    -----------
+    hash_dict: dict
+        A dictionary with the following structure:
+        {'<hash>': {'result': {'val': <val>, 'unit': <unit>},
+                    'result_key': <result_key>,
+                    ['analysis_params': {
+                         '<analysis_key1>': {'val': <val>, 'unit': <unit>},
+                         '<analysis_key2>': {'val': <val>, 'unit': <unit>}}]
+                    },
+         ...}
+    """
+    hash_dict = copy.deepcopy(hash_dict)
     for hash, result in hash_dict.items():
         result = val_unit_to_quantities(result)
         if 'analysis_params' in result.keys():
