@@ -997,8 +997,8 @@ def scan_fit_transfer_function_mean_std_input(mean_inputs, std_inputs,
 
 
 @check_positive_params
-@ureg.wraps(None, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV,
-                   ureg.mV))
+# @ureg.wraps(None, (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV,
+#                    ureg.mV))
 def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
                                 mean_input, std_input):
     """
