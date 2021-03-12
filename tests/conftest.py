@@ -55,7 +55,7 @@ all_pos_keys = ['C',
                 ]
 
 # list of tested parameter regimes for correct output tests
-regimes = ['noise_driven', 'negative_firing_rate', 'mean_driven']
+regimes = ['noise_driven', 'mean_driven']
 
 # list of keys that have two different variable names
 key_pairs = (('mean_input', 'mu'),
@@ -204,9 +204,9 @@ def all_std_params():
                   sigma=std_input,
                   sigma_set=np.array([6, 5]) * ureg.mV,
                   std_input=std_input,
-                  tau_m=10 * ureg.s,
-                  tau_s=0.5 * ureg.s,
-                  tau_r=2.0 * ureg.s,
+                  tau_m=10 * ureg.ms,
+                  tau_s=0.5 * ureg.ms,
+                  tau_r=2.0 * ureg.ms,
                   transfer_function=[complex(0.653, -0.101),
                                      complex(1.811, -0.228),
                                      ] * ureg.Hz / ureg.mV,
@@ -252,9 +252,9 @@ def all_std_params_single_population():
                   sigma=std_input,
                   sigma_set=6 * ureg.mV,
                   std_input=std_input,
-                  tau_m=10 * ureg.s,
-                  tau_s=0.5 * ureg.s,
-                  tau_r=2.0 * ureg.s,
+                  tau_m=10 * ureg.ms,
+                  tau_s=0.5 * ureg.ms,
+                  tau_r=2.0 * ureg.ms,
                   transfer_function=complex(0.653) * ureg.Hz / ureg.mV,
                   omega=20 * ureg.Hz,
                   omegas=20 * ureg.Hz,
