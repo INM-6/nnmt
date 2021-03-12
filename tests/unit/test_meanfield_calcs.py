@@ -142,8 +142,8 @@ class Test_delay_dist_matrix_single:
     output_keys = ['delay_dist_{}'.format(id) for id in ids]
 
     @pytest.mark.parametrize('key', [0, 1, 2], ids=ids)
-    def test_correct_output_dist_none(self, output_test_fixtures, key):
-        delay_dist = 'none'
+    def test_correct_output_dist(self, output_test_fixtures, key):
+        delay_dist = self.ids[key]
         params = output_test_fixtures['params']
         params['delay_dist'] = delay_dist
         output = output_test_fixtures['output'][key]
