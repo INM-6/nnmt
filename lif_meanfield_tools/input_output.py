@@ -225,7 +225,7 @@ def load_network(file_name):
     Parameters:
     -----------
     file_name: str
-        Output file name.
+        Input file name.
     
     Returns:
     --------
