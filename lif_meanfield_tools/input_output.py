@@ -203,7 +203,7 @@ def save_network(file_name, network, overwrite_dataset=False):
         The network to be saved.
     overwrite_dataset: bool
         Whether to overwrite an existing h5 file or not. If there already is
-        one h5py tries to update the h5 dictionary.
+        one, h5py tries to update the h5 dictionary.
     """
     network_params = quantities_to_val_unit(network.network_params)
     analysis_params = quantities_to_val_unit(network.analysis_params)
