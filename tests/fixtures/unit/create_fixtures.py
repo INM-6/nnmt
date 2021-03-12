@@ -45,8 +45,8 @@ ureg = lmt.ureg
 def fix_additional_rates_for_fixed_input(network, file):
     """Call additional_rates_for_fixed_input and save results as h5."""
     nu_e_ext, nu_i_ext = network.additional_rates_for_fixed_input(
-        network.network_params['mean_input_set'],
-        network.network_params['std_input_set'])
+        network.network_params['mu_set'],
+        network.network_params['sigma_set'])
     network.results['add_nu_e_ext'] = nu_e_ext
     network.results['add_nu_i_ext'] = nu_i_ext
     network.save(file_name=file)
@@ -64,8 +64,6 @@ def fix_d_nu_d_mu(network, file):
                          mu, sigma)
                for mu, sigma in zip(mus.magnitude, sigmas.magnitude)]
     network.results['d_nu_d_mu'] = results
-    import pdb
-    pdb.set_trace()
     network.save(file_name=file)
 
 
@@ -163,15 +161,15 @@ def fix_delay_dist_single(network, file):
 def fix_delay_dist_matrix(network, file):
     """Calculate fixtures for all delay dist matrix options and save as h5."""
     original_delay_dist = network.network_params['delay_dist']
-    network.network_params['delay_dist'] = 'none'
-    network.delay_dist_matrix()
-    dd_none = network.results['delay_dist']
-    network.network_params['delay_dist'] = 'truncated_gaussian'
-    network.delay_dist_matrix()
-    dd_truncated_gaussian = network.results.pop('delay_dist')
-    network.network_params['delay_dist'] = 'gaussian'
-    network.delay_dist_matrix()
-    dd_gaussian = network.results.pop('delay_dist')
+    network = network.change_parameters(
+        changed_network_params={'delay_dist': 'none'})
+    dd_none = network.delay_dist_matrix()
+    network = network.change_parameters(
+        changed_network_params={'delay_dist': 'truncated_gaussian'})
+    dd_truncated_gaussian = network.delay_dist_matrix()
+    network = network.change_parameters(
+        changed_network_params={'delay_dist': 'gaussian'})
+    dd_gaussian = network.delay_dist_matrix()
     network.results['delay_dist_none'] = dd_none
     network.results['delay_dist_truncated_gaussian'] = dd_truncated_gaussian
     network.results['delay_dist_gaussian'] = dd_gaussian
@@ -330,9 +328,11 @@ def fix_sensitivity_measure(network, file):
 def fix_transfer_function(network, file):
     """Calculate results for all options of transfer_function."""
     network.transfer_function(method='shift')
-    network.results['tf_shift'] = network.results.pop('transfer_function')
     network.transfer_function(method='taylor')
-    network.results['tf_taylor'] = network.results['transfer_function']
+    tfs = network.results['transfer_function']
+    network.results['tf_shift'] = tfs[0]
+    network.results['tf_taylor'] = tfs[1]
+    network.results['transfer_function'] = tfs[0]
     network.save(file_name=file)
 
 
@@ -365,7 +365,6 @@ if __name__ == '__main__':
 
         configs = dict(
             noise_driven=(config_path + 'network_params_microcircuit.yaml'),
-            negative_firing_rate=(config_path + 'minimal_negative.yaml'),
             mean_driven=(config_path + 'mean_driven.yaml'),
             )
         analysis_param_file = config_path + 'analysis_params_test.yaml'
