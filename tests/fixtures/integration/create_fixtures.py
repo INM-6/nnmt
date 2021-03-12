@@ -46,11 +46,10 @@ if __name__ == '__main__':
         network.working_point()
         network.delay_dist_matrix()
         network.delay_dist_matrix(omega)
-        network.transfer_function(method='taylor')
-        network.results['tf_taylor'] = network.results.pop('transfer_function')
-        network.transfer_function(method='shift')
-        network.results['tf_shift'] = network.results.pop('transfer_function')
-        network.transfer_function()
+        network.results['tf_shift'] = network.transfer_function(
+            method='shift')
+        network.results['tf_taylor'] = network.transfer_function(
+            method='taylor')
         network.transfer_function(omega)
         network.sensitivity_measure(omega)
         network.power_spectra()
