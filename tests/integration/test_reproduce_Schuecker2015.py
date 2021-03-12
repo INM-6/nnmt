@@ -107,8 +107,8 @@ def pre_results(network_params, omegas):
                 sigma)
 
             transfer_function = lmt.meanfield_calcs.transfer_function(
-                [mu],
-                [sigma],
+                lmt.utils.pint_array([mu]),
+                lmt.utils.pint_array([sigma]),
                 network_params['tau_m'],
                 network_params['tau_s'],
                 network_params['tau_r'],
@@ -189,8 +189,8 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
                                      'nu0_fb433',
                                      'zero_freq'])
     @pytest.mark.parametrize('index', indices)
-    def test_results_conincide(self, key, index, network_params,
-                               ground_truth_result, test_result):
+    def test_results_coincide(self, key, index, network_params,
+                              ground_truth_result, test_result):
         sigma = network_params['sigma_{}'.format(index)].magnitude
         for mu in network_params['mean_input_{}'.format(index)].magnitude:
             ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]

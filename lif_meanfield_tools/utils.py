@@ -116,6 +116,18 @@ def pint_append(array, quantity, axis=0):
         return np.append(array, [quantity], axis=axis)
     
     
+def pint_array(quantity_list):
+    """
+    Create quantity with magnitude np.array. Handles units correctly.
+    
+    quantity_list: list
+        List of quantities.
+    """
+    mags = [q.magnitude for q in quantity_list]
+    unit = quantity_list[0].units
+    return np.array(mags) * unit
+    
+    
 def pint_array_of_dimension_plus_one(quantity):
     """
     Create quantity with magnitude np.array with one more dimension.
