@@ -1,9 +1,33 @@
 import pytest
 import re
+# note that numpy asserts are wrapped with pint_wrap a few lines down
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
+
+
+def pint_wrap(func):
+    """
+    Pint wrapper for numpy assert statements.
+    
+    Numpy asserts given a quantity give an UnstrippedWarning. This wrapper
+    makes them handle quantities correctly.
+    
+    Note that only magnitudes are passed to the wrapped function.
+    """
+    def decorator_wrap(*args, **kwargs):
+        try:
+            args = [arg.magnitude for arg in args]
+            kwargs = {key: value.magnitude for key, value in kwargs.items()}
+            output = func(*args, **kwargs)
+        except AttributeError:
+            output = func(*args, **kwargs)
+        return output
+    return decorator_wrap
+
+
+assert_array_equal = pint_wrap(assert_array_equal)
 
 
 def assert_units_equal(var_1, var_2):
