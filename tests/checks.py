@@ -1,5 +1,6 @@
 import pytest
 import re
+import inspect
 # note that numpy asserts are wrapped with pint_wrap a few lines down
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -17,9 +18,17 @@ def pint_wrap(func):
     Note that only magnitudes are passed to the wrapped function.
     """
     def decorator_wrap(*args, **kwargs):
+        signature = inspect.signature(func)
+        quantity_args = [param for i, param
+                         in enumerate(signature.parameters)
+                         if i < 2]
+        print(quantity_args)
         try:
-            args = [arg.magnitude for arg in args]
-            kwargs = {key: value.magnitude for key, value in kwargs.items()}
+            args = [arg.magnitude if i < 2
+                    else arg
+                    for i, arg in enumerate(args)]
+            kwargs = {key: (value.magnitude if key in quantity_args else value)
+                      for key, value in kwargs.items()}
             output = func(*args, **kwargs)
         except AttributeError:
             output = func(*args, **kwargs)
@@ -28,6 +37,7 @@ def pint_wrap(func):
 
 
 assert_array_equal = pint_wrap(assert_array_equal)
+assert_array_almost_equal = pint_wrap(assert_array_almost_equal)
 
 
 def assert_units_equal(var_1, var_2):
