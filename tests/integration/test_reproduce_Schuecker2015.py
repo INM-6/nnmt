@@ -195,4 +195,9 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
         for mu in network_params['mean_input_{}'.format(index)].magnitude:
             ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]
             test_data = test_result['sigma'][sigma]['mu'][mu]
-            assert_allclose(test_data[key], ground_truth_data[key], atol=1e-14)
+            try:
+                assert_allclose(test_data[key].magnitude,
+                                ground_truth_data[key], atol=1e-14)
+            except AttributeError:
+                assert_allclose(test_data[key],
+                                ground_truth_data[key], atol=1e-14)
