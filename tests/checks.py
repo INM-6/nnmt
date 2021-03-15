@@ -22,7 +22,6 @@ def pint_wrap(func):
         quantity_args = [param for i, param
                          in enumerate(signature.parameters)
                          if i < 2]
-        print(quantity_args)
         try:
             args = [arg.magnitude if i < 2
                     else arg
@@ -38,6 +37,11 @@ def pint_wrap(func):
 
 assert_array_equal = pint_wrap(assert_array_equal)
 assert_array_almost_equal = pint_wrap(assert_array_almost_equal)
+
+
+def assert_quantity_array_equal(qarray1, qarray2):
+    assert_array_equal(qarray1, qarray2)
+    assert_units_equal(qarray1, qarray2)
 
 
 def assert_units_equal(var_1, var_2):
