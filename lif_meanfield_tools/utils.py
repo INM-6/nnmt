@@ -123,9 +123,13 @@ def pint_array(quantity_list):
     quantity_list: list
         List of quantities.
     """
-    mags = [q.magnitude for q in quantity_list]
-    unit = quantity_list[0].units
-    return np.array(mags) * unit
+    try:
+        mags = [q.magnitude for q in quantity_list]
+        unit = quantity_list[0].units
+        array = np.array(mags) * unit
+    except AttributeError:
+        array = np.array(quantity_list)
+    return array
     
     
 def pint_array_of_dimension_plus_one(quantity):
