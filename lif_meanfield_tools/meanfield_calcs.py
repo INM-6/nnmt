@@ -1037,7 +1037,7 @@ def effective_coupling_strength(tau_m, tau_s, tau_r, V_0_rel, V_th_rel, J,
             # linear (mu) contribution
             w_ecs[post][pre] = aux_calcs.d_nu_d_nu_in_fb(
                 tau_m, tau_s, tau_r, V_th_rel, V_0_rel, J[post][pre],
-                mean_input[pre], std_input[pre])[1]
+                mean_input[pre], std_input[pre])
     return w_ecs
 
 

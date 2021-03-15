@@ -439,7 +439,8 @@ def d_nu_d_mu(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
                * (1 + erf(y_r))))
 
 
-def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
+def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma,
+                    contributions='mu'):
     """
     Derivative of nu_0 by input rate for low-pass-filtered synapses with tau_s.
     Effective threshold and reset from Fourcaud & Brunel 2002.
@@ -462,15 +463,14 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
         Mean neuron activity in mV.
     sigma:
         Standard deviation of neuron activity in mV.
+    contributions: str
+        Which contributions to derivative should be returned. Options: 'mu',
+        'sigma', 'all'.
 
     Returns:
     --------
     float:
-        Derivative in Hz/mV (sum of mu and sigma^2 contribution).
-    float:
-        Derivative in Hz/mV (linear (mu) contribution).
-    float:
-        Derivative in Hz/mV (squared (sigma^2) contribution).
+        Derivative in Hz/mV (mu, or sigma^2, or sum of both contribution).
     """
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
@@ -496,7 +496,8 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
 
     # linear contribution
     lin = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
-           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb.magnitude)) - np.exp(y_r_fb**2)
+           * (np.exp(y_th_fb**2) * (1 + erf(y_th_fb.magnitude))
+              - np.exp(y_r_fb**2)
               * (1 + erf(y_r_fb.magnitude))))
 
     # quadratic contribution
@@ -505,7 +506,15 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma):
               * 0.5 * y_th * j / sigma - np.exp(y_r_fb**2)
               * (1 + erf(y_r_fb.magnitude)) * 0.5 * y_r * j / sigma))
 
-    return lin + sqr, lin, sqr
+    if contributions == 'mu':
+        return lin
+    elif contributions == 'sigma':
+        return sqr
+    elif contributions == 'all':
+        return lin + sqr
+    else:
+        raise ValueError("Contributions argument must be one of the follwing "
+                         "options: 'mu', 'sigma', 'all'.")
 
 
 def Psi(z, x):
