@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
-from numpy.testing import assert_array_almost_equal
 from scipy.special import erf, zetac
 from scipy.integrate import quad
 
-from ..checks import (assert_units_equal,
+from ..checks import (assert_array_almost_equal,
+                      assert_units_equal,
                       check_pos_params_neg_raise_exception,
                       check_correct_output_for_several_mus_and_sigmas,
                       check_almost_correct_output_for_several_mus_and_sigmas,
