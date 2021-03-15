@@ -14,7 +14,7 @@ def check_if_positive(parameters, parameter_names):
     """Check that will raise an error if parameters are negative."""
     for parameter, parameter_name in zip(parameters, parameter_names):
         try:
-            if any(p < 0 for p in np.array(parameter).flatten()):
+            if any(p < 0 for p in pint_array(parameter).flatten()):
                 raise ValueError('{} should be larger than zero!'.format(
                     parameter_name))
         except TypeError:
