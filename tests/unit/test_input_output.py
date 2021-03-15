@@ -5,14 +5,14 @@ Unit tests for the input output module.
 
 import pytest
 import numpy as np
-from numpy.testing import assert_array_equal
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
 
-from .checks import (check_file_in_tmpdir,
-                     check_quantity_dicts_are_equal,
-                     assert_units_equal)
+from ..checks import (check_file_in_tmpdir,
+                      check_quantity_dicts_are_equal,
+                      assert_array_equal,
+                      assert_units_equal)
 
 ureg = lmt.ureg
 

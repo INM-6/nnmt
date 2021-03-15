@@ -1,9 +1,11 @@
 import re
 import pytest
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose
+from numpy.testing import assert_allclose
 
-from .checks import assert_units_equal, check_quantity_dicts_are_equal
+from ..checks import (assert_array_equal,
+                      assert_units_equal,
+                      check_quantity_dicts_are_equal)
 
 import lif_meanfield_tools as lmt
 

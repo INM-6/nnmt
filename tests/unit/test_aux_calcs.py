@@ -4,13 +4,13 @@ from numpy.testing import assert_array_almost_equal
 from scipy.special import erf, zetac
 from scipy.integrate import quad
 
-from .checks import (assert_units_equal,
-                     check_pos_params_neg_raise_exception,
-                     check_correct_output_for_several_mus_and_sigmas,
-                     check_almost_correct_output_for_several_mus_and_sigmas,
-                     check_V_0_larger_V_th_raise_exception,
-                     check_warning_is_given_if_k_is_critical,
-                     check_exception_is_raised_if_k_is_too_large)
+from ..checks import (assert_units_equal,
+                      check_pos_params_neg_raise_exception,
+                      check_correct_output_for_several_mus_and_sigmas,
+                      check_almost_correct_output_for_several_mus_and_sigmas,
+                      check_V_0_larger_V_th_raise_exception,
+                      check_warning_is_given_if_k_is_critical,
+                      check_exception_is_raised_if_k_is_too_large)
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.aux_calcs import (

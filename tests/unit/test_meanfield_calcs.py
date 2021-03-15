@@ -1,12 +1,12 @@
 import pytest
 from numpy.testing import assert_array_equal
 
-from .checks import (check_pos_params_neg_raise_exception,
-                     check_correct_output,
-                     assert_units_equal,
-                     check_V_0_larger_V_th_raise_exception,
-                     check_warning_is_given_if_k_is_critical,
-                     check_exception_is_raised_if_k_is_too_large)
+from ..checks import (check_pos_params_neg_raise_exception,
+                      check_correct_output,
+                      assert_units_equal,
+                      check_V_0_larger_V_th_raise_exception,
+                      check_warning_is_given_if_k_is_critical,
+                      check_exception_is_raised_if_k_is_too_large)
 
 from lif_meanfield_tools.meanfield_calcs import (
     firing_rates,
