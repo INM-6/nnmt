@@ -246,7 +246,11 @@ def save_network(file_name, network, overwrite_dataset=False):
               'analysis_params': analysis_params,
               'results': results,
               'results_hash_dict': results_hash_dict}
-    h5.save(file_name, output, overwrite_dataset=overwrite_dataset)
+    try:
+        h5.save(file_name, output, overwrite_dataset=overwrite_dataset)
+    except KeyError:
+        raise IOError(f'{file_name} already exists! Use '
+                      '`overwrite_dataset=True` if you want to overwrite it.')
     
     
 def load_network(file_name):
