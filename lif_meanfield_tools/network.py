@@ -732,7 +732,8 @@ class Network(object):
             self.transfer_function(method=method),
             self.analysis_params['omegas'])
 
-    @_check_and_store(['eigenvalue_spectra'], ['eigenvalue_matrix'])
+    @_check_and_store(['eigenvalue_spectra'], ['eigenvalue_matrix',
+                                               'eigenvalue_method'])
     def eigenvalue_spectra(self, matrix, method='shift'):
         """
         Calculates the eigenvalues of the specified matrix at given frequency.
@@ -761,8 +762,9 @@ class Network(object):
             'eigvals',
             matrix)
 
-    @_check_and_store(['r_eigenvec_spectra'], ['r_eigenvec_matrix'])
-    def r_eigenvec_spectra(self, matrix):
+    @_check_and_store(['r_eigenvec_spectra'], ['r_eigenvec_matrix',
+                                               'r_eigenvec_method'])
+    def r_eigenvec_spectra(self, matrix, method='shift'):
         """
         Calculates the right eigenvecs of the specified matrix at given freq.
 
@@ -781,7 +783,7 @@ class Network(object):
         return meanfield_calcs.eigen_spectra(
             self.network_params['tau_m'],
             self.network_params['tau_s'],
-            self.transfer_function(),
+            self.transfer_function(method=method),
             self.network_params['dimension'],
             self.delay_dist_matrix(),
             self.network_params['J'],
@@ -790,8 +792,9 @@ class Network(object):
             'reigvecs',
             matrix)
 
-    @_check_and_store(['l_eigenvec_spectra'], ['l_eigenvec_matrix'])
-    def l_eigenvec_spectra(self, matrix):
+    @_check_and_store(['l_eigenvec_spectra'], ['l_eigenvec_matrix',
+                                               'l_eigenvec_method'])
+    def l_eigenvec_spectra(self, matrix, method='shift'):
         """
         Calculates the left eigenvecs of the specified matrix at given freq.
 
@@ -810,7 +813,7 @@ class Network(object):
         return meanfield_calcs.eigen_spectra(
             self.network_params['tau_m'],
             self.network_params['tau_s'],
-            self.transfer_function(),
+            self.transfer_function(method=method),
             self.network_params['dimension'],
             self.delay_dist_matrix(),
             self.network_params['J'],

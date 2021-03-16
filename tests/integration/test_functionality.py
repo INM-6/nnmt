@@ -74,24 +74,37 @@ class Test_Network_functions_give_correct_results:
     def test_eigenvalue_spectra(self, network, std_results):
         es = network.eigenvalue_spectra('MH')
         assert_quantity_array_equal(es, std_results['eigenvalue_spectra_MH'])
+        
+    def test_eigenvalue_spectra_taylor(self, network, std_results):
+        es = network.eigenvalue_spectra('MH', method='taylor')
+        assert_quantity_array_equal(
+            es, std_results['eigenvalue_spectra_taylor_MH'])
     
     def test_r_eigenvec_spectra(self, network, std_results):
         es = network.r_eigenvec_spectra('MH')
         assert_quantity_array_equal(es, std_results['r_eigenvec_spectra_MH'])
+    
+    def test_r_eigenvec_spectra_taylor(self, network, std_results):
+        es = network.r_eigenvec_spectra('MH', method='taylor')
+        assert_quantity_array_equal(
+            es, std_results['r_eigenvec_spectra_taylor_MH'])
         
-    @pytest.mark.xfail
-    def test_r_eigenvec_spectra_shift(self, network, std_results):
+    def test_r_eigenvec_spectra_with_method(self, network, std_results):
         es = network.r_eigenvec_spectra('MH', method='shift')
-        assert_quantity_array_equal(es, std_results['r_eigenvec_spectra'])
+        assert_quantity_array_equal(es, std_results['r_eigenvec_spectra_MH'])
     
     def test_l_eigenvec_spectra(self, network, std_results):
         es = network.l_eigenvec_spectra('MH')
         assert_quantity_array_equal(es, std_results['l_eigenvec_spectra_MH'])
+        
+    def test_l_eigenvec_spectra_taylor(self, network, std_results):
+        es = network.l_eigenvec_spectra('MH', method='taylor')
+        assert_quantity_array_equal(
+            es, std_results['l_eigenvec_spectra_taylor_MH'])
 
-    @pytest.mark.xfail
-    def test_l_eigenvec_spectra_shift(self, network, std_results):
+    def test_l_eigenvec_spectra_with_method(self, network, std_results):
         es = network.l_eigenvec_spectra('MH', method='shift')
-        assert_quantity_array_equal(es, std_results['l_eigenvec_spectra'])
+        assert_quantity_array_equal(es, std_results['l_eigenvec_spectra_MH'])
     
     def test_additional_rates_for_fixed_input(self, network, std_results):
         mean_input_set = network.network_params['mean_input_set']
@@ -254,21 +267,15 @@ class Test_temporary_storage_of_results:
         assert_quantity_array_equal(delay_dist_matrix,
                                     network.results['delay_dist_single'])
     
-    @pytest.mark.xfail
     def test_transfer_function(self, network):
-        """Reminds of current problem with storing."""
         transfer_function_taylor = network.transfer_function(method='taylor')
         assert_quantity_array_equal(transfer_function_taylor,
                                     network.results['transfer_function'])
         transfer_function_shift = network.transfer_function(method='shift')
         assert_quantity_array_equal(transfer_function_shift,
                                     network.results['transfer_function'])
-        assert_quantity_array_equal(transfer_function_taylor,
-                                    network.results['transfer_function'])
     
-    @pytest.mark.xfail
     def test_transfer_function_single(self, network):
-        """Reminds of current problem with storing."""
         omega = network.analysis_params['omega']
         transfer_function_taylor = network.transfer_function(omega,
                                                              method='taylor')
@@ -280,10 +287,6 @@ class Test_temporary_storage_of_results:
                                                             method='shift')
         assert_quantity_array_equal(
             transfer_function_shift,
-            network.results['transfer_function_single']
-            )
-        assert_quantity_array_equal(
-            transfer_function_taylor,
             network.results['transfer_function_single']
             )
     
@@ -298,18 +301,17 @@ class Test_temporary_storage_of_results:
         assert_quantity_array_equal(power_spectra,
                                     network.results['power_spectra'])
     
-    @pytest.mark.xfail
     def test_eigenvalue_spectra(self, network):
         eigenvalue_spectra_mh = network.eigenvalue_spectra('MH')
         assert_quantity_array_equal(eigenvalue_spectra_mh,
-                                    network.results['eigenvalue_spectra_MH'])
+                                    network.results['eigenvalue_spectra'])
         eigenvalue_spectra_prop = network.eigenvalue_spectra('prop')
         assert_quantity_array_equal(eigenvalue_spectra_prop,
-                                    network.results['eigenvalue_spectra_prop'])
+                                    network.results['eigenvalue_spectra'])
         eigenvalue_spectra_prop_inv = network.eigenvalue_spectra('prop_inv')
         assert_quantity_array_equal(
             eigenvalue_spectra_prop_inv,
-            network.results['eigenvalue_spectra_prop_inv'])
+            network.results['eigenvalue_spectra'])
         
     def test_r_eigenvec_spectra(self, network):
         r_eigenvec_spectra_mh = network.r_eigenvec_spectra('MH')
@@ -333,7 +335,6 @@ class Test_temporary_storage_of_results:
         assert_quantity_array_equal(l_eigenvec_spectra_prop_inv,
                                     network.results['l_eigenvec_spectra'])
 
-    @pytest.mark.xfail
     def test_additional_rates_for_fixed_input(self, network):
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
@@ -352,7 +353,6 @@ class Test_correct_return_value_for_second_call:
         assert_quantity_array_equal(transfer_function_taylor_0,
                                     transfer_function_taylor_1)
 
-    @pytest.mark.xfail
     def test_transfer_function_first_taylor_then_shift(self, network):
         transfer_function_taylor = network.transfer_function(method='taylor')
         transfer_function_shift = network.transfer_function(method='shift')
@@ -360,7 +360,6 @@ class Test_correct_return_value_for_second_call:
             assert_quantity_array_equal(transfer_function_taylor,
                                         transfer_function_shift)
 
-    @pytest.mark.xfail
     def test_transfer_function_single_first_taylor_then_shift(self, network):
         omega = network.analysis_params['omega']
         tf_taylor = network.transfer_function(omega, method='taylor')
