@@ -803,6 +803,7 @@ class Network(object):
             'leigvecs',
             matrix)
 
+    @_check_and_store(['nu_e_ext', 'nu_i_ext'])
     def additional_rates_for_fixed_input(self, mean_input_set, std_input_set):
         """
         Calculate additional external excitatory and inhibitory Poisson input
