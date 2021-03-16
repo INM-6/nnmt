@@ -115,7 +115,8 @@ class Test_instantiate_calculate_check_change_params_calculate_check:
         
     def test_change_parameters(self, network):
         tau_m = network.network_params['tau_m']
-        network.change_parameters(changed_network_params=dict(tau_m=2 * tau_m))
+        network.change_parameters(
+            changed_network_params=dict(tau_m=2 * tau_m), overwrite=True)
         assert network.network_params['tau_m'] == 2 * tau_m
         
     def test_calculate_something_again_get_different_results(self,

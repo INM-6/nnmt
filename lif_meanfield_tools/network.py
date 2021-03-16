@@ -406,27 +406,43 @@ class Network(object):
         return sorted(list(self.results.keys()))
 
     def change_parameters(self, changed_network_params={},
-                          changed_analysis_params={}):
+                          changed_analysis_params={},
+                          overwrite=False):
         """
-        Change parameters and return new network with specified parameters.
+        Change parameters and return network with specified parameters.
 
         Parameters:
         -----------
-        new_network_parameters: dict
-            Dictionary specifying which parameters should be altered.
+        changed_network_params: dict
+            Dictionary specifying which network parameters should be altered.
+        changed_analysis_params: dict
+            Dictionary specifying which analysis parameters should be altered.
+        overwrite: bool
+            Specifying whether existing network should be overwritten. Note:
+            This deletes the existing results!
 
         Returns:
         Network object
             New network with specified parameters.
         """
-
-        new_network_params = self.network_params
+        
+        new_network_params = self.network_params.copy()
         new_network_params.update(changed_network_params)
-        new_analysis_params = self.analysis_params
+        new_analysis_params = self.analysis_params.copy()
         new_analysis_params.update(changed_analysis_params)
-
-        return Network(self.network_params_yaml, self.analysis_params_yaml,
-                       new_network_params, new_analysis_params)
+        
+        if overwrite:
+            self.network_params = new_network_params
+            self.analysis_params = new_analysis_params
+            # delete results, because otherwise get inconsistens return values
+            # from _check_and_store. We do not keep track, which quantities
+            # have been recalculated or not.
+            self.results = {}
+            self.results_hash_dict = {}
+            return self
+        else:
+            return Network(self.network_params_yaml, self.analysis_params_yaml,
+                           new_network_params, new_analysis_params)
 
     def extend_analysis_frequencies(self, f_min, f_max):
         """

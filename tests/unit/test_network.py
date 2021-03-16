@@ -280,14 +280,44 @@ class Test_meta_functions:
     def test_change_network_parameters(self, network):
         new_tau_m = 1000 * ureg.ms
         update = dict(tau_m=new_tau_m)
-        network.change_parameters(changed_network_params=update)
+        network.change_parameters(changed_network_params=update,
+                                  overwrite=True)
         assert network.network_params['tau_m'] == new_tau_m
 
     def test_change_analysis_parameters(self, network):
         new_df = 1000 * ureg.Hz
         update = dict(df=new_df)
-        network.change_parameters(changed_analysis_params=update)
+        network.change_parameters(changed_analysis_params=update,
+                                  overwrite=True)
         assert network.analysis_params['df'] == new_df
+        
+    def test_change_parameters_returns_new_network(self, network):
+        new_tau_m = 1000 * ureg.ms
+        update = dict(tau_m=new_tau_m)
+        new_network = network.change_parameters(changed_network_params=update)
+        assert new_network is not network
+        
+    def test_change_parameters_returns_new_network_with_uncoupled_dicts(
+            self, network):
+        new_tau_m = 1000 * ureg.ms
+        update = dict(tau_m=new_tau_m)
+        new_network = network.change_parameters(changed_network_params=update)
+        new_network.network_params['K'] = np.array([1, 2, 3])
+        new_network.analysis_params['omegas'] = np.array([1, 2, 3]) * ureg.Hz
+        with pytest.raises(AssertionError):
+            assert_array_equal(network.network_params['K'],
+                               new_network.network_params['K'])
+        with pytest.raises(AssertionError):
+            assert_array_equal(network.analysis_params['omegas'],
+                               new_network.analysis_params['omegas'])
+
+    def test_change_parameter_deletes_results_if_overwrite_true(self, network):
+        new_tau_m = 1000 * ureg.ms
+        update = dict(tau_m=new_tau_m)
+        network.change_parameters(changed_network_params=update,
+                                  overwrite=True)
+        assert len(network.results.items()) == 0
+        assert len(network.results_hash_dict.items()) == 0
 
     @pytest.mark.xfail
     def test_extend_analysis_frequencies(self):
