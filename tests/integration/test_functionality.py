@@ -306,39 +306,33 @@ class Test_temporary_storage_of_results:
         eigenvalue_spectra_prop = network.eigenvalue_spectra('prop')
         assert_quantity_array_equal(eigenvalue_spectra_prop,
                                     network.results['eigenvalue_spectra_prop'])
-        eigenvalue_spectra_inv_prop = network.eigenvalue_spectra('inv_prop')
+        eigenvalue_spectra_prop_inv = network.eigenvalue_spectra('prop_inv')
         assert_quantity_array_equal(
-            eigenvalue_spectra_inv_prop,
-            network.results['eigenvalue_spectra_inv_prop'])
+            eigenvalue_spectra_prop_inv,
+            network.results['eigenvalue_spectra_prop_inv'])
         
     def test_r_eigenvec_spectra(self, network):
-        """Reminds of the current problematic way of storing."""
         r_eigenvec_spectra_mh = network.r_eigenvec_spectra('MH')
         assert_quantity_array_equal(r_eigenvec_spectra_mh,
                                     network.results['r_eigenvec_spectra'])
         r_eigenvec_spectra_prop = network.r_eigenvec_spectra('prop')
         assert_quantity_array_equal(r_eigenvec_spectra_prop,
                                     network.results['r_eigenvec_spectra'])
-        r_eigenvec_spectra_inv_prop = network.r_eigenvec_spectra('inv_prop')
-        assert_quantity_array_equal(r_eigenvec_spectra_inv_prop,
-                                    network.results['r_eigenvec_spectra'])
-        assert_quantity_array_equal(r_eigenvec_spectra_mh,
+        r_eigenvec_spectra_prop_inv = network.r_eigenvec_spectra('prop_inv')
+        assert_quantity_array_equal(r_eigenvec_spectra_prop_inv,
                                     network.results['r_eigenvec_spectra'])
         
     def test_l_eigenvec_spectra(self, network):
-        """Reminds of the current problematic way of storing."""
         l_eigenvec_spectra_mh = network.l_eigenvec_spectra('MH')
         assert_quantity_array_equal(l_eigenvec_spectra_mh,
                                     network.results['l_eigenvec_spectra'])
         l_eigenvec_spectra_prop = network.l_eigenvec_spectra('prop')
         assert_quantity_array_equal(l_eigenvec_spectra_prop,
                                     network.results['l_eigenvec_spectra'])
-        l_eigenvec_spectra_inv_prop = network.l_eigenvec_spectra('inv_prop')
-        assert_quantity_array_equal(l_eigenvec_spectra_inv_prop,
+        l_eigenvec_spectra_prop_inv = network.l_eigenvec_spectra('prop_inv')
+        assert_quantity_array_equal(l_eigenvec_spectra_prop_inv,
                                     network.results['l_eigenvec_spectra'])
-        assert_quantity_array_equal(l_eigenvec_spectra_mh,
-                                    network.results['l_eigenvec_spectra'])
-    
+
     @pytest.mark.xfail
     def test_additional_rates_for_fixed_input(self, network):
         mean_input_set = network.network_params['mean_input_set']
