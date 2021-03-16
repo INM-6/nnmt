@@ -228,7 +228,7 @@ class Network(object):
 
         return derived_params
 
-    def _check_and_store(result_key, analysis_keys=None):
+    def _check_and_store(result_keys, analysis_keys=None):
         """
         Decorator function that checks whether result are already existing.
 
@@ -254,10 +254,11 @@ class Network(object):
 
         Parameters:
         -----------
-        result_key: str
-            Specifies under which key the result should be stored.
+        result_keys: list
+            Specifies under which keys the result should be stored.
         analysis_key: list
-            Specifies under which key the analysis_parameters should be stored.
+            Specifies under which keys the analysis_parameters should be
+            stored.
 
         Returns:
         --------
@@ -282,18 +283,26 @@ class Network(object):
                     new_params.append(args[i])
 
             # calculate hash from result and analysis keys and analysis params
-            label = str(result_key) + str(analysis_keys) + str(new_params)
+            label = str(result_keys) + str(analysis_keys) + str(new_params)
             h = hashlib.md5(label.encode('utf-8')).hexdigest()
             # check if hash already exists and get corresponding result
             if h in results_hash_dict.keys():
-                result = results_hash_dict[h]['result']
+                # if only one key is present don't use list
+                if len(result_keys) == 1:
+                    new_results = results_hash_dict[h][result_keys[0]]
+                else:
+                    new_results = [results_hash_dict[h][key]
+                                   for key in result_keys]
             else:
                 # if not, calculate new result
-                result = func(self, *args, **kwargs)
+                new_results = func(self, *args, **kwargs)
 
                 # create new hash dict entry
-                hash_dict = dict(result=result,
-                                 result_key=result_key)
+                if len(result_keys) == 1:
+                    hash_dict = {result_keys[0]: new_results}
+                else:
+                    hash_dict = {key: new_results[i] for i, key
+                                 in enumerate(result_keys)}
                 if analysis_keys:
                     analysis_dict = {}
                     for key, param in zip(analysis_keys, new_params):
@@ -302,7 +311,11 @@ class Network(object):
                 results_hash_dict[h] = hash_dict
                 
             # create new results and analysis_params entries
-            results[result_key] = result
+            if len(result_keys) == 1:
+                results[result_keys[0]] = new_results
+            else:
+                for i, key in enumerate(result_keys):
+                    results[key] = new_results[i]
             if analysis_keys:
                 analysis_dict = {}
                 for key, param in zip(analysis_keys, new_params):
@@ -314,7 +327,7 @@ class Network(object):
             setattr(self, 'analysis_params', analysis_params)
 
             # return new result
-            return result
+            return new_results
 
         return decorator_check_and_store
     
@@ -342,6 +355,8 @@ class Network(object):
         
         The networks' dictionaires (network_params, analysis_params, results,
         results_hash_dict) are loaded.
+        
+        Note: The network's state is overwritten!
         
         Parameters:
         -----------
@@ -426,7 +441,7 @@ class Network(object):
         """
         pass
 
-    @_check_and_store('firing_rates')
+    @_check_and_store(['firing_rates'])
     def firing_rates(self):
         """ Calculates firing rates """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
@@ -444,7 +459,7 @@ class Network(object):
                                             self.network_params['nu_e_ext'],
                                             self.network_params['nu_i_ext'])
 
-    @_check_and_store('mean_input')
+    @_check_and_store(['mean_input'])
     def mean_input(self):
         """ Calculates mean """
         return meanfield_calcs.mean(self.firing_rates(),
@@ -458,7 +473,7 @@ class Network(object):
                                     self.network_params['nu_e_ext'],
                                     self.network_params['nu_i_ext'])
 
-    @_check_and_store('std_input')
+    @_check_and_store(['std_input'])
     def std_input(self):
         """ Calculates variance """
         return meanfield_calcs.standard_deviation(
@@ -516,7 +531,7 @@ class Network(object):
             omega = 2 * np.pi * freq
             return self.delay_dist_matrix_single(omega)
 
-    @_check_and_store('delay_dist')
+    @_check_and_store(['delay_dist'])
     def delay_dist_matrix_multi(self):
         """
         Calculates delay distribution matrix for all omegas.
@@ -534,7 +549,7 @@ class Network(object):
             self.network_params['delay_dist'],
             self.analysis_params['omegas'])
 
-    @_check_and_store('delay_dist_single', ['delay_dist_freqs'])
+    @_check_and_store(['delay_dist_single'], ['delay_dist_freqs'])
     def delay_dist_matrix_single(self, omega):
         """
         Calculates delay distribution matrix for one omega.
@@ -577,7 +592,7 @@ class Network(object):
         else:
             return self.transfer_function_single(freq, method)
 
-    @_check_and_store('transfer_function', ['transfer_multi_method'])
+    @_check_and_store(['transfer_function'], ['transfer_multi_method'])
     def transfer_function_multi(self, method='shift'):
         """
         Calculates transfer function for each population.
@@ -602,8 +617,8 @@ class Network(object):
 
         return transfer_functions
 
-    @_check_and_store('transfer_function_single', ['transfer_freqs',
-                                                   'transfer_single_method'])
+    @_check_and_store(['transfer_function_single'], ['transfer_freqs',
+                                                     'transfer_single_method'])
     def transfer_function_single(self, freq, method='shift'):
         """
         Calculates transfer function for each population.
@@ -630,7 +645,7 @@ class Network(object):
 
         return transfer_functions
 
-    @_check_and_store('sensitivity_measure', ['sensitivity_freqs'])
+    @_check_and_store(['sensitivity_measure'], ['sensitivity_freqs'])
     def sensitivity_measure(self, freq, method='shift'):
         """
         Calculates the sensitivity measure for the given frequency.
@@ -684,7 +699,7 @@ class Network(object):
             self.network_params['dimension'],
             omega)
 
-    @_check_and_store('power_spectra')
+    @_check_and_store(['power_spectra'])
     def power_spectra(self, method='shift'):
         """
         Calculates power spectra.
@@ -701,7 +716,7 @@ class Network(object):
             self.transfer_function(method=method),
             self.analysis_params['omegas'])
 
-    @_check_and_store('eigenvalue_spectra', ['eigenvalue_matrix'])
+    @_check_and_store(['eigenvalue_spectra'], ['eigenvalue_matrix'])
     def eigenvalue_spectra(self, matrix, method='shift'):
         """
         Calculates the eigenvalues of the specified matrix at given frequency.
@@ -730,7 +745,7 @@ class Network(object):
             'eigvals',
             matrix)
 
-    @_check_and_store('r_eigenvec_spectra', ['r_eigenvec_matrix'])
+    @_check_and_store(['r_eigenvec_spectra'], ['r_eigenvec_matrix'])
     def r_eigenvec_spectra(self, matrix):
         """
         Calculates the right eigenvecs of the specified matrix at given freq.
@@ -759,7 +774,7 @@ class Network(object):
             'reigvecs',
             matrix)
 
-    @_check_and_store('l_eigenvec_spectra', ['l_eigenvec_matrix'])
+    @_check_and_store(['l_eigenvec_spectra'], ['l_eigenvec_matrix'])
     def l_eigenvec_spectra(self, matrix):
         """
         Calculates the left eigenvecs of the specified matrix at given freq.

@@ -1,5 +1,6 @@
 import pytest
 
+import lif_meanfield_tools as lmt
 from ..checks import (assert_quantity_array_equal,
                       check_quantity_dicts_are_equal)
 
@@ -197,6 +198,23 @@ class Test_saving_and_loading:
         loaded_i = network.results['nu_i_ext']
         assert_quantity_array_equal(saved_e, loaded_e)
         assert_quantity_array_equal(saved_i, loaded_i)
+
+    def test_results_hash_dict_same_before_and_after_saving_and_loading(
+            self, network, tmpdir):
+        network.firing_rates()
+        rhd = network.results_hash_dict
+        save_and_load(network, tmpdir)
+        check_quantity_dicts_are_equal(rhd, network.results_hash_dict)
+        
+    def test_results_hash_dict_same_for_new_loading_network(
+            self, network, tmpdir):
+        network.firing_rates()
+        network.results_hash_dict
+        with tmpdir.as_cwd():
+            network.save('test.h5')
+            new_network = lmt.Network(file='test.h5')
+        check_quantity_dicts_are_equal(network.results_hash_dict,
+                                       new_network.results_hash_dict)
 
 
 class Test_temporary_storage_of_results:

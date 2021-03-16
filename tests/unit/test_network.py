@@ -295,14 +295,14 @@ class Test_meta_functions:
 
 
 def make_test_method(output):
-    @lmt.Network._check_and_store('test')
+    @lmt.Network._check_and_store(['test'])
     def test_method(self):
         return output
     return test_method
 
 
 def make_test_method_with_key(output, key):
-    @lmt.Network._check_and_store('test', key)
+    @lmt.Network._check_and_store(['test'], key)
     def test_method(self, key):
         return output
     return test_method
@@ -413,7 +413,7 @@ class Test_check_and_store_decorator:
     def test_returns_existing_key_param_results_for_second_param(self,
                                                                  mocker,
                                                                  network):
-        @lmt.Network._check_and_store('test', ['test_key'])
+        @lmt.Network._check_and_store(['test'], ['test_key'])
         def test_method(self, key):
             return key
         mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
@@ -444,7 +444,7 @@ class Test_check_and_store_decorator:
     def test_result_calculated_twice_for_differing_keys(self,
                                                         mocker,
                                                         network):
-        @lmt.Network._check_and_store('test', ['test_key'])
+        @lmt.Network._check_and_store(['test'], ['test_key'])
         def test_method(self, key):
             return key
         mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
@@ -454,7 +454,7 @@ class Test_check_and_store_decorator:
         assert len(network.results_hash_dict) == 2
         
     def test_updates_results_and_analysis_params(self, mocker, network):
-        @lmt.Network._check_and_store('test', ['test_key'])
+        @lmt.Network._check_and_store(['test'], ['test_key'])
         def test_method(self, key):
             return key
         mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
@@ -533,8 +533,8 @@ class Test_check_and_store_decorator:
         results_entry = list(network.results_hash_dict.values())[0]
         assert 1 * ureg.mV in results_entry.values()
         assert 2 * ureg.mV in results_entry.values()
-        assert 1 * ureg.ms in results_entry.values()
-        assert 2 * ureg.ms in results_entry.values()
+        assert 1 * ureg.ms in results_entry['analysis_params'].values()
+        assert 2 * ureg.ms in results_entry['analysis_params'].values()
         
     def test_results_updated_in_result_dict_for_two_result_keys_and_one_analysis_key(
             self, mocker, network):

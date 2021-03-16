@@ -10,7 +10,12 @@ config_path = 'tests/fixtures/integration/config/'
 
 @pytest.fixture(scope='class')
 def network():
-    """Standard microcircuit network with testing analysis params."""
+    """
+    Standard microcircuit network with testing analysis params.
+    
+    Because of the pytest scope the same network will be used for all tests of
+    a single test class.
+    """
     network = lmt.Network(
         network_params=(config_path + 'network_params.yaml'),
         analysis_params=(config_path + 'analysis_params.yaml')
@@ -155,3 +160,27 @@ class Test_instantiate_calculate_several_things_show_and_check_save:
                                     std_results['firing_rates'])
         assert_quantity_array_equal(network.results['mean_input'],
                                     std_results['mean_input'])
+        
+        
+class Test_instantiate_calculate_save_load:
+    
+    def test_calculate_something(self, network, std_results):
+        firing_rates = network.firing_rates()
+        assert_quantity_array_equal(firing_rates, std_results['firing_rates'])
+    
+    def test_list_results(self, network):
+        list_of_results = network.show()
+        assert list_of_results == ['firing_rates']
+    
+    def test_look_at_results(self, network, std_results):
+        assert_quantity_array_equal(network.results['firing_rates'],
+                                    std_results['firing_rates'])
+        
+    def test_save_and_something(self, network, tmpdir, std_results):
+        temp = tmpdir.mkdir('temp')
+        with temp.as_cwd():
+            network.save(file_name='test.h5')
+            network.reset()
+            network.load('test.h5')
+        firing_rates = network.results['firing_rates']
+        assert_array_equal(firing_rates, std_results['firing_rates'])
