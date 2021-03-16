@@ -393,7 +393,6 @@ class Test_check_and_store_decorator:
             assert_array_equal(network.mean_input(key), result)
             assert_units_equal(network.mean_input(key), result)
 
-
     @pytest.mark.parametrize('key', keys, ids=key_names)
     @pytest.mark.parametrize('result', results, ids=result_ids)
     def test_saves_new_param_and_results_for_existing_analysis_key(self,
@@ -476,6 +475,82 @@ class Test_check_and_store_decorator:
         with pytest.raises(AssertionError):
             check_quantity_dicts_are_equal(analysis_params0, analysis_params1)
             
+    def test_results_stored_in_result_dict_for_two_result_keys(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result1', 'result2'])
+        def test_method(self):
+            return 1 * ureg.mV, 2 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input()
+        assert 1 * ureg.mV == network.results['result1']
+        assert 2 * ureg.mV == network.results['result2']
+        
+    def test_results_stored_in_results_hash_dict_for_two_result_keys(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result1', 'result2'])
+        def test_method(self):
+            return 1 * ureg.mV, 2 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input()
+        # get only element in results_hash_dict
+        results_entry = list(network.results_hash_dict.values())[0]
+        assert 1 * ureg.mV in results_entry.values()
+        assert 2 * ureg.mV in results_entry.values()
+        
+    def test_results_stored_for_two_result_keys_with_one_analysis_key(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result1', 'result2'], ['analysis1'])
+        def test_method(self, key):
+            return 1 * ureg.mV, 2 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(1 * ureg.ms)
+        assert 1 * ureg.mV == network.results['result1']
+        assert 2 * ureg.mV == network.results['result2']
+        assert 1 * ureg.ms == network.analysis_params['analysis1']
+            
+    def test_results_stored_for_two_result_keys_with_two_analysis_keys(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result1', 'result2'],
+                                      ['analysis1', 'analysis2'])
+        def test_method(self, key1, key2):
+            return 1 * ureg.mV, 2 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(1 * ureg.ms, 2 * ureg.ms)
+        assert 1 * ureg.mV == network.results['result1']
+        assert 2 * ureg.mV == network.results['result2']
+        assert 1 * ureg.ms == network.analysis_params['analysis1']
+        assert 2 * ureg.ms == network.analysis_params['analysis2']
+        
+    def test_results_stored_in_results_hash_dict_for_two_result_keys_with_two_analysis_keys(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result1', 'result2'],
+                                      ['analysis1', 'analysis2'])
+        def test_method(self, key1, key2):
+            return 1 * ureg.mV, 2 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(1 * ureg.ms, 2 * ureg.ms)
+        # get only element in results_hash_dict
+        results_entry = list(network.results_hash_dict.values())[0]
+        assert 1 * ureg.mV in results_entry.values()
+        assert 2 * ureg.mV in results_entry.values()
+        assert 1 * ureg.ms in results_entry.values()
+        assert 2 * ureg.ms in results_entry.values()
+        
+    def test_results_updated_in_result_dict_for_two_result_keys_and_one_analysis_key(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result1', 'result2'], ['analysis'])
+        def test_method(self, key):
+            return key * 1 * ureg.mV, key * 2 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(1)
+        result11 = network.results['result1']
+        result12 = network.results['result2']
+        network.mean_input(2)
+        result21 = network.results['result1']
+        result22 = network.results['result2']
+        assert 2 * result11 == result21
+        assert 2 * result12 == result22
+        
             
 class Test_functionality:
 
