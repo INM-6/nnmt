@@ -177,11 +177,10 @@ class Test_instantiate_calculate_save_load:
         assert_quantity_array_equal(network.results['firing_rates'],
                                     std_results['firing_rates'])
         
-    def test_save_and_something(self, network, tmpdir, std_results):
+    def test_save_and_load_something(self, network, tmpdir, std_results):
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
             network.save(file_name='test.h5')
-            network.reset()
             network.load('test.h5')
-        firing_rates = network.results['firing_rates']
-        assert_array_equal(firing_rates, std_results['firing_rates'])
+            firing_rates = network.results['firing_rates']
+            assert_array_equal(firing_rates, std_results['firing_rates'])
