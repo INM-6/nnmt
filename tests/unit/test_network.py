@@ -215,7 +215,26 @@ class Test_saving_and_loading:
             network.save(file_name=file_name, overwrite_dataset=True)
             output = lmt.input_output.load_h5(file_name)
             assert_array_equal(output['results']['mean_input'], new_mean)
-
+            
+    def test_load_correctly_sets_network_dictionaries(self, tmpdir, network):
+        network.firing_rates()
+        nparams = network.network_params
+        aparams = network.analysis_params
+        results = network.results
+        rhd = network.results_hash_dict
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            network.save('test.h5')
+            network.network_params = {}
+            network.analysis_params = {}
+            network.results = {}
+            network.results_hash_dict = {}
+            network.load('test.h5')
+            check_quantity_dicts_are_equal(nparams, network.network_params)
+            check_quantity_dicts_are_equal(aparams, network.analysis_params)
+            check_quantity_dicts_are_equal(results, network.results)
+            check_quantity_dicts_are_equal(rhd, network.results_hash_dict)
+            
 
 class Test_meta_functions:
 
@@ -742,14 +761,3 @@ class Test_functionality:
         mock.assert_called_once()
         mock_mean.assert_called_once()
         mock_std.assert_called_once()
-
-    @pytest.mark.xfail
-    def test_compute_profile_characteristics_called_correctly(self, network,
-                                                              mocker):
-        mock_xi = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
-                               'xi_of_k')
-        mock_xi.return_value = 1, 2, 3, 4
-        mock_xi = mocker.patch('lif_meanfield_tools.meanfield_calcs.'
-                               'solve_chareq_rate_boxcar')
-        mock_xi.side_effect = 1, 2
-        network.compute_profile_characteristics()
