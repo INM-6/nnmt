@@ -80,15 +80,19 @@ class Test_initialization:
     def test_hash_is_created(self, network):
         assert hasattr(network, 'hash')
 
-    @pytest.mark.xfail
-    def test_loading_of_existing_results(self):
-        """How do we want them to be loaded?"""
-        raise NotImplementedError
+    def test_loading_of_existing_results(self, unit_fixture_path):
+        network = lmt.Network(file=f'{unit_fixture_path}test_network.h5')
+        assert len(network.network_params.items()) != 0
+        assert len(network.analysis_params.items()) != 0
+        assert 'firing_rates' in network.results.keys()
 
     def test_result_dict_is_created(self, network):
         assert hasattr(network, 'results')
 
-
+    def test_results_hash_dict_is_created(self, network):
+        assert hasattr(network, 'results_hash_dict')
+    
+    
 class Test_calculation_of_dependent_network_params:
     """
     Depends strongly on network_params_microcircuit.yaml in tests/fixtures.

@@ -29,7 +29,7 @@ from lif_meanfield_tools import ureg
 # path to network configuration files and analysis parameters
 config_path = 'tests/fixtures/unit/config/'
 # path to fixtures
-fixture_path = 'tests/fixtures/unit/data/'
+unit_fix_path = 'tests/fixtures/unit/data/'
 integration_fix_path = 'tests/fixtures/integration/data/'
 
 # list of all always positive arguments
@@ -69,7 +69,7 @@ ids_all_regimes = []
 for i, regime in enumerate(regimes):
     # load fixtures corresponding to regimes defined above
     # standard file name: `<regime_id>_regime.h5`
-    fixs = load_h5('{}{}_regime.h5'.format(fixture_path, regime))
+    fixs = load_h5('{}{}_regime.h5'.format(unit_fix_path, regime))
     result = fixs['results']
     # add regime to results so test functions can use them as output keys
     result['regime'] = regime
@@ -96,6 +96,12 @@ def get_required_params(func, all_params):
     required_params = {k: v for k, v in all_params.items()
                        if k in required_keys}
     return required_params
+
+
+@pytest.fixture
+def unit_fixture_path():
+    """Path to fixtures for unit tests."""
+    return unit_fix_path
 
 
 @pytest.fixture

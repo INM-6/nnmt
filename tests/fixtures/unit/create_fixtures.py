@@ -342,6 +342,12 @@ def fix_working_point(network, file):
     """Calculate working_point and save results as h5 using network.save()."""
     network.working_point()
     network.save(file_name=file, overwrite_dataset=True)
+    
+
+def fix_network_loading(network, file):
+    """Calculate firing_rates and save network to h5 file."""
+    network.firing_rates()
+    network.save(file, overwrite_dataset=True)
 
 
 if __name__ == '__main__':
@@ -390,3 +396,7 @@ if __name__ == '__main__':
             fix_d_nu_d_mu(network, file_path)
             fix_d_nu_d_mu_fb433(network, file_path)
             fix_d_nu_d_nu_in_fb(network, file_path)
+            
+            # test network for loading
+            network = lmt.Network(param_file, analysis_param_file)
+            fix_network_loading(network, f'{fixture_path}test_network.h5')
