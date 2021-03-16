@@ -8,8 +8,8 @@ from ..checks import (assert_quantity_array_equal,
 def save_and_load(network, tmpdir):
     temp = tmpdir.mkdir('temp')
     with temp.as_cwd():
-        network.save(file_name='test.h5')
-        network.load(file_name='test.h5')
+        network.save(file='test.h5')
+        network.load(file='test.h5')
 
 
 class Test_Network_functions_give_correct_results:

@@ -172,14 +172,6 @@ class Test_quantities_to_val_unit:
         assert conv_item[1]['unit'] == exp_item[1]['unit']
         assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
 
-    @pytest.mark.xfail
-    def test_list_of_quantities_with_several_units_raises_exception(self):
-        quantity_dict = dict(list_of_quantities=[1 * ureg.Hz,
-                                                 2 * ureg.s,
-                                                 3 * ureg.m])
-        with pytest.raises(ValueError):
-            io.quantities_to_val_unit(quantity_dict)
-
 
 class Test_load_params:
 
@@ -194,24 +186,44 @@ class Test_load_params:
         check_quantity_dicts_are_equal(params, param_test_dict)
 
 
-class Test_save:
+class Test_save_network:
 
     def test_h5_is_created(self, tmpdir, network):
         tmp_test = tmpdir.mkdir('tmp_test')
-        file_name = 'test.h5'
+        file = 'test.h5'
         with tmp_test.as_cwd():
-            io.save_network(file_name, network)
-        check_file_in_tmpdir(file_name, tmp_test)
+            io.save_network(file, network)
+        check_file_in_tmpdir(file, tmp_test)
 
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
                                                          network):
-        file_name = 'test.h5'
+        file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
-        file_name = 'test.h5'
+        file = 'test.h5'
         with tmp_test.as_cwd():
-            with pytest.raises(KeyError):
-                io.save_network(file_name, network)
-                io.save_network(file_name, network)
+            with pytest.raises(IOError):
+                io.save_network(file, network)
+                io.save_network(file, network)
+                
+                
+class Test_load_network:
+    pass
+
+
+class Test_save_dict:
+    pass
+
+
+class Test_load_dict:
+    pass
+
+
+class Test_recursive_dictionary_conversion_quantity_to_val_unit:
+    pass
+
+
+class Test_recursive_dictionary_conversion_val_unit_to_quantity:
+    pass
 
 
 class Test_create_hash:
@@ -229,7 +241,6 @@ class Test_create_hash:
 
 class Test_load_h5:
 
-    @pytest.mark.xfail
     def test_raise_exception_if_filename_not_existing(self, tmpdir):
         tmp_test = tmpdir.mkdir('tmp_test')
         filename = 'test.h5'
@@ -255,15 +266,14 @@ class Test_load_h5:
 
 class Test_load_from_h5:
 
-    @pytest.mark.xfail
     def test_save_and_load_existing_results_without_analysis_params(
             self, tmpdir, network):
-        network.firing_rate()
-        file_name = 'test.h5'
+        network.firing_rates()
+        file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            io.save_network(file_name, network)
-            dicts = io.load_network(file_name)
+            io.save_network(file, network)
+            dicts = io.load_network(file)
         results_hash_dict = dicts[3]
         check_quantity_dicts_are_equal(results_hash_dict,
                                        network.results_hash_dict)
@@ -294,6 +304,6 @@ class Test_load_from_h5:
             io.save_params('results', param_test_dict, filename)
             io.save_params('analysis_params', analysis_params, filename)
             loaded_analysis_params, loaded_results = io.load_from_h5(
-                input_name=filename)
+                file=filename)
         check_quantity_dicts_are_equal(analysis_params, loaded_analysis_params)
         check_quantity_dicts_are_equal(loaded_results, param_test_dict)

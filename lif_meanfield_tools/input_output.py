@@ -218,7 +218,7 @@ def convert_results_hash_dict_val_unit_to_quantities(hash_dict):
     return hash_dict
 
     
-def save_network(file_name, network, overwrite_dataset=False):
+def save_network(file, network, overwrite=False):
     """
     Save network to h5 file.
     
@@ -228,11 +228,11 @@ def save_network(file_name, network, overwrite_dataset=False):
     
     Parameters:
     -----------
-    file_name: str
+    file: str
         Output file name.
     network: Network object
         The network to be saved.
-    overwrite_dataset: bool
+    overwrite: bool
         Whether to overwrite an existing h5 file or not. If there already is
         one, h5py tries to update the h5 dictionary.
     """
@@ -247,19 +247,19 @@ def save_network(file_name, network, overwrite_dataset=False):
               'results': results,
               'results_hash_dict': results_hash_dict}
     try:
-        h5.save(file_name, output, overwrite_dataset=overwrite_dataset)
+        h5.save(file, output, overwrite_dataset=overwrite)
     except KeyError:
-        raise IOError(f'{file_name} already exists! Use '
-                      '`overwrite_dataset=True` if you want to overwrite it.')
+        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
+                      'want to overwrite it.')
     
     
-def load_network(file_name):
+def load_network(file):
     """
     Load network from h5 file.
     
     Parameters:
     -----------
-    file_name: str
+    file: str
         Input file name.
     
     Returns:
@@ -274,10 +274,10 @@ def load_network(file_name):
         Dictionary where all calculated results are stored.
     """
     try:
-        input = h5.load(file_name)
+        input = h5.load(file)
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
     except OSError:
-        print(f'File {file_name} not found!')
+        print(f'File {file} not found!')
         return {}, {}, {}, {}
     
     network_params = val_unit_to_quantities(input['network_params'])
@@ -289,7 +289,7 @@ def load_network(file_name):
     return network_params, analysis_params, results, results_hash_dict
 
 
-def save_params(output_key, output, file_name):
+def save_params(output_key, output, file):
     """
     Save data and given parameters in h5 file.
 
@@ -305,7 +305,7 @@ def save_params(output_key, output, file_name):
         Dictionary containing network parameters as quantities.
     analysis_params: dict
         Dictionary containing analysis parameters as quantities.
-    file_name: str
+    file: str
         String specifying output file name.
     """
     # convert data into format usable in h5 file
@@ -314,17 +314,17 @@ def save_params(output_key, output, file_name):
     output_dict[output_key] = output
 
     # save output
-    h5.save(file_name, output_dict, overwrite_dataset=True)
+    h5.save(file, output_dict, overwrite_dataset=True)
 
 
-def load_from_h5(network_params={}, param_keys=[], input_name=''):
+def load_from_h5(network_params={}, param_keys=[], file=''):
     """
     Load existing results and analysis_params for given params from h5 file.
 
     Loads results from h5 files named with the standard format
     <label>_<hash>.h5, if this file already exists. Or uses given list of
     parameters to create hash to find file. Or reads from file specified in
-    input_name.
+    file.
 
     Parameters:
     -----------
@@ -332,7 +332,7 @@ def load_from_h5(network_params={}, param_keys=[], input_name=''):
         Dictionary containing network parameters as quantities.
     param_keys: list
         List of parameters used in file hash.
-    input_name: str
+    file: str
         optional string specifying input file name
         (default: <label>_<hash>.h5).
 
@@ -344,7 +344,7 @@ def load_from_h5(network_params={}, param_keys=[], input_name=''):
         Dictionary containing all found results.
     """
     # if no input file name is specified
-    if not input_name:
+    if not file:
         # create hash from given parameters
         # collect all parameters reflected by hash in one dictionary
         hash_params = {}
@@ -356,11 +356,11 @@ def load_from_h5(network_params={}, param_keys=[], input_name=''):
         # crate hash from param_keys
         hash = create_hash(hash_params, param_keys)
         # default input name
-        input_name = '{}_{}.h5'.format(network_params['label'], str(hash))
+        file = '{}_{}.h5'.format(network_params['label'], str(hash))
 
     # try to load file with standard name
     try:
-        input_file = h5.load(input_name)
+        input_file = h5.load(file)
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
     except OSError:
         return {}, {}
@@ -384,7 +384,7 @@ def load_h5(filename):
     try:
         raw_data = h5.load(filename)
     except OSError:
-        raw_data = {}
+        raise IOError(f'{filename} does not exist!')
 
     data = {}
     for key in sorted(raw_data.keys()):

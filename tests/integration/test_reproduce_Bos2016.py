@@ -24,7 +24,7 @@ config_path = 'tests/fixtures/integration/config/'
 fix_path = 'tests/fixtures/integration/data/'
 
 # options for debugging
-save_data = False
+save_data = True
 use_saved_data = True
 
 
@@ -59,7 +59,7 @@ def network(exemplary_frequency_idx):
     yield network
     
     if save_data:
-        network.save(file_name=fix_path + 'network.h5', overwrite_dataset=True)
+        network.save(file=fix_path + 'network.h5', overwrite=True)
 
 
 @pytest.fixture

@@ -40,7 +40,7 @@ class Test_Network_instantiation_calculation_saving_routine:
     def test_save_something(self, network, tmpdir, std_results):
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
-            network.save(file_name='test.h5')
+            network.save(file='test.h5')
             loaded = h5.load('test.h5')
         firing_rates = loaded['results']['firing_rates']['val']
         assert_array_equal(firing_rates, std_results['firing_rates'])
@@ -76,7 +76,7 @@ class Test_instantiate_with_some_passed_quantities_calculate_save_routine:
     def test_save_something(self, network, tmpdir, std_results):
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
-            network.save(file_name='test.h5')
+            network.save(file='test.h5')
             loaded = h5.load('test.h5')
         firing_rates = loaded['results']['firing_rates']['val']
         assert_array_equal(firing_rates, std_results['firing_rates'])
@@ -135,7 +135,7 @@ class Test_instantiate_calculate_check_change_params_calculate_check:
     def test_save_something(self, network, tmpdir, std_results):
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
-            network.save(file_name='test.h5')
+            network.save(file='test.h5')
             loaded = h5.load('test.h5')
         firing_rates = loaded['results']['firing_rates']['val']
         with pytest.raises(AssertionError):
@@ -180,7 +180,7 @@ class Test_instantiate_calculate_save_load:
     def test_save_and_load_something(self, network, tmpdir, std_results):
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
-            network.save(file_name='test.h5')
+            network.save(file='test.h5')
             network.load('test.h5')
             firing_rates = network.results['firing_rates']
             assert_array_equal(firing_rates, std_results['firing_rates'])

@@ -331,7 +331,7 @@ class Network(object):
 
         return decorator_check_and_store
     
-    def save(self, file_name, overwrite_dataset=False):
+    def save(self, file, overwrite=False):
         """
         Save network to h5 file.
         
@@ -341,15 +341,15 @@ class Network(object):
         
         Parameters:
         -----------
-        file_name: str
+        file: str
             Output file name.
-        overwrite_dataset: bool
+        overwrite: bool
             Whether to overwrite an existing h5 file or not. If there already
             is one, h5py tries to update the h5 dictionary.
         """
-        io.save_network(file_name, self, overwrite_dataset)
+        io.save_network(file, self, overwrite)
     
-    def load(self, file_name):
+    def load(self, file):
         """
         Load network from h5 file.
         
@@ -360,15 +360,15 @@ class Network(object):
         
         Parameters:
         -----------
-        file_name: str
+        file: str
             Input file name.
         """
         (self.network_params,
          self.analysis_params,
          self.results,
-         self.results_hash_dict) = io.load_network(file_name)
+         self.results_hash_dict) = io.load_network(file)
     
-    def save_results(self, output_key='', output={}, file_name=''):
+    def save_results(self, output_key='', output={}, file=''):
         """
         Saves results and parameters to h5 file. If output is specified, this
         is saved to h5 file.
@@ -379,7 +379,7 @@ class Network(object):
             if specified, save output_dict under key output name in h5 file
         output: dict
             data that is stored in h5 file
-        file_name: str
+        file: str
             if given, this is used as output file name
 
         Returns:
@@ -387,19 +387,19 @@ class Network(object):
         None
         """
         # if no file name is specified use standard version
-        if not file_name:
-            file_name = '{}_{}.h5'.format(self.network_params['label'],
-                                          str(self.hash))
+        if not file:
+            file = '{}_{}.h5'.format(self.network_params['label'],
+                                     str(self.hash))
 
         # if output is given, save it to h5 file
         if output_key:
-            io.save(output_key, output, file_name)
+            io.save(output_key, output, file)
 
         # else save results and parameters to h5 file
         else:
-            io.save('results', self.results, file_name)
-            io.save('network_params', self.network_params, file_name)
-            io.save('analysis_params', self.analysis_params, file_name)
+            io.save('results', self.results, file)
+            io.save('network_params', self.network_params, file)
+            io.save('analysis_params', self.analysis_params, file)
 
     def show(self):
         """ Returns which results have already been calculated """

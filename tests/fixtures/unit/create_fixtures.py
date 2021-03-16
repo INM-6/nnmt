@@ -49,7 +49,7 @@ def fix_additional_rates_for_fixed_input(network, file):
         network.network_params['sigma_set'])
     network.results['add_nu_e_ext'] = nu_e_ext
     network.results['add_nu_i_ext'] = nu_i_ext
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_d_nu_d_mu(network, file):
@@ -64,7 +64,7 @@ def fix_d_nu_d_mu(network, file):
                          mu, sigma)
                for mu, sigma in zip(mus.magnitude, sigmas.magnitude)]
     network.results['d_nu_d_mu'] = results
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_d_nu_d_mu_fb433(network, file):
@@ -80,7 +80,7 @@ def fix_d_nu_d_mu_fb433(network, file):
                                mu, sigma)
                for mu, sigma in zip(mus, sigmas)]
     network.results['d_nu_d_mu_fb433'] = results
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_d_nu_d_nu_in_fb(network, file):
@@ -97,7 +97,7 @@ def fix_d_nu_d_nu_in_fb(network, file):
                                mu, sigma)
                for mu, sigma in zip(mus, sigmas)]
     network.results['d_nu_d_nu_in_fb'] = results
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_d_Psi(fixture_path):
@@ -155,7 +155,7 @@ def fix_d_2_Psi(fixture_path):
 def fix_delay_dist_single(network, file):
     """Calculate delay_dist_matrix for a single freq and save as h5."""
     network.delay_dist_matrix(network.analysis_params['omega'])
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_delay_dist_matrix(network, file):
@@ -174,7 +174,7 @@ def fix_delay_dist_matrix(network, file):
     network.results['delay_dist_truncated_gaussian'] = dd_truncated_gaussian
     network.results['delay_dist_gaussian'] = dd_gaussian
     network.network_params['delay_dist'] = original_delay_dist
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_eff_coupling_strength(network, file):
@@ -189,7 +189,7 @@ def fix_eff_coupling_strength(network, file):
         network.results['mean_input'],
         network.results['std_input'])
     network.results['effective_coupling_strength'] = eff_coupling_strength
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_eigenspectra(network, file):
@@ -220,7 +220,7 @@ def fix_eigenspectra(network, file):
         network.results['l_eigenvec_spectra_prop_inv'] = (
             network.l_eigenvec_spectra('prop_inv'))
 
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_p_hat_boxcar(fixture_path):
@@ -293,7 +293,7 @@ def fix_Phi_prime_mu(fixture_path):
 
 def fix_power_spectra(network, file):
     network.power_spectra()
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_Psi(fixture_path):
@@ -328,26 +328,26 @@ def fix_sensitivity_measure(network, file):
     omega = network.analysis_params['omega']
     network.sensitivity_measure(omega)
     network.transfer_function(omega)
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_transfer_function(network, file):
     """Calculate results for all options of transfer_function."""
     network.results['tf_taylor'] = network.transfer_function(method='taylor')
     network.results['tf_shift'] = network.transfer_function(method='shift')
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
 
 
 def fix_working_point(network, file):
     """Calculate working_point and save results as h5 using network.save()."""
     network.working_point()
-    network.save(file_name=file, overwrite_dataset=True)
+    network.save(file=file, overwrite=True)
     
 
 def fix_network_loading(network, file):
     """Calculate firing_rates and save network to h5 file."""
     network.firing_rates()
-    network.save(file, overwrite_dataset=True)
+    network.save(file, overwrite=True)
 
 
 if __name__ == '__main__':

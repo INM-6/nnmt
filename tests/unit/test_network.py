@@ -179,9 +179,9 @@ class Test_saving_and_loading:
         # results file name expression
         exp = re.compile(r'.*\.h5')
         # file names in tmp dir
-        file_names = [str(obj) for obj in tmp_test.listdir()]
+        files = [str(obj) for obj in tmp_test.listdir()]
         # file names matching exp
-        matches = list(filter(exp.match, file_names))
+        matches = list(filter(exp.match, files))
         # pass test if test file created
         assert any(matches)
 
@@ -195,25 +195,25 @@ class Test_saving_and_loading:
 
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
                                                          network):
-        file_name = 'file.h5'
+        file = 'file.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             with pytest.raises(IOError):
                 network.mean_input()
-                network.save(file_name=file_name)
-                network.save(file_name=file_name)
+                network.save(file=file)
+                network.save(file=file)
 
     def test_save_overwrites_existing_file_if_explicitely_told(self, tmpdir,
                                                                network):
-        file_name = 'file.h5'
+        file = 'file.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.mean_input()
-            network.save(file_name=file_name)
+            network.save(file=file)
             network.network_params['tau_m'] = 100 * ureg.ms
             new_mean = network.mean_input()
-            network.save(file_name=file_name, overwrite_dataset=True)
-            output = lmt.input_output.load_h5(file_name)
+            network.save(file=file, overwrite=True)
+            output = lmt.input_output.load_h5(file)
             assert_array_equal(output['results']['mean_input'], new_mean)
             
     def test_load_correctly_sets_network_dictionaries(self, tmpdir, network):

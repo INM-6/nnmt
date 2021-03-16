@@ -73,4 +73,4 @@ if __name__ == '__main__':
             network.l_eigenvec_spectra('prop_inv'))
         network.additional_rates_for_fixed_input(mean_input_set,
                                                  std_input_set)
-        network.save(file_name=fixture_path + 'std_results.h5')
+        network.save(file=fixture_path + 'std_results.h5')
