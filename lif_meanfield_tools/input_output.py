@@ -25,7 +25,7 @@ from . import ureg
 
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """
-    Convert a dictionary of value-unit pairs to a dictionary of quantities
+    Recursively convert a dict of value-unit pairs to a dict of quantities.
 
     Combine value and unit of each quantity and save them in a dictionary
     of the structure: {'<quantity_key1>':<quantity1>, ...}.
@@ -75,7 +75,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
 def quantities_to_val_unit(dict_of_quantities):
     """
-    Convert a dictionary of quantities to a dictionary of val-unit pairs
+    Recursively convert a dict of quantities to a dict of val-unit pairs.
 
     Split up value and unit of each quantiy and save them in a dictionary
     of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
@@ -101,14 +101,17 @@ def quantities_to_val_unit(dict_of_quantities):
         if isinstance(quantity, ureg.Quantity):
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
-        # lists of strings need to be treated seperately
+        # nested dictionaries need to be converted first
+        elif isinstance(quantity, dict):
+            converted_dict[quantity_key] = quantities_to_val_unit(quantity)
+        # arrays, lists and lists of quantities
         elif isinstance(quantity, Iterable):
-            if any(isinstance(part, str) for part in quantity):
-                converted_dict[quantity_key] = quantity
-            elif any(isinstance(part, ureg.Quantity) for part in quantity):
+            # lists of quantities
+            if any(isinstance(part, ureg.Quantity) for part in quantity):
                 converted_dict[quantity_key]['val'] = (
                     [array.magnitude for array in quantity])
                 converted_dict[quantity_key]['unit'] = str(quantity[0].units)
+            # arrays, lists, etc.
             else:
                 converted_dict[quantity_key] = quantity
         # anything else is stored the way it is
@@ -178,55 +181,6 @@ def create_hash(params, param_keys):
     return hl.md5(label.encode('utf-8')).hexdigest()
     
     
-def convert_results_hash_dict_quantities_to_val_unit(hash_dict):
-    """
-    Converts hash_dict of quantities to val-unit pairs.
-    
-    Parameters:
-    -----------
-    hash_dict: dict
-        A dictionary with the following structure:
-        {'<hash>': {'result': <result>, 'result_key': <result_key>,
-                    ['analysis_params': {'<analysis_key1>': <analysis_param1>,
-                                         '<analysis_key2>': <analysis_param2>}]
-                    },
-         ...}
-    """
-    hash_dict = copy.deepcopy(hash_dict)
-    for hash, result in hash_dict.items():
-        if 'analysis_params' in result.keys():
-            result['analysis_params'] = quantities_to_val_unit(
-                result['analysis_params'])
-        hash_dict[hash] = quantities_to_val_unit(result)
-    return hash_dict
-
-
-def convert_results_hash_dict_val_unit_to_quantities(hash_dict):
-    """
-    Converts hash_dict of val-unit pairs to quantities.
-    
-    Parameters:
-    -----------
-    hash_dict: dict
-        A dictionary with the following structure:
-        {'<hash>': {'result': {'val': <val>, 'unit': <unit>},
-                    'result_key': <result_key>,
-                    ['analysis_params': {
-                         '<analysis_key1>': {'val': <val>, 'unit': <unit>},
-                         '<analysis_key2>': {'val': <val>, 'unit': <unit>}}]
-                    },
-         ...}
-    """
-    hash_dict = copy.deepcopy(hash_dict)
-    for hash, result in hash_dict.items():
-        result = val_unit_to_quantities(result)
-        if 'analysis_params' in result.keys():
-            result['analysis_params'] = val_unit_to_quantities(
-                result['analysis_params'])
-        hash_dict[hash] = result
-    return hash_dict
-
-    
 def save_network(file, network, overwrite=False):
     """
     Save network to h5 file.
@@ -248,8 +202,7 @@ def save_network(file, network, overwrite=False):
     network_params = quantities_to_val_unit(network.network_params)
     analysis_params = quantities_to_val_unit(network.analysis_params)
     results = quantities_to_val_unit(network.results)
-    results_hash_dict = convert_results_hash_dict_quantities_to_val_unit(
-        network.results_hash_dict)
+    results_hash_dict = quantities_to_val_unit(network.results_hash_dict)
     
     output = {'network_params': network_params,
               'analysis_params': analysis_params,
