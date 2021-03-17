@@ -115,6 +115,31 @@ def network():
 
 
 @pytest.fixture
+def network_dict_val_unit():
+    """
+    Simple example of all network dictionaries in val unit format in a dict.
+    
+    Returns:
+    --------
+    dict
+        {network_params, analysis_params, results, results_hash_dict}
+    """
+    network_params = {'tau_m': {'val': 10, 'unit': 'ms'}}
+    analysis_params = {'omegas': {'val': [1, 2, 3, 4], 'unit': 'hertz'}}
+    results = {'test': {'val': 1, 'unit': 'hertz'}}
+    results_hash_dict = {
+        '46611a50a5da6eb3b7761b552bb28fc5': {
+            'test': {'val': 1, 'unit': 'hertz'},
+            'analysis_params': {'test_key': {'val': 1, 'unit': 'ms'}}
+            }
+        }
+    return {'network_params': network_params,
+            'analysis_params': analysis_params,
+            'results': results,
+            'results_hash_dict': results_hash_dict}
+    
+
+@pytest.fixture
 def std_results():
     """Standard microcircuit network results for testing analysis params."""
     results = load_h5(integration_fix_path + 'std_results.h5')

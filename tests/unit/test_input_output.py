@@ -284,55 +284,34 @@ class Test_load_network:
             for output in outputs:
                 assert not bool(output)
             
-    def test_input_is_converted_to_quantities(self, tmpdir, mocker, network):
+    def test_input_is_converted_to_quantities(self, tmpdir,
+                                              network_dict_val_unit):
         file = 'test.h5'
-        
-        @lmt.Network._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return 1 * ureg.ms
-    
-        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
-        network.mean_input(np.array([1, 2, 3]) * ureg.ms)
-        
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            network.save(file)
+            h5.save(file, network_dict_val_unit)
             outputs = io.load_network(file)
             # check that all val unit dicts have been converted to quantities
             for output in outputs:
                 check_dict_contains_no_val_unit_dict(output)
         
-    def test_loaded_dictionaries_are_not_empty(self, tmpdir, mocker, network):
+    def test_loaded_dictionaries_are_not_empty(self, tmpdir,
+                                               network_dict_val_unit):
         file = 'test.h5'
-        
-        @lmt.Network._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return 1 * ureg.ms
-
-        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
-        network.mean_input(1 * ureg.ms)
-        
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            network.save(file)
+            h5.save(file, network_dict_val_unit)
             outputs = io.load_network(file)
             # check that no loaded dictionary is empty
             for sub_dict in outputs:
                 assert bool(sub_dict)
             
-    def test_returns_dictionaries_in_correct_order(self, tmpdir, mocker,
-                                                   network):
+    def test_returns_dictionaries_in_correct_order(self, tmpdir,
+                                                   network_dict_val_unit):
         file = 'test.h5'
-        
-        @lmt.Network._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return 1 * ureg.ms
-    
-        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
-        network.mean_input(np.array([1, 2, 3]) * ureg.ms)
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            network.save(file)
+            h5.save(file, network_dict_val_unit)
             outputs = io.load_network(file)
             assert 'tau_m' in outputs[0].keys()
             assert 'omegas' in outputs[1].keys()
