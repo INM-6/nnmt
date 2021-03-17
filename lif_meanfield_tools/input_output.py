@@ -13,6 +13,7 @@ Options:
 from __future__ import print_function
 from collections.abc import Iterable
 import copy
+import warnings
 
 import numpy as np
 import yaml
@@ -277,7 +278,8 @@ def load_network(file):
         input = h5.load(file)
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
     except OSError:
-        print(f'File {file} not found!')
+        message = f'File {file} not found!'
+        warnings.warn(message)
         return {}, {}, {}, {}
     
     network_params = val_unit_to_quantities(input['network_params'])
