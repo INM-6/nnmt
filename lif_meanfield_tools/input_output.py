@@ -12,7 +12,6 @@ Options:
 
 from __future__ import print_function
 from collections.abc import Iterable
-import copy
 import warnings
 
 import numpy as np
@@ -120,13 +119,12 @@ def quantities_to_val_unit(dict_of_quantities):
     return converted_dict
 
 
-def load_params(file_path):
+def load_val_unit_dict_from_yaml(file_path):
     """
-    Load and convert parameters from yaml file
+    Load and convert val unit dictionary from yaml file.
 
-    Load parameters from yaml file and convert them from value unit
-    dictionaries (used in yaml file) to quantities (used in implementation of
-    functions in meanfield_calcs.py).
+    Load val unit dictionary from yaml file and convert it to dictionary of
+    quantities.
 
     Parameters:
     -----------
@@ -135,12 +133,13 @@ def load_params(file_path):
         <parameter1>:
             val: <value1>
             unit: <unit1>
+        <parameter2>: <value_without_unit>
         ...
 
     Returns:
     --------
     dict
-        dictionary containing all converted parameters as quantities
+        dictionary containing all converted val unit dicts as quantities
     """
     # try to load yaml file
     with open(file_path, 'r') as stream:

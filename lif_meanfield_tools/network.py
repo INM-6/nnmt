@@ -102,7 +102,8 @@ class Network(object):
             else:
                 self.network_params_yaml = network_params
                 # read from yaml and convert to quantities
-                self.network_params = io.load_params(network_params)
+                self.network_params = io.load_val_unit_dict_from_yaml(
+                    network_params)
                 self.network_params.update(new_network_params)
 
             # no yaml file for analysis parameters given
@@ -111,7 +112,8 @@ class Network(object):
                 self.analysis_params = new_analysis_params
             else:
                 self.analysis_params_yaml = analysis_params
-                self.analysis_params = io.load_params(analysis_params)
+                self.analysis_params = io.load_val_unit_dict_from_yaml(
+                    analysis_params)
                 self.analysis_params.update(new_analysis_params)
 
             if derive_params:

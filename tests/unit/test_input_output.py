@@ -207,16 +207,17 @@ class Test_quantities_to_val_unit:
         assert isinstance(converted['c'], dict)
 
 
-class Test_load_params:
+class Test_load_val_unit_dict_from_yaml:
 
     def test_val_unit_to_quantities_called(self, mocker):
         mock = mocker.patch('lif_meanfield_tools.input_output.'
                             'val_unit_to_quantities')
-        io.load_params(f'{path_to_fixtures}test.yaml')
+        io.load_val_unit_dict_from_yaml(f'{path_to_fixtures}test.yaml')
         mock.assert_called_once()
 
     def test_yaml_loaded_correctly(self, param_test_dict):
-        params = io.load_params(f'{path_to_fixtures}test.yaml')
+        params = io.load_val_unit_dict_from_yaml(
+            f'{path_to_fixtures}test.yaml')
         check_quantity_dicts_are_equal(params, param_test_dict)
 
 
