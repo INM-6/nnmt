@@ -138,6 +138,31 @@ def network_dict_val_unit():
             'results': results,
             'results_hash_dict': results_hash_dict}
     
+    
+@pytest.fixture
+def network_dict_quantity():
+    """
+    Simple example of all network dictionaries in quantity format in a dict.
+    
+    Returns:
+    --------
+    dict
+        {network_params, analysis_params, results, results_hash_dict}
+    """
+    network_params = {'tau_m': 10 * ureg.ms}
+    analysis_params = {'omegas': [1, 2, 3, 4] * ureg.Hz}
+    results = {'test': 1 * ureg.Hz}
+    results_hash_dict = {
+        '46611a50a5da6eb3b7761b552bb28fc5': {
+            'test': 1 * ureg.Hz,
+            'analysis_params': {'test_key': 1 * ureg.ms}
+            }
+        }
+    return {'network_params': network_params,
+            'analysis_params': analysis_params,
+            'results': results,
+            'results_hash_dict': results_hash_dict}
+    
 
 @pytest.fixture
 def std_results():

@@ -7,6 +7,7 @@ import pytest
 import numpy as np
 import h5py_wrapper as h5
 import warnings
+import yaml
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
@@ -207,6 +208,33 @@ class Test_quantities_to_val_unit:
         assert isinstance(converted['c'], dict)
 
 
+class Test_save_quantity_dict_to_yaml:
+    
+    def test_quantities_to_val_unit_called(self, mocker, tmpdir,
+                                           network_dict_quantity):
+        file = 'test.yaml'
+        mock = mocker.patch('lif_meanfield_tools.input_output.'
+                            'quantities_to_val_unit',
+                            return_value=network_dict_quantity)
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save_quantity_dict_to_yaml(file, network_dict_quantity)
+        mock.assert_called_once()
+
+    def test_quantity_dict_saved_correctly(self, tmpdir,
+                                           network_dict_quantity):
+        file = 'test.yaml'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save_quantity_dict_to_yaml(file, network_dict_quantity)
+            with open(file, 'r') as stream:
+                loaded = yaml.safe_load(stream)
+            check_dict_contains_no_quantity(loaded)
+            # check that dicts are not empty
+            for sdict in loaded:
+                assert bool(sdict)
+            
+            
 class Test_load_val_unit_dict_from_yaml:
 
     def test_val_unit_to_quantities_called(self, mocker):

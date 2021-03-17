@@ -13,6 +13,7 @@ Options:
 from __future__ import print_function
 from collections.abc import Iterable
 import warnings
+import copy
 
 import numpy as np
 import yaml
@@ -119,7 +120,39 @@ def quantities_to_val_unit(dict_of_quantities):
     return converted_dict
 
 
-def load_val_unit_dict_from_yaml(file_path):
+def convert_arrays_in_dict_to_lists(adict):
+    """
+    Recursively searches through a dict and replaces all numpy arrays by lists.
+    """
+    converted = copy.deepcopy(adict)
+    for key, value in converted.items():
+        if isinstance(value, dict):
+            converted[key] = convert_arrays_in_dict_to_lists(value)
+        elif isinstance(value, np.ndarray):
+            converted[key] = value.tolist()
+    return converted
+
+
+def save_quantity_dict_to_yaml(file, qdict):
+    """
+    Convert and save dictionary of quantities to yaml file.
+    
+    Converts dict of quantities to val unit dicts and saves them in yaml file.
+    
+    Parameters:
+    -----------
+    file: str
+        Name of file.
+    qdict: dict
+        Dictionary containing quantities.
+    """
+    converted = quantities_to_val_unit(qdict)
+    converted = convert_arrays_in_dict_to_lists(converted)
+    with open(file, 'w') as f:
+        yaml.dump(converted, f)
+    
+
+def load_val_unit_dict_from_yaml(file):
     """
     Load and convert val unit dictionary from yaml file.
 
@@ -128,7 +161,7 @@ def load_val_unit_dict_from_yaml(file_path):
 
     Parameters:
     -----------
-    file_path : str
+    file : str
         string specifying path to yaml file containing parameters in format
         <parameter1>:
             val: <value1>
@@ -142,17 +175,15 @@ def load_val_unit_dict_from_yaml(file_path):
         dictionary containing all converted val unit dicts as quantities
     """
     # try to load yaml file
-    with open(file_path, 'r') as stream:
+    with open(file, 'r') as stream:
         try:
-            params = yaml.safe_load(stream)
+            val_unit_dict = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
-
     # convert parameters to quantities
-    params_converted = val_unit_to_quantities(params)
-
+    quantity_dict = val_unit_to_quantities(val_unit_dict)
     # return converted network parameters
-    return params_converted
+    return quantity_dict
 
 
 def create_hash(params, param_keys):

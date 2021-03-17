@@ -34,7 +34,7 @@ def ground_truth_result():
 
 @pytest.fixture(scope='class')
 def network_params():
-    params = lmt.input_output.load_params(
+    params = lmt.input_output.load_val_unit_dict_from_yaml(
         config_path + 'Schuecker2015_parameters.yaml')
     params['dimension'] = 1
     return params
