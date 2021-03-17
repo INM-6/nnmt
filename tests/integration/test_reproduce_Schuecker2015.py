@@ -43,9 +43,9 @@ def network_params():
 @pytest.fixture(scope='class')
 def frequencies(network_params):
     frequencies = np.logspace(
-        network_params['f_start_exponent']['val'],
-        network_params['f_end_exponent']['val'],
-        network_params['n_freqs']['val']) * ureg.Hz
+        network_params['f_start_exponent'],
+        network_params['f_end_exponent'],
+        network_params['n_freqs']) * ureg.Hz
     return frequencies
     
     
