@@ -206,8 +206,29 @@ class Test_quantities_to_val_unit:
         assert isinstance(converted['b']['b1'], dict)
         assert isinstance(converted['b']['b2'], dict)
         assert isinstance(converted['c'], dict)
-
-
+        
+        
+class Test_convert_arrays_in_dict_to_list:
+    
+    def test_converts_simple_dict(self):
+        tdict = {'a': np.array([1, 2, 3]),
+                 'b': [3, 4, 5],
+                 'c': 'spam',
+                 'd': 1}
+        converted = io.convert_arrays_in_dict_to_lists(tdict)
+        tdict.update({'a': [1, 2, 3]})
+        check_quantity_dicts_are_equal(converted, tdict)
+        
+    def test_converts_nested_dict(self):
+        tdict = {'a': {'val': np.array([1, 2, 3]), 'unit': 'ms'},
+                 'b': [3, 4, 5],
+                 'c': 'spam',
+                 'd': 1}
+        converted = io.convert_arrays_in_dict_to_lists(tdict)
+        tdict.update({'a': {'val': [1, 2, 3], 'unit': 'ms'}})
+        check_quantity_dicts_are_equal(converted, tdict)
+        
+        
 class Test_save_quantity_dict_to_yaml:
     
     def test_quantities_to_val_unit_called(self, mocker, tmpdir,
