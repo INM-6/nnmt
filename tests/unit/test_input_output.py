@@ -145,6 +145,7 @@ class Test_val_unit_to_quantities:
                            b2=dict(val=2, unit='ms')),
                     c=dict(val=3, unit='meter'))
         converted = io.val_unit_to_quantities(test)
+        check_dict_contains_no_val_unit_dict(converted)
         assert isinstance(converted['a']['a1'], ureg.Quantity)
         assert isinstance(converted['a']['a2'], ureg.Quantity)
         assert isinstance(converted['b']['b1'], ureg.Quantity)
@@ -190,6 +191,20 @@ class Test_quantities_to_val_unit:
         assert conv_item[0] == exp_item[0]
         assert conv_item[1]['unit'] == exp_item[1]['unit']
         assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
+        
+    def test_nested_dictionaries_are_converted_correctly(self):
+        test = dict(a=dict(a1=1 * ureg.ms,
+                           a2=[1, 2, 3] * ureg.Hz),
+                    b=dict(b1=1 * ureg.Hz,
+                           b2=2 * ureg.ms),
+                    c=3 * ureg.m)
+        converted = io.quantities_to_val_unit(test)
+        check_dict_contains_no_quantity(converted)
+        assert isinstance(converted['a']['a1'], dict)
+        assert isinstance(converted['a']['a2'], dict)
+        assert isinstance(converted['b']['b1'], dict)
+        assert isinstance(converted['b']['b2'], dict)
+        assert isinstance(converted['c'], dict)
 
 
 class Test_load_params:
