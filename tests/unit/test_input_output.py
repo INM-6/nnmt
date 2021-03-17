@@ -283,14 +283,12 @@ class Test_save_network:
                                                          network):
         file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
-        file = 'test.h5'
         with tmp_test.as_cwd():
             with pytest.raises(IOError):
                 io.save_network(file, network)
                 io.save_network(file, network)
             
     def test_save_creates_correct_output(self, tmpdir, mocker, network):
-        file = 'test.h5'
         file = 'test.h5'
         keys = ['results', 'results_hash_dict', 'network_params',
                 'analysis_params']
@@ -371,19 +369,42 @@ class Test_load_network:
             assert 'analysis_params' in rhd[0].keys()
             
 
-class Test_save_dict:
-    pass
+class Test_save_quantity_dict_to_h5:
+    
+    def test_h5_is_created(self, tmpdir, network_dict_quantity):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save_quantity_dict_to_h5(file, network_dict_quantity)
+        check_file_in_tmpdir(file, tmp_test)
+
+    def test_save_overwriting_existing_file_raises_error(
+            self, tmpdir, network_dict_quantity):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                io.save_quantity_dict_to_h5(file, network_dict_quantity)
+                io.save_quantity_dict_to_h5(file, network_dict_quantity)
+                
+    def test_save_creates_correct_output(self, tmpdir, network_dict_quantity):
+        file = 'test.h5'
+        keys = ['results', 'results_hash_dict', 'network_params',
+                'analysis_params']
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            io.save_quantity_dict_to_h5(file, network_dict_quantity)
+            output = h5.load(file)
+            for key in keys:
+                assert key in output.keys()
+            # check that dicts are not empty
+            for sub_dict in output.values():
+                assert bool(sub_dict)
+            # check that all quantities have been converted
+            check_dict_contains_no_quantity(output)
 
 
-class Test_load_dict:
-    pass
-
-
-class Test_recursive_dictionary_conversion_quantity_to_val_unit:
-    pass
-
-
-class Test_recursive_dictionary_conversion_val_unit_to_quantity:
+class Test_load_val_unit_dict_from_h5:
     pass
 
 

@@ -281,32 +281,30 @@ def load_network(file):
     return network_params, analysis_params, results, results_hash_dict
 
 
-def save_params(output_key, output, file):
+def save_quantity_dict_to_h5(file, qdict, overwrite=False):
     """
-    Save data and given parameters in h5 file.
-
-    By default the output name will be <label>_<hash>.h5, where the hash is
-    created using network_params. But you can either specify an ouput_name
-    yourself, or specify which param_keys should be reflected in the hash.
+    Convert and save dict of quantities to h5 file.
+    
+    The quantity dictionary is first converted to a val unit dictionary and
+    then saved to an h5 file.
 
     Parameters:
     -----------
-    results_dict : dict
-        Dictionary containing all calculated results.
-    network_params : dict
-        Dictionary containing network parameters as quantities.
-    analysis_params: dict
-        Dictionary containing analysis parameters as quantities.
     file: str
         String specifying output file name.
+    qdict: dict
+        Dictionary containing quantities.
+    overwrite: bool
+        Whether h5 file should be overwritten, if already existing.
     """
     # convert data into format usable in h5 file
-    output = quantities_to_val_unit(output)
-    output_dict = {}
-    output_dict[output_key] = output
-
+    output = quantities_to_val_unit(qdict)
     # save output
-    h5.save(file, output_dict, overwrite_dataset=True)
+    try:
+        h5.save(file, output, overwrite_dataset=overwrite)
+    except KeyError:
+        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
+                      'want to overwrite it.')
 
 
 def load_from_h5(network_params={}, param_keys=[], file=''):
