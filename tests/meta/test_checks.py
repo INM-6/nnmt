@@ -1,6 +1,7 @@
 import pytest
 
-from ..checks import pint_wrap
+from ..checks import (pint_wrap,
+                      check_dict_contains_no_quantity)
 
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
@@ -34,3 +35,33 @@ class Test_pint_wrapper:
         assert b0.magnitude == b1
         assert c0.magnitude == c1.magnitude
         assert c0.units == c1.units
+        
+    
+class Test_check_dict_contains_no_quantity:
+    
+    def test_simple_dict_with_no_quantities(self):
+        test = dict(a=1, b=[1, 2, 3], c='ham')
+        check_dict_contains_no_quantity(test)
+    
+    def test_simple_dict_with_quantities(self):
+        test = dict(a=1 * ureg.Hz, b=[1, 2, 3], c='ham')
+        with pytest.raises(AssertionError):
+            check_dict_contains_no_quantity(test)
+        
+    def test_dict_of_dict_with_no_quantities(self):
+        test = dict(a=dict(a1=1, a2='ham', a3=[1, 2]),
+                    b=dict(b1=2, b2='spam', b3=[3, 4]))
+        check_dict_contains_no_quantity(test)
+        
+    def test_dict_of_dict_with_quantities(self):
+        test = dict(a=dict(a1=1 * ureg.Hz, a2='ham', a3=[1, 2]),
+                    b=dict(b1=2, b2='spam', b3=[3, 4]))
+        with pytest.raises(AssertionError):
+            check_dict_contains_no_quantity(test)
+        
+    def test_dict_of_dict_of_dict_with_quantities(self):
+        test = dict(a=dict(a1=1 * ureg.Hz,
+                           a2=dict(a3=[1, 2, 3] * ureg.ms),
+                    b=dict(b1=2, b2='spam', b3=[3, 4])))
+        with pytest.raises(AssertionError):
+            check_dict_contains_no_quantity(test)

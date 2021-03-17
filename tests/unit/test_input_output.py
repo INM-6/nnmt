@@ -5,12 +5,14 @@ Unit tests for the input output module.
 
 import pytest
 import numpy as np
+import h5py_wrapper as h5
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
 
 from ..checks import (check_file_in_tmpdir,
                       check_quantity_dicts_are_equal,
+                      check_dict_contains_no_quantity,
                       assert_array_equal,
                       assert_units_equal)
 
@@ -204,7 +206,20 @@ class Test_save_network:
             with pytest.raises(IOError):
                 io.save_network(file, network)
                 io.save_network(file, network)
-                
+            
+    def test_output_has_right_format(self, tmpdir, network):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        file = 'test.h5'
+        keys = ['results', 'results_hash_dict', 'network_params',
+                'analysis_params']
+        with tmp_test.as_cwd():
+            io.save_network(file, network)
+            output = h5.load(file)
+            for key in keys:
+                assert key in output.keys()
+            check_dict_contains_no_quantity(output)
+            
                 
 class Test_load_network:
     pass

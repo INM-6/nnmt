@@ -146,3 +146,11 @@ def check_quantity_dicts_are_equal(dict1, dict2):
             else:
                 assert_array_equal(dict1[key], dict2[key])
                 assert_units_equal(dict1[key], dict2[key])
+
+
+def check_dict_contains_no_quantity(d):
+    for key, value in d.items():
+        if isinstance(value, dict):
+            check_dict_contains_no_quantity(value)
+        else:
+            assert not isinstance(value, ureg.Quantity)
