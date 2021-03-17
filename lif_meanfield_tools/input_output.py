@@ -307,76 +307,22 @@ def save_quantity_dict_to_h5(file, qdict, overwrite=False):
                       'want to overwrite it.')
 
 
-def load_from_h5(network_params={}, param_keys=[], file=''):
+def load_val_unit_dict_from_h5(file):
     """
-    Load existing results and analysis_params for given params from h5 file.
-
-    Loads results from h5 files named with the standard format
-    <label>_<hash>.h5, if this file already exists. Or uses given list of
-    parameters to create hash to find file. Or reads from file specified in
-    file.
+    Load and convert val unit dict from h5 file to dict of quantities.
+    
+    The val unit dictionary is loaded from the h5 file and then converted to
+    a dictionary containing quantities.
 
     Parameters:
     -----------
-    network_params : dict
-        Dictionary containing network parameters as quantities.
-    param_keys: list
-        List of parameters used in file hash.
     file: str
-        optional string specifying input file name
-        (default: <label>_<hash>.h5).
-
-    Returns:
-    --------
-    analysis_params: dict
-        Dictionary containing all found analysis_params.
-    results: dict
-        Dictionary containing all found results.
-    """
-    # if no input file name is specified
-    if not file:
-        # create hash from given parameters
-        # collect all parameters reflected by hash in one dictionary
-        hash_params = {}
-        hash_params.update(network_params)
-        # if user did not specify which parameters to use for hash
-        if not param_keys:
-            # take all parameters sorted alphabetically
-            param_keys = sorted(list(hash_params.keys()))
-        # crate hash from param_keys
-        hash = create_hash(hash_params, param_keys)
-        # default input name
-        file = '{}_{}.h5'.format(network_params['label'], str(hash))
-
-    # try to load file with standard name
-    try:
-        input_file = h5.load(file)
-    # if not existing OSError is raised by h5py_wrapper, then return empty dict
-    except OSError:
-        return {}, {}
-
-    # read in whats already stored
-    analysis_params = input_file['analysis_params']
-    results = input_file['results']
-
-    # convert results to quantitites
-    analysis_params = val_unit_to_quantities(analysis_params)
-    results = val_unit_to_quantities(results)
-
-    return analysis_params, results
-
-
-def load_h5(filename):
-    """
-    filename: str
-        default filename format is ''<label>_<hash>.h5'
+        String specifying input file name.
     """
     try:
-        raw_data = h5.load(filename)
+        loaded = h5.load(file)
     except OSError:
-        raise IOError(f'{filename} does not exist!')
+        raise IOError(f'{file} does not exist!')
 
-    data = {}
-    for key in sorted(raw_data.keys()):
-        data[key] = val_unit_to_quantities(raw_data[key])
-    return data
+    converted = val_unit_to_quantities(loaded)
+    return converted

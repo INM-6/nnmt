@@ -22,7 +22,7 @@ import numpy as np
 from inspect import signature
 
 import lif_meanfield_tools as lmt
-from lif_meanfield_tools.input_output import load_h5
+from lif_meanfield_tools.input_output import load_val_unit_dict_from_h5
 from lif_meanfield_tools import ureg
 
 
@@ -69,7 +69,8 @@ ids_all_regimes = []
 for i, regime in enumerate(regimes):
     # load fixtures corresponding to regimes defined above
     # standard file name: `<regime_id>_regime.h5`
-    fixs = load_h5('{}{}_regime.h5'.format(unit_fix_path, regime))
+    fixs = load_val_unit_dict_from_h5('{}{}_regime.h5'.format(unit_fix_path,
+                                                              regime))
     result = fixs['results']
     # add regime to results so test functions can use them as output keys
     result['regime'] = regime
@@ -167,7 +168,8 @@ def network_dict_quantity():
 @pytest.fixture
 def std_results():
     """Standard microcircuit network results for testing analysis params."""
-    results = load_h5(integration_fix_path + 'std_results.h5')
+    results = load_val_unit_dict_from_h5(integration_fix_path
+                                         + 'std_results.h5')
     return results['results']
 
 

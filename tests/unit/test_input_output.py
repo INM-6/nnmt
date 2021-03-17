@@ -405,7 +405,33 @@ class Test_save_quantity_dict_to_h5:
 
 
 class Test_load_val_unit_dict_from_h5:
-    pass
+
+    def test_raise_exception_if_filename_not_existing(self, tmpdir):
+        tmp_test = tmpdir.mkdir('tmp_test')
+        file = 'test.h5'
+        with tmp_test.as_cwd():
+            with pytest.raises(IOError):
+                io.load_val_unit_dict_from_h5(file)
+
+    def test_input_is_converted_to_quantities(self, tmpdir,
+                                              network_dict_val_unit):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            h5.save(file, network_dict_val_unit)
+            output = io.load_val_unit_dict_from_h5(file)
+            # check that all val unit dicts have been converted to quantities
+            check_dict_contains_no_val_unit_dict(output)
+            
+    def test_loaded_dictionaries_are_not_empty(self, tmpdir,
+                                               network_dict_val_unit):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            h5.save(file, network_dict_val_unit)
+            output = io.load_val_unit_dict_from_h5(file)
+            # check that no loaded dictionary is empty
+            assert bool(output)
 
 
 class Test_create_hash:
@@ -419,31 +445,6 @@ class Test_create_hash:
         params = dict(a=1, b=2, c=3)
         hash = io.create_hash(params, ['a', 'b'])
         assert hash == 'c20ad4d76fe97759aa27a0c99bff6710'
-
-
-class Test_load_h5:
-
-    def test_raise_exception_if_filename_not_existing(self, tmpdir):
-        tmp_test = tmpdir.mkdir('tmp_test')
-        filename = 'test.h5'
-        with tmp_test.as_cwd():
-            with pytest.raises(IOError):
-                io.load_h5(filename)
-
-    def test_data_saved_and_loaded_correctly(self, tmpdir, network):
-        tmp_test = tmpdir.mkdir('tmp_test')
-        filename = 'test.h5'
-        network.working_point()
-        with tmp_test.as_cwd():
-            io.save_network(filename, network)
-            (network_params, analysis_params, results, results_hash_dict
-             ) = io.load_network(filename)
-        check_quantity_dicts_are_equal(network_params, network.network_params)
-        check_quantity_dicts_are_equal(analysis_params,
-                                       network.analysis_params)
-        check_quantity_dicts_are_equal(results, network.results)
-        check_quantity_dicts_are_equal(results_hash_dict,
-                                       network.results_hash_dict)
 
 
 class Test_load_from_h5:

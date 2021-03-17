@@ -190,7 +190,7 @@ class Test_saving_and_loading:
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.save('test.h5')
-            output = lmt.input_output.load_h5('test.h5')
+            output = lmt.input_output.load_val_unit_dict_from_h5('test.h5')
             assert 'mean_input' in output['results'].keys()
 
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
@@ -213,7 +213,7 @@ class Test_saving_and_loading:
             network.network_params['tau_m'] = 100 * ureg.ms
             new_mean = network.mean_input()
             network.save(file=file, overwrite=True)
-            output = lmt.input_output.load_h5(file)
+            output = lmt.input_output.load_val_unit_dict_from_h5(file)
             assert_array_equal(output['results']['mean_input'], new_mean)
             
     def test_load_correctly_sets_network_dictionaries(self, tmpdir, network):
