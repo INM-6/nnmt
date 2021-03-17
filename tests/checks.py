@@ -154,3 +154,11 @@ def check_dict_contains_no_quantity(d):
             check_dict_contains_no_quantity(value)
         else:
             assert not isinstance(value, ureg.Quantity)
+
+
+def check_dict_contains_no_val_unit_dict(d):
+    for key, value in d.items():
+        if (key == 'val') or (key == 'unit'):
+            assert False
+        elif isinstance(value, dict):
+            check_dict_contains_no_val_unit_dict(value)

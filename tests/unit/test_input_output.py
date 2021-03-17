@@ -6,6 +6,7 @@ Unit tests for the input output module.
 import pytest
 import numpy as np
 import h5py_wrapper as h5
+import warnings
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
@@ -13,6 +14,7 @@ import lif_meanfield_tools.input_output as io
 from ..checks import (check_file_in_tmpdir,
                       check_quantity_dicts_are_equal,
                       check_dict_contains_no_quantity,
+                      check_dict_contains_no_val_unit_dict,
                       assert_array_equal,
                       assert_units_equal)
 
@@ -209,10 +211,10 @@ class Test_save_network:
             
     def test_output_has_right_format(self, tmpdir, network):
         file = 'test.h5'
-        tmp_test = tmpdir.mkdir('tmp_test')
         file = 'test.h5'
         keys = ['results', 'results_hash_dict', 'network_params',
                 'analysis_params']
+        tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             io.save_network(file, network)
             output = h5.load(file)
@@ -222,8 +224,62 @@ class Test_save_network:
             
                 
 class Test_load_network:
-    pass
-
+    
+    def test_warning_is_raised_if_file_doesnt_exist(self, tmpdir):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            with pytest.warns(UserWarning):
+                io.load_network(file)
+                
+    def test_returns_empty_dicts_if_no_file_present(self, tmpdir):
+        file = 'test.h5'
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                outputs = io.load_network(file)
+            for output in outputs:
+                assert not bool(output)
+            
+    def test_input_is_converted_to_quantities(self, tmpdir, mocker, network):
+        file = 'test.h5'
+        
+        @lmt.Network._check_and_store(['test'], ['test_key'])
+        def test_method(self, key):
+            return 1 * ureg.ms
+        return test_method
+    
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(np.array([1, 2, 3]) * ureg.ms)
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            network.save(file)
+            outputs = io.load_network(file)
+            check_dict_contains_no_val_unit_dict(outputs)
+            
+    def test_returns_dictionaries_in_correct_order(self, tmpdir, mocker,
+                                                   network):
+        file = 'test.h5'
+        
+        @lmt.Network._check_and_store(['test'], ['test_key'])
+        def test_method(self, key):
+            return 1 * ureg.ms
+        return test_method
+    
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(np.array([1, 2, 3]) * ureg.ms)
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            network.save(file)
+            outputs = io.load_network(file)
+            assert 'tau_m' in outputs[0].keys()
+            assert 'omegas' in outputs[1].keys()
+            assert 'test' in outputs[2].keys()
+            rhd = [dict for dict in outputs[3].values()]
+            assert 'test' in rhd.keys()
+            assert 'analysis_params' in rhd.keys()
+            
 
 class Test_save_dict:
     pass

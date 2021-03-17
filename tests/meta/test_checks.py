@@ -1,7 +1,8 @@
 import pytest
 
 from ..checks import (pint_wrap,
-                      check_dict_contains_no_quantity)
+                      check_dict_contains_no_quantity,
+                      check_dict_contains_no_val_unit_dict)
 
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
@@ -65,3 +66,33 @@ class Test_check_dict_contains_no_quantity:
                     b=dict(b1=2, b2='spam', b3=[3, 4])))
         with pytest.raises(AssertionError):
             check_dict_contains_no_quantity(test)
+    
+    
+class Test_check_dict_contains_no_val_unit_dict:
+    
+    def test_simple_dict_with_no_val_unit_dict(self):
+        test = dict(a=1, b=[1, 2, 3], c='ham')
+        check_dict_contains_no_val_unit_dict(test)
+    
+    def test_simple_val_unit_dict(self):
+        test = dict(val=1, unit='hertz')
+        with pytest.raises(AssertionError):
+            check_dict_contains_no_val_unit_dict(test)
+        
+    def test_dict_of_dict_with_no_val_unit_dict(self):
+        test = dict(a=dict(a1=1, a2='ham', a3=[1, 2]),
+                    b=dict(b1=2, b2='spam', b3=[3, 4]))
+        check_dict_contains_no_val_unit_dict(test)
+        
+    def test_dict_of_dict_with_val_unit_dict(self):
+        test = dict(a=dict(a1=dict(val=1, unit='hertz'), a2='ham', a3=[1, 2]),
+                    b=dict(b1=2, b2='spam', b3=[3, 4]))
+        with pytest.raises(AssertionError):
+            check_dict_contains_no_val_unit_dict(test)
+        
+    def test_dict_of_dict_of_dict_with_val_unit_dict(self):
+        test = dict(a=dict(a1=1 * ureg.Hz,
+                           a2=dict(a3=dict(val=1, unit='hertz')),
+                    b=dict(b1=2, b2='spam', b3=[3, 4])))
+        with pytest.raises(AssertionError):
+            check_dict_contains_no_val_unit_dict(test)
