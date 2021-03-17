@@ -229,20 +229,11 @@ def save_network(file, network, overwrite=False):
         Whether to overwrite an existing h5 file or not. If there already is
         one, h5py tries to update the h5 dictionary.
     """
-    network_params = quantities_to_val_unit(network.network_params)
-    analysis_params = quantities_to_val_unit(network.analysis_params)
-    results = quantities_to_val_unit(network.results)
-    results_hash_dict = quantities_to_val_unit(network.results_hash_dict)
-    
-    output = {'network_params': network_params,
-              'analysis_params': analysis_params,
-              'results': results,
-              'results_hash_dict': results_hash_dict}
-    try:
-        h5.save(file, output, overwrite_dataset=overwrite)
-    except KeyError:
-        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
-                      'want to overwrite it.')
+    output = {'network_params': network.network_params,
+              'analysis_params': network.analysis_params,
+              'results': network.results,
+              'results_hash_dict': network.results_hash_dict}
+    save_quantity_dict_to_h5(file, output, overwrite)
     
     
 def load_network(file):
@@ -266,19 +257,17 @@ def load_network(file):
         Dictionary where all calculated results are stored.
     """
     try:
-        input = h5.load(file)
+        input = load_val_unit_dict_from_h5(file)
     # if not existing OSError is raised by h5py_wrapper, then return empty dict
-    except OSError:
+    except IOError:
         message = f'File {file} not found!'
         warnings.warn(message)
         return {}, {}, {}, {}
     
-    network_params = val_unit_to_quantities(input['network_params'])
-    analysis_params = val_unit_to_quantities(input['analysis_params'])
-    results = val_unit_to_quantities(input['results'])
-    results_hash_dict = val_unit_to_quantities(input['results_hash_dict'])
-    
-    return network_params, analysis_params, results, results_hash_dict
+    return (input['network_params'],
+            input['analysis_params'],
+            input['results'],
+            input['results_hash_dict'])
 
 
 def save_quantity_dict_to_h5(file, qdict, overwrite=False):
