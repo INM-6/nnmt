@@ -56,10 +56,18 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     converted_dict = {}
     for key, value in dict_of_val_unit_dicts.items():
-        # if dictionary with keys val and unit, convert to quantity
-        if isinstance(value, dict) and set(('val', 'unit')) == value.keys():
-            converted_dict[key] = (formatval(value['val'])
-                                   * ureg.parse_expression(value['unit']))
+        if isinstance(value, dict):
+            # if dictionary with keys val and unit, convert to quantity
+            if set(('val', 'unit')) == value.keys():
+                converted_dict[key] = (formatval(value['val'])
+                                       * ureg.parse_expression(value['unit']))
+            # if dictionary with only val, convert
+            elif 'val' in value.keys():
+                converted_dict[key] = formatval(value['val'])
+            # if not val unit dict, first convert the dictionary
+            else:
+                converted_dict[key] = val_unit_to_quantities(value)
+        # if not dict, convert value itself
         else:
             converted_dict[key] = formatval(value)
     return converted_dict
@@ -285,8 +293,7 @@ def load_network(file):
     network_params = val_unit_to_quantities(input['network_params'])
     analysis_params = val_unit_to_quantities(input['analysis_params'])
     results = val_unit_to_quantities(input['results'])
-    results_hash_dict = convert_results_hash_dict_val_unit_to_quantities(
-        input['results_hash_dict'])
+    results_hash_dict = val_unit_to_quantities(input['results_hash_dict'])
     
     return network_params, analysis_params, results, results_hash_dict
 

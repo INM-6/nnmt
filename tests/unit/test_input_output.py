@@ -25,6 +25,7 @@ path_to_fixtures = 'tests/fixtures/unit/config/'
 val_unit_pairs = [
     dict(numerical=1),
     dict(quantity={'val': 1, 'unit': 'hertz'}),
+    dict(only_val_dict={'val': 1}),
     dict(string='test'),
     dict(list_of_strings=['spam', 'ham']),
     dict(array=np.array([1, 2, 3])),
@@ -55,6 +56,7 @@ val_unit_pairs = [
 quantity_dicts = [
     dict(numerical=1),
     dict(quantity=1 * ureg.Hz),
+    dict(only_val_dict=1),
     dict(string='test'),
     dict(list_of_strings=['spam', 'ham']),
     dict(array=np.array([1, 2, 3])),
@@ -135,6 +137,19 @@ class Test_val_unit_to_quantities:
             )
         converted = io.val_unit_to_quantities(val_unit_pairs)
         assert converted == quantity_dict
+        
+    def test_nested_dictionaries_are_converted_correctly(self):
+        test = dict(a=dict(a1=dict(val=1, unit='hertz'),
+                           a2=dict(val=2, unit='ms')),
+                    b=dict(b1=dict(val=1, unit='hertz'),
+                           b2=dict(val=2, unit='ms')),
+                    c=dict(val=3, unit='meter'))
+        converted = io.val_unit_to_quantities(test)
+        assert isinstance(converted['a']['a1'], ureg.Quantity)
+        assert isinstance(converted['a']['a2'], ureg.Quantity)
+        assert isinstance(converted['b']['b1'], ureg.Quantity)
+        assert isinstance(converted['b']['b2'], ureg.Quantity)
+        assert isinstance(converted['c'], ureg.Quantity)
 
 
 class Test_quantities_to_val_unit:
@@ -209,17 +224,29 @@ class Test_save_network:
                 io.save_network(file, network)
                 io.save_network(file, network)
             
-    def test_output_has_right_format(self, tmpdir, network):
+    def test_save_creates_correct_output(self, tmpdir, mocker, network):
         file = 'test.h5'
         file = 'test.h5'
         keys = ['results', 'results_hash_dict', 'network_params',
                 'analysis_params']
+        
+        @lmt.Network._check_and_store(['test'], ['test_key'])
+        def test_method(self, key):
+            return 1 * ureg.ms
+    
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(np.array([1, 2, 3]) * ureg.ms)
+        
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             io.save_network(file, network)
             output = h5.load(file)
             for key in keys:
                 assert key in output.keys()
+            # check that dicts are not empty
+            for sub_dict in output.values():
+                assert bool(sub_dict)
+            # check that all quantities have been converted
             check_dict_contains_no_quantity(output)
             
                 
@@ -248,15 +275,35 @@ class Test_load_network:
         @lmt.Network._check_and_store(['test'], ['test_key'])
         def test_method(self, key):
             return 1 * ureg.ms
-        return test_method
     
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(np.array([1, 2, 3]) * ureg.ms)
+        
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.save(file)
             outputs = io.load_network(file)
-            check_dict_contains_no_val_unit_dict(outputs)
+            # check that all val unit dicts have been converted to quantities
+            for output in outputs:
+                check_dict_contains_no_val_unit_dict(output)
+        
+    def test_loaded_dictionaries_are_not_empty(self, tmpdir, mocker, network):
+        file = 'test.h5'
+        
+        @lmt.Network._check_and_store(['test'], ['test_key'])
+        def test_method(self, key):
+            return 1 * ureg.ms
+
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input(1 * ureg.ms)
+        
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            network.save(file)
+            outputs = io.load_network(file)
+            # check that no loaded dictionary is empty
+            for sub_dict in outputs:
+                assert bool(sub_dict)
             
     def test_returns_dictionaries_in_correct_order(self, tmpdir, mocker,
                                                    network):
@@ -265,7 +312,6 @@ class Test_load_network:
         @lmt.Network._check_and_store(['test'], ['test_key'])
         def test_method(self, key):
             return 1 * ureg.ms
-        return test_method
     
         mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input(np.array([1, 2, 3]) * ureg.ms)
@@ -277,8 +323,8 @@ class Test_load_network:
             assert 'omegas' in outputs[1].keys()
             assert 'test' in outputs[2].keys()
             rhd = [dict for dict in outputs[3].values()]
-            assert 'test' in rhd.keys()
-            assert 'analysis_params' in rhd.keys()
+            assert 'test' in rhd[0].keys()
+            assert 'analysis_params' in rhd[0].keys()
             
 
 class Test_save_dict:
