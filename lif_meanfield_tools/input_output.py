@@ -23,6 +23,19 @@ import h5py_wrapper.wrapper as h5
 from . import ureg
 
 
+def convert_arrays_in_dict_to_lists(adict):
+    """
+    Recursively searches through a dict and replaces all numpy arrays by lists.
+    """
+    converted = copy.deepcopy(adict)
+    for key, value in converted.items():
+        if isinstance(value, dict):
+            converted[key] = convert_arrays_in_dict_to_lists(value)
+        elif isinstance(value, np.ndarray):
+            converted[key] = value.tolist()
+    return converted
+
+
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """
     Recursively convert a dict of value-unit pairs to a dict of quantities.
@@ -120,19 +133,6 @@ def quantities_to_val_unit(dict_of_quantities):
     return converted_dict
 
 
-def convert_arrays_in_dict_to_lists(adict):
-    """
-    Recursively searches through a dict and replaces all numpy arrays by lists.
-    """
-    converted = copy.deepcopy(adict)
-    for key, value in converted.items():
-        if isinstance(value, dict):
-            converted[key] = convert_arrays_in_dict_to_lists(value)
-        elif isinstance(value, np.ndarray):
-            converted[key] = value.tolist()
-    return converted
-
-
 def save_quantity_dict_to_yaml(file, qdict):
     """
     Convert and save dictionary of quantities to yaml file.
@@ -186,29 +186,51 @@ def load_val_unit_dict_from_yaml(file):
     return quantity_dict
 
 
-def create_hash(params, param_keys):
+def save_quantity_dict_to_h5(file, qdict, overwrite=False):
     """
-    Create unique hash from values of parameters specified in param_keys.
+    Convert and save dict of quantities to h5 file.
+    
+    The quantity dictionary is first converted to a val unit dictionary and
+    then saved to an h5 file.
 
     Parameters:
     -----------
-    params : dict
-        Dictionary containing all network parameters.
-    param_keys : list
-        List specifying which parameters should be reflected in hash.
-
-    Returns:
-    --------
-    str
-        Hash string.
+    file: str
+        String specifying output file name.
+    qdict: dict
+        Dictionary containing quantities.
+    overwrite: bool
+        Whether h5 file should be overwritten, if already existing.
     """
+    # convert data into format usable in h5 file
+    output = quantities_to_val_unit(qdict)
+    # save output
+    try:
+        h5.save(file, output, overwrite_dataset=overwrite)
+    except KeyError:
+        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
+                      'want to overwrite it.')
 
-    label = ''
-    # add all param values to one string
-    for key in sorted(list(param_keys)):
-        label += str(params[key])
-    # create and return hash (label must be encoded)
-    return hl.md5(label.encode('utf-8')).hexdigest()
+
+def load_val_unit_dict_from_h5(file):
+    """
+    Load and convert val unit dict from h5 file to dict of quantities.
+    
+    The val unit dictionary is loaded from the h5 file and then converted to
+    a dictionary containing quantities.
+
+    Parameters:
+    -----------
+    file: str
+        String specifying input file name.
+    """
+    try:
+        loaded = h5.load(file)
+    except OSError:
+        raise IOError(f'{file} does not exist!')
+
+    converted = val_unit_to_quantities(loaded)
+    return converted
     
     
 def save_network(file, network, overwrite=False):
@@ -270,48 +292,26 @@ def load_network(file):
             input['results_hash_dict'])
 
 
-def save_quantity_dict_to_h5(file, qdict, overwrite=False):
+def create_hash(params, param_keys):
     """
-    Convert and save dict of quantities to h5 file.
-    
-    The quantity dictionary is first converted to a val unit dictionary and
-    then saved to an h5 file.
+    Create unique hash from values of parameters specified in param_keys.
 
     Parameters:
     -----------
-    file: str
-        String specifying output file name.
-    qdict: dict
-        Dictionary containing quantities.
-    overwrite: bool
-        Whether h5 file should be overwritten, if already existing.
+    params : dict
+        Dictionary containing all network parameters.
+    param_keys : list
+        List specifying which parameters should be reflected in hash.
+
+    Returns:
+    --------
+    str
+        Hash string.
     """
-    # convert data into format usable in h5 file
-    output = quantities_to_val_unit(qdict)
-    # save output
-    try:
-        h5.save(file, output, overwrite_dataset=overwrite)
-    except KeyError:
-        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
-                      'want to overwrite it.')
 
-
-def load_val_unit_dict_from_h5(file):
-    """
-    Load and convert val unit dict from h5 file to dict of quantities.
-    
-    The val unit dictionary is loaded from the h5 file and then converted to
-    a dictionary containing quantities.
-
-    Parameters:
-    -----------
-    file: str
-        String specifying input file name.
-    """
-    try:
-        loaded = h5.load(file)
-    except OSError:
-        raise IOError(f'{file} does not exist!')
-
-    converted = val_unit_to_quantities(loaded)
-    return converted
+    label = ''
+    # add all param values to one string
+    for key in sorted(list(param_keys)):
+        label += str(params[key])
+    # create and return hash (label must be encoded)
+    return hl.md5(label.encode('utf-8')).hexdigest()
