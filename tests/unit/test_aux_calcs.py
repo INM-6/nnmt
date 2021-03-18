@@ -289,7 +289,7 @@ class Test_d_nu_d_mu_fb433:
         std_params['sigma'] = 0 * ureg.mV
         with pytest.raises(ZeroDivisionError):
             self.func(**std_params)
-
+        
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         outputs = output_test_fixtures.pop('output')
@@ -300,7 +300,8 @@ class Test_d_nu_d_mu_fb433:
 class Test_d_nu_d_nu_in_fb:
 
     func = staticmethod(d_nu_d_nu_in_fb)
-    output_key = 'd_nu_d_nu_in_fb'
+    output_keys = ['d_nu_d_nu_in_fb_mu', 'd_nu_d_nu_in_fb_sigma',
+                   'd_nu_d_nu_in_fb_all']
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -321,11 +322,15 @@ class Test_d_nu_d_nu_in_fb:
         with pytest.raises(ZeroDivisionError):
             self.func(**std_params)
 
-    def test_correct_output(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        outputs = output_test_fixtures.pop('output')
+    @pytest.mark.parametrize('contribution, num', [('mu', 0), ('sigma', 1),
+                                                   ('all', 2)])
+    def test_correct_output(self, output_test_fixtures, contribution, num):
+        params = output_test_fixtures['params']
+        outputs = output_test_fixtures['output']
+        params['contributions'] = contribution
+        output = outputs[num]
         check_correct_output_for_several_mus_and_sigmas(self.func, params,
-                                                        outputs)
+                                                        output)
 
 
 class Test_Psi:

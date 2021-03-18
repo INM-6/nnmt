@@ -94,9 +94,30 @@ def fix_d_nu_d_nu_in_fb(network, file):
                                params['V_th_rel'],
                                params['V_0_rel'],
                                params['j'],
-                               mu, sigma)
+                               mu, sigma,
+                               'mu')
                for mu, sigma in zip(mus, sigmas)]
-    network.results['d_nu_d_nu_in_fb'] = results
+    network.results['d_nu_d_nu_in_fb_mu'] = results
+    results = [d_nu_d_nu_in_fb(params['tau_m'],
+                               params['tau_s'],
+                               params['tau_r'],
+                               params['V_th_rel'],
+                               params['V_0_rel'],
+                               params['j'],
+                               mu, sigma,
+                               'sigma')
+               for mu, sigma in zip(mus, sigmas)]
+    network.results['d_nu_d_nu_in_fb_sigma'] = results
+    results = [d_nu_d_nu_in_fb(params['tau_m'],
+                               params['tau_s'],
+                               params['tau_r'],
+                               params['V_th_rel'],
+                               params['V_0_rel'],
+                               params['j'],
+                               mu, sigma,
+                               'all')
+               for mu, sigma in zip(mus, sigmas)]
+    network.results['d_nu_d_nu_in_fb_all'] = results
     network.save(file=file, overwrite=True)
 
 

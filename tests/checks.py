@@ -77,6 +77,7 @@ def check_correct_output(func, params, output, updates=None):
 
 
 def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
+    params = params.copy()
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
     for mu, sigma, output in zip(mus, sigmas, outputs):
