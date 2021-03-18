@@ -1,6 +1,12 @@
 import pytest
+import numpy as np
 
 from ..checks import (pint_wrap,
+                      assert_quantity_array_equal,
+                      assert_units_equal,
+                      assert_dimensionality_equal,
+                      check_pos_params_neg_raise_exception,
+                      check_quantity_dicts_are_equal,
                       check_dict_contains_no_quantity,
                       check_dict_contains_no_val_unit_dict)
 
@@ -37,6 +43,91 @@ class Test_pint_wrapper:
         assert c0.magnitude == c1.magnitude
         assert c0.units == c1.units
         
+        
+class Test_assert_quantity_array_equal:
+    
+    def test_fails_when_amplitudes_differ(self):
+        arr1 = np.array([1, 2, 3]) * ureg.mV
+        arr2 = np.array([1, 2, 4]) * ureg.mV
+        with pytest.raises(AssertionError):
+            assert_quantity_array_equal(arr1, arr2)
+
+    def test_fails_when_units_differ(self):
+        arr1 = np.array([1, 2, 3]) * ureg.mV
+        arr2 = np.array([1, 2, 3]) * ureg.ms
+        with pytest.raises(AssertionError):
+            assert_quantity_array_equal(arr1, arr2)
+    
+    def test_passes_when_arrays_equal(self):
+        arr1 = np.array([1, 2, 3]) * ureg.mV
+        assert_quantity_array_equal(arr1, arr1)
+        
+
+class Test_assert_units_equal:
+    
+    def test_fails_when_units_differ(self):
+        var1 = 1 * ureg.ms
+        var2 = 1 * ureg.mV
+        with pytest.raises(AssertionError):
+            assert_units_equal(var1, var2)
+    
+    def test_passes_when_units_same(self):
+        var1 = 1 * ureg.ms
+        var2 = [1, 2, 3] * ureg.ms
+        assert_units_equal(var1, var2)
+    
+    
+class Test_assert_dimensionality_equal:
+    
+    def test_fails_when_dimensionalities_differ(self):
+        var1 = [1, 2, 3, 4] * ureg.V
+        var2 = [1, 2, 3] * ureg.s
+        with pytest.raises(AssertionError):
+            assert_dimensionality_equal(var1, var2)
+            
+    def test_passes_when_dimensionalities_same(self):
+        var1 = [1, 2, 3, 4] * ureg.V
+        var2 = [1, 2, 3] * ureg.mV
+        assert_dimensionality_equal(var1, var2)
+        
+    
+class Test_check_quantity_dicts_are_equal:
+    
+    adicts = [dict(a=1, b=[1, 2, 3], c='ham'),
+              dict(a=1 * ureg.Hz, b=[1, 2, 3], c='ham'),
+              dict(a=dict(a1=1, a2='ham', a3=[1, 2]),
+                   b=dict(b1=2, b2='spam', b3=[3, 4])),
+              dict(a=dict(a1=1 * ureg.Hz, a2='ham', a3=[1, 2]),
+                   b=dict(b1=2, b2='spam', b3=[3, 4])),
+              dict(a=dict(a1=1 * ureg.Hz,
+                          a2=dict(a3=[1, 2, 3] * ureg.ms),
+                   b=dict(b1=2, b2='spam', b3=[3, 4])))]
+    # adicts with one different element
+    bdicts = [dict(a=1, b=[3, 2, 3], c='ham'),
+              dict(a=2 * ureg.Hz, b=[1, 2, 3], c='ham'),
+              dict(a=dict(a1=1, a2='spam', a3=[1, 2]),
+                   b=dict(b1=2, b2='spam', b3=[3, 4])),
+              dict(a=dict(a1=2 * ureg.Hz, a2='ham', a3=[1, 2]),
+                   b=dict(b1=2, b2='spam', b3=[3, 4])),
+              dict(a=dict(a1=1 * ureg.Hz,
+                          a2=dict(a3=[2, 2, 3] * ureg.ms),
+                   b=dict(b1=2, b2='spam', b3=[3, 4])))]
+    
+    ids = ['dict_without_quantities',
+           'dict_with_quantities',
+           'nested_dict_without_quantities',
+           'nested_dict_with_quantities',
+           'double_nested_dict_with_quantitites']
+    
+    @pytest.mark.parametrize('test_dict', adicts, ids=ids)
+    def test_works_for_same_dicts(self, test_dict):
+        check_quantity_dicts_are_equal(test_dict, test_dict)
+    
+    @pytest.mark.parametrize('adict, bdict', zip(adicts, bdicts), ids=ids)
+    def test_fails_for_differing_dicts(self, adict, bdict):
+        with pytest.raises(AssertionError):
+            check_quantity_dicts_are_equal(adict, bdict)
+            
     
 class Test_check_dict_contains_no_quantity:
     
