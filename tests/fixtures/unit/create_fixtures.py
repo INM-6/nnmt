@@ -194,31 +194,23 @@ def fix_eff_coupling_strength(network, file):
 
 def fix_eigenspectra(network, file):
     """Calc eigenvalues, l and r eigenvecs and save as h5."""
-    regime = network.network_params['regime']
-
     network.results['eigenvalue_spectra_MH'] = network.eigenvalue_spectra('MH')
     network.results['eigenvalue_spectra_prop'] = (
         network.eigenvalue_spectra('prop'))
-    # inverse propagator does not exist in neg rate regime with current params!
-    if regime != 'negative_firing_rate':
-        network.results['eigenvalue_spectra_prop_inv'] = (
-            network.eigenvalue_spectra('prop_inv'))
+    network.results['eigenvalue_spectra_prop_inv'] = (
+        network.eigenvalue_spectra('prop_inv'))
         
     network.results['r_eigenvec_spectra_MH'] = network.r_eigenvec_spectra('MH')
     network.results['r_eigenvec_spectra_prop'] = (
         network.r_eigenvec_spectra('prop'))
-    # inverse propagator does not exist in neg rate regime with current params!
-    if regime != 'negative_firing_rate':
-        network.results['r_eigenvec_spectra_prop_inv'] = (
-            network.r_eigenvec_spectra('prop_inv'))
+    network.results['r_eigenvec_spectra_prop_inv'] = (
+        network.r_eigenvec_spectra('prop_inv'))
         
     network.results['l_eigenvec_spectra_MH'] = network.l_eigenvec_spectra('MH')
     network.results['l_eigenvec_spectra_prop'] = (
         network.l_eigenvec_spectra('prop'))
-    # inverse propagator does not exist in neg rate regime with current params!
-    if regime != 'negative_firing_rate':
-        network.results['l_eigenvec_spectra_prop_inv'] = (
-            network.l_eigenvec_spectra('prop_inv'))
+    network.results['l_eigenvec_spectra_prop_inv'] = (
+        network.l_eigenvec_spectra('prop_inv'))
 
     network.save(file=file, overwrite=True)
 
@@ -364,12 +356,12 @@ if __name__ == '__main__':
         config_path = 'tests/fixtures/unit/config/'
 
         # purely numerical fixtures, that don't need any network
-        # fix_Phi(fixture_path)
-        # fix_Phi_prime_mu(fixture_path)
-        # fix_Psi(fixture_path)
-        # fix_d_Psi(fixture_path)
-        # fix_d_2_Psi(fixture_path)
-        # fix_p_hat_boxcar(fixture_path)
+        fix_Phi(fixture_path)
+        fix_Phi_prime_mu(fixture_path)
+        fix_Psi(fixture_path)
+        fix_d_Psi(fixture_path)
+        fix_d_2_Psi(fixture_path)
+        fix_p_hat_boxcar(fixture_path)
 
         configs = dict(
             noise_driven=(config_path + 'network_params_microcircuit.yaml'),

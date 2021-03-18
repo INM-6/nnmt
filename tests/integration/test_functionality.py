@@ -366,3 +366,22 @@ class Test_correct_return_value_for_second_call:
         tf_shift = network.transfer_function(omega, method='shift')
         with pytest.raises(AssertionError):
             assert_quantity_array_equal(tf_taylor, tf_shift)
+            
+            
+class Test_negative_firing_rate_regime:
+    """
+    These tests where implemented, because we encountered the situation where
+    the firing rate function returned negative results, which does not make
+    sense. Therefore we here check the firing rate for the parameters for which
+    these false results occurred.
+    """
+    
+    def test_no_negative_firing_rates(self):
+        negative_rate_params_file = ('tests/fixtures/integration/config/'
+                                     'minimal_negative.yaml')
+        analysis_params_file = ('tests/fixtures/integration/config/'
+                                'analysis_params.yaml')
+        network = lmt.Network(negative_rate_params_file,
+                              analysis_params_file)
+        firing_rates = network.firing_rates()
+        assert not any(firing_rates < 0)

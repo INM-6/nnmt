@@ -197,18 +197,6 @@ class Test_eigen_spectra_eval:
                                              std_params_eval_spectra,
                                              pos_keys)
 
-    def test_exception_is_raised_if_prop_is_singular_and_inv_prop_is_requested(
-            self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        params['quantity'] = 'eigvals'
-        params['matrix'] = 'prop_inv'
-        output = output_test_fixtures.pop('output')
-        regime = output[1]
-        if regime != 'negative_firing_rate':
-            pytest.skip()
-        with pytest.raises(ValueError):
-            self.func(**params)
-
     def test_correct_output_eigvals_MH(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'eigvals'
@@ -229,9 +217,6 @@ class Test_eigen_spectra_eval:
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
         regime = output[1]
-        if regime == 'negative_firing_rate':
-            pytest.skip('Propagator is singular, '
-                        'cannot run calculation!')
         output = output[2]
         check_correct_output(self.func, params, output)
 
@@ -262,9 +247,6 @@ class Test_eigen_spectra_reigvecs:
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
         regime = output[1]
-        if regime == 'negative_firing_rate':
-            pytest.skip('Propagator is singular, '
-                        'cannot run calcultaion!')
         output = output[2]
         check_correct_output(self.func, params, output)
 
@@ -295,9 +277,6 @@ class Test_eigen_spectra_leigvecs:
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
         regime = output[1]
-        if regime == 'negative_firing_rate':
-            pytest.skip('Propagator is singular, '
-                        'cannot run calcultaion!')
         output = output[2]
         check_correct_output(self.func, params, output)
 

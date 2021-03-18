@@ -28,7 +28,6 @@ from lif_meanfield_tools.aux_calcs import (
     d_Psi,
     d_2_Psi,
     p_hat_boxcar,
-    determinant,
     )
 
 ureg = lmt.ureg
@@ -380,49 +379,6 @@ class Test_d_2_Psi:
             assert result == output
 
 
-@pytest.mark.xfail
-class Test_determinant:
-
-    func = staticmethod(determinant)
-
-    def test_real_matrix_with_zero_determinant(self):
-        a = [1, 2, 3]
-        M = np.array([a, a, a])
-        result = self.func(M)
-        real_determinant = 0
-        assert result == real_determinant
-
-    def test_real_matrix_with_positive_determinant(self):
-        M = np.array([[1, 2, 3], [2, 1, 3], [3, 1, 2]])
-        result = self.func(M)
-        real_determinant = 6
-        assert result == real_determinant
-
-    def test_real_matrix_with_negative_determinant(self):
-        M = np.array([[1, 2, 3], [3, 1, 2], [2, 1, 3]])
-        result = self.func(M)
-        real_determinant = -6
-        assert result == real_determinant
-
-    def test_non_square_matrix(self):
-        M = np.array([[1, 2, 3], [2, 3, 1]])
-        with pytest.raises(np.linalg.LinAlgError):
-            self.func(M)
-
-    def test_matrix_with_imaginary_determinant(self):
-        M = np.array([[complex(0, 1), 1], [0, 1]])
-        real_determinant = np.linalg.det(M)
-        result = self.func(M)
-        assert result == real_determinant
-
-
-class Test_determinant_same_rows:
-
-    @pytest.mark.xfail
-    def test_something(self):
-        pass
-
-
 class Test_p_hat_boxcar:
 
     func = staticmethod(p_hat_boxcar)
@@ -435,10 +391,3 @@ class Test_p_hat_boxcar:
         for z, x, output in zip(ks, widths, outputs):
             result = self.func(z, x)
             assert result == output
-
-
-class Test_solve_chareq_rate_boxcar:
-
-    @pytest.mark.xfail
-    def test_something(self):
-        pass
