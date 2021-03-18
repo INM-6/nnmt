@@ -2,7 +2,9 @@ import pytest
 import re
 import inspect
 # note that numpy asserts are wrapped with pint_wrap a few lines down
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import (assert_array_equal,
+                           assert_array_almost_equal,
+                           assert_allclose)
 
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
@@ -37,6 +39,7 @@ def pint_wrap(func):
 
 assert_array_equal = pint_wrap(assert_array_equal)
 assert_array_almost_equal = pint_wrap(assert_array_almost_equal)
+assert_allclose = pint_wrap(assert_allclose)
 
 
 def assert_quantity_array_equal(qarray1, qarray2):
@@ -92,7 +95,7 @@ def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
 
 def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
                                                            params,
-                                                           decimal):
+                                                           rtol):
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
     for mu, sigma in zip(mus, sigmas):
@@ -102,7 +105,7 @@ def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
         expected = alt_func(**params)
         if isinstance(result, ureg.Quantity):
             expected.ito(result.units)
-        assert_array_almost_equal(expected, result, decimal)
+        assert_allclose(expected, result, rtol)
         assert_units_equal(expected, result)
 
 
