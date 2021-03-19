@@ -51,7 +51,7 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_r = (V_0_rel - mu) / sigma
 
     nu = 1 / (tau_r + np.sqrt(np.pi) * tau_m
-              * quad(integrand, y_r, y_th)[0])
+              * quad(integrand, y_r, y_th, epsabs=1e-6)[0])
 
     return nu
 

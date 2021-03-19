@@ -239,8 +239,8 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
     return sigma
 
 
-@check_k_in_fast_synaptic_regime
 @check_positive_params
+@check_k_in_fast_synaptic_regime
 @ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                 ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -306,8 +306,8 @@ def transfer_function_1p_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
-@check_k_in_fast_synaptic_regime
 @check_positive_params
+@check_k_in_fast_synaptic_regime
 @ureg.wraps(ureg.Hz / ureg.mV, (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                 ureg.mV, ureg.mV, ureg.Hz, None))
 def transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -384,8 +384,8 @@ def _transfer_function_1p_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     return result
 
 
-@check_k_in_fast_synaptic_regime
 @check_positive_params
+@check_k_in_fast_synaptic_regime
 def transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                       dimension, omegas, method='shift', synaptic_filter=True):
     """
