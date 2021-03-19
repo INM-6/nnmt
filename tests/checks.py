@@ -21,19 +21,19 @@ def pint_wrap(func):
     """
     def decorator_wrap(*args, **kwargs):
         signature = inspect.signature(func)
-        quantity_args = [param for i, param
-                         in enumerate(signature.parameters)
-                         if i < 2]
-        try:
-            args = [arg.magnitude if i < 2
-                    else arg
-                    for i, arg in enumerate(args)]
-            kwargs = {key: (value.magnitude if key in quantity_args else value)
-                      for key, value in kwargs.items()}
-            output = func(*args, **kwargs)
-        except AttributeError:
-            output = func(*args, **kwargs)
-        return output
+        # convert tuple to list, such that item assignment is possible
+        args = list(args)
+        # put all arguments into args
+        for key in signature.parameters:
+            if key in kwargs:
+                args.append(kwargs.pop(key))
+        # strip quantity of first two arguments
+        for i in range(2):
+            try:
+                args[i] = args[i].magnitude
+            except AttributeError:
+                pass
+        return func(*args, **kwargs)
     return decorator_wrap
 
 

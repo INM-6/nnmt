@@ -5,7 +5,6 @@ from ..checks import (pint_wrap,
                       assert_quantity_array_equal,
                       assert_units_equal,
                       assert_dimensionality_equal,
-                      check_pos_params_neg_raise_exception,
                       check_quantity_dicts_are_equal,
                       check_dict_contains_no_quantity,
                       check_dict_contains_no_val_unit_dict)
@@ -42,6 +41,33 @@ class Test_pint_wrapper:
         assert b0.magnitude == b1
         assert c0.magnitude == c1.magnitude
         assert c0.units == c1.units
+        
+    def test_works_even_if_with_mixed_args_are_kwargs(self):
+        def test_function(a, b, c):
+            return a, b, c
+        test_function = pint_wrap(test_function)
+        a0 = 10 * ureg.mV
+        b0 = 20 * ureg.mV
+        c0 = 30 * ureg.mV
+        a1, b1, c1 = test_function(a0, b=b0, c=c0)
+        assert a0.magnitude == a1
+        assert b0.magnitude == b1
+        assert c0.magnitude == c1.magnitude
+        assert c0.units == c1.units
+        
+    def test_works_if_function_has_unpassed_standard_parameters(self):
+        def test_function(a, b, c, d=1):
+            return a, b, c, d
+        test_function = pint_wrap(test_function)
+        a0 = 10 * ureg.mV
+        b0 = 20 * ureg.mV
+        c0 = 30 * ureg.mV
+        a1, b1, c1, d1 = test_function(a0, b=b0, c=c0)
+        assert a0.magnitude == a1
+        assert b0.magnitude == b1
+        assert c0.magnitude == c1.magnitude
+        assert c0.units == c1.units
+        assert d1 == 1
         
         
 class Test_assert_quantity_array_equal:
