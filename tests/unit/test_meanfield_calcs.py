@@ -216,7 +216,6 @@ class Test_eigen_spectra_eval:
         params['quantity'] = 'eigvals'
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
-        regime = output[1]
         output = output[2]
         check_correct_output(self.func, params, output)
 
@@ -246,7 +245,6 @@ class Test_eigen_spectra_reigvecs:
         params['quantity'] = 'reigvecs'
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
-        regime = output[1]
         output = output[2]
         check_correct_output(self.func, params, output)
 
@@ -276,7 +274,6 @@ class Test_eigen_spectra_leigvecs:
         params['quantity'] = 'leigvecs'
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
-        regime = output[1]
         output = output[2]
         check_correct_output(self.func, params, output)
 

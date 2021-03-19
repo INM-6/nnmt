@@ -95,7 +95,8 @@ class Test_initialization:
     
 class Test_calculation_of_dependent_network_params:
     """
-    Depends strongly on network_params_microcircuit.yaml in tests/fixtures.
+    Depends strongly on network_params_microcircuit.yaml in
+    tests/fixtures/unit/config/.
     """
 
     def test_dimension(self, network):
@@ -517,7 +518,7 @@ class Test_check_and_store_decorator:
         assert 1 * ureg.ms == network.analysis_params['analysis1']
         assert 2 * ureg.ms == network.analysis_params['analysis2']
         
-    def test_results_stored_in_results_hash_dict_for_two_result_keys_with_two_analysis_keys(
+    def test_stores_in_results_hash_dict_two_result_keys_two_analysis_keys(
             self, mocker, network):
         @lmt.Network._check_and_store(['result1', 'result2'],
                                       ['analysis1', 'analysis2'])
@@ -532,7 +533,7 @@ class Test_check_and_store_decorator:
         assert 1 * ureg.ms in results_entry['analysis_params'].values()
         assert 2 * ureg.ms in results_entry['analysis_params'].values()
         
-    def test_results_updated_in_result_dict_for_two_result_keys_and_one_analysis_key(
+    def test_results_updated_in_result_dict_two_result_keys_one_analysis_key(
             self, mocker, network):
         @lmt.Network._check_and_store(['result1', 'result2'], ['analysis'])
         def test_method(self, key):
@@ -549,6 +550,7 @@ class Test_check_and_store_decorator:
         
             
 class Test_functionality:
+    """A lot of those tests might actually be superfluous."""
 
     def test_firing_rates_calls_correctly(self, network, mocker):
         mock = mocker.patch('lif_meanfield_tools.meanfield_calcs.firing_rates')
