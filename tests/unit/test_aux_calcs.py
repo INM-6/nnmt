@@ -91,15 +91,17 @@ class Test_siegert1:
         std_params['mu'] = 1.1 * std_params['V_th_rel']
         with pytest.raises(ValueError):
             self.func(**std_params)
-
-    def test_correct_output(self, output_test_fixtures):
+        
+    def test_gives_similar_results_as_real_siegert(
+            self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         if any(params['mu'] > params['V_th_rel']):
-            pytest.skip("Parameters out of range the function is intended "
-                        "for.")
-        check_almost_correct_output_for_several_mus_and_sigmas(
-            self.func, real_siegert, params, self.rtol)
-
+            with pytest.raises(ValueError):
+                self.func(**params)
+        else:
+            check_almost_correct_output_for_several_mus_and_sigmas(
+                self.func, real_siegert, params, self.rtol)
+            
 
 class Test_siegert2:
 
@@ -117,7 +119,7 @@ class Test_siegert2:
         with pytest.raises(ValueError):
             self.func(**std_params)
 
-    def test_correct_output(self, output_test_fixtures):
+    def test_gives_similar_results_as_real_siegert(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         mus = params.pop('mu')
         sigmas = params.pop('sigma')
