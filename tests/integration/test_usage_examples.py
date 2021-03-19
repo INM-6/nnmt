@@ -2,7 +2,7 @@ import pytest
 import h5py_wrapper.wrapper as h5
 
 import lif_meanfield_tools as lmt
-from numpy.testing import assert_array_equal
+from ..checks import assert_array_equal
 from .test_functionality import assert_quantity_array_equal
 
 config_path = 'tests/fixtures/integration/config/'
