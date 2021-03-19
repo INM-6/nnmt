@@ -1,12 +1,12 @@
 import pytest
-from numpy.testing import assert_array_equal
 
-from .checks import (check_pos_params_neg_raise_exception,
-                     check_correct_output,
-                     assert_units_equal,
-                     check_V_0_larger_V_th_raise_exception,
-                     check_warning_is_given_if_k_is_critical,
-                     check_exception_is_raised_if_k_is_too_large)
+from ..checks import (check_pos_params_neg_raise_exception,
+                      check_correct_output,
+                      assert_array_equal,
+                      assert_units_equal,
+                      check_V_0_larger_V_th_raise_exception,
+                      check_warning_is_given_if_k_is_critical,
+                      check_exception_is_raised_if_k_is_too_large)
 
 from lif_meanfield_tools.meanfield_calcs import (
     firing_rates,
@@ -142,8 +142,8 @@ class Test_delay_dist_matrix_single:
     output_keys = ['delay_dist_{}'.format(id) for id in ids]
 
     @pytest.mark.parametrize('key', [0, 1, 2], ids=ids)
-    def test_correct_output_dist_none(self, output_test_fixtures, key):
-        delay_dist = 'none'
+    def test_correct_output_dist(self, output_test_fixtures, key):
+        delay_dist = self.ids[key]
         params = output_test_fixtures['params']
         params['delay_dist'] = delay_dist
         output = output_test_fixtures['output'][key]
@@ -161,18 +161,12 @@ class Test_sensitivity_measure:
         check_pos_params_neg_raise_exception(self.func, std_params,
                                              pos_keys)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-        
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
-
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
-        params['transfer_function'] = output[1][0]
-        params['delay_dist_matrix'] = output[2][0]
-        output = output[0][0]
+        params['transfer_function'] = output[1]
+        params['delay_dist_matrix'] = output[2]
+        output = output[0]
         check_correct_output(self.func, params, output)
 
 
@@ -185,12 +179,6 @@ class Test_power_spectra:
         check_pos_params_neg_raise_exception(self.func, std_params,
                                              pos_keys)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-        
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
-
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
@@ -200,7 +188,8 @@ class Test_power_spectra:
 class Test_eigen_spectra_eval:
 
     func = staticmethod(eigen_spectra)
-    output_keys = ['eigenvalue_spectra', 'regime']
+    output_keys = ['eigenvalue_spectra_MH', 'eigenvalue_spectra_prop',
+                   'eigenvalue_spectra_prop_inv', 'regime']
 
     def test_pos_params_neg_raise_exception(self, std_params_eval_spectra,
                                             pos_keys):
@@ -208,39 +197,18 @@ class Test_eigen_spectra_eval:
                                              std_params_eval_spectra,
                                              pos_keys)
 
-    def test_warning_is_given_if_k_is_critical(self, std_params_eval_spectra):
-        check_warning_is_given_if_k_is_critical(self.func,
-                                                std_params_eval_spectra)
-
-    def test_exception_is_raised_if_k_is_too_large(self,
-                                                   std_params_eval_spectra):
-        check_exception_is_raised_if_k_is_too_large(self.func,
-                                                    std_params_eval_spectra)
-
-    def test_exception_is_raised_if_prop_is_singular_and_inv_prop_is_requested(
-            self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        params['quantity'] = 'eigvals'
-        params['matrix'] = 'prop_inv'
-        output = output_test_fixtures.pop('output')
-        regime = output[1]
-        if regime != 'negative_firing_rate':
-            pytest.skip()
-        with pytest.raises(ValueError):
-            self.func(**params)
-
     def test_correct_output_eigvals_MH(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'eigvals'
         params['matrix'] = 'MH'
-        output = output_test_fixtures.pop('output')[0][0]
+        output = output_test_fixtures.pop('output')[0]
         check_correct_output(self.func, params, output)
 
     def test_correct_output_eigvals_prop(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'eigvals'
         params['matrix'] = 'prop'
-        output = output_test_fixtures.pop('output')[0][1]
+        output = output_test_fixtures.pop('output')[1]
         check_correct_output(self.func, params, output)
 
     def test_correct_output_eigvals_prop_inv(self, output_test_fixtures):
@@ -248,31 +216,28 @@ class Test_eigen_spectra_eval:
         params['quantity'] = 'eigvals'
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
-        regime = output[1]
-        if regime == 'negative_firing_rate':
-            pytest.skip('Propagator is singular, '
-                        'cannot run calculation!')
-        output = output[0][2]
+        output = output[2]
         check_correct_output(self.func, params, output)
 
 
 class Test_eigen_spectra_reigvecs:
 
     func = staticmethod(eigen_spectra)
-    output_keys = ['r_eigenvec_spectra', 'regime']
+    output_keys = ['r_eigenvec_spectra_MH', 'r_eigenvec_spectra_prop',
+                   'r_eigenvec_spectra_prop_inv', 'regime']
     
     def test_correct_output_reigvecs_MH(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'reigvecs'
         params['matrix'] = 'MH'
-        output = output_test_fixtures.pop('output')[0][0]
+        output = output_test_fixtures.pop('output')[0]
         check_correct_output(self.func, params, output)
 
     def test_correct_output_reigvecs_prop(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'reigvecs'
         params['matrix'] = 'prop'
-        output = output_test_fixtures.pop('output')[0][1]
+        output = output_test_fixtures.pop('output')[1]
         check_correct_output(self.func, params, output)
 
     def test_correct_output_reigvecs_prop_inv(self, output_test_fixtures):
@@ -280,31 +245,28 @@ class Test_eigen_spectra_reigvecs:
         params['quantity'] = 'reigvecs'
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
-        regime = output[1]
-        if regime == 'negative_firing_rate':
-            pytest.skip('Propagator is singular, '
-                        'cannot run calcultaion!')
-        output = output[0][2]
+        output = output[2]
         check_correct_output(self.func, params, output)
 
 
 class Test_eigen_spectra_leigvecs:
 
     func = staticmethod(eigen_spectra)
-    output_keys = ['l_eigenvec_spectra', 'regime']
+    output_keys = ['l_eigenvec_spectra_MH', 'l_eigenvec_spectra_prop',
+                   'l_eigenvec_spectra_prop_inv', 'regime']
 
     def test_correct_output_leigvecs_MH(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'leigvecs'
         params['matrix'] = 'MH'
-        output = output_test_fixtures.pop('output')[0][0]
+        output = output_test_fixtures.pop('output')[0]
         check_correct_output(self.func, params, output)
 
     def test_correct_output_leigvecs_prop(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         params['quantity'] = 'leigvecs'
         params['matrix'] = 'prop'
-        output = output_test_fixtures.pop('output')[0][1]
+        output = output_test_fixtures.pop('output')[1]
         check_correct_output(self.func, params, output)
 
     def test_correct_output_leigvecs_prop_inv(self, output_test_fixtures):
@@ -312,11 +274,7 @@ class Test_eigen_spectra_leigvecs:
         params['quantity'] = 'leigvecs'
         params['matrix'] = 'prop_inv'
         output = output_test_fixtures.pop('output')
-        regime = output[1]
-        if regime == 'negative_firing_rate':
-            pytest.skip('Propagator is singular, '
-                        'cannot run calcultaion!')
-        output = output[0][2]
+        output = output[2]
         check_correct_output(self.func, params, output)
 
 
@@ -327,12 +285,6 @@ class Test_additional_rates_for_fixed_input:
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_warning_is_given_if_k_is_critical(self, std_params):
-        check_warning_is_given_if_k_is_critical(self.func, std_params)
-
-    def test_exception_is_raised_if_k_is_too_large(self, std_params):
-        check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
     @pytest.mark.parametrize('key', [0, 1],
                              ids=['nu_e_ext', 'nu_i_ext'])

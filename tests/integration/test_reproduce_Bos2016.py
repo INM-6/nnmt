@@ -12,7 +12,7 @@ import pytest
 from collections import defaultdict
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from ..checks import assert_array_equal, assert_array_almost_equal
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools import ureg
@@ -47,17 +47,11 @@ def exemplary_frequency_idx(bos_code_result):
 
 @pytest.fixture(scope='class')
 def network(exemplary_frequency_idx):
-    network = lmt.Network(config_path + 'Bos2016_network_params.yaml',
-                          config_path + 'Bos2016_analysis_params.yaml')
-    
     if use_saved_data:
-        try:
-            a_params, results = lmt.input_output.load_from_h5(
-                input_name=fix_path + 'network_results.h5')
-            network.results.update(results)
-            network.analysis_params.update(a_params)
-        except FileNotFoundError:
-            pass
+        network = lmt.Network(file=fix_path + 'network.h5')
+    else:
+        network = lmt.Network(config_path + 'Bos2016_network_params.yaml',
+                              config_path + 'Bos2016_analysis_params.yaml')
     
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
@@ -65,7 +59,7 @@ def network(exemplary_frequency_idx):
     yield network
     
     if save_data:
-        network.save(file_name=fix_path + 'network_results.h5')
+        network.save(file=fix_path + 'network.h5', overwrite=True)
 
 
 @pytest.fixture
@@ -265,7 +259,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
                 'critical_frequency': critical_frequency,
                 'critical_frequency_index': critical_frequency_index,
                 'critical_eigenvalue': critical_eigenvalue}
-
+        
         # identify which eigenvalue contributes most to this peak
         for eig_index, eig_results in sensitivity_dict.items():
             if eig_results['critical_frequency'] == fmax:
@@ -291,7 +285,8 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
 
         # test vector (k) between critical eigenvalue and complex(1,0)
         # and repective perpendicular (k_per)
-        k = np.asarray([1, 0]) - np.asarray([eigc.real, eigc.imag])
+        k = np.asarray([1, 0]) - np.asarray([eigc.magnitude.real,
+                                             eigc.magnitude.imag])
         k /= np.sqrt(np.dot(k, k))
         k_per = np.asarray([-k[1], k[0]])
         k_per /= np.sqrt(np.dot(k_per, k_per))

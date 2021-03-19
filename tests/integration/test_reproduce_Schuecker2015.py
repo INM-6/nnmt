@@ -34,7 +34,7 @@ def ground_truth_result():
 
 @pytest.fixture(scope='class')
 def network_params():
-    params = lmt.input_output.load_params(
+    params = lmt.input_output.load_val_unit_dict_from_yaml(
         config_path + 'Schuecker2015_parameters.yaml')
     params['dimension'] = 1
     return params
@@ -43,9 +43,9 @@ def network_params():
 @pytest.fixture(scope='class')
 def frequencies(network_params):
     frequencies = np.logspace(
-        network_params['f_start_exponent']['val'],
-        network_params['f_end_exponent']['val'],
-        network_params['n_freqs']['val']) * ureg.Hz
+        network_params['f_start_exponent'],
+        network_params['f_end_exponent'],
+        network_params['n_freqs']) * ureg.Hz
     return frequencies
     
     
@@ -107,8 +107,8 @@ def pre_results(network_params, omegas):
                 sigma)
 
             transfer_function = lmt.meanfield_calcs.transfer_function(
-                [mu],
-                [sigma],
+                lmt.utils.pint_array([mu]),
+                lmt.utils.pint_array([sigma]),
                 network_params['tau_m'],
                 network_params['tau_s'],
                 network_params['tau_r'],
@@ -189,10 +189,15 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
                                      'nu0_fb433',
                                      'zero_freq'])
     @pytest.mark.parametrize('index', indices)
-    def test_results_conincide(self, key, index, network_params,
-                               ground_truth_result, test_result):
+    def test_results_coincide(self, key, index, network_params,
+                              ground_truth_result, test_result):
         sigma = network_params['sigma_{}'.format(index)].magnitude
         for mu in network_params['mean_input_{}'.format(index)].magnitude:
             ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]
             test_data = test_result['sigma'][sigma]['mu'][mu]
-            assert_allclose(test_data[key], ground_truth_data[key], atol=1e-14)
+            try:
+                assert_allclose(test_data[key].magnitude,
+                                ground_truth_data[key], atol=1e-14)
+            except AttributeError:
+                assert_allclose(test_data[key],
+                                ground_truth_data[key], atol=1e-14)

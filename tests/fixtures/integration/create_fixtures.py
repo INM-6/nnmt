@@ -46,23 +46,37 @@ if __name__ == '__main__':
         network.working_point()
         network.delay_dist_matrix()
         network.delay_dist_matrix(omega)
-        network.transfer_function(method='taylor')
-        network.results['tf_taylor'] = network.results.pop('transfer_function')
-        network.transfer_function(method='shift')
-        network.results['tf_shift'] = network.results.pop('transfer_function')
-        network.transfer_function()
+        network.results['tf_shift'] = network.transfer_function(
+            method='shift')
+        network.results['tf_taylor'] = network.transfer_function(
+            method='taylor')
         network.transfer_function(omega)
         network.sensitivity_measure(omega)
         network.power_spectra()
-        network.eigenvalue_spectra('MH')
-        network.r_eigenvec_spectra('MH')
-        network.l_eigenvec_spectra('MH')
-        network.eigenvalue_spectra('prop')
-        network.r_eigenvec_spectra('prop')
-        network.l_eigenvec_spectra('prop')
-        network.eigenvalue_spectra('prop_inv')
-        network.r_eigenvec_spectra('prop_inv')
-        network.l_eigenvec_spectra('prop_inv')
+        network.results['eigenvalue_spectra_MH'] = (
+            network.eigenvalue_spectra('MH'))
+        network.results['eigenvalue_spectra_taylor_MH'] = (
+            network.eigenvalue_spectra('MH', method='taylor'))
+        network.results['r_eigenvec_spectra_MH'] = (
+            network.r_eigenvec_spectra('MH'))
+        network.results['r_eigenvec_spectra_taylor_MH'] = (
+            network.r_eigenvec_spectra('MH', method='taylor'))
+        network.results['l_eigenvec_spectra_MH'] = (
+            network.l_eigenvec_spectra('MH'))
+        network.results['l_eigenvec_spectra_taylor_MH'] = (
+            network.l_eigenvec_spectra('MH', method='taylor'))
+        network.results['eigenvalue_spectra_prop'] = (
+            network.eigenvalue_spectra('prop'))
+        network.results['r_eigenvec_spectra_prop'] = (
+            network.r_eigenvec_spectra('prop'))
+        network.results['l_eigenvec_spectra_prop'] = (
+            network.l_eigenvec_spectra('prop'))
+        network.results['eigenvalue_spectra_prop_inv'] = (
+            network.eigenvalue_spectra('prop_inv'))
+        network.results['r_eigenvec_spectra_prop_inv'] = (
+            network.r_eigenvec_spectra('prop_inv'))
+        network.results['l_eigenvec_spectra_prop_inv'] = (
+            network.l_eigenvec_spectra('prop_inv'))
         network.additional_rates_for_fixed_input(mean_input_set,
                                                  std_input_set)
-        network.save(file_name=fixture_path + 'std_results.h5')
+        network.save(file=fixture_path + 'std_results.h5')

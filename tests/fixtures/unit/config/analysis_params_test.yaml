@@ -63,4 +63,8 @@ tf_mode: analytical
 
 # number of modes used when fast response time constants are calculated
 num_modes: 1
+
+# branches of Lambert W function to be considered
+branches:
+  - 0
 ...

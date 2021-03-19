@@ -114,13 +114,14 @@ nu_i_ext:
 
   unit: Hz
   
-mean_input_set:
+    
+mu_set:
   unit: millivolt
   val:
-    - 100
-    - 100
+    - 10
+    - 10
     
-std_input_set:
+sigma_set:
   unit: millivolt
   val:
     - 20
