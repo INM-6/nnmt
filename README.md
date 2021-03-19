@@ -64,6 +64,10 @@ lif_meanfield_tools consists of four modules:
   non-specific building blocks. However, it is difficult to draw a line between
   the calculations that belong to `meanfield_calcs.py` and the ones that belong to
   `aux_calcs.py`.
+  
+- __utils.py__ is a module which contains utility functions. It contains functions
+  that simplify working with pint quantities and decorators for checking that
+  passed parameters are in valid regimes.
 
 # How to Get Started / Installation
 
