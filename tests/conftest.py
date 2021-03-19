@@ -485,3 +485,25 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                     in zip(output, params)]
         metafunc.parametrize("output_test_fixtures", fixtures,
                              ids=ids_all_regimes)
+        
+    elif "output_fixtures_noise_driven" in metafunc.fixturenames:
+        # list of input arguments for the tested function for each regime
+        params = [get_required_params(func, dict(results[0], **all_params[0]))]
+        # list of outputs for the tested function for each regime
+        output = get_output_for_keys_of_metafunc(metafunc, results[0:1],
+                                                 params)
+        fixtures = [dict(output=output, params=params) for output, params
+                    in zip(output, params)]
+        metafunc.parametrize("output_fixtures_noise_driven", fixtures,
+                             ids=ids_all_regimes[0:1])
+        
+    elif "output_fixtures_mean_driven" in metafunc.fixturenames:
+        # list of input arguments for the tested function for each regime
+        params = [get_required_params(func, dict(results[1], **all_params[1]))]
+        # list of outputs for the tested function for each regime
+        output = get_output_for_keys_of_metafunc(metafunc, results[1:],
+                                                 params)
+        fixtures = [dict(output=output, params=params) for output, params
+                    in zip(output, params)]
+        metafunc.parametrize("output_fixtures_mean_driven", fixtures,
+                             ids=ids_all_regimes[1:])
