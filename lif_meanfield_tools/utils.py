@@ -64,7 +64,7 @@ def check_positive_params(func):
 def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
     """ Check whether we are in fast synaptic regime."""
     k = np.sqrt(tau_s / tau_m)
-    if (0.1 < k) & (k < 1):
+    if (np.sqrt(0.1) < k) & (k < 1):
         k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
                      'calculation of firing rates via Taylor expansion!'
                      ).format(k)
