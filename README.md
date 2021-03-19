@@ -234,7 +234,8 @@ publication in Physical Review Research):
 # Testing
 
 We have an extensive test suite using the `pytest` framework. If you want to
-run all the tests, you can simply do so by installing and activating the conda environment specified in the provided `environment.yaml` file, and running
+run all the tests, you can simply do so by installing and activating the conda
+environment specified in the provided `environment.yaml` file, and running
 ```
 pytest
 ```
@@ -245,7 +246,8 @@ pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_outpu
 ```
 See the `pytest` documentation for all available options.
 
-Note that some tests currently fail. This points towards pieces of code that still need to be improved (see current issues).
+Note that some tests currently fail. This points towards pieces of code that
+still need to be improved (see current issues).
 
 Note that `pytest` distinguishes between failures and errors:
 - A failure occurs if a test did not run successfully.
@@ -254,13 +256,25 @@ Note that `pytest` distinguishes between failures and errors:
 ## Test Directory Structure
 ```
 tests/
-  conftest.py
+  conftest.
+  checks.py
   fixtures/
-    create_fixtures.py
-    config/
-    data/
+    unit/
+      config/
+      data/
+      create_fixtures.py
+    integration/
+      config/
+      data/
+      create_fixtures.py
+  integration/
+    test_functionality.py
+    test_reproduce_Bos2016.py
+    test_reproduce_Schuecker2015.py
+    test_usage_examples.py
+  meta/
+    test_checks.py
   unit/
-    checks.py
     test_input_output.py
     test_network.py
     test_aux_calcs.py
@@ -268,14 +282,21 @@ tests/
 ```
 
 `conftest.py` is a special `pytest` file, in which custom fixtures
-and special `pytest` functions are defined. We, in particular, make use of the `pytest_generate_tests` function, which considerably simplifies complex parametrizations of tests.
+and special `pytest` functions are defined. We, in particular, make use of the
+`pytest_generate_tests` function, which considerably simplifies complex
+parametrizations of tests.
+
+`checks.py` is a collection of custom assert functions.
 
 `fixtures/` contains all the data that is used for tests comparing real and
-expected output of functions, as well as the file that creates the data
+expected output of functions, as well as the files that creates the data
 `create_fixtures.py` using the parameters defined in `config/`.
 
-`unit/` contains all unit tests as well as a file `checks.py` which is a
-collection of custom assert functions.
+`integration/` contains all integration tests.
+
+`meta/` contains tests for custom assert functions.
+
+`unit/` contains all unit tests.
 
 ## Test Design
 
