@@ -139,7 +139,7 @@ class Test_siegert2:
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
-    rtol = 0.01
+    rtol = 0.05
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -155,16 +155,23 @@ class Test_nu0_fb433:
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
-    def test_correct_output(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
+    def test_gives_similar_results_as_real_shifted_siegert(
+            self, output_fixtures_mean_driven):
+        params = output_fixtures_mean_driven.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
+        
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output_for_several_mus_and_sigmas(
+            self.func, params, output)
 
 
 class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
-    rtol = 0.01
+    rtol = 0.05
     
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -180,10 +187,17 @@ class Test_nu0_fb:
     def test_exception_is_raised_if_k_is_too_large(self, std_params):
         check_exception_is_raised_if_k_is_too_large(self.func, std_params)
 
-    def test_correct_output(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
+    def test_gives_similar_results_as_real_shifted_siegert(
+            self, output_fixtures_mean_driven):
+        params = output_fixtures_mean_driven.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
+        
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        check_correct_output_for_several_mus_and_sigmas(
+            self.func, params, output)
 
 
 class Test_nu_0:

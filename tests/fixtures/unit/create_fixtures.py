@@ -28,6 +28,8 @@ from lif_meanfield_tools.meanfield_calcs import (
     effective_coupling_strength,
     )
 from lif_meanfield_tools.aux_calcs import (
+    nu0_fb433,
+    nu_0,
     d_nu_d_mu,
     d_nu_d_mu_fb433,
     d_nu_d_nu_in_fb,
@@ -342,6 +344,35 @@ def fix_sensitivity_measure(network, file):
     network.sensitivity_measure(omega)
     network.transfer_function(omega)
     network.save(file=file, overwrite=True)
+    
+
+def fix_nu0_fb433(network, file):
+    """Calc nu0_fb433 and save as h5 using network.save()."""
+    network.working_point()
+    network.results['nu0_fb433'] = [
+        nu0_fb433(network.network_params['tau_m'],
+                  network.network_params['tau_s'],
+                  network.network_params['tau_r'],
+                  network.network_params['V_th_rel'],
+                  network.network_params['V_0_rel'],
+                  mu,
+                  sigma)
+        for mu, sigma in zip(network.mean_input(), network.std_input())]
+    network.save(file, overwrite=True)
+
+
+def fix_nu_0(network, file):
+    """Calc nu_0 and save as h5 using network.save()."""
+    network.working_point()
+    network.results['nu_0'] = [
+        nu_0(network.network_params['tau_m'],
+             network.network_params['tau_r'],
+             network.network_params['V_th_rel'],
+             network.network_params['V_0_rel'],
+             mu,
+             sigma)
+        for mu, sigma in zip(network.mean_input(), network.std_input())]
+    network.save(file, overwrite=True)
 
 
 def fix_transfer_function(network, file):
@@ -406,10 +437,12 @@ if __name__ == '__main__':
             fix_eigenspectra(network, file_path)
             fix_additional_rates_for_fixed_input(network, file_path)
             fix_eff_coupling_strength(network, file_path)
+            fix_nu0_fb433(network, file_path)
+            fix_nu_0(network, file_path)
             fix_d_nu_d_mu(network, file_path)
             fix_d_nu_d_mu_fb433(network, file_path)
             fix_d_nu_d_nu_in_fb(network, file_path)
-            
+            #
             # test network for loading
             network = lmt.Network(param_file, analysis_param_file)
             fix_network_loading(network, f'{fixture_path}test_network.h5')
