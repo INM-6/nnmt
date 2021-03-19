@@ -12,7 +12,7 @@ import pytest
 from collections import defaultdict
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from ..checks import assert_array_equal, assert_array_almost_equal
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools import ureg
@@ -259,7 +259,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
                 'critical_frequency': critical_frequency,
                 'critical_frequency_index': critical_frequency_index,
                 'critical_eigenvalue': critical_eigenvalue}
-
+        
         # identify which eigenvalue contributes most to this peak
         for eig_index, eig_results in sensitivity_dict.items():
             if eig_results['critical_frequency'] == fmax:
@@ -285,7 +285,8 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
 
         # test vector (k) between critical eigenvalue and complex(1,0)
         # and repective perpendicular (k_per)
-        k = np.asarray([1, 0]) - np.asarray([eigc.real, eigc.imag])
+        k = np.asarray([1, 0]) - np.asarray([eigc.magnitude.real,
+                                             eigc.magnitude.imag])
         k /= np.sqrt(np.dot(k, k))
         k_per = np.asarray([-k[1], k[0]])
         k_per /= np.sqrt(np.dot(k_per, k_per))
