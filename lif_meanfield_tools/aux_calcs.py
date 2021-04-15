@@ -513,7 +513,7 @@ def d_nu_d_nu_in_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j, mu, sigma,
     elif contributions == 'all':
         return lin + sqr
     else:
-        raise ValueError("Contributions argument must be one of the follwing "
+        raise ValueError("Contributions argument must be one of the following "
                          "options: 'mu', 'sigma', 'all'.")
 
 
