@@ -55,7 +55,7 @@ if __name__ == '__main__':
     eigenvalue_spectra_freqs, eigenvalue_spectra = (
         circ.create_eigenvalue_spectra('MH'))
 
-    h5.add_to_h5(filename, {'params': circ.params,
+    h5.save(filename, {'params': circ.params,
                             'omegas': circ.omegas,
                             'firing_rates': circ.th_rates,
                             'transfer_function': transfer_function,
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                             'delay_dist': delay_dist,
                             'eigenvalue_spectra': eigenvalue_spectra,
                             'exemplary_frequency_idx': exemplary_frequency_idx
-                            }
+                            }, overwrite_dataset=True
                  )
 
     # frequencies = [64, 241, 263, 267, 284]
