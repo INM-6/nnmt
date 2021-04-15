@@ -25,7 +25,7 @@ fix_path = 'tests/fixtures/integration/data/'
 
 # options for debugging
 save_data = True
-use_saved_data = True
+use_saved_data = False
 
 
 @pytest.fixture(scope='class')
