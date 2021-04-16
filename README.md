@@ -342,14 +342,16 @@ To invoke the workflow, set `tests/fixtures` as current working directory and
 type: `snakemake --use-conda --cores 1`.
 The workflow than takes care of installing the necessary conda environments 
 and creating all fixtures, that are specified within 
-`tests/fixtures/config.yaml`.
+`tests/fixtures/config.yaml`. By default, the workflow looks whether the
+requested fixtures exists and only creates them, if they don't.
 
-It might be useful to first see what the workflow is planning to due by 
-triggering a 'dry-run' with: `snakemake -n`
+It might be useful to first see what the workflow is planning to do by 
+triggering a 'dry-run' with: `snakemake -n`.
 Furthermore the execution of single rules can be forced with the `-R` flag, 
-e.g.: `snakemake --use-conda --cores 1 -R make_Bos2016_data`. Refer to the
-[Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)
-for more.
+e.g.: `snakemake --use-conda --cores 1 -R make_Bos2016_data`. This is useful,
+if one specific fixture should be re-created.
+
+Refer to the [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html) for more information.
 
 # History of this Project
 
