@@ -161,21 +161,35 @@ rule convert_publicated_Bos2016_data:
 
 rule remove_existing_fixtures:
     input:
+        'all_unit_fixtures_have_been_removed.done',
+        'all_integration_fixtures_have_been_removed.done'
+
+rule remove_existing_unit_fixtures:
+    params:
         # unit test fixtures
-        expand(
+        unit_fixs = expand(
             join(unit_fixture_path, '{unit_fixture}'),
             unit_fixture=unit_fixtures
-        ),
+        )
+    output:
+        touch('all_unit_fixtures_have_been_removed.done')
+    run:
+        import os
+        for fixture in params.unit_fixs:
+            if os.path.exists(fixture):
+                os.remove(fixture)
+
+rule remove_existing_integration_fixtures:
+    params:
         # integration test fixtures
-        expand(
+        integration_fixs = expand(
             join(integration_fixture_path, '{integration_fixture}'),
             integration_fixture=integration_fixtures
         )
     output:
-        touch('all_fixtures_have_been_removed.done')
+        touch('all_integration_fixtures_have_been_removed.done')
     run:
         import os
-        for fixture in input:
+        for fixture in params.integration_fixs:
             if os.path.exists(fixture):
                 os.remove(fixture)
-
