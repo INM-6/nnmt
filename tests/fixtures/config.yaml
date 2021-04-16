@@ -1,0 +1,14 @@
+# Paramters for fixture creation workflow
+unit_fixture_path: 'unit/data'
+integration_fixture_path: 'integration/data'
+
+unit_fixtures: [
+  # 'test_network.h5'
+  ]
+
+integration_fixtures: [
+  # 'std_results.h5',
+  'Schuecker2015_data.h5',
+  'Bos2016_data.h5',
+  'Bos2016_publicated_and_converted_data.h5'
+  ]

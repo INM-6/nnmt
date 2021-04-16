@@ -263,6 +263,7 @@ tests/
   conftest.
   checks.py
   fixtures/
+    Snakefile
     unit/
       config/
       data/
@@ -294,7 +295,8 @@ parametrizations of tests.
 
 `fixtures/` contains all the data that is used for tests comparing real and
 expected output of functions, as well as the files that creates the data
-`create_fixtures.py` using the parameters defined in `config/`.
+`create_fixtures.py` using the parameters defined in `config/`. The Snakefile
+defines a workflow to create all fixtures at once.
 
 `integration/` contains all integration tests.
 
@@ -318,10 +320,39 @@ arguments is defined within `conftest.py`.
 
 If a test requires `output_test_fixtures`, pytest will pass the output fixtures
 corresponding to the `output_key` defined as a test class variable. Those
-output key results need to be created beforehand (see `create_fixtures.py`).
-This allows us to parametrize the test such that the function is tested in
+output key results are checked into the repository for convenience, but can
+be created from the sources (see Fixture Creation Workflow).
+This allows us to parametrize the tests such that the function is tested in
 different parameter regimes (e.g. mean-driven regime vs. fluctuation-driven
 regime).
+
+## Fixture Creation Workflow
+
+Fixture creation is a sensible part of the testing framework as it 
+supplies a kind of ground truth to test against. Please make 
+sure that your code is trustworthy before running the fixture creation.
+Otherwise, tests might incorrectly fail or pass.
+
+The fixture creation workflow is defined using 
+[Snakemake](https://snakemake.readthedocs.io/en/stable/index.html), a
+workflow management system using a Python based syntax. It is recommended to 
+install it in a separate conda environment (see [Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)).
+
+To invoke the workflow, set `tests/fixtures` as current working directory and
+type: `snakemake --use-conda --cores 1`.
+The workflow then takes care of installing the necessary conda environments 
+and creating all fixtures that are specified within 
+`tests/fixtures/config.yaml`. By default, the workflow looks whether the
+requested fixtures exists and only creates them if they don't.
+
+It might be useful to first see what the workflow is planning to do by 
+triggering a 'dry-run' with: `snakemake -n`.
+Furthermore the execution of single rules can be enforced with the `-R` flag, 
+e.g.: `snakemake --use-conda --cores 1 -R make_Bos2016_data`. This is useful
+if one specific fixture should be re-created.
+
+Have a look at the [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html) 
+for more information.
 
 # History of this Project
 

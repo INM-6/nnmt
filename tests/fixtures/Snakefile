@@ -1,0 +1,195 @@
+configfile: "config.yaml"
+
+from os.path import join
+
+unit_fixture_path = config['unit_fixture_path']
+integration_fixture_path = config['integration_fixture_path']
+
+unit_fixtures = config['unit_fixtures']
+integration_fixtures = config['integration_fixtures']
+
+rule all:
+    input:
+        # unit test fixtures
+        expand(
+            join(unit_fixture_path, '{unit_fixture}'),
+            unit_fixture=unit_fixtures
+        ),
+        # integration test fixtures
+        expand(
+            join(integration_fixture_path, '{integration_fixture}'),
+            integration_fixture=integration_fixtures
+        )
+
+rule copy_environment_yaml_and_adapt_path:
+    input:
+        yaml = join('..', '..', 'environment.yaml')
+    output:
+        modified_yaml = join('envs', 'environment.yaml')
+    run:
+        print(input.yaml, output.modified_yaml)
+        in_file = open(input.yaml, 'rt')
+        out_file = open(output.modified_yaml, 'wt')
+
+        for line in in_file:
+            out_file.write(line.replace('-e .',
+                                        '-e ../../../../'))
+        in_file.close()
+        out_file.close()
+
+
+rule create_unit_test_fixtures:
+    input:
+        script = join('unit', 'create_fixtures.py'),
+        modified_yaml = join('envs', 'environment.yaml')
+    conda:
+        # /lif_meanfield_tools/environment.yaml
+        join('envs', 'environment.yaml')
+    output:
+        join(unit_fixture_path, 'test_network.h5')
+    shell:
+        """
+        python {input.script} -f
+        """
+
+rule create_integration_test_fixtures:
+    input:
+        script = join('integration', 'create_fixtures.py'),
+        modified_yaml = join('envs', 'environment.yaml')
+    conda:
+        # /lif_meanfield_tools/environment.yaml
+        join('envs', 'environment.yaml')
+    output:
+        join(integration_fixture_path, 'std_results.h5')
+    shell:
+        """
+        python {input.script} -f
+        """
+
+rule create_signature_file_from_fortran_code:
+    input: 
+        f90 = join('integration', 'make_Bos2016_data', 
+                   'meanfield', 'kummers_function.f90')
+    conda:
+        join('envs', 'Bos2016_environment.yaml')
+    output:
+        pyf = join('integration', 'make_Bos2016_data', 
+                   'meanfield', 'kummers_function.pyf')
+    shell:
+        # -m <modulename>
+        """
+        f2py {input.f90} -m fortran_functions -h {output.pyf}
+        """
+
+rule compile_fortran_functions:
+    input:
+        f90 = join('integration', 'make_Bos2016_data', 
+                        'meanfield', 'kummers_function.f90'),
+        pyf = join('integration', 'make_Bos2016_data', 
+                        'meanfield', 'kummers_function.pyf')
+    conda:
+        join('envs', 'Bos2016_environment.yaml')
+    output:
+        Bos = join('integration', 'make_Bos2016_data', 'meanfield', 
+             'fortran_functions.so'),
+        Schuecker = join('integration', 'make_Schuecker2015_data', 
+             'fortran_functions.so')
+    shell:
+        """
+        f2py -c {input.pyf} -lmathlib {input.f90}
+        mv fortran_functions.so {output.Bos}
+        cp {output.Bos} {output.Schuecker}
+        """
+
+rule make_Schuecker2015_data:
+    input:
+        script = join('integration',
+                      'make_Schuecker2015_data',
+                      'make_Schuecker2015_data.py'),
+        fortran_functions = join('integration', 'make_Schuecker2015_data', 
+             'fortran_functions.so')
+    conda:
+        join('envs', 'Schuecker2015_environment.yaml')
+    output:
+        join(integration_fixture_path, 'Schuecker2015_data.h5')
+    shell:
+        """
+        python {input.script}
+        """
+
+rule make_Bos2016_data:
+    input:
+        script = join('integration',
+                      'make_Bos2016_data',
+                      'make_Bos2016_data.py'),
+        fortran_functions = join('integration', 'make_Bos2016_data', 
+                                 'meanfield', 'fortran_functions.so')
+    conda:
+        join('envs', 'Bos2016_environment.yaml')
+    params:
+        filename = 'Bos2016_data',
+        # automatically saved with different/incompatible keys
+        results_microcircuit_h5 = 'results_microcircuit.h5'
+    output:
+        h5 = join(integration_fixture_path, 'Bos2016_data.h5')
+    shell:
+        """
+        python {input.script} output {output.h5}
+        rm {params.results_microcircuit_h5}
+        """
+
+rule convert_publicated_Bos2016_data:
+    input:
+        script = join('integration',
+                      'convert_Bos2016_data',
+                      'convert_h5file'),
+        publicated_data = join('integration', 'convert_Bos2016_data', 
+                               'publicated_data', 'results.h5')
+    conda:
+        join('envs', 'Bos2016_environment.yaml')
+    output:
+        intermediate_data = join('integration', 'convert_Bos2016_data', 
+                  'results.h5'),
+        converted_data = join(integration_fixture_path, 
+                  'Bos2016_publicated_and_converted_data.h5')
+    shell:
+        """
+        cp {input.publicated_data} {output.intermediate_data}
+        {input.script} {input.publicated_data} --release=0.0.1
+        cp {output.intermediate_data} {output.converted_data}
+        """
+
+rule remove_existing_fixtures:
+    input:
+        'all_unit_fixtures_have_been_removed.done',
+        'all_integration_fixtures_have_been_removed.done'
+
+rule remove_existing_unit_fixtures:
+    params:
+        # unit test fixtures
+        unit_fixs = expand(
+            join(unit_fixture_path, '{unit_fixture}'),
+            unit_fixture=unit_fixtures
+        )
+    output:
+        touch('all_unit_fixtures_have_been_removed.done')
+    run:
+        import os
+        for fixture in params.unit_fixs:
+            if os.path.exists(fixture):
+                os.remove(fixture)
+
+rule remove_existing_integration_fixtures:
+    params:
+        # integration test fixtures
+        integration_fixs = expand(
+            join(integration_fixture_path, '{integration_fixture}'),
+            integration_fixture=integration_fixtures
+        )
+    output:
+        touch('all_integration_fixtures_have_been_removed.done')
+    run:
+        import os
+        for fixture in params.integration_fixs:
+            if os.path.exists(fixture):
+                os.remove(fixture)

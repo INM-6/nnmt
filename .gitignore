@@ -94,6 +94,9 @@ venv.bak/
 .spyderproject
 .spyproject
 
+# VScode project settings
+.vscode
+
 # Rope project settings
 .ropeproject
 
@@ -112,3 +115,6 @@ venv.bak/
 
 # Data folder in make_Bos2016_data
 data/
+
+# snakemake
+.snakemake
