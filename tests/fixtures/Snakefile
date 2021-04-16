@@ -168,3 +168,24 @@ rule convert_publicated_Bos2016_data:
         {input.script} {input.publicated_data} --release=0.0.1
         cp {output.intermediate_data} {output.converted_data}
         """
+
+rule remove_existing_fixtures:
+    input:
+        # unit test fixtures
+        expand(
+            join(unit_fixture_path, '{unit_fixture}'),
+            unit_fixture=unit_fixtures
+        ),
+        # integration test fixtures
+        expand(
+            join(integration_fixture_path, '{integration_fixture}'),
+            integration_fixture=integration_fixtures
+        )
+    output:
+        touch('all_fixtures_have_been_removed.done')
+    run:
+        import os
+        for fixture in input:
+            if os.path.exists(fixture):
+                os.remove(fixture)
+
