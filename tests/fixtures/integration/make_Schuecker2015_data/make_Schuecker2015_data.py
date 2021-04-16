@@ -231,7 +231,7 @@ if __name__ == '__main__':
     Phi1 = Phi1_mpmath_pcfu
     results_dict = plot_PRE_Schuecker_Fig4(frequencies, sigma_1, mean_input_1,
                                            sigma_2, mean_input_2)
-    fig.savefig(fix_path + 'PRE_Schuecker_Fig4.pdf')
+    # fig.savefig(fix_path + 'PRE_Schuecker_Fig4.pdf')
 
     # save output
     h5.save(fix_path + 'Schuecker2015_data.h5', results_dict,
