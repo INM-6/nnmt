@@ -1,29 +1,24 @@
-"""make_Bos2016_data.py
+"""
+This script reproduces the data produces and analyzed in the following 
+publication:
 
-Outputs:
-    <filename>: full path including filename and extension of .txt file to return
-Usage:
-  make_Bos2016_data.py output <filename>
-  make_Bos2016_data.py (-h | --help)
-  make_Bos2016_data.py --version
-Options:
-  -h --help     Show this screen.
-  --version     Show version.
+Bos, H., Diesmann, M. & Helias, M. 
+Identifying Anatomical Origins of Coexisting Oscillations in the Cortical 
+Microcircuit. 
+PLOS Computational Biology 12, 1-34 (2016).
 """
 
 import plot_helpers
 import meanfield.circuit as circuit
 import numpy as np
-from docopt import docopt
 import h5py_wrapper.wrapper as h5
 
 
-fix_path = 'tests/fixtures/integration/data/'
+fix_path = 'integration/data/'
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='0.1')
-    filename = fix_path + arguments['<filename>']
+    filename = fix_path + 'Bos2016_data.h5'
 
     # Original parameters extracted from the data + modification
     circ_params_with_modifications = plot_helpers.get_parameter_microcircuit()

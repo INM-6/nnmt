@@ -34,8 +34,8 @@ if __name__ == '__main__':
     # only run code if users are sure they want to do it
     if '--force' in args.keys():
 
-        fixture_path = 'tests/fixtures/integration/data/'
-        config_path = 'tests/fixtures/integration/config/'
+        fixture_path = 'integration/data/'
+        config_path = 'integration/config/'
 
         network = lmt.Network(config_path + 'network_params.yaml',
                               config_path + 'analysis_params.yaml')

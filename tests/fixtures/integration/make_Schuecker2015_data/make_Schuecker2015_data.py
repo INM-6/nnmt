@@ -20,7 +20,7 @@ import siegert
 from collections import defaultdict
 
 
-fix_path = 'tests/fixtures/integration/data/'
+fix_path = 'integration/data/'
 
 
 # Here we define the variants of the Phi1 function and change
