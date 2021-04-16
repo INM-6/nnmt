@@ -71,9 +71,7 @@ rule create_signature_file_from_fortran_code:
         f90 = join('integration', 'make_Bos2016_data', 
                    'meanfield', 'kummers_function.f90')
     conda:
-        join('integration',
-             'make_Bos2016_data',
-             'Bos2016_environment.yaml')
+        join('envs', 'Bos2016_environment.yaml')
     output:
         pyf = join('integration', 'make_Bos2016_data', 
                    'meanfield', 'kummers_function.pyf')
@@ -90,9 +88,7 @@ rule compile_fortran_functions:
         pyf = join('integration', 'make_Bos2016_data', 
                         'meanfield', 'kummers_function.pyf')
     conda:
-        join('integration',
-             'make_Bos2016_data',
-             'Bos2016_environment.yaml')
+        join('envs', 'Bos2016_environment.yaml')
     output:
         Bos = join('integration', 'make_Bos2016_data', 'meanfield', 
              'fortran_functions.so'),
@@ -113,9 +109,7 @@ rule make_Schuecker2015_data:
         fortran_functions = join('integration', 'make_Schuecker2015_data', 
              'fortran_functions.so')
     conda:
-        join('integration',
-             'make_Schuecker2015_data',
-             'Schuecker2015_environment.yaml')
+        join('envs', 'Schuecker2015_environment.yaml')
     output:
         join(integration_fixture_path, 'Schuecker2015_data.h5')
     shell:
@@ -131,9 +125,7 @@ rule make_Bos2016_data:
         fortran_functions = join('integration', 'make_Bos2016_data', 
                                  'meanfield', 'fortran_functions.so')
     conda:
-        join('integration',
-             'make_Bos2016_data',
-             'Bos2016_environment.yaml')
+        join('envs', 'Bos2016_environment.yaml')
     params:
         filename = 'Bos2016_data',
         # automatically saved with different/incompatible keys
@@ -154,9 +146,7 @@ rule convert_publicated_Bos2016_data:
         publicated_data = join('integration', 'convert_Bos2016_data', 
                                'publicated_data', 'results.h5')
     conda:
-        join('integration',
-             'make_Bos2016_data',
-             'Bos2016_environment.yaml')
+        join('envs', 'Bos2016_environment.yaml')
     output:
         intermediate_data = join('integration', 'convert_Bos2016_data', 
                   'results.h5'),
