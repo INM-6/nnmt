@@ -45,6 +45,7 @@ from __future__ import print_function
 import numpy as np
 from decorator import decorator
 import hashlib
+import inspect
 
 from . import ureg
 from . import input_output as io
@@ -278,9 +279,15 @@ class Network(object):
             results = getattr(self, 'results')
             results_hash_dict = getattr(self, 'results_hash_dict')
 
-            # convert new params to list
             new_params = []
             if analysis_keys is not None:
+                # add not passed standard arguments to args
+                if len(analysis_keys) != len(args):
+                    default_args = inspect.getfullargspec(func).defaults
+                    args = list(args)
+                    args.extend(default_args)
+                    args = tuple(args)
+                # convert new params to list
                 for i, key in enumerate(analysis_keys):
                     new_params.append(args[i])
 
@@ -663,7 +670,8 @@ class Network(object):
 
         return transfer_functions
 
-    @_check_and_store(['sensitivity_measure'], ['sensitivity_freqs'])
+    @_check_and_store(['sensitivity_measure'], ['sensitivity_freqs',
+                                                'sensitivity_method'])
     def sensitivity_measure(self, freq, method='shift'):
         """
         Calculates the sensitivity measure for the given frequency.
