@@ -1,12 +1,14 @@
-configfile: "config.yaml"
-
 from os.path import join
+
+
+configfile: "config.yaml"
 
 unit_fixture_path = config['unit_fixture_path']
 integration_fixture_path = config['integration_fixture_path']
 
 unit_fixtures = config['unit_fixtures']
 integration_fixtures = config['integration_fixtures']
+
 
 rule all:
     input:
@@ -20,22 +22,6 @@ rule all:
             join(integration_fixture_path, '{integration_fixture}'),
             integration_fixture=integration_fixtures
         )
-
-rule copy_environment_yaml_and_adapt_path:
-    input:
-        yaml = join('..', '..', 'environment.yaml')
-    output:
-        modified_yaml = join('envs', 'environment.yaml')
-    run:
-        print(input.yaml, output.modified_yaml)
-        in_file = open(input.yaml, 'rt')
-        out_file = open(output.modified_yaml, 'wt')
-
-        for line in in_file:
-            out_file.write(line.replace('-e .',
-                                        '-e ../../../../'))
-        in_file.close()
-        out_file.close()
 
 
 rule create_unit_test_fixtures:
@@ -52,6 +38,7 @@ rule create_unit_test_fixtures:
         python {input.script} -f
         """
 
+
 rule create_integration_test_fixtures:
     input:
         script = join('integration', 'create_fixtures.py'),
@@ -66,14 +53,15 @@ rule create_integration_test_fixtures:
         python {input.script} -f
         """
 
+
 rule create_signature_file_from_fortran_code:
-    input: 
-        f90 = join('integration', 'make_Bos2016_data', 
+    input:
+        f90 = join('integration', 'make_Bos2016_data',
                    'meanfield', 'kummers_function.f90')
     conda:
         join('envs', 'Bos2016_environment.yaml')
     output:
-        pyf = join('integration', 'make_Bos2016_data', 
+        pyf = join('integration', 'make_Bos2016_data',
                    'meanfield', 'kummers_function.pyf')
     shell:
         # -m <modulename>
@@ -81,18 +69,19 @@ rule create_signature_file_from_fortran_code:
         f2py {input.f90} -m fortran_functions -h {output.pyf}
         """
 
+
 rule compile_fortran_functions:
     input:
-        f90 = join('integration', 'make_Bos2016_data', 
+        f90 = join('integration', 'make_Bos2016_data',
                         'meanfield', 'kummers_function.f90'),
-        pyf = join('integration', 'make_Bos2016_data', 
+        pyf = join('integration', 'make_Bos2016_data',
                         'meanfield', 'kummers_function.pyf')
     conda:
         join('envs', 'Bos2016_environment.yaml')
     output:
-        Bos = join('integration', 'make_Bos2016_data', 'meanfield', 
+        Bos = join('integration', 'make_Bos2016_data', 'meanfield',
              'fortran_functions.so'),
-        Schuecker = join('integration', 'make_Schuecker2015_data', 
+        Schuecker = join('integration', 'make_Schuecker2015_data',
              'fortran_functions.so')
     shell:
         """
@@ -101,12 +90,13 @@ rule compile_fortran_functions:
         cp {output.Bos} {output.Schuecker}
         """
 
+
 rule make_Schuecker2015_data:
     input:
         script = join('integration',
                       'make_Schuecker2015_data',
                       'make_Schuecker2015_data.py'),
-        fortran_functions = join('integration', 'make_Schuecker2015_data', 
+        fortran_functions = join('integration', 'make_Schuecker2015_data',
              'fortran_functions.so')
     conda:
         join('envs', 'Schuecker2015_environment.yaml')
@@ -117,12 +107,13 @@ rule make_Schuecker2015_data:
         python {input.script}
         """
 
+
 rule make_Bos2016_data:
     input:
         script = join('integration',
                       'make_Bos2016_data',
                       'make_Bos2016_data.py'),
-        fortran_functions = join('integration', 'make_Bos2016_data', 
+        fortran_functions = join('integration', 'make_Bos2016_data',
                                  'meanfield', 'fortran_functions.so')
     conda:
         join('envs', 'Bos2016_environment.yaml')
@@ -138,19 +129,20 @@ rule make_Bos2016_data:
         rm {params.results_microcircuit_h5}
         """
 
+
 rule convert_publicated_Bos2016_data:
     input:
         script = join('integration',
                       'convert_Bos2016_data',
                       'convert_h5file'),
-        publicated_data = join('integration', 'convert_Bos2016_data', 
+        publicated_data = join('integration', 'convert_Bos2016_data',
                                'publicated_data', 'results.h5')
     conda:
         join('envs', 'Bos2016_environment.yaml')
     output:
-        intermediate_data = join('integration', 'convert_Bos2016_data', 
+        intermediate_data = join('integration', 'convert_Bos2016_data',
                   'results.h5'),
-        converted_data = join(integration_fixture_path, 
+        converted_data = join(integration_fixture_path,
                   'Bos2016_publicated_and_converted_data.h5')
     shell:
         """
@@ -158,6 +150,7 @@ rule convert_publicated_Bos2016_data:
         {input.script} {input.publicated_data} --release=0.0.1
         cp {output.intermediate_data} {output.converted_data}
         """
+
 
 rule remove_existing_fixtures:
     input:
@@ -178,6 +171,7 @@ rule remove_existing_unit_fixtures:
         for fixture in params.unit_fixs:
             if os.path.exists(fixture):
                 os.remove(fixture)
+
 
 rule remove_existing_integration_fixtures:
     params:

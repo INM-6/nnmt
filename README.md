@@ -328,30 +328,42 @@ regime).
 
 ## Fixture Creation Workflow
 
-Fixture creation is a sensible part of the testing framework as it 
-supplies a kind of ground truth to test against. Please make 
+Fixture creation is a sensible part of the testing framework as it
+supplies a kind of ground truth to test against. Please make
 sure that your code is trustworthy before running the fixture creation.
 Otherwise, tests might incorrectly fail or pass.
 
-The fixture creation workflow is defined using 
+The fixture creation workflow is defined using
 [Snakemake](https://snakemake.readthedocs.io/en/stable/index.html), a
-workflow management system using a Python based syntax. It is recommended to 
+workflow management system using a Python based syntax. It is recommended to
 install it in a separate conda environment (see [Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)).
 
-To invoke the workflow, set `tests/fixtures` as current working directory and
-type: `snakemake --use-conda --cores 1`.
-The workflow then takes care of installing the necessary conda environments 
-and creating all fixtures that are specified within 
+To invoke the workflow and create the fixtures using the same conda environment
+you are using the toolbox with, you first need to export the conda environment.
+Therefore set `tests/fixtures/envs` as current working directory, activate the
+corresponding conda environment and type
+```
+conda env export -f environment.yaml
+```
+Then open the created `environment.yaml` file, remove the last line starting
+with `prefix` and add the line `- -e ../../../../` to the list at the end.
+Change your current working directory to `tests/fixtures`, activate the conda
+environment you have installed sakemake in and type
+```
+snakemake --use-conda --cores 1
+```
+The workflow then takes care of installing the necessary conda environments
+and creating all fixtures that are specified within
 `tests/fixtures/config.yaml`. By default, the workflow looks whether the
 requested fixtures exists and only creates them if they don't.
 
-It might be useful to first see what the workflow is planning to do by 
+It might be useful to first see what the workflow is planning to do by
 triggering a 'dry-run' with: `snakemake -n`.
-Furthermore the execution of single rules can be enforced with the `-R` flag, 
+Furthermore the execution of single rules can be enforced with the `-R` flag,
 e.g.: `snakemake --use-conda --cores 1 -R make_Bos2016_data`. This is useful
 if one specific fixture should be re-created.
 
-Have a look at the [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html) 
+Have a look at the [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)
 for more information.
 
 # History of this Project
