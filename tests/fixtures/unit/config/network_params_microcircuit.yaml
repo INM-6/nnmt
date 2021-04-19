@@ -1,0 +1,337 @@
+---
+# Label, that is used to trigger calculation of network-specific derived
+# parameters. Changing this label currently disables the calculation of
+# microcircuit specific derived parameters!
+label: microcircuit
+
+populations:
+  - 23E
+  - 23I
+  - 4E
+  - 4I
+  - 5E
+  - 5I
+  - 6E
+  - 6I
+
+# number of neurons in populations
+N:
+  - 20683
+  - 5834
+  - 21915
+  - 5479
+  - 4850
+  - 1065
+  - 14395
+  - 2948
+
+
+### neurons
+# membrane capacitance
+C:
+  val: 250.0
+  unit: pF
+
+# membrane time constant
+tau_m:
+  val: 10.0
+  unit: ms
+
+# refractory time
+tau_r:
+  val: 2.0
+  unit: ms
+
+# absolute reset potential
+V_0_abs:
+  val: -65.0
+  unit: mV
+
+# absolute threshold of membrane potential
+V_th_abs:
+  val: -50.0
+  unit: mV
+
+
+### synapses
+# synaptic time constant
+tau_s:
+  val: 0.5
+  unit: ms
+
+# delay of excitatory connections
+d_e:
+  val: 1.5
+  unit: ms
+
+# delay of inhibitory connections
+d_i:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of excitatory connections
+d_e_sd:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of inhibitory connections
+d_i_sd:
+  val: 0.375
+  unit: ms
+
+# delay distribution, options: none, gaussian (standard deviation is defined
+# above), truncated_gaussian (standard deviation is defined above, truncation
+# at zero)
+delay_dist: none
+
+# PSC amplitude
+w:
+  val: 87.8
+  unit: pA
+
+# indegrees
+K:
+  - - 2199.86486
+    - 1079.32007
+    - 979.241261
+    - 467.578108
+    - 159.240826
+    - 0.0
+    - 109.819852
+    - 0.0
+  - - 2990.00583
+    - 860.261056
+    - 703.691807
+    - 289.693864
+    - 380.735859
+    - 0.0
+    - 60.5863901
+    - 0.0
+  - - 159.875428
+    - 34.5225188
+    - 1117.17312
+    - 794.596213
+    - 32.6043349
+    - 0.319552818
+    - 667.325211
+    - 0.0
+  - - 1480.97354
+    - 16.9432378
+    - 1813.02026
+    - 953.325789
+    - 16.0313926
+    - 0.0
+    - 1608.12283
+    - 0.0
+  - - 2188.36598
+    - 374.651134
+    - 1135.62969
+    - 31.3195876
+    - 420.770722
+    - 496.471959
+    - 296.694639
+    - 0.0
+  - - 1165.66761
+    - 159.083568
+    - 570.579343
+    - 12.0666667
+    - 300.095775
+    - 404.17277
+    - 124.332394
+    - 0.0
+  - - 325.197985
+    - 38.632025
+    - 467.354637
+    - 91.7147621
+    - 285.670372
+    - 21.1899271
+    - 581.635915
+    - 752.183189
+  - - 766.90502
+    - 5.83683853
+    - 74.6380597
+    - 2.74016282
+    - 136.240841
+    - 8.55427408
+    - 979.791723
+    - 459.402985
+
+# ratio of inhibitory to excitatory weights
+g: 4.0
+
+### external input
+# firing rate of external input
+nu_ext:
+  val: 8.0
+  unit: Hz
+
+# number of external neurons
+K_ext:
+  - 1600
+  - 1500
+  - 2100
+  - 1900
+  - 2000
+  - 1900
+  - 2900
+  - 2100
+
+
+# rates of additional external excitatory and inhibitory Poisson input
+nu_e_ext:
+  val:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  unit: Hz
+
+nu_i_ext:
+  val:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  unit: Hz
+
+mean_input_set:
+  unit: millivolt
+  val:
+    - 4
+    - 7
+    - 7
+    - 7
+    - 8
+    - 9
+    - 3
+    - 9
+
+mu_set:
+  unit: millivolt
+  val:
+    - 4
+    - 7
+    - 7
+    - 7
+    - 8
+    - 9
+    - 3
+    - 9
+
+std_input_set:
+  unit: millivolt
+  val:
+    - 6
+    - 5
+    - 6
+    - 6
+    - 6
+    - 5
+    - 6
+    - 5
+
+sigma_set:
+  unit: millivolt
+  val:
+    - 6
+    - 5
+    - 6
+    - 6
+    - 6
+    - 5
+    - 6
+    - 5
+
+# results from fit_transfer_function
+tau_rate:
+  val:
+    - 7.3567177
+    - 6.01784889
+    - 5.36814716
+    - 5.06622102
+    - 4.6839838
+    - 4.29267873
+    - 7.06862226
+    - 4.43713224
+  unit: millisecond
+    
+W_rate:
+  val:
+    - - 2.57119625
+      - -13.8017721
+      - 7.96265959
+      - -8.15207068
+      - 0.797279755
+      - -0.0
+      - 0.159383416
+      - -0.0
+    - - 3.49471093
+      - -11.0005617
+      - 2.86102033
+      - -5.05071733
+      - 1.90625105
+      - -0.0
+      - 0.0879300566
+      - -0.0
+    - - 0.186861979
+      - -0.441455643
+      - 4.54212339
+      - -13.8535239
+      - 0.163241907
+      - -0.0078429572
+      - 0.968500409
+      - -0.0
+    - - 1.73095797
+      - -0.21666113
+      - 7.37124943
+      - -16.6209219
+      - 0.0802652503
+      - -0.0
+      - 2.33389597
+      - -0.0
+    - - 2.55775639
+      - -4.7908398
+      - 4.6171628
+      - -0.546046719
+      - 2.10669579
+      - -12.1851791
+      - 0.430597967
+      - -0.0
+    - - 1.36242923
+      - -2.03427621
+      - 2.3198211
+      - -0.210378369
+      - 1.50250593
+      - -9.91983033
+      - 0.180445714
+      - -0.0
+    - - 0.380090547
+      - -0.494005826
+      - 1.9001374
+      - -1.59901674
+      - 1.43028148
+      - -0.520075812
+      - 0.844138079
+      - -18.0663568
+    - - 0.896356565
+      - -0.0746383924
+      - 0.303458139
+      - -0.0477738384
+      - 0.682124471
+      - -0.209952163
+      - 1.42198836
+      - -11.034198
+      
+# for spatial networks
+width:
+  val: 1.0
+  unit: millimeter
+...

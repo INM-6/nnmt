@@ -1,0 +1,130 @@
+---
+# Label, that is used to trigger calculation of network-specific derived
+# parameters. Changing this label currently disables the calculation of
+# microcircuit specific derived parameters!
+label: mean_driven
+
+populations:
+  - E
+  - I
+
+# number of neurons in populations
+N:
+  - 8000
+  - 2000
+
+### neurons
+# membrane capacitance
+C:
+  val: 250.0
+  unit: pF
+
+# membrane time constant
+tau_m:
+  val: 20.0
+  unit: ms
+
+# refractory time
+tau_r:
+  val: 0.5
+  unit: ms
+
+# absolute reset potential
+V_0_abs:
+  val: -70.0
+  unit: mV
+
+# absolute threshold of membrane potential
+V_th_abs:
+  val: -50.0
+  unit: mV
+
+
+### synapses
+# synaptic time constant
+tau_s:
+  val: 0.5
+  unit: ms
+
+# delay of excitatory connections
+d_e:
+  val: 1.5
+  unit: ms
+
+# delay of inhibitory connections
+d_i:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of excitatory connections
+d_e_sd:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of inhibitory connections
+d_i_sd:
+  val: 0.375
+  unit: ms
+
+# delay distribution, options: none, gaussian (standard deviation is defined
+# above), truncated_gaussian (standard deviation is defined above, truncation
+# at zero)
+delay_dist: none
+
+# PSC amplitude
+w:
+  val: 87.8
+  unit: pA
+
+# indegrees
+K:
+  - - 800
+    - 200
+  - - 800
+    - 200
+
+# ratio of inhibitory to excitatory weights
+g: 3.65
+
+### external input
+# firing rate of external input
+nu_ext:
+  val: 10
+  unit: Hz
+
+# number of external neurons
+K_ext:
+  - 500
+  - 300
+
+
+
+# rates of additional external excitatory and inhibitory Poisson input
+nu_e_ext:
+  val:
+    - 0.0
+    - 0.0
+
+  unit: Hz
+
+nu_i_ext:
+  val:
+    - 0.0
+    - 0.0
+
+  unit: Hz
+  
+    
+mu_set:
+  unit: millivolt
+  val:
+    - 10
+    - 10
+    
+sigma_set:
+  unit: millivolt
+  val:
+    - 20
+    - 20
+
+...

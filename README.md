@@ -64,6 +64,10 @@ lif_meanfield_tools consists of four modules:
   non-specific building blocks. However, it is difficult to draw a line between
   the calculations that belong to `meanfield_calcs.py` and the ones that belong to
   `aux_calcs.py`.
+  
+- __utils.py__ is a module which contains utility functions. It contains functions
+  that simplify working with pint quantities and decorators for checking that
+  passed parameters are in valid regimes.
 
 # How to Get Started / Installation
 
@@ -234,7 +238,8 @@ publication in Physical Review Research):
 # Testing
 
 We have an extensive test suite using the `pytest` framework. If you want to
-run all the tests, you can simply do so by installing and activating the conda environment specified in the provided `environment.yaml` file, and running
+run all the tests, you can simply do so by installing and activating the conda
+environment specified in the provided `environment.yaml` file, and running
 ```
 pytest
 ```
@@ -245,7 +250,8 @@ pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_outpu
 ```
 See the `pytest` documentation for all available options.
 
-Note that some tests currently fail. This points towards pieces of code that still need to be improved (see current issues).
+Note that some tests currently fail. This points towards pieces of code that
+still need to be improved (see current issues).
 
 Note that `pytest` distinguishes between failures and errors:
 - A failure occurs if a test did not run successfully.
@@ -254,13 +260,26 @@ Note that `pytest` distinguishes between failures and errors:
 ## Test Directory Structure
 ```
 tests/
-  conftest.py
+  conftest.
+  checks.py
   fixtures/
-    create_fixtures.py
-    config/
-    data/
+    Snakefile
+    unit/
+      config/
+      data/
+      create_fixtures.py
+    integration/
+      config/
+      data/
+      create_fixtures.py
+  integration/
+    test_functionality.py
+    test_reproduce_Bos2016.py
+    test_reproduce_Schuecker2015.py
+    test_usage_examples.py
+  meta/
+    test_checks.py
   unit/
-    checks.py
     test_input_output.py
     test_network.py
     test_aux_calcs.py
@@ -268,14 +287,22 @@ tests/
 ```
 
 `conftest.py` is a special `pytest` file, in which custom fixtures
-and special `pytest` functions are defined. We, in particular, make use of the `pytest_generate_tests` function, which considerably simplifies complex parametrizations of tests.
+and special `pytest` functions are defined. We, in particular, make use of the
+`pytest_generate_tests` function, which considerably simplifies complex
+parametrizations of tests.
+
+`checks.py` is a collection of custom assert functions.
 
 `fixtures/` contains all the data that is used for tests comparing real and
-expected output of functions, as well as the file that creates the data
-`create_fixtures.py` using the parameters defined in `config/`.
+expected output of functions, as well as the files that creates the data
+`create_fixtures.py` using the parameters defined in `config/`. The Snakefile
+defines a workflow to create all fixtures at once.
 
-`unit/` contains all unit tests as well as a file `checks.py` which is a
-collection of custom assert functions.
+`integration/` contains all integration tests.
+
+`meta/` contains tests for custom assert functions.
+
+`unit/` contains all unit tests.
 
 ## Test Design
 
@@ -293,10 +320,51 @@ arguments is defined within `conftest.py`.
 
 If a test requires `output_test_fixtures`, pytest will pass the output fixtures
 corresponding to the `output_key` defined as a test class variable. Those
-output key results need to be created beforehand (see `create_fixtures.py`).
-This allows us to parametrize the test such that the function is tested in
+output key results are checked into the repository for convenience, but can
+be created from the sources (see Fixture Creation Workflow).
+This allows us to parametrize the tests such that the function is tested in
 different parameter regimes (e.g. mean-driven regime vs. fluctuation-driven
 regime).
+
+## Fixture Creation Workflow
+
+Fixture creation is a sensible part of the testing framework as it
+supplies a kind of ground truth to test against. Please make
+sure that your code is trustworthy before running the fixture creation.
+Otherwise, tests might incorrectly fail or pass.
+
+The fixture creation workflow is defined using
+[Snakemake](https://snakemake.readthedocs.io/en/stable/index.html), a
+workflow management system using a Python based syntax. It is recommended to
+install it in a separate conda environment (see [Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)).
+
+To invoke the workflow and create the fixtures using the same conda environment
+you are using the toolbox with, you first need to export the conda environment.
+Therefore set `tests/fixtures/envs` as current working directory, activate the
+corresponding conda environment and type
+```
+conda env export -f environment.yaml
+```
+Then open the created `environment.yaml` file, remove the last line starting
+with `prefix` and add the line `- -e ../../../../` to the list at the end.
+Change your current working directory to `tests/fixtures`, activate the conda
+environment you have installed sakemake in and type
+```
+snakemake --use-conda --cores 1
+```
+The workflow then takes care of installing the necessary conda environments
+and creating all fixtures that are specified within
+`tests/fixtures/config.yaml`. By default, the workflow looks whether the
+requested fixtures exists and only creates them if they don't.
+
+It might be useful to first see what the workflow is planning to do by
+triggering a 'dry-run' with: `snakemake -n`.
+Furthermore the execution of single rules can be enforced with the `-R` flag,
+e.g.: `snakemake --use-conda --cores 1 -R make_Bos2016_data`. This is useful
+if one specific fixture should be re-created.
+
+Have a look at the [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)
+for more information.
 
 # History of this Project
 
