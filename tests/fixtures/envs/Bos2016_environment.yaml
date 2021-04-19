@@ -5,7 +5,6 @@ channels:
 dependencies:
   - python=2.7
   - matplotlib
-  - numpy
   - scipy
   - pip
   - mpmath
@@ -13,5 +12,6 @@ dependencies:
   - h5py
   - quantities
   - pip:
+    - numpy>1.8.0
     - docopts
     - h5py-wrapper==1.0.1
