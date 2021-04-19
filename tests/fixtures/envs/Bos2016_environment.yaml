@@ -13,5 +13,5 @@ dependencies:
   - h5py
   - quantities
   - pip:
-    - docopts
+    - docopt
     - h5py-wrapper==1.0.1
