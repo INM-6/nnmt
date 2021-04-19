@@ -110,11 +110,5 @@ venv.bak/
 # Temporary files
 *~
 
-# Result files
-*.h5
-
-# Data folder in make_Bos2016_data
-data/
-
 # snakemake
 .snakemake
