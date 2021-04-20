@@ -1,4 +1,4 @@
-name: lmt_
+name: lmt
 channels:
   - defaults
 dependencies:
