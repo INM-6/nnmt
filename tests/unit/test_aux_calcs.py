@@ -200,25 +200,6 @@ class Test_nu0_fb:
             self.func, params, output)
 
 
-class Test_nu_0:
-
-    func = staticmethod(nu_0)
-
-    def test_sieger1_is_called_if_mu_smaller_V_th_rel(self, mocker,
-                                                      std_params):
-        std_params['mu'] = std_params['V_th_rel'] * 0.9
-        mock = mocker.patch('lif_meanfield_tools.aux_calcs.siegert1')
-        self.func(**std_params)
-        mock.assert_called_once()
-
-    def test_sieger2_is_called_if_mu_bigger_V_th_rel(self, mocker,
-                                                     std_params):
-        std_params['mu'] = std_params['V_th_rel'] * 1.1
-        mock = mocker.patch('lif_meanfield_tools.aux_calcs.siegert2')
-        self.func(**std_params)
-        mock.assert_called_once()
-
-
 class Test_Phi:
 
     func = staticmethod(Phi)

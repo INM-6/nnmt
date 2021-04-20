@@ -148,6 +148,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_r = np.atleast_1d(y_r)
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
+    assert y_th >= y_r
 
     # determine order of quadrature
     params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
@@ -216,6 +217,8 @@ def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
     check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
+    if V_th_rel < V_0_rel:
+        raise ValueError('V_th should be larger than V_0!')
 
     # using zetac (zeta-1), because zeta is giving nan result for arguments
     # smaller 1
