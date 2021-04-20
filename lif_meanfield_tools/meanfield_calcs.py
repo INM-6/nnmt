@@ -103,7 +103,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
                                     g, nu_e_ext, nu_i_ext)
 
-        new_nu = aux_calcs.nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+        new_nu = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
                                   sigma)
 
         return -nu + new_nu
@@ -815,7 +815,7 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
         additional external inhibitory rate needed for fixed input
     """
     # target rates for set mean and standard deviation of input
-    target_rates = aux_calcs.nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+    target_rates = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                                     mu_set, sigma_set)
 
     # additional external rates set to 0 for local-only contributions

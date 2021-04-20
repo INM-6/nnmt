@@ -34,6 +34,19 @@ from . import ureg
 from .utils import check_if_positive, check_for_valid_k_in_fast_synaptic_regime
 
 
+def pint_erfcx(x):
+    try:
+        return erfcx(x)
+    except TypeError:
+        return erfcx(x.magnitude)
+
+def pint_dawsn(x):
+    try:
+        return dawsn(x)
+    except TypeError:
+        return dawsn(x.magnitude) * x.units
+    
+
 @ureg.wraps(ureg.Hz,
             (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -193,6 +206,12 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+    
+    return _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+
+def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -239,7 +258,7 @@ def _erfcx_integral(a, b, order):
     x, w = roots_legendre(order)
     x = x[:, np.newaxis]
     w = w[:, np.newaxis]
-    return (b-a) * np.sum(w * erfcx((b-a)*x/2 + (b+a)/2), axis=0) / 2
+    return (b-a) * np.sum(w * pint_erfcx((b-a)*x/2 + (b+a)/2), axis=0) / 2
 
 
 def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
@@ -253,7 +272,7 @@ def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
-    Int = 2 * dawsn(y_th) - 2 * np.exp(y_r**2 - y_th**2) * dawsn(y_r)
+    Int = 2 * pint_dawsn(y_th) - 2 * np.exp(y_r**2 - y_th**2) * pint_dawsn(y_r)
     Int -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
     return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
@@ -262,9 +281,134 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
-    Int = 2 * dawsn(y_th)
+    Int = 2 * pint_dawsn(y_th)
     Int += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
     return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
+
+
+def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    """
+    Calculates stationary firing rates for delta shaped PSCs for mu < V_th_rel.
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Stationary firing rate in Hz.
+    """
+    pos_parameters = [tau_m, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+
+    if V_th_rel < V_0_rel:
+        raise ValueError('V_th should be larger than V_0!')
+    if mu > V_th_rel - 0.05 * abs(V_th_rel):
+        raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if '
+                         'mu > (V_th-V_0).')
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    def integrand(u):
+        if u == 0:
+            return np.exp(-y_th**2) * 2 * (y_th - y_r)
+        else:
+            return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th)
+                                                          * u)) / u
+    # find lower bound of integration, such that integrand is smaller than
+    # 1e-12 at lower bound
+    lower_bound = y_th
+    err_dn = 1.0
+    while err_dn > 1e-12 and lower_bound > 1e-16:
+        err_dn = integrand(lower_bound)
+        if err_dn > 1e-12:
+            lower_bound /= 2
+
+    # find upper bound of integration, such that integrand is smaller than
+    # 1e-12 at lower bound
+    upper_bound = y_th
+    err_up = 1.0
+    while err_up > 1e-12:
+        err_up = integrand(upper_bound)
+        if err_up > 1e-12:
+            upper_bound *= 2
+
+    # check preventing overflow
+    if y_th >= 20:
+        out = 0.
+    if y_th < 20:
+        out = 1.0 / (tau_r + np.exp(y_th**2)
+                     * quad(integrand, lower_bound, upper_bound)[0] * tau_m)
+
+    return out
+
+
+def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    """
+    Calculates stationary firing rates for delta shaped PSCs for mu > V_th_rel.
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Stationary firing rate in Hz.
+    """
+    pos_parameters = [tau_m, tau_r, sigma]
+    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
+    check_if_positive(pos_parameters, pos_parameter_names)
+
+    if V_th_rel < V_0_rel:
+        raise ValueError('V_th should be larger than V_0!')
+    # why this threshold?
+    if mu < V_th_rel - 0.05 * abs(V_th_rel):
+        raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * '
+                         'abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    def integrand(u):
+        if u == 0:
+            return 2 * (y_th - y_r)
+        else:
+            return (np.exp(2 * y_th * u - u**2) - np.exp(2 * y_r * u - u**2)
+                    ) / u
+
+    upper_bound = 1.0
+    err = 1.0
+    while err > 1e-12:
+        err = integrand(upper_bound)
+        upper_bound *= 2
+
+    return 1.0 / (tau_r + quad(integrand, 0.0, upper_bound)[0] * tau_m)
 
 
 def Phi(s):
