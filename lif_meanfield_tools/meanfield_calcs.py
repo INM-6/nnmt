@@ -41,6 +41,7 @@ import warnings
 import numpy as np
 import scipy.optimize as sopt
 import scipy.integrate as sint
+import scipy.linalg as slinalg
 import scipy.misc as smisc
 from scipy.special import zetac, erf
 
@@ -607,14 +608,13 @@ def sensitivity_measure(transfer_function, delay_dist_matrix, J, K, tau_m,
     MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
                                  dimension, delay_dist_matrix)
 
-    e, U = np.linalg.eig(MH)
-    U_inv = np.linalg.inv(U)
+    e, U_l, U_r = slinalg.eig(MH, left=True, right=True)
     index = None
     if index is None:
         # find eigenvalue closest to one
-        index = np.argmin(np.abs(e - 1))
-    T = np.outer(U_inv[index], U[:, index])
-    T /= np.dot(U_inv[index], U[:, index])
+        index = np.argmin(np.abs(e-1))
+    T = np.outer(U_l[:, index].conj(), U_r[:, index])
+    T /= np.dot(U_l[:, index].conj(), U_r[:, index])
     T *= MH
 
     return T
