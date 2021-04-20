@@ -148,7 +148,8 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_r = np.atleast_1d(y_r)
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
-    assert y_th >= y_r
+    if np.any(V_th_rel - V_0_rel < 0):
+        raise ValueError('V_th should be larger than V_0!')
 
     # determine order of quadrature
     params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
