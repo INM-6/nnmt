@@ -1,0 +1,17 @@
+name: Bos2016_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=2.7
+  - matplotlib
+  - scipy
+  - pip
+  - mpmath
+  - requests
+  - h5py
+  - quantities
+  - pip:
+    - numpy>1.8.0
+    - docopt
+    - h5py-wrapper==1.0.1

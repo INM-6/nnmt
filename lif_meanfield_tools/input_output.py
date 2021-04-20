@@ -11,6 +11,9 @@ Options:
 '''
 
 from __future__ import print_function
+from collections.abc import Iterable
+import warnings
+import copy
 
 import numpy as np
 import yaml
@@ -19,9 +22,23 @@ import h5py_wrapper.wrapper as h5
 
 from . import ureg
 
+
+def convert_arrays_in_dict_to_lists(adict):
+    """
+    Recursively searches through a dict and replaces all numpy arrays by lists.
+    """
+    converted = copy.deepcopy(adict)
+    for key, value in converted.items():
+        if isinstance(value, dict):
+            converted[key] = convert_arrays_in_dict_to_lists(value)
+        elif isinstance(value, np.ndarray):
+            converted[key] = value.tolist()
+    return converted
+
+
 def val_unit_to_quantities(dict_of_val_unit_dicts):
     """
-    Convert a dictionary of value-unit pairs to a dictionary of quantities
+    Recursively convert a dict of value-unit pairs to a dict of quantities.
 
     Combine value and unit of each quantity and save them in a dictionary
     of the structure: {'<quantity_key1>':<quantity1>, ...}.
@@ -52,9 +69,18 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     converted_dict = {}
     for key, value in dict_of_val_unit_dicts.items():
-        # if dictionary with keys val and unit, convert to quantity
-        if isinstance(value, dict) and set(('val', 'unit')) == value.keys():
-            converted_dict[key] = (formatval(value['val']) * ureg.parse_expression(value['unit']))
+        if isinstance(value, dict):
+            # if dictionary with keys val and unit, convert to quantity
+            if set(('val', 'unit')) == value.keys():
+                converted_dict[key] = (formatval(value['val'])
+                                       * ureg.parse_expression(value['unit']))
+            # if dictionary with only val, convert
+            elif 'val' in value.keys():
+                converted_dict[key] = formatval(value['val'])
+            # if not val unit dict, first convert the dictionary
+            else:
+                converted_dict[key] = val_unit_to_quantities(value)
+        # if not dict, convert value itself
         else:
             converted_dict[key] = formatval(value)
     return converted_dict
@@ -62,13 +88,13 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
 def quantities_to_val_unit(dict_of_quantities):
     """
-    Convert a dictionary of quantities to a dictionary of val-unit pairs
+    Recursively convert a dict of quantities to a dict of val-unit pairs.
 
     Split up value and unit of each quantiy and save them in a dictionary
     of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
 
-    Lists of quantities are handled seperately. Anything else but quantities, is
-    stored just the way it is given.
+    Lists of quantities are handled seperately. Anything else but quantities,
+    is stored just the way it is given.
 
     Parameters:
     -----------
@@ -84,59 +110,186 @@ def quantities_to_val_unit(dict_of_quantities):
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
         converted_dict[quantity_key] = {}
-
-        # lists of strings need to be treated seperately
-        if isinstance(quantity, list):
-            if any(isinstance(part, str) for part in quantity):
-                converted_dict[quantity_key] = quantity
-            elif any(isinstance(part, ureg.Quantity) for part in quantity):
-                converted_dict[quantity_key]['val'] = np.stack([array.magnitude for array in quantity])
-                converted_dict[quantity_key]['unit'] = str(quantity[0].units)
         # quantities are converted to val unit dictionary
-        elif isinstance(quantity, ureg.Quantity):
+        if isinstance(quantity, ureg.Quantity):
             converted_dict[quantity_key]['val'] = quantity.magnitude
             converted_dict[quantity_key]['unit'] = str(quantity.units)
+        # nested dictionaries need to be converted first
+        elif isinstance(quantity, dict):
+            converted_dict[quantity_key] = quantities_to_val_unit(quantity)
+        # arrays, lists and lists of quantities
+        elif isinstance(quantity, Iterable):
+            # lists of quantities
+            if any(isinstance(part, ureg.Quantity) for part in quantity):
+                converted_dict[quantity_key]['val'] = (
+                    [array.magnitude for array in quantity])
+                converted_dict[quantity_key]['unit'] = str(quantity[0].units)
+            # arrays, lists, etc.
+            else:
+                converted_dict[quantity_key] = quantity
         # anything else is stored the way it is
         else:
             converted_dict[quantity_key] = quantity
     return converted_dict
 
 
-def load_params(file_path):
+def save_quantity_dict_to_yaml(file, qdict):
     """
-    Load and convert parameters from yaml file
+    Convert and save dictionary of quantities to yaml file.
+    
+    Converts dict of quantities to val unit dicts and saves them in yaml file.
+    
+    Parameters:
+    -----------
+    file: str
+        Name of file.
+    qdict: dict
+        Dictionary containing quantities.
+    """
+    converted = quantities_to_val_unit(qdict)
+    converted = convert_arrays_in_dict_to_lists(converted)
+    with open(file, 'w') as f:
+        yaml.dump(converted, f)
+    
 
-    Load parameters from yaml file and convert them from value unit dictionaries
-    (used in yaml file) to quantities (used in implementation of functions in
-    meanfield_calcs.py).
+def load_val_unit_dict_from_yaml(file):
+    """
+    Load and convert val unit dictionary from yaml file.
+
+    Load val unit dictionary from yaml file and convert it to dictionary of
+    quantities.
 
     Parameters:
     -----------
-    file_path : str
+    file : str
         string specifying path to yaml file containing parameters in format
         <parameter1>:
             val: <value1>
             unit: <unit1>
+        <parameter2>: <value_without_unit>
         ...
 
     Returns:
     --------
     dict
-        dictionary containing all converted parameters as quantities
+        dictionary containing all converted val unit dicts as quantities
     """
-
     # try to load yaml file
-    with open(file_path, 'r') as stream:
+    with open(file, 'r') as stream:
         try:
-            params = yaml.safe_load(stream)
+            val_unit_dict = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
-
     # convert parameters to quantities
-    params_converted = val_unit_to_quantities(params)
-
+    quantity_dict = val_unit_to_quantities(val_unit_dict)
     # return converted network parameters
-    return params_converted
+    return quantity_dict
+
+
+def save_quantity_dict_to_h5(file, qdict, overwrite=False):
+    """
+    Convert and save dict of quantities to h5 file.
+    
+    The quantity dictionary is first converted to a val unit dictionary and
+    then saved to an h5 file.
+
+    Parameters:
+    -----------
+    file: str
+        String specifying output file name.
+    qdict: dict
+        Dictionary containing quantities.
+    overwrite: bool
+        Whether h5 file should be overwritten, if already existing.
+    """
+    # convert data into format usable in h5 file
+    output = quantities_to_val_unit(qdict)
+    # save output
+    try:
+        h5.save(file, output, overwrite_dataset=overwrite)
+    except KeyError:
+        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
+                      'want to overwrite it.')
+
+
+def load_val_unit_dict_from_h5(file):
+    """
+    Load and convert val unit dict from h5 file to dict of quantities.
+    
+    The val unit dictionary is loaded from the h5 file and then converted to
+    a dictionary containing quantities.
+
+    Parameters:
+    -----------
+    file: str
+        String specifying input file name.
+    """
+    try:
+        loaded = h5.load(file)
+    except OSError:
+        raise IOError(f'{file} does not exist!')
+
+    converted = val_unit_to_quantities(loaded)
+    return converted
+    
+    
+def save_network(file, network, overwrite=False):
+    """
+    Save network to h5 file.
+    
+    The networks' dictionaires (network_params, analysis_params, results,
+    results_hash_dict) are stored. Quantities are converted to value-unit
+    dictionaries.
+    
+    Parameters:
+    -----------
+    file: str
+        Output file name.
+    network: Network object
+        The network to be saved.
+    overwrite: bool
+        Whether to overwrite an existing h5 file or not. If there already is
+        one, h5py tries to update the h5 dictionary.
+    """
+    output = {'network_params': network.network_params,
+              'analysis_params': network.analysis_params,
+              'results': network.results,
+              'results_hash_dict': network.results_hash_dict}
+    save_quantity_dict_to_h5(file, output, overwrite)
+    
+    
+def load_network(file):
+    """
+    Load network from h5 file.
+    
+    Parameters:
+    -----------
+    file: str
+        Input file name.
+    
+    Returns:
+    --------
+    network_params: dict
+        Network parameters.
+    analysis_params: dict
+        Analysis parameters.
+    results: dict
+        Dictionary containing most recently calculated results.
+    results_hash_dict: dict
+        Dictionary where all calculated results are stored.
+    """
+    try:
+        input = load_val_unit_dict_from_h5(file)
+    # if not existing OSError is raised by h5py_wrapper, then return empty dict
+    except IOError:
+        message = f'File {file} not found!'
+        warnings.warn(message)
+        return {}, {}, {}, {}
+    
+    return (input['network_params'],
+            input['analysis_params'],
+            input['results'],
+            input['results_hash_dict'])
 
 
 def create_hash(params, param_keys):
@@ -162,110 +315,3 @@ def create_hash(params, param_keys):
         label += str(params[key])
     # create and return hash (label must be encoded)
     return hl.md5(label.encode('utf-8')).hexdigest()
-
-
-def save(output_key, output, file_name):
-    """
-    Save data and given parameters in h5 file.
-
-    By default the output name will be <label>_<hash>.h5, where the hash is
-    created using network_params. But you can either specify an ouput_name
-    yourself, or specify which param_keys should be reflected in the hash.
-
-    Parameters:
-    -----------
-    results_dict : dict
-        Dictionary containing all calculated results.
-    network_params : dict
-        Dictionary containing network parameters as quantities.
-    analysis_params: dict
-        Dictionary containing analysis parameters as quantities.
-    file_name: str
-        String specifying output file name.
-
-    Returns:
-    --------
-    None
-    """
-    # convert data into format usable in h5 file
-    output = quantities_to_val_unit(output)
-    output_dict = {}
-    output_dict[output_key] = output
-
-    # save output
-    h5.save(file_name, output_dict, overwrite_dataset=True)
-
-
-def load_from_h5(network_params={}, param_keys=[], input_name=''):
-    """
-    Load existing results and analysis_params for given parameters from h5 file.
-
-    Loads results from h5 files named with the standard format
-    <label>_<hash>.h5, if this file already exists. Or uses given list of
-    parameters to create hash to find file. Or reads from file specified in
-    input_name.
-
-    Parameters:
-    -----------
-    network_params : dict
-        Dictionary containing network parameters as quantities.
-    param_keys: list
-        List of parameters used in file hash.
-    input_name: str
-        optional string specifying input file name (default: <label>_<hash>.h5).
-
-    Returns:
-    --------
-    analysis_params: dict
-        Dictionary containing all found analysis_params.
-    results: dict
-        Dictionary containing all found results.
-    """
-
-    # if no input file name is specified
-    if not input_name:
-        # create hash from given parameters
-        # collect all parameters reflected by hash in one dictionary
-        hash_params = {}
-        hash_params.update(network_params)
-        # if user did not specify which parameters to use for hash
-        if not param_keys:
-            # take all parameters sorted alphabetically
-            param_keys = sorted(list(hash_params.keys()))
-        # crate hash from param_keys
-        hash = create_hash(hash_params, param_keys)
-        # default input name
-        input_name = '{}_{}.h5'.format(network_params['label'], str(hash))
-
-    # try to load file with standard name
-    try:
-        input_file = h5.load(input_name)
-    # if not existing OSError is raised by h5py_wrapper, then return empty dict
-    except OSError:
-        return {}, {}
-
-    # read in whats already stored
-    analysis_params = input_file['analysis_params']
-    results = input_file['results']
-
-    # convert results to quantitites
-    analysis_params = val_unit_to_quantities(analysis_params)
-    results = val_unit_to_quantities(results)
-
-    return analysis_params, results
-
-
-def load_h5(filename):
-    """
-    filename: str
-        default filename format is ''<label>_<hash>.h5'
-    """
-    try:
-        raw_data = h5.load(filename)
-    except OSError:
-        raw_data = {}
-
-    data = {}
-    for key in sorted(raw_data.keys()):
-        data[key] = val_unit_to_quantities(raw_data[key])
-    return data

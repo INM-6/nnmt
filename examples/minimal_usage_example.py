@@ -1,5 +1,4 @@
 # Minimal working example
-
 import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
@@ -17,7 +16,7 @@ print('std input: {}'.format(working_point['std_input']))
 print('firing rates: {}'.format(working_point['firing_rates']))
 
 # print(network.transfer_function())
-print(network.transfer_function(10*ureg.Hz))
+print(network.transfer_function(10 * ureg.Hz))
 
 # save results
 network.save()
