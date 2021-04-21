@@ -50,6 +50,7 @@ import inspect
 from . import ureg
 from . import input_output as io
 from . import meanfield_calcs
+from .utils import build_full_arg_list
 
 
 class Network(object):
@@ -281,13 +282,17 @@ class Network(object):
 
             new_params = []
             if analysis_keys is not None:
-                # add not passed standard arguments to args
-                if len(analysis_keys) != len(args):
-                    default_args = inspect.getfullargspec(func).defaults
-                    args = list(args)
-                    args.extend(default_args)
-                    args = tuple(args)
-                # convert new params to list
+                # add not passed standard arguments to args:
+                # need to add self first because function signature expects
+                # self at first position
+                args = list(args)
+                args.insert(0, self)
+                args = build_full_arg_list(inspect.signature(func),
+                                           args, kwargs)
+                # remove self
+                args.pop(0)
+                # empty kwargs which are now included in args
+                kwargs = {}
                 for i, key in enumerate(analysis_keys):
                     new_params.append(args[i])
 

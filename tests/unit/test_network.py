@@ -571,7 +571,126 @@ class Test_check_and_store_decorator:
         assert 2 * result11 == result21
         assert 2 * result12 == result22
         
+    def test_standard_value_for_analysis_key_is_not_passed(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis'])
+        def test_method(self, key=2):
+            return key * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input()
+        assert network.analysis_params['analysis'] == 2
+        assert network.results['result'] == 2 * ureg.mV
+        
+    def test_standard_value_for_analysis_key_is_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis'])
+        def test_method(self, key=2):
+            return key * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        key = 5
+        network.mean_input(key=key)
+        assert network.analysis_params['analysis'] == key
+        assert network.results['result'] == key * ureg.mV
+        
+    def test_standard_values_for_two_analysis_keys_are_not_passed(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input()
+        assert network.analysis_params['analysis1'] == 2
+        assert network.analysis_params['analysis2'] == 3
+        assert network.results['result'] == 6 * ureg.mV
+        
+    def test_standard_values_for_two_analysis_keys_are_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(key1=3, key2=4)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 4
+        assert network.results['result'] == 12 * ureg.mV
             
+    def test_only_first_standard_value_is_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(key1=3)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 3
+        assert network.results['result'] == 9 * ureg.mV
+            
+    def test_only_second_standard_value_is_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(key2=5)
+        assert network.analysis_params['analysis1'] == 2
+        assert network.analysis_params['analysis2'] == 5
+        assert network.results['result'] == 10 * ureg.mV
+        
+    def test_one_positional_and_one_kwarg_with_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, key2=5)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 5
+        assert network.results['result'] == 15 * ureg.mV
+            
+    def test_one_and_two_are_passed_with_three_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1',
+                                                   'analysis2',
+                                                   'analysis3'])
+        def test_method(self, key1=1, key2=2, key3=3):
+            return key1 * key2 * key3 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, 4)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 4
+        assert network.analysis_params['analysis3'] == 3
+        assert network.results['result'] == 36 * ureg.mV
+    
+    def test_one_and_three_are_passed_with_three_mixed_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1',
+                                                   'analysis2',
+                                                   'analysis3'])
+        def test_method(self, key1, key2=2, key3=3):
+            return key1 * key2 * key3 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, key3=5)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 2
+        assert network.analysis_params['analysis3'] == 5
+        assert network.results['result'] == 30 * ureg.mV
+            
+    def test_one_and_three_are_passed_with_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1',
+                                                   'analysis2',
+                                                   'analysis3'])
+        def test_method(self, key1=1, key2=2, key3=3):
+            return key1 * key2 * key3 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, key3=5)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 2
+        assert network.analysis_params['analysis3'] == 5
+        assert network.results['result'] == 30 * ureg.mV
+        
+        
+@pytest.mark.xfail
 class Test_functionality:
     """A lot of those tests might actually be superfluous."""
 
