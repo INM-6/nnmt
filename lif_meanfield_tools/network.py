@@ -514,7 +514,7 @@ class Network(object):
             self.network_params['nu_e_ext'],
             self.network_params['nu_i_ext'])
 
-    def working_point(self):
+    def working_point(self, method='scef'):
         """
         Calculates stationary working point of the network.
 
@@ -528,7 +528,7 @@ class Network(object):
 
         # then do calculations
         working_point = {}
-        working_point['firing_rates'] = self.firing_rates()
+        working_point['firing_rates'] = self.firing_rates(method=method)
         working_point['mean_input'] = self.mean_input()
         working_point['std_input'] = self.std_input()
 
