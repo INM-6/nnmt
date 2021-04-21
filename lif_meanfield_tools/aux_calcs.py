@@ -48,8 +48,9 @@ def pint_dawsn(x):
     
 
 @ureg.wraps(ureg.Hz,
-            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
-def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV, None))
+def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
+              method='scef'):
     """
     Calcs stationary firing rates for exp PSCs
 
@@ -74,6 +75,11 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Mean neuron activity in mV.
     sigma: float
         Standard deviation of neuron activity in mV.
+    method: str
+        The method used for numerical integration of the Siegert formula.
+        Options:
+        - 'scef' (using the Scaled Complementary Error Function)
+        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
 
     Returns:
     --------
@@ -92,7 +98,8 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
-def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
+               method='scef'):
     """Helper function implementing nu0_fb433 without quantities."""
     # use zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
@@ -105,10 +112,11 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # preventing overflow in np.exponent in Phi(s)
     # note: this simply returns the white noise result... is this ok?
     if x_th > 20.0 / np.sqrt(2.):
-        result = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        result = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma,
+                      method=method)
     else:
         # white noise firing rate
-        r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, method=method)
 
         dPhi = Phi(x_th) - Phi(x_r)
         # colored noise firing rate (might this lead to negative rates?)

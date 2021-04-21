@@ -808,11 +808,13 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
 @check_positive_params
 @ureg.wraps((ureg.Hz, ureg.Hz), (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                  ureg.mV, ureg.mV,
-                                 None, ureg.mV, ureg.mV, ureg.Hz, None, None))
+                                 None, ureg.mV, ureg.mV, ureg.Hz, None, None,
+                                 None))
 def additional_rates_for_fixed_input(mu_set, sigma_set,
                                      tau_m, tau_s, tau_r,
                                      V_0_rel, V_th_rel,
-                                     K, J, j, nu_ext, K_ext, g):
+                                     K, J, j, nu_ext, K_ext, g,
+                                     method='scef'):
     """
     Calculate additional external excitatory and inhibitory Poisson input
     rates such that the input fixed by the mean and standard deviation
@@ -856,9 +858,21 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     nu_i_ext: Quantity(np.ndarray, 'hertz')
         additional external inhibitory rate needed for fixed input
     """
-    # target rates for set mean and standard deviation of input
-    target_rates = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
-                                    mu_set, sigma_set)
+    if method == 'scef':
+        # target rates for set mean and standard deviation of input
+        target_rates = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel,
+                                         V_0_rel, mu_set, sigma_set,
+                                         method=method)
+    elif method == 'hds2017':
+        target_rates = np.zeros(len(mu_set))
+        for i in np.arange(len(mu_set)):
+            # target rates for set mean and standard deviation of input
+            target_rates[i] = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r,
+                                                   V_th_rel, V_0_rel,
+                                                   mu_set[i], sigma_set[i],
+                                                   method=method)
+    else:
+        raise ValueError('Chosen method not implemented')
 
     # additional external rates set to 0 for local-only contributions
     mu_loc = _mean(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,

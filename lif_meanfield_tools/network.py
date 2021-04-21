@@ -835,6 +835,11 @@ class Network(object):
 
     @_check_and_store(['nu_e_ext', 'nu_i_ext'])
     def additional_rates_for_fixed_input(self, mean_input_set, std_input_set):
+    @_check_and_store(['nu_e_ext', 'nu_i_ext'], ['mean_input_set',
+                                                 'std_input_set',
+                                                 'additional_rates_method'])
+    def additional_rates_for_fixed_input(self, mean_input_set, std_input_set,
+                                         method='scef'):
         """
         Calculate additional external excitatory and inhibitory Poisson input
         rates such that the input prescribed by the mean and standard deviation
@@ -867,7 +872,8 @@ class Network(object):
                 self.network_params['j'],
                 self.network_params['nu_ext'],
                 self.network_params['K_ext'],
-                self.network_params['g'])
+                self.network_params['g'],
+                method=method)
         return nu_e_ext, nu_i_ext
 
     def fit_transfer_function(self):
