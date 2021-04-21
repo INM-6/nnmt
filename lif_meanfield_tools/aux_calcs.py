@@ -118,7 +118,7 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     return result
 
 
-def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
@@ -134,52 +134,70 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Relative reset potential in mV.
     mu: float
         Mean neuron activity in mV.
-    sigma:
+    sigma: float
         Standard deviation of neuron activity in mV.
+    method: str
+        The method used for numerical integration of the Siegert formula.
+        Options:
+        - 'scef' (using the Scaled Complementary Error Function)
+        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
 
     Returns:
     --------
     float:
         Stationary firing rate in Hz.
     """
-    y_th = (V_th_rel - mu) / sigma
-    y_r = (V_0_rel - mu) / sigma
-    y_th = np.atleast_1d(y_th)
-    y_r = np.atleast_1d(y_r)
-    assert y_th.shape == y_r.shape
-    assert y_th.ndim == y_r.ndim == 1
-    if np.any(V_th_rel - V_0_rel < 0):
-        raise ValueError('V_th should be larger than V_0!')
+    if method == 'scef':
+        y_th = (V_th_rel - mu) / sigma
+        y_r = (V_0_rel - mu) / sigma
+        y_th = np.atleast_1d(y_th)
+        y_r = np.atleast_1d(y_r)
+        assert y_th.shape == y_r.shape
+        assert y_th.ndim == y_r.ndim == 1
+        if np.any(V_th_rel - V_0_rel < 0):
+            raise ValueError('V_th should be larger than V_0!')
 
-    # determine order of quadrature
-    params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
-    gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
+        # determine order of quadrature
+        params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
+        gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
 
-    # separate domains
-    mask_exc = y_th < 0
-    mask_inh = 0 < y_r
-    mask_interm = (y_r <= 0) & (0 <= y_th)
+        # separate domains
+        mask_exc = y_th < 0
+        mask_inh = 0 < y_r
+        mask_interm = (y_r <= 0) & (0 <= y_th)
 
-    # calculate siegert
-    nu = np.zeros(shape=y_th.shape)
-    params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
-    nu[mask_exc] = _siegert_exc(y_th=y_th[mask_exc],
-                                y_r=y_r[mask_exc], **params)
-    nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
-                                y_r=y_r[mask_inh], **params)
-    nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
-                                      y_r=y_r[mask_interm], **params)
-
-    # convert back to scalar if only one value calculated
-    if nu.shape == (1,):
-        return nu.item(0)
-    else:
-        return nu
+        # calculate siegert
+        nu = np.zeros(shape=y_th.shape)
+        params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
+        nu[mask_exc] = temp = _siegert_exc(y_th=y_th[mask_exc],
+                                           y_r=y_r[mask_exc], **params)
+        nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
+                                    y_r=y_r[mask_inh], **params)
+        nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
+                                          y_r=y_r[mask_interm], **params)
+        # unit is stripped when quantity returned from _siegert_... is assigned to
+        # elements in nu, so here we add it again
+        try:
+            nu = nu * temp.units
+        except AttributeError:
+            pass
+        
+        # convert back to scalar if only one value calculated
+        if nu.shape == (1,):
+            return nu.item(0)
+        else:
+            return nu
+    
+    elif method == 'hds2017':
+        if mu <= V_th_rel - 0.05 * abs(V_th_rel):
+            return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        else:
+            return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
 @ureg.wraps(ureg.Hz,
-            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
-def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV, None))
+def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
     """
     Calculates stationary firing rates including synaptic filtering.
 
@@ -202,6 +220,11 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Mean neuron activity in mV.
     sigma:
         Standard deviation of neuron activity in mV.
+    method: str
+        The method used for numerical integration of the Siegert formula.
+        Options:
+        - 'scef' (using the Scaled Complementary Error Function)
+        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
 
     Returns:
     --------
@@ -209,10 +232,10 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Stationary firing rate in Hz.
     """
     
-    return _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    return _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method)
 
 
-def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
     
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
@@ -230,7 +253,7 @@ def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # effective reset
     V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # use standard Siegert with modified threshold and reset
-    return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma)
+    return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma, method)
 
 
 def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):

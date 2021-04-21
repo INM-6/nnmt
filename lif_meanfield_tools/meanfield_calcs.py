@@ -52,9 +52,10 @@ from .utils import check_positive_params, check_k_in_fast_synaptic_regime
 
 @check_positive_params
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
-                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
+                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz,
+                      None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, method='scef'):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -88,44 +89,85 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         firing rate of additional external excitatory Poisson input
     nu_i_ext: Quantity(float, 'hertz')
         firing rate of additional external inhibitory Poisson input
+    method: str
+        The method used for numerical integration of the Siegert formula.
+        Options:
+        - 'scef' (using the Scaled Complementary Error Function)
+        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
 
     Returns:
     --------
     Quantity(np.ndarray, 'hertz')
         Array of firing rates of each population in hertz.
     '''
-    def get_rate_difference(_, nu):
-        """ calculate difference between new iteration step and previous one """
-        ### new mean
-        mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
+    if method == 'scef':
+        def get_rate_difference(_, nu):
+            """ calculate difference between new iteration step and previous one """
+            ### new mean
+            mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
 
-        # new std
-        sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
-                                    g, nu_e_ext, nu_i_ext)
+            # new std
+            sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
+                                        g, nu_e_ext, nu_i_ext)
 
-        new_nu = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                  sigma)
+            new_nu = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                       sigma, method)
 
-        return -nu + new_nu
+            return -nu + new_nu
 
-    # do iteration procedure, until stationary firing rates are found
-    eps_tol = 1e-12
-    t_max = 1000
-    maxiter = 1000
-    y0 = np.zeros(int(dimension))
-    for _ in range(maxiter):
-        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
-                             t_eval=[t_max-1, t_max], method='LSODA')
-        assert sol.success is True
-        eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
-        if eps < eps_tol:
-            return sol.y[:, 1]
-        else:
-            y0 = sol.y[:, 1]
-    msg = f'Rate iteration failed to converge after {maxiter} iterations. '
-    msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
-    raise RuntimeError(msg)
+        # do iteration procedure, until stationary firing rates are found
+        eps_tol = 1e-12
+        t_max = 1000
+        maxiter = 1000
+        y0 = np.zeros(int(dimension))
+        for _ in range(maxiter):
+            sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
+                                 t_eval=[t_max-1, t_max], method='LSODA')
+            assert sol.success is True
+            eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
+            if eps < eps_tol:
+                return sol.y[:, 1]
+            else:
+                y0 = sol.y[:, 1]
+        msg = f'Rate iteration failed to converge after {maxiter} iterations. '
+        msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
+        raise RuntimeError(msg)
 
+    elif method == 'hds2017':
+        def rate_function(mu, sigma):
+            """Calculate stationary firing rate with given parameters"""
+            return aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                     sigma)
+
+        def get_rate_difference(nu):
+            """Calculate difference between new iteration step and previous one"""
+            # new mean
+            mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
+
+            # new std
+            sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
+                                     g, nu_e_ext, nu_i_ext)
+
+            new_nu = np.array([x for x in list(map(rate_function, mu, sigma))])
+        
+            return -nu + new_nu
+ 
+        # do iteration procedure, until stationary firing rates are found
+        dt = 0.05
+        y = np.zeros((2, int(dimension)))
+        eps = 1.0
+        while eps >= 1e-5:
+            delta_y = get_rate_difference(y[0])
+            y[1] = y[0] + delta_y * dt
+            epsilon = (y[1] - y[0])
+            eps = max(np.abs(epsilon))
+            y[0] = y[1]
+
+        return y[1]
+
+
+
+        
 
 @check_positive_params
 @ureg.wraps(ureg.mV, (ureg.Hz, None, ureg.mV, ureg.mV, ureg.s, ureg.Hz, None,

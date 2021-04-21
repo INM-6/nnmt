@@ -466,8 +466,8 @@ class Network(object):
         """
         pass
 
-    @_check_and_store(['firing_rates'])
-    def firing_rates(self):
+    @_check_and_store(['firing_rates'], ['firing_rates_method'])
+    def firing_rates(self, method='scef'):
         """ Calculates firing rates """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
                                             self.network_params['tau_m'],
@@ -482,7 +482,8 @@ class Network(object):
                                             self.network_params['K_ext'],
                                             self.network_params['g'],
                                             self.network_params['nu_e_ext'],
-                                            self.network_params['nu_i_ext'])
+                                            self.network_params['nu_i_ext'],
+                                            method)
 
     @_check_and_store(['mean_input'])
     def mean_input(self):
