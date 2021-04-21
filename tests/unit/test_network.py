@@ -170,7 +170,10 @@ class Test_calculation_of_dependent_analysis_params:
 
 class Test_saving_and_loading:
     
-    def test_save_creates_h5_file(self, tmpdir, network):
+    def test_save_creates_h5_file(self, mocker, tmpdir, network):
+        # create mocking method
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         # create temp directory
         tmp_test = tmpdir.mkdir('tmp_test')
         # calculate and save mean_input in tmp dir
@@ -186,16 +189,23 @@ class Test_saving_and_loading:
         # pass test if test file created
         assert any(matches)
 
-    def test_save_created_output_file_with_results(self, tmpdir, network):
+    def test_save_created_output_file_with_results(
+            self, mocker, tmpdir, network):
+        # create mocking method
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input()
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.save('test.h5')
             output = lmt.input_output.load_val_unit_dict_from_h5('test.h5')
-            assert 'mean_input' in output['results'].keys()
+            assert 'test' in output['results'].keys()
 
-    def test_save_overwriting_existing_file_raises_error(self, tmpdir,
+    def test_save_overwriting_existing_file_raises_error(self, mocker, tmpdir,
                                                          network):
+        # create mocking method
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         file = 'file.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
@@ -204,18 +214,21 @@ class Test_saving_and_loading:
                 network.save(file=file)
                 network.save(file=file)
 
-    def test_save_overwrites_existing_file_if_explicitely_told(self, tmpdir,
-                                                               network):
+    def test_save_overwrites_existing_file_if_explicitely_told(
+            self, tmpdir, mocker, network):
         file = 'file.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
+            test_method = make_test_method(42)
+            mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
             network.mean_input()
             network.save(file=file)
-            network.network_params['tau_m'] = 100 * ureg.ms
+            test_method = make_test_method(43)
+            mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
             new_mean = network.mean_input()
             network.save(file=file, overwrite=True)
             output = lmt.input_output.load_val_unit_dict_from_h5(file)
-            assert_array_equal(output['results']['mean_input'], new_mean)
+            assert_array_equal(output['results']['test'], new_mean)
             
     def test_load_correctly_sets_network_dictionaries(self, tmpdir, network):
         network.firing_rates()
@@ -239,10 +252,20 @@ class Test_saving_and_loading:
 
 class Test_meta_functions:
 
-    def test_show(self, network):
+    def test_show(self, mocker, network):
         assert network.show() == []
+        
+        @lmt.Network._check_and_store(['inner'])
+        def test_method_inner(self):
+            return 1
+        
+        @lmt.Network._check_and_store(['outer'])
+        def test_method_outer(self):
+            return test_method_inner(self)
+        
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method_outer)
         network.mean_input()
-        assert network.show() == ['firing_rates', 'mean_input']
+        assert network.show() == ['inner', 'outer']
 
     def test_change_network_parameters(self, network):
         new_tau_m = 1000 * ureg.ms
@@ -289,7 +312,7 @@ class Test_meta_functions:
     @pytest.mark.xfail
     def test_extend_analysis_frequencies(self):
         raise NotImplementedError
-
+    
 
 def make_test_method(output):
     @lmt.Network._check_and_store(['test'])
