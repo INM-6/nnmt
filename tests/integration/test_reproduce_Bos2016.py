@@ -55,6 +55,8 @@ def network(exemplary_frequency_idx):
     
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
+    network.working_point(method='hds2017')
+    network.delay_dist_matrix()
     
     yield network
     
@@ -78,24 +80,6 @@ def bos_params(bos_code_result):
 def freqs(network):
     fs = network.analysis_params['omegas'].to(ureg.Hz).magnitude / 2. / np.pi
     return fs
-
-
-@pytest.fixture(scope='class')
-def firing_rates(network):
-    rates = network.firing_rates()
-    return rates
-
-
-@pytest.fixture(scope='class')
-def delay_dist(network, bos_data):
-    omega = network.analysis_params['omega']
-    delay_dist = network.delay_dist_matrix(omega)
-    return delay_dist
-
-
-@pytest.fixture(scope='class')
-def transfer_function(network):
-    return network.transfer_function()
 
 
 class Test_lif_meanfield_toolbox_vs_Bos_2016:
@@ -152,7 +136,8 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         ground_truth_data = ground_truth_result[
             'fig_microcircuit']['rates_calc']
         bos_code_data = bos_code_result['firing_rates']
-        test_data = network.firing_rates().to(ureg.Hz).magnitude
+        test_data = network.firing_rates(
+            method='hds2017').to(ureg.Hz).magnitude
         # check ground truth data vs data generated via old code
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
         # check ground truth data vs data generated via lmt
@@ -177,7 +162,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # be fine
         bos_code_data = bos_code_result['MH']
         omega = network.analysis_params['omega']
-
+        
         tf = network.transfer_function(omega / 2 / np.pi, method='taylor')[0]
         test_data = lmt.meanfield_calcs._effective_connectivity(
             omega,
@@ -212,13 +197,16 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=3)
         # Bos code used Taylor method and the fortran implementation of the
         # Kummer's function to approximate the parabolic cylinder functions
-        test_data = network.power_spectra(method='taylor')
+        print(network.results['transfer_function'])
+        network.transfer_function(method='taylor')
+        print(network.results['transfer_function'])
+        test_data = network.power_spectra()
         assert_array_equal(test_data.shape, ground_truth_data.shape)
         assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
     
     def test_eigenvalue_trajectories(self, network, ground_truth_result,
                                      bos_code_result):
-        eigenvalue_spectra = network.eigenvalue_spectra('MH', method='taylor')
+        eigenvalue_spectra = network.eigenvalue_spectra('MH')
         ground_truth_data = ground_truth_result[
             'eigenvalue_trajectories']['eigs']
         bos_code_data = bos_code_result['eigenvalue_spectra']
@@ -235,8 +223,8 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
             ground_truth_data, decimal=4)
         
     def test_sensitivity_measure(self, network, ground_truth_result, freqs):
-        power_spectra = network.power_spectra(method='taylor')
-        eigenvalue_spectra = network.eigenvalue_spectra('MH', method='taylor')
+        power_spectra = network.power_spectra()
+        eigenvalue_spectra = network.eigenvalue_spectra('MH')
         ground_truth_data = ground_truth_result['sensitivity_measure']
         
         # check whether highest power is identified correctly
