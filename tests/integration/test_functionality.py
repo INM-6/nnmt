@@ -21,7 +21,7 @@ class Test_Network_functions_give_correct_results:
             firing_rates, std_results['firing_rates'])
     
     def test_firing_rates_hds2017(self, network, std_results):
-        firing_rates = network.firing_rates()
+        firing_rates = network.firing_rates(method='hds2017')
         assert_quantity_array_equal(
             firing_rates, std_results['firing_rates_hds2017'])
         
@@ -46,17 +46,12 @@ class Test_Network_functions_give_correct_results:
                                        
     def test_delay_dist_matrix(self, network, std_results):
         ddm = network.delay_dist_matrix()
-        assert_quantity_array_equal(ddm, std_results['delay_dist'])
+        assert_quantity_array_equal(ddm, std_results['delay_dist_matrix'])
     
     def test_delay_dist_matrix_single(self, network, std_results):
         ddm = network.delay_dist_matrix(network.analysis_params['omega'])
-        assert_quantity_array_equal(ddm, std_results['delay_dist_single'])
-    
-    def test_transfer_function(self, network, std_results):
-        network.working_point()
-        transfer_fn = network.transfer_function()
-        assert_quantity_array_equal(transfer_fn,
-                                    std_results['transfer_function'])
+        assert_quantity_array_equal(ddm,
+                                    std_results['delay_dist_matrix_single'])
     
     def test_transfer_function_taylor(self, network, std_results):
         network.working_point()
@@ -90,60 +85,20 @@ class Test_Network_functions_give_correct_results:
     def test_eigenvalue_spectra(self, network, std_results):
         network.working_point()
         network.delay_dist_matrix()
-        network.transfer_function(method='shift')
+        network.transfer_function()
         es = network.eigenvalue_spectra('MH')
         assert_quantity_array_equal(
             es, std_results['eigenvalue_spectra_MH'])
-        
-    def test_eigenvalue_spectra_taylor(self, network, std_results):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function(method='taylor')
-        es = network.eigenvalue_spectra('MH')
-        assert_quantity_array_equal(
-            es, std_results['eigenvalue_spectra_taylor_MH'])
     
     def test_r_eigenvec_spectra(self, network, std_results):
         network.working_point()
         network.delay_dist_matrix()
-        network.transfer_function(method='shift')
-        es = network.r_eigenvec_spectra('MH')
-        assert_quantity_array_equal(
-            es, std_results['r_eigenvec_spectra_MH'])
-    
-    def test_r_eigenvec_spectra_taylor(self, network, std_results):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function(method='taylor')
-        es = network.r_eigenvec_spectra('MH')
-        assert_quantity_array_equal(
-            es, std_results['r_eigenvec_spectra_taylor_MH'])
-        
-    def test_r_eigenvec_spectra_with_method(self, network, std_results):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function(method='shift')
+        network.transfer_function()
         es = network.r_eigenvec_spectra('MH')
         assert_quantity_array_equal(
             es, std_results['r_eigenvec_spectra_MH'])
     
     def test_l_eigenvec_spectra(self, network, std_results):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function(method='shift')
-        es = network.l_eigenvec_spectra('MH')
-        assert_quantity_array_equal(
-            es, std_results['l_eigenvec_spectra_MH'])
-        
-    def test_l_eigenvec_spectra_taylor(self, network, std_results):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function(method='taylor')
-        es = network.l_eigenvec_spectra('MH')
-        assert_quantity_array_equal(
-            es, std_results['l_eigenvec_spectra_taylor_MH'])
-
-    def test_l_eigenvec_spectra_with_method(self, network, std_results):
         network.working_point()
         network.delay_dist_matrix()
         network.transfer_function(method='shift')
