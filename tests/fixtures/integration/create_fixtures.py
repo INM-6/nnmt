@@ -45,28 +45,22 @@ if __name__ == '__main__':
         std_input_set = network.network_params['std_input_set']
         network.results['firing_rates_hds2017'] = network.firing_rates(
             method='hds2017')
-        network.working_point()
+        network.working_point(method='scef')
         network.delay_dist_matrix()
         network.delay_dist_matrix(omega)
-        network.results['tf_shift'] = network.transfer_function(
-            method='shift')
         network.results['tf_taylor'] = network.transfer_function(
             method='taylor')
+        network.results['tf_shift'] = network.transfer_function(
+            method='shift')
         network.transfer_function(omega)
         network.sensitivity_measure(omega)
         network.power_spectra()
         network.results['eigenvalue_spectra_MH'] = (
             network.eigenvalue_spectra('MH'))
-        network.results['eigenvalue_spectra_taylor_MH'] = (
-            network.eigenvalue_spectra('MH', method='taylor'))
         network.results['r_eigenvec_spectra_MH'] = (
             network.r_eigenvec_spectra('MH'))
-        network.results['r_eigenvec_spectra_taylor_MH'] = (
-            network.r_eigenvec_spectra('MH', method='taylor'))
         network.results['l_eigenvec_spectra_MH'] = (
             network.l_eigenvec_spectra('MH'))
-        network.results['l_eigenvec_spectra_taylor_MH'] = (
-            network.l_eigenvec_spectra('MH', method='taylor'))
         network.results['eigenvalue_spectra_prop'] = (
             network.eigenvalue_spectra('prop'))
         network.results['r_eigenvec_spectra_prop'] = (
