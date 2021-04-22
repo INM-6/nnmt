@@ -47,6 +47,11 @@ def assert_quantity_array_equal(qarray1, qarray2):
     assert_units_equal(qarray1, qarray2)
 
 
+def assert_quantity_array_almost_equal(qarray1, qarray2, rtol=1e-14):
+    assert_array_almost_equal(qarray1, qarray2, rtol)
+    assert_units_equal(qarray1, qarray2)
+
+
 def assert_units_equal(var_1, var_2):
     """Checks whether unit of var_1 and of var_2 conincide."""
     try:
@@ -149,6 +154,20 @@ def check_quantity_dicts_are_equal(dict1, dict2):
                 check_quantity_dicts_are_equal(dict1[key], dict2[key])
             else:
                 assert_array_equal(dict1[key], dict2[key])
+                assert_units_equal(dict1[key], dict2[key])
+
+
+def check_quantity_dicts_are_almost_equal(dict1, dict2, rtol=1e-14):
+    keys = sorted(dict1.keys())
+    for key in keys:
+        assert key in dict2
+        try:
+            assert dict1[key] == dict2[key]
+        except ValueError:
+            if isinstance(dict1[key], dict):
+                check_quantity_dicts_are_almost_equal(dict1[key], dict2[key])
+            else:
+                assert_array_almost_equal(dict1[key], dict2[key], rtol)
                 assert_units_equal(dict1[key], dict2[key])
 
 
