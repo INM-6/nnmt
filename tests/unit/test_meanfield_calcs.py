@@ -155,7 +155,7 @@ class Test_sensitivity_measure:
     func = staticmethod(sensitivity_measure)
     # need transfer_function_single and delay_dist_single as input arguments
     output_keys = ['sensitivity_measure', 'transfer_function_single',
-                   'delay_dist_single']
+                   'delay_dist_matrix_single']
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params,
