@@ -60,8 +60,7 @@ regimes = ['noise_driven', 'mean_driven']
 # list of keys that have two different variable names
 key_pairs = (('mean_input', 'mu'),
              ('std_input', 'sigma'),
-             ('firing_rates', 'nu'),
-             ('delay_dist', 'delay_dist_matrix'))
+             ('firing_rates', 'nu'))
 
 all_params = []
 results = []
