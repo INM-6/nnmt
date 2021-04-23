@@ -10,11 +10,13 @@ network = lmt.Network(network_params='network_params_microcircuit.yaml',
                       analysis_params='analysis_params.yaml')
 
 # compute the transfer function
+network.working_point(method='taylor')
+network.delay_dist_matrix()
 network.transfer_function()
 network.save()
 
 # get frequencies as specified in analysis_params.yaml
-freqs = network.analysis_params['omegas']/2./np.pi
+freqs = network.analysis_params['omegas'] / 2. / np.pi
 
 # compute power spectra
 power = network.power_spectra()
