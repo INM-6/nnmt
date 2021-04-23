@@ -315,3 +315,25 @@ def create_hash(params, param_keys):
         label += str(params[key])
     # create and return hash (label must be encoded)
     return hl.md5(label.encode('utf-8')).hexdigest()
+
+
+def load_unit_yaml(file):
+    """
+    Loads the standard unit yaml file.
+    
+    Parameters:
+    -----------
+    file: str
+        The file to be loaded.
+    
+    Returns:
+    --------
+    dict
+    """
+    # try to load yaml file
+    with open(file, 'r') as stream:
+        try:
+            unit_dict = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+    return unit_dict
