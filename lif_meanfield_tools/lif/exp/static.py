@@ -1,16 +1,25 @@
-from scipy.special import erf, zetac, lambertw, erfcx, dawsn, roots_legendre
+from scipy.special import erf, zetac
 import numpy as np
-import mpmath
 
 from ... import ureg
 from ...utils import (check_if_positive,
                       check_for_valid_k_in_fast_synaptic_regime)
 
-from ..static import _firing_rate_integration
+from ..static import (_firing_rate_integration,
+                      mean_input as _mean_input,
+                      std_input as _std_input)
+                      
 from ..delta.static import _firing_rate as delta_firing_rate
 
 
-def firing_rates(network, method='shift', integration_method='scef'):
+from ...utils import _check_and_store, _strip_units
+
+
+prefix = 'lif.exp'
+
+
+@_check_and_store(prefix, ['firing_rates'])
+def firing_rates(network, method='shift'):
     list_of_firing_rate_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel',
                                   'V_0_rel']
     list_of_input_params = ['K', 'J', 'j', 'tau_m', 'nu_ext', 'K_ext', 'g',
@@ -26,15 +35,16 @@ def firing_rates(network, method='shift', integration_method='scef'):
               " parameters.")
         
     firing_rate_params['method'] = method
-    firing_rate_params['integration_method'] = integration_method
+    _strip_units(firing_rate_params)
+    _strip_units(input_params)
         
     return _firing_rate_integration(_firing_rate,
                                     firing_rate_params,
-                                    input_params)
+                                    input_params) * ureg.Hz
 
 
 def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-                 method='shift', integration_method='scef'):
+                 method='shift'):
     """
     Calcs stationary firing rates for exp PSCs
 
@@ -59,6 +69,10 @@ def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
         Mean neuron activity in mV.
     sigma: float
         Standard deviation of neuron activity in mV.
+    method: str
+        Method used for adjusting the Siegert functions for exponentially
+        shaped post synaptic currents. Options: 'shift', 'taylor'. Default is
+        'shift'.
     
     Returns:
     --------
@@ -75,18 +89,15 @@ def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
     
     if method == 'taylor':
         return _firing_rate_taylor(
-            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-            integration_method)
+            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
     elif method == 'shift':
         return _firing_rate_shift(
-            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-            integration_method)
+            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
     else:
-        raise ValueError('Method not implemented.')
+        raise ValueError(f'Method {method} not implemented.')
     
 
-def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-                        integration_method):
+def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """Helper function implementing nu0_fb433 without quantities."""
     # use zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
@@ -94,27 +105,37 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
 
     mu = np.atleast_1d(mu)
     sigma = np.atleast_1d(sigma)
+    x_th = (np.sqrt(2.) * (V_th_rel - mu) / sigma)
+    x_r = (np.sqrt(2.) * (V_0_rel - mu) / sigma)
 
     # preventing overflow in np.exponent in Phi(s)
     # note: this simply returns the white noise result... is this ok?
-    result = np.zeros(len(mu)) * ureg.Hz
-    for i, (mu, sigma) in enumerate(zip(mu, sigma)):
-        # additional prefactor sqrt(2) because its x from Schuecker 2015
-        x_th = (np.sqrt(2.) * (V_th_rel - mu) / sigma).magnitude
-        x_r = (np.sqrt(2.) * (V_0_rel - mu) / sigma).magnitude
-        if x_th > 20.0 / np.sqrt(2.):
-            result[i] = delta_firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu,
-                                          sigma, integration_method)
-        else:
-            # white noise firing rate
-            r = delta_firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma,
-                                  integration_method)
+    result = np.zeros(len(mu))
+    
+    # do slightly different calculations for large thresholds
+    overflow_mask = x_th > 20.0 / np.sqrt(2.)
+    regular_mask = np.invert(overflow_mask)
+    
+    # white noise firing rate
+    if np.any(overflow_mask):
+        result[overflow_mask] = delta_firing_rate(tau_m, tau_r,
+                                                  V_th_rel,
+                                                  V_0_rel,
+                                                  mu[overflow_mask],
+                                                  sigma[overflow_mask])
+    result[regular_mask] = delta_firing_rate(tau_m, tau_r,
+                                             V_th_rel,
+                                             V_0_rel,
+                                             mu[regular_mask],
+                                             sigma[regular_mask])
 
-            dPhi = _Phi(x_th) - _Phi(x_r)
-            # colored noise firing rate (might this lead to negative rates?)
-            result[i] = (r - np.sqrt(tau_s / tau_m) * alpha
-                         / (tau_m * np.sqrt(2))
-                         * dPhi * (r * tau_m)**2)
+    dPhi = _Phi(x_th[regular_mask]) - _Phi(x_r[regular_mask])
+    
+    # colored noise firing rate (might this lead to negative rates?)
+    result[regular_mask] = (result[regular_mask]
+                            - np.sqrt(tau_s / tau_m) * alpha
+                            / (tau_m * np.sqrt(2)) * dPhi
+                            * (result[regular_mask] * tau_m)**2)
 
     return result
 
@@ -135,8 +156,7 @@ def _Phi(s):
                                   * (1 + erf(s / np.sqrt(2))))
 
 
-def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-                       integration_method):
+def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
 
@@ -174,5 +194,14 @@ def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
     # effective reset
     V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # use standard Siegert with modified threshold and reset
-    return delta_firing_rate(tau_m, tau_r, V_th1, V_01, mu, sigma,
-                             integration_method)
+    return delta_firing_rate(tau_m, tau_r, V_th1, V_01, mu, sigma)
+
+
+@_check_and_store(prefix, ['mean_input'])
+def mean_input(network):
+    return _mean_input(network, prefix)
+
+
+@_check_and_store(prefix, ['std_input'])
+def std_input(network):
+    return _std_input(network, prefix)

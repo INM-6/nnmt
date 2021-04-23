@@ -6,8 +6,128 @@ import inspect
 import warnings
 from functools import wraps
 import numpy as np
+from decorator import decorator
+import hashlib
 
 from . import ureg
+
+
+def _check_and_store(prefix, result_keys, analysis_keys=None):
+    """
+    Decorator function that checks whether result are already existing.
+
+    This decorator serves as a wrapper for functions that calculate
+    quantities which are to be stored in self.results. First it checks,
+    whether the result already has been stored in self.results. If this is
+    the case, it returns that result. If not, the calculation is executed,
+    the result is stored in self.results and the result is returned.
+    Additionally results are stored in self.results_hash_dict to simplify
+    searching.
+
+    If the wrapped function gets additional parameters passed, one should
+    also include an analysis key, under which the new analysis parameters
+    should be stored in the dictionary self.analysis_params. Then, the
+    decorator first checks, whether the given parameters have been used
+    before and returns the corresponding results.
+    
+    This function can only handle unitless objects or quantities. Lists or
+    arrays of quantites are not allowed. Use quantity arrays instead (a
+    quantity with array magnitude and a unit).
+
+    TODO: Implement possibility to pass list of result_keys
+
+    Parameters:
+    -----------
+    result_keys: list
+        Specifies under which keys the result should be stored.
+    analysis_key: list
+        Specifies under which keys the analysis_parameters should be
+        stored.
+
+    Returns:
+    --------
+    func
+        decorator function
+    """
+    # add prefix
+    result_keys = [prefix + key for key in result_keys]
+    if analysis_keys is not None:
+        analysis_keys = [prefix + key for key in analysis_keys]
+
+    @decorator
+    def decorator_check_and_store(func, network, *args, **kwargs):
+        """ Decorator with given parameters, returns expected results. """
+        # collect analysis_params
+        analysis_params = getattr(network, 'analysis_params')
+
+        # collect results
+        results = getattr(network, 'results')
+        results_hash_dict = getattr(network, 'results_hash_dict')
+
+        new_params = []
+        if analysis_keys is not None:
+            # add not passed standard arguments to args:
+            # need to add network first because function signature expects
+            # network at first position
+            args = list(args)
+            args.insert(0, network)
+            args = build_full_arg_list(inspect.signature(func),
+                                       args, kwargs)
+            # remove network
+            args.pop(0)
+            # empty kwargs which are now included in args
+            kwargs = {}
+            for i, key in enumerate(analysis_keys):
+                new_params.append(args[i])
+
+        # calculate hash from result and analysis keys and analysis params
+        label = str(result_keys) + str(analysis_keys) + str(new_params)
+        h = hashlib.md5(label.encode('utf-8')).hexdigest()
+        # check if hash already exists and get corresponding result
+        if h in results_hash_dict.keys():
+            # if only one key is present don't use list
+            if len(result_keys) == 1:
+                new_results = results_hash_dict[h][result_keys[0]]
+            else:
+                new_results = [results_hash_dict[h][key]
+                               for key in result_keys]
+        else:
+            # if not, calculate new result
+            new_results = func(network, *args, **kwargs)
+
+            # create new hash dict entry
+            if len(result_keys) == 1:
+                hash_dict = {result_keys[0]: new_results}
+            else:
+                hash_dict = {key: new_results[i] for i, key
+                             in enumerate(result_keys)}
+            if analysis_keys:
+                analysis_dict = {}
+                for key, param in zip(analysis_keys, new_params):
+                    analysis_dict[key] = param
+                hash_dict['analysis_params'] = analysis_dict
+            results_hash_dict[h] = hash_dict
+            
+        # create new results and analysis_params entries
+        if len(result_keys) == 1:
+            results[result_keys[0]] = new_results
+        else:
+            for i, key in enumerate(result_keys):
+                results[key] = new_results[i]
+        if analysis_keys:
+            analysis_dict = {}
+            for key, param in zip(analysis_keys, new_params):
+                analysis_params[key] = param
+            
+        # update network.results and network.results_hash_dict
+        setattr(network, 'results', results)
+        setattr(network, 'results_hash_dict', results_hash_dict)
+        setattr(network, 'analysis_params', analysis_params)
+
+        # return new result
+        return new_results
+
+    return decorator_check_and_store
 
 
 def check_if_positive(parameters, parameter_names):
@@ -141,6 +261,17 @@ def pint_array_of_dimension_plus_one(quantity):
         return np.array([quantity.magnitude]) * quantity.units
     else:
         return np.array([quantity])
+    
+
+def _strip_units(dict):
+    """
+    Strip units of quantities.
+    """
+    for key, item in dict.items():
+        try:
+            dict[key] = item.magnitude
+        except AttributeError:
+            pass
 
 
 def build_full_arg_list(signature, args, kwargs):

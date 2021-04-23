@@ -3,6 +3,8 @@ import scipy.integrate as sint
 
 from .. import ureg
 
+from ..utils import _strip_units
+
 
 def _firing_rate_integration(firing_rate_func, firing_rate_params,
                              input_params):
@@ -13,12 +15,8 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         """
         Calculate difference between new iteration step and previous one.
         """
-        try:
-            nu.units
-        except AttributeError:
-            nu = nu * ureg.Hz
-        mu = _mean(nu=nu, **input_params)
-        sigma = _standard_deviation(nu=nu, **input_params)
+        mu = _mean_input(nu=nu, **input_params)
+        sigma = _std_input(nu=nu, **input_params)
         new_nu = firing_rate_func(mu=mu, sigma=sigma, **firing_rate_params)
         return -nu + new_nu
 
@@ -40,13 +38,35 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
     msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
     raise RuntimeError(msg)
 
+    
+def mean_input(network, prefix):
+    return _input_calc(network, prefix, _mean_input)
+    
+    
+def std_input(network, prefix):
+    return _input_calc(network, prefix, _std_input)
 
-def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
-    """ Compute mean() without quantities. """
+
+def _input_calc(network, prefix, input_func):
     try:
-        nu.units
-    except AttributeError:
-        nu = nu * ureg.Hz
+        rates = network.results[prefix + 'firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    list_of_params = ['K', 'J', 'j', 'tau_m', 'nu_ext', 'K_ext', 'g',
+                      'nu_e_ext', 'nu_i_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    
+    rates = rates.magnitude
+    _strip_units(params)
+    
+    return input_func(rates, **params) * ureg.mV
+    
+
+def _mean_input(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+    """ Compute mean input without quantities. """
     # contribution from within the network
     m0 = tau_m * np.dot(K * J, nu)
     # contribution from external sources
@@ -55,16 +75,12 @@ def _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
     m_ext_add = tau_m * j * (nu_e_ext - g * nu_i_ext)
     # add them up
     m = m0 + m_ext + m_ext_add
-    return m.to(ureg.mV)
+    # divide by factor 1000 to adjust for nu in hertz vs tau_m in millisecond
+    return m / 1000
 
 
-def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
-                        nu_i_ext):
-    """ Compute standard_deviation() without quantities. """
-    try:
-        nu.units
-    except AttributeError:
-        nu = nu * ureg.Hz
+def _std_input(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+    """ Compute standard deviation of input without quantities. """
     # contribution from within the network to variance
     var0 = tau_m * np.dot(K * J**2, nu)
     # contribution from external sources to variance
@@ -74,5 +90,5 @@ def _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext,
     # add them up
     var = var0 + var_ext + var_ext_add
     # standard deviation is square root of variance
-    sigma = np.sqrt(var)
-    return sigma.to(ureg.mV)
+    sigma = np.sqrt(var / 1000)
+    return sigma
