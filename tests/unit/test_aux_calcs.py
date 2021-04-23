@@ -14,8 +14,6 @@ from ..checks import (assert_array_almost_equal,
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.aux_calcs import (
-    siegert1,
-    siegert2,
     nu0_fb433,
     nu0_fb,
     nu_0,
@@ -74,66 +72,6 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     nu = real_siegert(tau_m, tau_r, V_th_eff, V_0_eff, mu, sigma)
 
     return nu
-
-
-class Test_siegert1:
-
-    func = staticmethod(siegert1)
-    rtol = 1e-10
-
-    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_V_0_larger_V_th_raise_exception(self, std_params):
-        check_V_0_larger_V_th_raise_exception(self.func, std_params)
-
-    def test_mu_larger_V_th_raises_exception(self, std_params):
-        std_params['mu'] = 1.1 * std_params['V_th_rel']
-        with pytest.raises(ValueError):
-            self.func(**std_params)
-        
-    def test_gives_similar_results_as_real_siegert(
-            self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        if any(params['mu'] > params['V_th_rel']):
-            with pytest.raises(ValueError):
-                self.func(**params)
-        else:
-            check_almost_correct_output_for_several_mus_and_sigmas(
-                self.func, real_siegert, params, self.rtol)
-            
-
-class Test_siegert2:
-
-    func = staticmethod(siegert2)
-    rtol = 1e-10
-
-    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_V_0_larger_V_th_raise_exception(self, std_params):
-        check_V_0_larger_V_th_raise_exception(self.func, std_params)
-
-    def test_mu_smaller_V_th_raises_exception(self, std_params):
-        std_params['mu'] = 0.9 * std_params['V_th_rel']
-        with pytest.raises(ValueError):
-            self.func(**std_params)
-
-    def test_gives_similar_results_as_real_siegert(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        mus = params.pop('mu')
-        sigmas = params.pop('sigma')
-        for mu, sigma in zip(mus, sigmas):
-            params['mu'] = mu
-            params['sigma'] = sigma
-            if mu > 0.95 * params['V_th_rel']:
-                expected = real_siegert(**params)
-                result = self.func(**params)
-                assert_array_almost_equal(expected, result, self.rtol)
-                assert_units_equal(expected, result)
-            else:
-                with pytest.raises(ValueError):
-                    self.func(**params)
 
 
 class Test_nu0_fb433:

@@ -55,7 +55,7 @@ def network(exemplary_frequency_idx):
     
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
-    network.working_point(method='hds2017')
+    network.working_point(method='taylor')
     network.delay_dist_matrix()
     
     yield network
@@ -137,11 +137,11 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
             'fig_microcircuit']['rates_calc']
         bos_code_data = bos_code_result['firing_rates']
         test_data = network.firing_rates(
-            method='hds2017').to(ureg.Hz).magnitude
+            method='taylor').to(ureg.Hz).magnitude
         # check ground truth data vs data generated via old code
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
         # check ground truth data vs data generated via lmt
-        assert_array_almost_equal(test_data, ground_truth_data, decimal=5)
+        assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
         
     def test_delay_distribution_at_single_frequency(self, network,
                                                     bos_code_result):
@@ -174,7 +174,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
             network.delay_dist_matrix_single(omega))
         
         assert_array_almost_equal(test_data.to_base_units(), bos_code_data,
-                                  decimal=5)
+                                  decimal=4)
 
     def test_transfer_function(self, network, bos_code_result):
         # ground truth data does not exist, but as regenerated bos_code_data

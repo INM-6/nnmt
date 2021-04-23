@@ -693,7 +693,7 @@ class Test_check_and_store_decorator:
         assert network.results['result'] == 30 * ureg.mV
         
         
-@pytest.mark.xfail
+@pytest.mark.skip
 class Test_functionality:
     """A lot of those tests might actually be superfluous."""
 
