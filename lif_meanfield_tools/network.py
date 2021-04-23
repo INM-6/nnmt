@@ -472,7 +472,7 @@ class Network(object):
         pass
 
     @_check_and_store(['firing_rates'], ['firing_rates_method'])
-    def firing_rates(self, method='scef'):
+    def firing_rates(self, method='shift'):
         """ Calculates firing rates """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
                                             self.network_params['tau_m'],
@@ -525,8 +525,7 @@ class Network(object):
         except KeyError as key:
             raise RuntimeError(f'You first need to calculate the {key}.')
 
-
-    def working_point(self, method='scef'):
+    def working_point(self, method='shift'):
         """
         Calculates stationary working point of the network.
 
@@ -587,7 +586,8 @@ class Network(object):
             self.network_params['delay_dist'],
             self.analysis_params['omegas'])
 
-    @_check_and_store(['delay_dist_matrix_single'], ['delay_dist_matrix_freqs'])
+    @_check_and_store(['delay_dist_matrix_single'],
+                      ['delay_dist_matrix_freqs'])
     def delay_dist_matrix_single(self, omega):
         """
         Calculates delay distribution matrix for one omega.
@@ -658,7 +658,6 @@ class Network(object):
         except KeyError as key:
             raise RuntimeError(f'You first need to calculate the {key}.')
 
-
     @_check_and_store(['transfer_function_single'], ['transfer_freqs',
                                                      'transfer_single_method'])
     def transfer_function_single(self, freq, method='shift'):
@@ -689,7 +688,6 @@ class Network(object):
 
         except KeyError as key:
             raise RuntimeError(f'You first need to calculate the {key}.')
-
 
     @_check_and_store(['sensitivity_measure'], ['sensitivity_freqs',
                                                 'sensitivity_method'])
@@ -869,7 +867,7 @@ class Network(object):
                                                  'std_input_set',
                                                  'additional_rates_method'])
     def additional_rates_for_fixed_input(self, mean_input_set, std_input_set,
-                                         method='scef'):
+                                         method='shift'):
         """
         Calculate additional external excitatory and inhibitory Poisson input
         rates such that the input prescribed by the mean and standard deviation

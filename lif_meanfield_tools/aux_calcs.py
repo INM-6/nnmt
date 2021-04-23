@@ -40,6 +40,7 @@ def pint_erfcx(x):
     except TypeError:
         return erfcx(x.magnitude)
 
+
 def pint_dawsn(x):
     try:
         return dawsn(x)
@@ -48,9 +49,8 @@ def pint_dawsn(x):
     
 
 @ureg.wraps(ureg.Hz,
-            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV, None))
-def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-              method='scef'):
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
+def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs
 
@@ -75,11 +75,6 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
         Mean neuron activity in mV.
     sigma: float
         Standard deviation of neuron activity in mV.
-    method: str
-        The method used for numerical integration of the Siegert formula.
-        Options:
-        - 'scef' (using the Scaled Complementary Error Function)
-        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
 
     Returns:
     --------
@@ -98,35 +93,44 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
     return _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
-def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-               method='scef'):
+def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """Helper function implementing nu0_fb433 without quantities."""
     # use zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
 
-    # additional prefactor sqrt(2) because its x from Schuecker 2015
-    x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
-    x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
+    mu = np.atleast_1d(mu)
+    sigma = np.atleast_1d(sigma)
+    result = np.zeros(len(mu))
+    
+    for i, (mu, sigma) in enumerate(zip(mu, sigma)):
+    
+        # additional prefactor sqrt(2) because its x from Schuecker 2015
+        x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
 
-    # preventing overflow in np.exponent in Phi(s)
-    # note: this simply returns the white noise result... is this ok?
-    if x_th > 20.0 / np.sqrt(2.):
-        result = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma,
-                      method=method)
+        # preventing overflow in np.exponent in Phi(s)
+        # note: this simply returns the white noise result... is this ok?
+        
+        if x_th > 20.0 / np.sqrt(2.):
+            result[i] = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        else:
+            # white noise firing rate
+            r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+
+            dPhi = Phi(x_th) - Phi(x_r)
+            # colored noise firing rate (might this lead to negative rates?)
+            result[i] = (r - np.sqrt(tau_s / tau_m) * alpha
+                         / (tau_m * np.sqrt(2)) * dPhi * (r * tau_m)**2)
+    
+    # convert back to scalar if only one value calculated
+    if result.shape == (1,):
+        return result.item(0)
     else:
-        # white noise firing rate
-        r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, method=method)
-
-        dPhi = Phi(x_th) - Phi(x_r)
-        # colored noise firing rate (might this lead to negative rates?)
-        result = (r - np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
-                  * dPhi * (r * tau_m)**2)
-
-    return result
+        return result
 
 
-def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
+def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
@@ -144,68 +148,56 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
         Mean neuron activity in mV.
     sigma: float
         Standard deviation of neuron activity in mV.
-    method: str
-        The method used for numerical integration of the Siegert formula.
-        Options:
-        - 'scef' (using the Scaled Complementary Error Function)
-        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
 
     Returns:
     --------
     float:
         Stationary firing rate in Hz.
     """
-    if method == 'scef':
-        y_th = (V_th_rel - mu) / sigma
-        y_r = (V_0_rel - mu) / sigma
-        y_th = np.atleast_1d(y_th)
-        y_r = np.atleast_1d(y_r)
-        assert y_th.shape == y_r.shape
-        assert y_th.ndim == y_r.ndim == 1
-        if np.any(V_th_rel - V_0_rel < 0):
-            raise ValueError('V_th should be larger than V_0!')
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+    y_th = np.atleast_1d(y_th)
+    y_r = np.atleast_1d(y_r)
+    assert y_th.shape == y_r.shape
+    assert y_th.ndim == y_r.ndim == 1
+    if np.any(V_th_rel - V_0_rel < 0):
+        raise ValueError('V_th should be larger than V_0!')
 
-        # determine order of quadrature
-        params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
-        gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
+    # determine order of quadrature
+    params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
+    gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
 
-        # separate domains
-        mask_exc = y_th < 0
-        mask_inh = 0 < y_r
-        mask_interm = (y_r <= 0) & (0 <= y_th)
+    # separate domains
+    mask_exc = y_th < 0
+    mask_inh = 0 < y_r
+    mask_interm = (y_r <= 0) & (0 <= y_th)
 
-        # calculate siegert
-        nu = np.zeros(shape=y_th.shape)
-        params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
-        nu[mask_exc] = temp = _siegert_exc(y_th=y_th[mask_exc],
-                                           y_r=y_r[mask_exc], **params)
-        nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
-                                    y_r=y_r[mask_inh], **params)
-        nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
-                                          y_r=y_r[mask_interm], **params)
-        # unit is stripped when quantity returned from _siegert_... is assigned to
-        # elements in nu, so here we add it again
-        try:
-            nu = nu * temp.units
-        except AttributeError:
-            pass
-        
-        # convert back to scalar if only one value calculated
-        if nu.shape == (1,):
-            return nu.item(0)
-        else:
-            return nu
+    # calculate siegert
+    nu = np.zeros(shape=y_th.shape)
+    params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
+    nu[mask_exc] = temp = _siegert_exc(y_th=y_th[mask_exc],
+                                       y_r=y_r[mask_exc], **params)
+    nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
+                                y_r=y_r[mask_inh], **params)
+    nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
+                                      y_r=y_r[mask_interm], **params)
+    # unit is stripped when quantity returned from _siegert_... is assigned to
+    # elements in nu, so here we add it again
+    try:
+        nu = nu * temp.units
+    except AttributeError:
+        pass
     
-    elif method == 'hds2017':
-        if mu <= V_th_rel - 0.05 * abs(V_th_rel):
-            return siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        else:
-            return siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    # convert back to scalar if only one value calculated
+    if nu.shape == (1,):
+        return nu.item(0)
+    else:
+        return nu
 
 
 @ureg.wraps(ureg.Hz,
-            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV, None))
-def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
+            (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
+def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
 
@@ -228,22 +220,17 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
         Mean neuron activity in mV.
     sigma:
         Standard deviation of neuron activity in mV.
-    method: str
-        The method used for numerical integration of the Siegert formula.
-        Options:
-        - 'scef' (using the Scaled Complementary Error Function)
-        - 'hds2017' (see appendix A.1. in Hahne, Dahmen, Schuecker et al. 2017)
-
+        
     Returns:
     --------
     float:
         Stationary firing rate in Hz.
     """
     
-    return _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method)
+    return _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
-def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
+def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
@@ -261,7 +248,7 @@ def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma, method='scef'):
     # effective reset
     V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # use standard Siegert with modified threshold and reset
-    return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma, method)
+    return nu_0(tau_m, tau_r, V_th1, V_01, mu, sigma)
 
 
 def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
@@ -277,7 +264,7 @@ def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
     order = start_order
     for _ in range(maxiter):
         I_gl = _erfcx_integral(a, b, order=order)[0]
-        rel_error = np.abs(I_gl/I_quad - 1)
+        rel_error = np.abs(I_gl / I_quad - 1)
         if rel_error < epsrel:
             return order
         else:
@@ -293,7 +280,8 @@ def _erfcx_integral(a, b, order):
     x, w = roots_legendre(order)
     x = x[:, np.newaxis]
     w = w[:, np.newaxis]
-    return (b-a) * np.sum(w * pint_erfcx((b-a)*x/2 + (b+a)/2), axis=0) / 2
+    return (b - a) * np.sum(w * pint_erfcx((b - a) * x / 2
+                                           + (b + a) / 2), axis=0) / 2
 
 
 def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
@@ -319,131 +307,6 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     Int = 2 * pint_dawsn(y_th)
     Int += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
     return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
-
-
-def siegert1(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
-    """
-    Calculates stationary firing rates for delta shaped PSCs for mu < V_th_rel.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float
-        Relative threshold potential in mV.
-    V_0_rel: float
-        Relative reset potential in mV.
-    mu: float
-        Mean neuron activity in mV.
-    sigma:
-        Standard deviation of neuron activity in mV.
-
-    Returns:
-    --------
-    float:
-        Stationary firing rate in Hz.
-    """
-    pos_parameters = [tau_m, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-
-    if V_th_rel < V_0_rel:
-        raise ValueError('V_th should be larger than V_0!')
-    if mu > V_th_rel - 0.05 * abs(V_th_rel):
-        raise ValueError('mu should be smaller than V_th-V_0! Use siegert2 if '
-                         'mu > (V_th-V_0).')
-
-    y_th = (V_th_rel - mu) / sigma
-    y_r = (V_0_rel - mu) / sigma
-
-    def integrand(u):
-        if u == 0:
-            return np.exp(-y_th**2) * 2 * (y_th - y_r)
-        else:
-            return np.exp(-(u - y_th)**2) * (1.0 - np.exp(2 * (y_r - y_th)
-                                                          * u)) / u
-    # find lower bound of integration, such that integrand is smaller than
-    # 1e-12 at lower bound
-    lower_bound = y_th
-    err_dn = 1.0
-    while err_dn > 1e-12 and lower_bound > 1e-16:
-        err_dn = integrand(lower_bound)
-        if err_dn > 1e-12:
-            lower_bound /= 2
-
-    # find upper bound of integration, such that integrand is smaller than
-    # 1e-12 at lower bound
-    upper_bound = y_th
-    err_up = 1.0
-    while err_up > 1e-12:
-        err_up = integrand(upper_bound)
-        if err_up > 1e-12:
-            upper_bound *= 2
-
-    # check preventing overflow
-    if y_th >= 20:
-        out = 0.
-    if y_th < 20:
-        out = 1.0 / (tau_r + np.exp(y_th**2)
-                     * quad(integrand, lower_bound, upper_bound)[0] * tau_m)
-
-    return out
-
-
-def siegert2(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
-    """
-    Calculates stationary firing rates for delta shaped PSCs for mu > V_th_rel.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float
-        Relative threshold potential in mV.
-    V_0_rel: float
-        Relative reset potential in mV.
-    mu: float
-        Mean neuron activity in mV.
-    sigma:
-        Standard deviation of neuron activity in mV.
-
-    Returns:
-    --------
-    float:
-        Stationary firing rate in Hz.
-    """
-    pos_parameters = [tau_m, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
-
-    if V_th_rel < V_0_rel:
-        raise ValueError('V_th should be larger than V_0!')
-    # why this threshold?
-    if mu < V_th_rel - 0.05 * abs(V_th_rel):
-        raise ValueError('mu should be bigger than V_th-V_0 - 0.05 * '
-                         'abs(V_th_rel)! Use siegert1 if mu < (V_th-V_0).')
-
-    y_th = (V_th_rel - mu) / sigma
-    y_r = (V_0_rel - mu) / sigma
-
-    def integrand(u):
-        if u == 0:
-            return 2 * (y_th - y_r)
-        else:
-            return (np.exp(2 * y_th * u - u**2) - np.exp(2 * y_r * u - u**2)
-                    ) / u
-
-    upper_bound = 1.0
-    err = 1.0
-    while err > 1e-12:
-        err = integrand(upper_bound)
-        upper_bound *= 2
-
-    return 1.0 / (tau_r + quad(integrand, 0.0, upper_bound)[0] * tau_m)
 
 
 def Phi(s):
