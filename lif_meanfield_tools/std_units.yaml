@@ -1,0 +1,58 @@
+---
+### network
+# weight matrix
+W: picoampere
+J: millivolt
+# delay matrix
+D: millisecond
+
+### neurons
+# membrane capacitance
+C: picofarad
+# membrane time constant
+tau_m: millisecond
+# refractory time
+tau_r: millisecond
+# absolute reset potential
+V_0_abs: millivolt
+# absolute threshold of membrane potential
+V_th_abs: millivolt
+# relative reset potential
+V_0_rel: millivolt
+# relative threshold of membrane potential
+V_th_rel: millivolt
+
+### synapses
+# delay of excitatory connections
+d_e: millisecond
+# delay of inhibitory connections
+d_i: millisecond
+# standard deviation of delay of excitatory connections
+d_e_sd: millisecond
+# standard deviation of delay of inhibitory connections
+d_i_sd: millisecond
+# synaptic time constant
+tau_s: millisecond
+# PSC amplitude
+w: picoampere
+# weight in mV
+j: millivolt
+
+### external input
+# firing rate of external input
+nu_ext: hertz
+# rates of additional external excitatory Poisson input
+nu_e_ext: hertz
+# rates of additional external inhibitory Poisson input
+nu_i_ext: hertz
+
+### analysis params
+# frequencies
+f_min: hertz
+f_max: hertz
+df: hertz
+# k wavenumbers
+k_min: 1 / millimeter
+k_max: 1 / millimeter
+dk: 1 / millimeter
+...

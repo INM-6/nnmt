@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 
 from . import ureg
@@ -70,6 +71,23 @@ class Network():
             # empty results
             self.results = {}
             self.results_hash_dict = {}
+
+    def _check_units(self, params, std_unit_file):
+        std_units = io.load_unit_yaml(std_unit_file)
+        
+        common_quantities = set(params.keys()) & set(std_units.keys())
+        
+        for quantity in common_quantities:
+            if params[quantity].units != std_units[quantity]:
+                old_unit = params[quantity].units
+                new_unit = std_units[quantity]
+                warnings.warn(f'{quantity} has non standard unit {old_unit}. '
+                              f'It is converted to {new_unit}. See '
+                              'std_unit.yaml for definition of standard '
+                              'units.')
+                params[quantity].ito(new_unit)
+            else:
+                print(f'{quantity} is ok')
 
     def save(self, file, overwrite=False):
         """
@@ -181,6 +199,9 @@ class Microcircuit(Network):
         derived_analysis_params = (
             self._calculate_dependent_analysis_parameters())
         self.analysis_params.update(derived_analysis_params)
+        
+        self._check_units(self.network_params, 'lif_meanfield_tools/std_units.yaml')
+        self._check_units(self.analysis_params, 'lif_meanfield_tools/std_units.yaml')
         
     def _calculate_dependent_network_parameters(self):
         """
