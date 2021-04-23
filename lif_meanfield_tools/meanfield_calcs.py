@@ -91,7 +91,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     nu_i_ext: Quantity(float, 'hertz')
         firing rate of additional external inhibitory Poisson input
     method: str
-        The method used for numerical integration of the Siegert formula.
+        The method used for adjusting the Siegert formula to exp shaped PSCs.
         Options: 'shift', 'taylor'. Default is 'shift'
         
     Returns:

@@ -473,7 +473,20 @@ class Network(object):
 
     @_check_and_store(['firing_rates'], ['firing_rates_method'])
     def firing_rates(self, method='shift'):
-        """ Calculates firing rates """
+        """
+        Calculates firing rates.
+        
+        Parameters:
+        -----------
+        method: str
+            The method used for adjusting the Siegert formula to exp shaped
+            PSCs. Options: 'shift', 'taylor'. Default is 'shift'
+            
+        Returns:
+        --------
+        Quantity(np.ndarray, 'Hertz'):
+            Firing rates for different populations.
+        """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
                                             self.network_params['tau_m'],
                                             self.network_params['tau_s'],
@@ -617,6 +630,8 @@ class Network(object):
         freq: Quantity(float, 'Hertz')
             Optional paramter. If given, transfer function is only calculated
             for this frequency.
+        method: str
+            Options: 'shift', 'taylor'. Default is 'shift'.
 
         Returns:
         --------
@@ -879,6 +894,9 @@ class Network(object):
             prescribed mean input for each population
         std_input_set: Quantity(np.ndarray, 'mV')
             prescribed standard deviation of input for each population
+        method: str
+            The method used for adjusting the Siegert formula to exp shaped
+            PSCs. Options: 'shift', 'taylor'. Default is 'shift'
 
         Returns:
         --------
