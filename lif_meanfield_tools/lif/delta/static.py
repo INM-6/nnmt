@@ -101,12 +101,10 @@ def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_r = (V_0_rel - mu) / sigma
     y_th = np.atleast_1d(y_th)
     y_r = np.atleast_1d(y_r)
-    tau_m = np.atleast_1d(tau_m)
-    if len(tau_m) == 1:
-        tau_m = np.ones(len(y_r)) * tau_m[0]
-    tau_r = np.atleast_1d(tau_r)
-    if len(tau_r) == 1:
-        tau_r = np.ones(len(y_r)) * tau_r[0]
+    # this brings tau_m and tau_r into the correct vectorized form if they are
+    # scalars and doesn't do anything if they are arrays of appropriate size
+    tau_m = tau_m + y_th - y_th
+    tau_r = tau_r + y_th - y_th
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
     if np.any(V_th_rel - V_0_rel < 0):
