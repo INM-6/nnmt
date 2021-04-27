@@ -10,7 +10,7 @@ class Network():
     Basic Network class with given network and analysis parameters.
     
     This class serves as a container for the results calculated using the
-    toolbox. It has four dictionaries:
+    toolbox. It has five dictionaries:
     - `network_params` contains the network parameters.
     - `analysis_params` contains the analysis parameters.
     - `results_hash_dict` contains all calculated results stored using a hash
@@ -20,6 +20,8 @@ class Network():
     latest results for a given quantity are stored. So if you calculate the
     same quantity using different methods, only the last one will be found in
     `results`.
+    - `input_units` where the units of input parameters are stored for
+    conversions.
 
     Parameters:
     -----------
@@ -76,6 +78,9 @@ class Network():
             self.input_units = {}
             
     def _convert_param_dicts_to_base_units_and_strip_units(self):
+        """
+        Converts the parameter dicts to base units and strips the units.
+        """
         for dict in [self.network_params, self.analysis_params]:
             for key in dict.keys():
                 try:
@@ -86,6 +91,9 @@ class Network():
                     pass
             
     def _add_units_to_param_dicts_and_convert_to_input_units(self):
+        """
+        Adds units to the parameter dicts and converts them to input units.
+        """
         self.network_params = (
             self._add_units_to_dict_and_convert_to_input_units(
                 self.network_params))
@@ -94,6 +102,19 @@ class Network():
                 self.analysis_params))
     
     def _add_units_to_dict_and_convert_to_input_units(self, dict):
+        """
+        Adds units to a unitless dict and converts them to input units.
+        
+        Parameters:
+        -----------
+        dict: dict
+            Dictionary to be converted.
+            
+        Returns:
+        --------
+        dict
+            Converted dictionary.
+        """
         dict = copy.deepcopy(dict)
         for key in dict.keys():
             try:

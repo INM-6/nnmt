@@ -15,6 +15,46 @@ prefix = 'lif.delta.'
 
 @_check_and_store(prefix, ['firing_rates'])
 def firing_rates(network):
+    """
+    Calculates stationary firing rates for delta shaped PSCs.
+
+    Parameters:
+    -----------
+    network: lif_meanfield_tools.create.Network or child class instance.
+        Network with the network parameters listed in the following.
+    
+    Network parameters:
+    -------------------
+    tau_m: float
+        Membrane time constant in s.
+    tau_r: float
+        Refractory time in s.
+    V_0_rel: float
+        Relative reset potential in V.
+    V_th_rel: float
+        Relative threshold potential in V.
+    K: np.array
+        Indegree matrix.
+    J: np.array
+        Weight matrix in V.
+    j: float
+        Synaptic weight in V.
+    nu_ext: float
+        Firing rate of external input in Hz.
+    K_ext: np.array
+        Numbers of external input neurons to each population.
+    g: float
+        Relative inhibitory weight.
+    nu_e_ext: float
+        Firing rate of additional external excitatory Poisson input in Hz.
+    nu_i_ext: float
+        Firing rate of additional external inhibitory Poisson input in Hz.
+
+    Returns:
+    --------
+    Quantity(np.array, 'hertz')
+        Array of firing rates of each population in Hz.
+    """
     list_of_firing_rate_params = ['tau_m', 'tau_r', 'V_th_rel', 'V_0_rel']
     list_of_input_params = ['K', 'J', 'j', 'tau_m', 'nu_ext', 'K_ext', 'g',
                             'nu_e_ext', 'nu_i_ext']
@@ -36,27 +76,28 @@ def firing_rates(network):
 
 def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
-    Calculates stationary firing rates for delta shaped PSCs.
-
+    Calculates stationary firing rate for delta shaped PSCs.
+    
+    For more documentation see `firing_rates`.
+    
     Parameters:
     -----------
     tau_m: float
-        Membrane time constant in seconds.
+        Membrane time constant in s.
     tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float
-        Relative threshold potential in mV.
-    V_0_rel: float
-        Relative reset potential in mV.
-    mu: float
-        Mean neuron activity in mV.
-    sigma: float
-        Standard deviation of neuron activity in mV.
-
+        Refractory time in s.
+    V_0_rel: float or np.array
+        Relative reset potential in V.
+    V_th_rel: float or np.array
+        Relative threshold potential in V.
+    mu: float or np.array
+        Mean input to population of neurons.
+    sigma: float or np.array
+        Standard deviation of input to population of neurons.
+        
     Returns:
-    --------
-    float:
-        Stationary firing rate in Hz.
+    float or np.array
+        Firing rates in Hz.
     """
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
@@ -153,9 +194,93 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
 
 @_check_and_store(prefix, ['mean_input'])
 def mean_input(network):
+    '''
+    Calc mean inputs to populations as function of firing rates of populations.
+
+    Following Fourcaud & Brunel (2002).
+    
+    Parameters:
+    -----------
+    network: lif_meanfield_tools.create.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+        
+    Network results:
+    ----------------
+    nu: Quantity(np.array, 'hertz')
+        Firing rates of populations in Hz.
+    
+    Network parameters:
+    -------------------
+    tau_m: float
+        Membrane time constant in s.
+    K: np.array
+        Indegree matrix.
+    J: np.array
+        Weight matrix in V.
+    j: float
+        Synaptic weight in V.
+    nu_ext: float
+        Firing rate of external input in Hz.
+    K_ext: np.array
+        Numbers of external input neurons to each population.
+    g: float
+        Relative inhibitory weight.
+    nu_e_ext: float
+        Firing rate of additional external excitatory Poisson input in Hz.
+    nu_i_ext: float
+        Firing rate of additional external inhibitory Poisson input in Hz.
+
+    Returns:
+    --------
+    Quantity(np.array, 'volt')
+        Array of mean inputs to each population in V.
+    '''
     return _mean_input(network, prefix)
 
 
 @_check_and_store(prefix, ['std_input'])
 def std_input(network):
+    '''
+    Calc standard deviation of inputs to populations.
+    
+    Following Fourcaud & Brunel (2002).
+    
+    Parameters:
+    -----------
+    network: lif_meanfield_tools.create.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+        
+    Network results:
+    ----------------
+    nu: Quantity(np.array, 'hertz')
+        Firing rates of populations in Hz.
+    
+    Network parameters:
+    -------------------
+    tau_m: float
+        Membrane time constant in s.
+    K: np.array
+        Indegree matrix.
+    J: np.array
+        Weight matrix in V.
+    j: float
+        Synaptic weight in V.
+    nu_ext: float
+        Firing rate of external input in Hz.
+    K_ext: np.array
+        Numbers of external input neurons to each population.
+    g: float
+        Relative inhibitory weight.
+    nu_e_ext: float
+        Firing rate of additional external excitatory Poisson input in Hz.
+    nu_i_ext: float
+        Firing rate of additional external inhibitory Poisson input in Hz.
+
+    Returns:
+    --------
+    Quantity(np.array, 'volt')
+        Array of mean inputs to each population in V.
+    '''
     return _std_input(network, prefix)

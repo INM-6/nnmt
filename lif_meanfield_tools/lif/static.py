@@ -1,12 +1,19 @@
+from functools import partial
 import numpy as np
 import scipy.integrate as sint
 
 from .. import ureg
-from functools import partial
 
 
 def _firing_rate_integration(firing_rate_func, firing_rate_params,
                              input_params):
+    """
+    Solves the self-consistent eqs for firing rates, mean and std of input.
+    
+    Starts with a zero firing rate, calculates mean and std of the input and
+    then calculates the firing rate again. This iterative procedure is repeated
+    until the firing rates converge or an upper interation limit is reached.
+    """
     
     dimension = input_params['K'].shape[0]
 
@@ -45,14 +52,41 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
 
 
 def mean_input(network, prefix):
+    '''
+    Calc mean inputs to populations as function of firing rates of populations.
+    
+    See `delta.static.mean_input` or `exp.static.mean_input` for full
+    documentation.
+    '''
     return _input_calc(network, prefix, _mean_input)
     
     
 def std_input(network, prefix):
+    '''
+    Calc std of inputs to populations as function of firing rates.
+    
+    See `delta.static.std_input` or `exp.static.std_input` for full
+    documentation.
+    '''
     return _input_calc(network, prefix, _std_input)
 
 
 def _input_calc(network, prefix, input_func):
+    '''
+    Helper function for input related calculations.
+    
+    Checks the requirements for calculating input related quantities and calls
+    the respective input function.
+    
+    Parameters:
+    -----------
+    network: lif_meanfield_tools.create.Network object
+        The network for which the calculation should be done.
+    prefix: str
+        The prefix used in the to store the firing rates (e.g. 'lif.delta.').
+    input_func: function
+        The function that should be calculated (either mean or std).
+    '''
     try:
         rates = (
             network.results[prefix + 'firing_rates'].to_base_units().magnitude)
