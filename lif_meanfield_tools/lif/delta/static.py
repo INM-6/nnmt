@@ -6,7 +6,7 @@ from ..static import (_firing_rate_integration,
                       mean_input as _mean_input,
                       std_input as _std_input)
 
-from ...utils import _check_and_store, _strip_units
+from ...utils import _check_and_store
 from ... import ureg
 
 
@@ -65,9 +65,6 @@ def firing_rates(network):
                         for key in list_of_input_params}
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
-    
-    _strip_units(firing_rate_params)
-    _strip_units(input_params)
     
     return _firing_rate_integration(_firing_rate,
                                     firing_rate_params,
