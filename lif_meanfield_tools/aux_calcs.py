@@ -140,19 +140,25 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float:
         Stationary firing rate in Hz.
     """
+    if np.any(V_th_rel - V_0_rel < 0):
+        raise ValueError('V_th should be larger than V_0!')
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
-    # strip units from dimensionless quantity
+
+    # strip units
     if isinstance(y_th, ureg.Quantity):
-        y_th = y_th.magnitude
-    if isinstance(y_r, ureg.Quantity):
-        y_r = y_r.magnitude
+        y_th = y_th.to(ureg.dimensionless).magnitude
+        y_r = y_r.to(ureg.dimensionless).magnitude
+    return_units = isinstance(tau_m, ureg.Quantity)
+    if return_units:
+        tau_m = tau_m.to(ureg.s).magnitude
+        tau_r = tau_r.to(ureg.s).magnitude
+
+    # bring into appropriate shape
     y_th = np.atleast_1d(y_th)
     y_r = np.atleast_1d(y_r)
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
-    if np.any(V_th_rel - V_0_rel < 0):
-        raise ValueError('V_th should be larger than V_0!')
 
     # determine order of quadrature
     params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
@@ -166,18 +172,16 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # calculate siegert
     nu = np.zeros(shape=y_th.shape)
     params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
-    nu[mask_exc] = temp = _siegert_exc(y_th=y_th[mask_exc],
-                                       y_r=y_r[mask_exc], **params)
+    nu[mask_exc] = _siegert_exc(y_th=y_th[mask_exc],
+                                y_r=y_r[mask_exc], **params)
     nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
                                 y_r=y_r[mask_inh], **params)
     nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
                                       y_r=y_r[mask_interm], **params)
-    # unit is stripped when quantity returned from _siegert_... is assigned to
-    # elements in nu, so here we add it again
-    try:
-        nu = nu * temp.units
-    except AttributeError:
-        pass
+
+    # assign units if necessary
+    if return_units:
+        nu = nu / ureg.s
 
     # convert back to scalar if only one value calculated
     if nu.shape == (1,):
