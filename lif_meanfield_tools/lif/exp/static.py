@@ -3,7 +3,8 @@ import numpy as np
 
 from ... import ureg
 from ...utils import (check_if_positive,
-                      check_for_valid_k_in_fast_synaptic_regime)
+                      check_for_valid_k_in_fast_synaptic_regime,
+                      _check_and_store)
 
 from ..static import (_firing_rate_integration,
                       mean_input as _mean_input,
@@ -12,13 +13,10 @@ from ..static import (_firing_rate_integration,
 from ..delta.static import _firing_rate as delta_firing_rate
 
 
-from ...utils import _check_and_store, _strip_units
+prefix = 'lif.exp.'
 
 
-prefix = 'lif.exp'
-
-
-@_check_and_store(prefix, ['firing_rates'])
+@_check_and_store(prefix, ['firing_rates'], ['firing_rates_method'])
 def firing_rates(network, method='shift'):
     list_of_firing_rate_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel',
                                   'V_0_rel']
@@ -33,14 +31,15 @@ def firing_rates(network, method='shift'):
         print(f"You are missing {param} for calculating the firing rate!\n"
               "Have a look into the documentation for more details on 'lif'"
               " parameters.")
-        
-    firing_rate_params['method'] = method
-    _strip_units(firing_rate_params)
-    _strip_units(input_params)
-        
-    return _firing_rate_integration(_firing_rate,
-                                    firing_rate_params,
-                                    input_params) * ureg.Hz
+    
+    if method == 'shift':
+        return _firing_rate_integration(_firing_rate_shift,
+                                        firing_rate_params,
+                                        input_params) * ureg.Hz
+    elif method == 'taylor':
+        return _firing_rate_integration(_firing_rate_taylor,
+                                        firing_rate_params,
+                                        input_params) * ureg.Hz
 
 
 def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
@@ -136,8 +135,11 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
                             - np.sqrt(tau_s / tau_m) * alpha
                             / (tau_m * np.sqrt(2)) * dPhi
                             * (result[regular_mask] * tau_m)**2)
-
-    return result
+                            
+    if result.shape == (1,):
+        return result.item(0)
+    else:
+        return result
 
 
 def _Phi(s):

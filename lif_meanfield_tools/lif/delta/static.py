@@ -10,7 +10,7 @@ from ...utils import _check_and_store, _strip_units
 from ... import ureg
 
 
-prefix = 'lif.delta'
+prefix = 'lif.delta.'
 
 
 @_check_and_store(prefix, ['firing_rates'])
@@ -121,7 +121,7 @@ def _erfcx_integral(a, b, order):
     x, w = roots_legendre(order)
     x = x[:, np.newaxis]
     w = w[:, np.newaxis]
-    return (b - a) * np.sum(w * _pint_erfcx((b - a) * x / 2 + (b + a) / 2),
+    return (b - a) * np.sum(w * erfcx((b - a) * x / 2 + (b + a) / 2),
                             axis=0) / 2
 
 
@@ -129,40 +129,26 @@ def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for y_th < 0."""
     assert np.all(y_th < 0)
     Int = _erfcx_integral(np.abs(y_th), np.abs(y_r), gl_order)
-    return 1 / (t_ref + tau_m * np.sqrt(np.pi) * Int) * 1000
+    return 1 / (t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
 def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
-    Int = (2 * _pint_dawsn(y_th) - 2
-           * np.exp(y_r**2 - y_th**2) * _pint_dawsn(y_r))
+    Int = (2 * dawsn(y_th) - 2
+           * np.exp(y_r**2 - y_th**2) * dawsn(y_r))
     Int -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int) * 1000
+    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
 def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
-    Int = 2 * _pint_dawsn(y_th)
+    Int = 2 * dawsn(y_th)
     Int += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int) * 1000
-
-
-def _pint_erfcx(x):
-    try:
-        return erfcx(x)
-    except TypeError:
-        return erfcx(x.magnitude)
-
-
-def _pint_dawsn(x):
-    try:
-        return dawsn(x)
-    except TypeError:
-        return dawsn(x.magnitude) * x.units
+    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
 @_check_and_store(prefix, ['mean_input'])
