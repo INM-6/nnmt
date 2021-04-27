@@ -34,20 +34,6 @@ from . import ureg
 from .utils import check_if_positive, check_for_valid_k_in_fast_synaptic_regime
 
 
-def pint_erfcx(x):
-    try:
-        return erfcx(x)
-    except TypeError:
-        return erfcx(x.magnitude)
-
-
-def pint_dawsn(x):
-    try:
-        return dawsn(x)
-    except TypeError:
-        return dawsn(x.magnitude) * x.units
-    
-
 @ureg.wraps(ureg.Hz,
             (ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, ureg.mV, ureg.mV))
 def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -102,16 +88,16 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     mu = np.atleast_1d(mu)
     sigma = np.atleast_1d(sigma)
     result = np.zeros(len(mu))
-    
+
     for i, (mu, sigma) in enumerate(zip(mu, sigma)):
-    
+
         # additional prefactor sqrt(2) because its x from Schuecker 2015
         x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
 
         # preventing overflow in np.exponent in Phi(s)
         # note: this simply returns the white noise result... is this ok?
-        
+
         if x_th > 20.0 / np.sqrt(2.):
             result[i] = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
         else:
@@ -122,7 +108,7 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
             # colored noise firing rate (might this lead to negative rates?)
             result[i] = (r - np.sqrt(tau_s / tau_m) * alpha
                          / (tau_m * np.sqrt(2)) * dPhi * (r * tau_m)**2)
-    
+
     # convert back to scalar if only one value calculated
     if result.shape == (1,):
         return result.item(0)
@@ -156,6 +142,12 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
+    # strip units from dimensionless quantity
+    try:
+        y_th = y_th.magnitude
+        y_r = y_r.magnitude
+    except AttributeError:
+        pass
     y_th = np.atleast_1d(y_th)
     y_r = np.atleast_1d(y_r)
     assert y_th.shape == y_r.shape
@@ -187,7 +179,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         nu = nu * temp.units
     except AttributeError:
         pass
-    
+
     # convert back to scalar if only one value calculated
     if nu.shape == (1,):
         return nu.item(0)
@@ -220,18 +212,18 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         Mean neuron activity in mV.
     sigma:
         Standard deviation of neuron activity in mV.
-        
+
     Returns:
     --------
     float:
         Stationary firing rate in Hz.
     """
-    
+
     return _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
 
 
 def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
-    
+
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -280,33 +272,32 @@ def _erfcx_integral(a, b, order):
     x, w = roots_legendre(order)
     x = x[:, np.newaxis]
     w = w[:, np.newaxis]
-    return (b - a) * np.sum(w * pint_erfcx((b - a) * x / 2
-                                           + (b + a) / 2), axis=0) / 2
+    return (b - a) * np.sum(w * erfcx((b-a) * x / 2 + (b+a) / 2), axis=0) / 2
 
 
 def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for y_th < 0."""
     assert np.all(y_th < 0)
-    Int = _erfcx_integral(np.abs(y_th), np.abs(y_r), gl_order)
-    return 1 / (t_ref + tau_m * np.sqrt(np.pi) * Int)
+    I_erfcx = _erfcx_integral(np.abs(y_th), np.abs(y_r), gl_order)
+    return 1 / (t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
-    Int = 2 * pint_dawsn(y_th) - 2 * np.exp(y_r**2 - y_th**2) * pint_dawsn(y_r)
-    Int -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
+    I_erfcx = 2 * dawsn(y_th) - 2 * np.exp(y_r**2 - y_th**2) * dawsn(y_r)
+    I_erfcx -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
+    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
-    Int = 2 * pint_dawsn(y_th)
-    Int += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
+    I_erfcx = 2 * dawsn(y_th)
+    I_erfcx += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
+    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def Phi(s):
