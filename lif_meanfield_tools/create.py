@@ -1,4 +1,4 @@
-import warnings
+import copy
 import numpy as np
 
 from . import ureg
@@ -71,23 +71,44 @@ class Network():
             # empty results
             self.results = {}
             self.results_hash_dict = {}
-
-    def _check_units(self, params, std_unit_file):
-        std_units = io.load_unit_yaml(std_unit_file)
-        
-        common_quantities = set(params.keys()) & set(std_units.keys())
-        
-        for quantity in common_quantities:
-            if params[quantity].units != std_units[quantity]:
-                old_unit = params[quantity].units
-                new_unit = std_units[quantity]
-                warnings.warn(f'{quantity} has non standard unit {old_unit}. '
-                              f'It is converted to {new_unit}. See '
-                              'std_unit.yaml for definition of standard '
-                              'units.')
-                params[quantity].ito(new_unit)
-            else:
-                print(f'{quantity} is ok')
+            
+            # input unit dict
+            self.input_units = {}
+            
+    def _convert_param_dicts_to_base_units_and_strip_units(self):
+        for dict in [self.network_params, self.analysis_params]:
+            for key in dict.keys():
+                try:
+                    quantity = dict[key]
+                    self.input_units[key] = str(quantity.units)
+                    dict[key] = quantity.to_base_units().magnitude
+                except AttributeError:
+                    pass
+            
+    def _add_units_to_param_dicts_and_convert_to_input_units(self):
+        self.network_params = (
+            self._add_units_to_dict_and_convert_to_input_units(
+                self.network_params))
+        self.analysis_params = (
+            self._add_units_to_dict_and_convert_to_input_units(
+                self.analysis_params))
+    
+    def _add_units_to_dict_and_convert_to_input_units(self, dict):
+        dict = copy.deepcopy(dict)
+        for key in dict.keys():
+            try:
+                input_unit = self.input_units[key]
+                try:
+                    base_unit = ureg.parse_unit_name(input_unit)[0][1]
+                except IndexError:
+                    base_unit = str(ureg(input_unit).to_base_units().units)
+                print(base_unit)
+                quantity = ureg.Quantity(dict[key], base_unit)
+                quantity.ito(input_unit)
+                dict[key] = quantity
+            except KeyError:
+                pass
+        return dict
 
     def save(self, file, overwrite=False):
         """
@@ -105,7 +126,9 @@ class Network():
             Whether to overwrite an existing h5 file or not. If there already
             is one, h5py tries to update the h5 dictionary.
         """
+        self._add_units_to_param_dicts_and_convert_to_input_units()
         io.save_network(file, self, overwrite)
+        self._convert_param_dicts_to_base_units_and_strip_units()
         
     def save_results(self, file):
         """
@@ -116,10 +139,12 @@ class Network():
         file: str
             Output file name.
         """
+        self._add_units_to_param_dicts_and_convert_to_input_units()
         output = dict(results=self.results,
                       network_params=self.network_params,
                       analysis_params=self.analysis_params)
         io.save_quantity_dict_to_h5(file, output)
+        self._convert_param_dicts_to_base_units_and_strip_units()
     
     def load(self, file):
         """
@@ -139,7 +164,8 @@ class Network():
          self.analysis_params,
          self.results,
          self.results_hash_dict) = io.load_network(file)
-        
+        self._convert_param_dicts_to_base_units_and_strip_units()
+
     def show(self):
         """Returns which results have already been calculated."""
         return sorted(list(self.results.keys()))
@@ -200,8 +226,7 @@ class Microcircuit(Network):
             self._calculate_dependent_analysis_parameters())
         self.analysis_params.update(derived_analysis_params)
         
-        self._check_units(self.network_params, 'lif_meanfield_tools/std_units.yaml')
-        self._check_units(self.analysis_params, 'lif_meanfield_tools/std_units.yaml')
+        self._convert_param_dicts_to_base_units_and_strip_units()
         
     def _calculate_dependent_network_parameters(self):
         """
