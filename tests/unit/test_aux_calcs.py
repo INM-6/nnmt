@@ -1,11 +1,9 @@
 import pytest
 import numpy as np
-from scipy.special import erf, zetac
+from scipy.special import erf, zetac, erfcx
 from scipy.integrate import quad
 
-from ..checks import (assert_array_almost_equal,
-                      assert_units_equal,
-                      check_pos_params_neg_raise_exception,
+from ..checks import (check_pos_params_neg_raise_exception,
                       check_correct_output_for_several_mus_and_sigmas,
                       check_almost_correct_output_for_several_mus_and_sigmas,
                       check_V_0_larger_V_th_raise_exception,
@@ -14,9 +12,10 @@ from ..checks import (assert_array_almost_equal,
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.aux_calcs import (
+    _get_erfcx_integral_gl_order,
+    _erfcx_integral,
     nu0_fb433,
     nu0_fb,
-    nu_0,
     Phi,
     Phi_prime_mu,
     d_nu_d_mu,
@@ -74,6 +73,20 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     return nu
 
 
+class Test_siegert_helper:
+    rtol = 1e-12
+
+    def test_quadrature_order_detection(self):
+        a = np.random.uniform(0, 10)
+        b = a + np.random.uniform(0, 90)
+        params = {'start_order': 1, 'epsrel': self.rtol, 'maxiter': 20}
+        order = _get_erfcx_integral_gl_order(y_th=b, y_r=a, **params)
+        I_quad = quad(erfcx, a, b, epsabs=0, epsrel=self.rtol)[0]
+        I_gl_fixed = _erfcx_integral(a, b, order=order)[0]
+        err = np.abs(I_gl_fixed/I_quad - 1)
+        assert err <= self.rtol
+
+
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
@@ -98,7 +111,7 @@ class Test_nu0_fb433:
         params = output_fixtures_mean_driven.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
-        
+
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
@@ -110,7 +123,7 @@ class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
     rtol = 0.05
-    
+
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
@@ -130,7 +143,7 @@ class Test_nu0_fb:
         params = output_fixtures_mean_driven.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
-        
+
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
@@ -224,7 +237,7 @@ class Test_d_nu_d_mu_fb433:
         std_params['sigma'] = 0 * ureg.mV
         with pytest.raises(ZeroDivisionError):
             self.func(**std_params)
-        
+
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         outputs = output_test_fixtures.pop('output')

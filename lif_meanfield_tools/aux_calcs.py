@@ -143,11 +143,10 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
     # strip units from dimensionless quantity
-    try:
+    if isinstance(y_th, ureg.Quantity):
         y_th = y_th.magnitude
+    if isinstance(y_r, ureg.Quantity):
         y_r = y_r.magnitude
-    except AttributeError:
-        pass
     y_th = np.atleast_1d(y_th)
     y_r = np.atleast_1d(y_r)
     assert y_th.shape == y_r.shape
