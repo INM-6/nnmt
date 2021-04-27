@@ -56,8 +56,9 @@ def firing_rates(network):
         Array of firing rates of each population in Hz.
     """
     list_of_firing_rate_params = ['tau_m', 'tau_r', 'V_th_rel', 'V_0_rel']
-    list_of_input_params = ['K', 'J', 'j', 'tau_m', 'nu_ext', 'K_ext', 'g',
-                            'nu_e_ext', 'nu_i_ext']
+    list_of_input_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext',
+                            'tau_m_ext']
+
     try:
         firing_rate_params = {key: network.network_params[key]
                               for key in list_of_firing_rate_params}
@@ -100,6 +101,12 @@ def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_r = (V_0_rel - mu) / sigma
     y_th = np.atleast_1d(y_th)
     y_r = np.atleast_1d(y_r)
+    tau_m = np.atleast_1d(tau_m)
+    if len(tau_m) == 1:
+        tau_m = np.ones(len(y_r)) * tau_m[0]
+    tau_r = np.atleast_1d(tau_r)
+    if len(tau_r) == 1:
+        tau_r = np.ones(len(y_r)) * tau_r[0]
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
     if np.any(V_th_rel - V_0_rel < 0):
@@ -116,11 +123,16 @@ def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
     # calculate siegert
     nu = np.zeros(shape=y_th.shape)
-    params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
+    params = {'tau_m': tau_m[mask_exc], 't_ref': tau_r[mask_exc],
+              'gl_order': gl_order}
     nu[mask_exc] = _siegert_exc(y_th=y_th[mask_exc],
                                 y_r=y_r[mask_exc], **params)
+    params = {'tau_m': tau_m[mask_inh], 't_ref': tau_r[mask_inh],
+              'gl_order': gl_order}
     nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
                                 y_r=y_r[mask_inh], **params)
+    params = {'tau_m': tau_m[mask_interm], 't_ref': tau_r[mask_interm],
+              'gl_order': gl_order}
     nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
                                       y_r=y_r[mask_interm], **params)
     # convert back to scalar if only one value calculated

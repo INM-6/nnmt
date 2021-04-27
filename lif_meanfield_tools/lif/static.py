@@ -92,8 +92,8 @@ def _input_calc(network, prefix, input_func):
             network.results[prefix + 'firing_rates'].to_base_units().magnitude)
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    list_of_params = ['K', 'J', 'j', 'tau_m', 'nu_ext', 'K_ext', 'g',
-                      'nu_e_ext', 'nu_i_ext']
+    list_of_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext',
+                      'tau_m_ext']
     try:
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
@@ -102,30 +102,24 @@ def _input_calc(network, prefix, input_func):
     return input_func(rates, **params) * ureg.V
     
 
-def _mean_input(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+def _mean_input(nu, J, K, tau_m, nu_ext=0, J_ext=0, K_ext=0, tau_m_ext=0):
     """ Compute mean input without quantities. """
     # contribution from within the network
-    m0 = tau_m * np.dot(K * J, nu)
+    m0 = np.dot(K * J, tau_m * nu)
     # contribution from external sources
-    m_ext = tau_m * j * K_ext * nu_ext
-    # contribution from additional excitatory and inhibitory Poisson input
-    m_ext_add = tau_m * j * (nu_e_ext - g * nu_i_ext)
+    m_ext = np.dot(K_ext * J_ext, tau_m_ext * nu_ext)
     # add them up
-    m = m0 + m_ext + m_ext_add
-    # divide by factor 1000 to adjust for nu in hertz vs tau_m in millisecond
+    m = m0 + m_ext
     return m
 
 
-def _std_input(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+def _std_input(nu, J, K, tau_m, nu_ext=0, J_ext=0, K_ext=0, tau_m_ext=0):
     """ Compute standard deviation of input without quantities. """
     # contribution from within the network to variance
-    var0 = tau_m * np.dot(K * J**2, nu)
+    var0 = np.dot(K * J**2, tau_m * nu)
     # contribution from external sources to variance
-    var_ext = tau_m * j**2 * K_ext * nu_ext
-    # contribution from additional excitatory and inhibitory Poisson input
-    var_ext_add = tau_m * j**2 * (nu_e_ext + g**2 * nu_i_ext)
+    var_ext = np.dot(K_ext * J_ext**2, tau_m_ext * nu_ext)
     # add them up
-    var = var0 + var_ext + var_ext_add
+    var = var0 + var_ext
     # standard deviation is square root of variance
-    sigma = np.sqrt(var)
-    return sigma
+    return np.sqrt(var)

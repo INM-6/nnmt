@@ -282,7 +282,7 @@ class Microcircuit(Network):
 
         # weight matrix in mV (voltage)
         derived_params['J'] = (tau_s_div_C * derived_params['W']).to(ureg.mV)
-
+        
         # delay matrix
         D = np.ones((dim, dim)) * self.network_params['d_e']
         D[1:dim:2] = np.ones(dim) * self.network_params['d_i']
@@ -298,6 +298,10 @@ class Microcircuit(Network):
         # larger weight for L4E->L23E connections
         derived_params['W'][0][2] *= 2.0
         derived_params['J'][0][2] *= 2.0
+        
+        derived_params['J_ext'] = (
+            tau_s_div_C * np.ones(self.network_params['K_ext'].shape)
+            * self.network_params['w_ext']).to(ureg.mV)
 
         return derived_params
 
