@@ -70,8 +70,9 @@ def firing_rates(network, method='shift'):
     """
     list_of_firing_rate_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel',
                                   'V_0_rel']
-    list_of_input_params = ['K', 'J', 'j', 'tau_m', 'nu_ext', 'K_ext', 'g',
-                            'nu_e_ext', 'nu_i_ext']
+    list_of_input_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext',
+                            'tau_m_ext']
+
     try:
         firing_rate_params = {key: network.network_params[key]
                               for key in list_of_firing_rate_params}
@@ -179,6 +180,13 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     sigma = np.atleast_1d(sigma)
     x_th = (np.sqrt(2.) * (V_th_rel - mu) / sigma)
     x_r = (np.sqrt(2.) * (V_0_rel - mu) / sigma)
+    # this brings tau_m and tau_r into the correct vectorized form if they are
+    # scalars and doesn't do anything if they are arrays of appropriate size
+    V_0_rel = V_0_rel + x_th - x_th
+    V_th_rel = V_th_rel + x_th - x_th
+    tau_m = tau_m + x_th - x_th
+    tau_s = tau_s + x_th - x_th
+    tau_r = tau_r + x_th - x_th
 
     # preventing overflow in np.exponent in Phi(s)
     # note: this simply returns the white noise result... is this ok?
@@ -190,14 +198,16 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     
     # white noise firing rate
     if np.any(overflow_mask):
-        result[overflow_mask] = delta_firing_rate(tau_m, tau_r,
-                                                  V_th_rel,
-                                                  V_0_rel,
+        result[overflow_mask] = delta_firing_rate(tau_m[overflow_mask],
+                                                  tau_r[overflow_mask],
+                                                  V_th_rel[overflow_mask],
+                                                  V_0_rel[overflow_mask],
                                                   mu[overflow_mask],
                                                   sigma[overflow_mask])
-    result[regular_mask] = delta_firing_rate(tau_m, tau_r,
-                                             V_th_rel,
-                                             V_0_rel,
+    result[regular_mask] = delta_firing_rate(tau_m[regular_mask],
+                                             tau_r[regular_mask],
+                                             V_th_rel[regular_mask],
+                                             V_0_rel[regular_mask],
                                              mu[regular_mask],
                                              sigma[regular_mask])
 
@@ -205,9 +215,11 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     
     # colored noise firing rate (might this lead to negative rates?)
     result[regular_mask] = (result[regular_mask]
-                            - np.sqrt(tau_s / tau_m) * alpha
-                            / (tau_m * np.sqrt(2)) * dPhi
-                            * (result[regular_mask] * tau_m)**2)
+                            - np.sqrt(tau_s[regular_mask]
+                                      / tau_m[regular_mask])
+                            * alpha
+                            / (tau_m[regular_mask] * np.sqrt(2)) * dPhi
+                            * (result[regular_mask] * tau_m[regular_mask])**2)
                             
     if result.shape == (1,):
         return result.item(0)
