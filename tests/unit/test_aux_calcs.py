@@ -74,17 +74,26 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
 
 
 class Test_siegert_helper:
-    rtol = 1e-12
-
-    def test_quadrature_order_detection(self):
+    def test_erfcx_quadrature_order_detection(self):
+        rtol = 1e-12
         a = np.random.uniform(0, 10)
         b = a + np.random.uniform(0, 90)
-        params = {'start_order': 1, 'epsrel': self.rtol, 'maxiter': 20}
+        params = {'start_order': 1, 'epsrel': rtol, 'maxiter': 20}
         order = _get_erfcx_integral_gl_order(y_th=b, y_r=a, **params)
-        I_quad = quad(erfcx, a, b, epsabs=0, epsrel=self.rtol)[0]
-        I_gl_fixed = _erfcx_integral(a, b, order=order)[0]
-        err = np.abs(I_gl_fixed/I_quad - 1)
-        assert err <= self.rtol
+        I_quad = quad(erfcx, a, b, epsabs=0, epsrel=rtol)[0]
+        I_gl = _erfcx_integral(a, b, order=order)[0]
+        err = np.abs(I_gl/I_quad - 1)
+        assert err <= rtol
+
+    def test_erfcx_quadrature_analytical_limit(self):
+        a = 100  # noise free limit a -> oo
+        b = a + np.linspace(1, 100, 100)
+        I_ana = np.log(b/a) / np.sqrt(np.pi)  # asymptotic result for a -> oo
+        params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 20}
+        order = _get_erfcx_integral_gl_order(y_th=b, y_r=a, **params)
+        I_gl = _erfcx_integral(a, b, order=order)
+        err = np.abs(I_gl/I_ana - 1)
+        assert np.all(err <= 1e-4)
 
 
 class Test_nu0_fb433:
