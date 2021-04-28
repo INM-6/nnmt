@@ -24,7 +24,7 @@ config_path = 'tests/fixtures/integration/config/'
 fix_path = 'tests/fixtures/integration/data/'
 
 # options for debugging
-save_data = True
+save_data = False
 use_saved_data = False
 
 
