@@ -184,19 +184,20 @@ def fix_delay_dist_single(network, file):
 def fix_delay_dist_matrix(network, file):
     """Calculate fixtures for all delay dist matrix options and save as h5."""
     original_delay_dist = network.network_params['delay_dist']
-    network = network.change_parameters(
+    new_network = network.change_parameters(
         changed_network_params={'delay_dist': 'none'})
-    dd_none = network.delay_dist_matrix()
-    network = network.change_parameters(
+    dd_none = new_network.delay_dist_matrix()
+    new_network = network.change_parameters(
         changed_network_params={'delay_dist': 'truncated_gaussian'})
-    dd_truncated_gaussian = network.delay_dist_matrix()
-    network = network.change_parameters(
+    dd_truncated_gaussian = new_network.delay_dist_matrix()
+    new_network = network.change_parameters(
         changed_network_params={'delay_dist': 'gaussian'})
-    dd_gaussian = network.delay_dist_matrix()
+    dd_gaussian = new_network.delay_dist_matrix()
     network.results['delay_dist_none'] = dd_none
     network.results['delay_dist_truncated_gaussian'] = dd_truncated_gaussian
     network.results['delay_dist_gaussian'] = dd_gaussian
     network.network_params['delay_dist'] = original_delay_dist
+    network.delay_dist_matrix()
     network.save(file=file, overwrite=True)
 
 

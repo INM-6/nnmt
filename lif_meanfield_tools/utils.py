@@ -141,3 +141,36 @@ def pint_array_of_dimension_plus_one(quantity):
         return np.array([quantity.magnitude]) * quantity.units
     else:
         return np.array([quantity])
+
+
+def build_full_arg_list(signature, args, kwargs):
+    """
+    Creates a full list of arguments including standard arguments.
+    
+    Parameters:
+    -----------
+    signature: Signature object
+        The signature of a given function.
+    args: list
+        List of passed positional arguments.
+    kwargs: dict
+        Dict of passed keyword arguments.
+    
+    Returns:
+    --------
+    list
+        Full list of arguments.
+    """
+
+    keys = list(signature.parameters.keys())[len(args):]
+    defaults = [param.default for param
+                in signature.parameters.values()][len(args):]
+    
+    full_list = list(args)
+    for key, default in zip(keys, defaults):
+        if key in kwargs.keys():
+            full_list.append(kwargs[key])
+        else:
+            full_list.append(default)
+        
+    return full_list
