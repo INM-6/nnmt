@@ -6,7 +6,8 @@ from ..static import (_firing_rate_integration,
                       mean_input as _mean_input,
                       std_input as _std_input)
 
-from ...utils import _check_and_store
+from ...utils import (_check_and_store,
+                      check_positive_params)
 from ... import ureg
 
 
@@ -72,6 +73,7 @@ def firing_rates(network):
                                     input_params) * ureg.Hz
 
 
+@check_positive_params
 def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rate for delta shaped PSCs.

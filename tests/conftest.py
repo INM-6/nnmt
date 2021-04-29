@@ -24,6 +24,7 @@ from inspect import signature
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.input_output import load_val_unit_dict_from_h5
 from lif_meanfield_tools import ureg
+from lif_meanfield_tools.utils import _strip_units
 
 
 # path to network configuration files and analysis parameters
@@ -107,11 +108,17 @@ def unit_fixture_path():
 @pytest.fixture
 def network():
     """Standard microcircuit network with testing analysis params."""
-    network = lmt.Network(
+    network = lmt.networks.Microcircuit(
         network_params=(config_path + 'network_params_microcircuit.yaml'),
         analysis_params=(config_path + 'analysis_params_test.yaml')
         )
     return network
+
+
+@pytest.fixture
+def empty_network():
+    """Network object with no parameters."""
+    return lmt.networks.Network()
 
 
 @pytest.fixture
@@ -376,6 +383,19 @@ def std_params(request, all_std_params):
     attribute `func`, which is the tested function as a staticmethod.
     """
     return get_required_params(request.cls.func, all_std_params)
+
+
+@pytest.fixture
+def std_unitless_params(request, all_std_params):
+    """
+    Returns set of standard params needed by requesting tested function.
+    
+    For using this fixture, the function test class needs to have a class
+    attribute `func`, which is the tested function as a staticmethod.
+    """
+    params = get_required_params(request.cls.func, all_std_params)
+    _strip_units(params)
+    return params
 
 
 @pytest.fixture

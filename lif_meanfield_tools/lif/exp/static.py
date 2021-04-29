@@ -3,6 +3,8 @@ from scipy.special import erf, zetac
 
 from ... import ureg
 from ...utils import (check_if_positive,
+                      check_positive_params,
+                      check_k_in_fast_synaptic_regime,
                       check_for_valid_k_in_fast_synaptic_regime,
                       _check_and_store)
 
@@ -79,9 +81,10 @@ def firing_rates(network, method='shift'):
         input_params = {key: network.network_params[key]
                         for key in list_of_input_params}
     except KeyError as param:
-        print(f"You are missing {param} for calculating the firing rate!\n"
-              "Have a look into the documentation for more details on 'lif'"
-              " parameters.")
+        raise RuntimeError(
+            f"You are missing {param} for calculating the firing rate!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
     
     if method == 'shift':
         return _firing_rate_integration(_firing_rate_shift,
@@ -93,6 +96,7 @@ def firing_rates(network, method='shift'):
                                         input_params) * ureg.Hz
 
 
+@check_positive_params
 def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
                  method='shift'):
     """
@@ -126,9 +130,6 @@ def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
     float:
         Stationary firing rate in Hz.
     """
-    pos_parameters = [tau_m, tau_s, tau_r, sigma]
-    pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
-    check_if_positive(pos_parameters, pos_parameter_names)
     if np.any(V_th_rel - V_0_rel < 0):
         raise ValueError('V_th should be larger than V_0!')
     
@@ -144,6 +145,8 @@ def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
         raise ValueError(f'Method {method} not implemented.')
     
 
+@check_positive_params
+@check_k_in_fast_synaptic_regime
 def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs using a Taylor expansion.
@@ -243,6 +246,8 @@ def _Phi(s):
                                   * (1 + erf(s / np.sqrt(2))))
 
 
+@check_positive_params
+@check_k_in_fast_synaptic_regime
 def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
