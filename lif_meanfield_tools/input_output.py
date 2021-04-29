@@ -4,10 +4,13 @@ in yaml files, to theoretical parameters, needed for usage of given implemented
 functions (they rely on a redefinition of quantities). Handles output-writing
 and provides function for creating hashes to uniquely identify output files.
 
-Usage: io.py [options]
-
-Options:
-    -h, --help       show extensive usage information
+.. autosummary::
+    :toctree: _toctree/input_output
+    
+    convert_arrays_in_dict_to_lists
+    val_unit_to_quantities
+    quantities_to_val_unit
+    
 '''
 
 from __future__ import print_function

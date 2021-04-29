@@ -1,3 +1,16 @@
+"""
+Module that contains the basic Network class.
+
+Classes
+^^^^^^^
+
+.. autosummary::
+    :toctree: _toctree/network
+    
+    Network
+    
+"""
+
 import copy
 
 from .. import ureg
@@ -207,6 +220,7 @@ class Network():
             This deletes the existing results!
 
         Returns:
+        --------
         Network object
             New network with specified parameters.
         """
