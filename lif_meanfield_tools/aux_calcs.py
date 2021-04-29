@@ -45,26 +45,26 @@ def nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
     expansion around k = sqrt(tau_s/tau_m).
 
-    Parameters:
-    -----------
-    tau_m: float
+    Parameters
+    ----------
+    tau_m : float
         Membrane time constant in seconds.
-    tau_s: float
+    tau_s : float
         Synaptic time constant in seconds.
-    tau_r: float
+    tau_r : float
         Refractory time in seconds.
-    V_th_rel: float
+    V_th_rel : float
         Relative threshold potential in mV.
-    V_0_rel: float
+    V_0_rel : float
         Relative reset potential in mV.
-    mu: float
+    mu : float
         Mean neuron activity in mV.
-    sigma: float
+    sigma : float
         Standard deviation of neuron activity in mV.
 
-    Returns:
-    --------
-    float:
+    Returns
+    -------
+    float
         Stationary firing rate in Hz.
     """
     pos_parameters = [tau_m, tau_s, tau_r, sigma]

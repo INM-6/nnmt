@@ -1,14 +1,5 @@
 """
 Module that contains the basic Network class.
-
-Classes
-^^^^^^^
-
-.. autosummary::
-    :toctree: _toctree/network
-    
-    Network
-    
 """
 
 import copy
@@ -35,27 +26,27 @@ class Network():
     - `input_units` where the units of input parameters are stored for
     conversions.
 
-    Parameters:
-    -----------
-    network_params: str
+    Parameters
+    ----------
+    network_params : str
         Specifies path to yaml file containing network parameters.
-    analysis_params: str
+    analysis_params : str
         Specifies path to yaml file containing analysis parameters.
-    file: str
+    file : str
         File name of h5 file from which network can be loaded. Default is
-        `None`.
+        ``None``.
         
-    Methods:
-    --------
-    save:
+    Methods
+    -------
+    save :
         Save network to h5 file.
-    save_results:
+    save_results :
         Saves results and parameters to h5 file.
-    load:
+    load :
         Load network from h5 file.
-    show:
+    show :
         Returns which results have already been calculated.
-    change_parameters:
+    change_parameters :
         Change parameters and return network with specified parameters.
     """
     
@@ -117,13 +108,13 @@ class Network():
         """
         Adds units to a unitless dict and converts them to input units.
         
-        Parameters:
-        -----------
-        dict: dict
+        Parameters
+        ----------
+        dict : dict
             Dictionary to be converted.
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Converted dictionary.
         """
@@ -151,11 +142,11 @@ class Network():
         results_hash_dict) are stored. Quantities are converted to value-unit
         dictionaries.
         
-        Parameters:
-        -----------
-        file: str
+        Parameters
+        ----------
+        file : str
             Output file name.
-        overwrite: bool
+        overwrite : bool
             Whether to overwrite an existing h5 file or not. If there already
             is one, h5py tries to update the h5 dictionary.
         """
