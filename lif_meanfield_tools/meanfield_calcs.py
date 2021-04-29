@@ -497,19 +497,19 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
 
     if delay_dist == 'none':
         D = np.ones((int(dimension), int(dimension)))
-        return D * np.exp(-np.complex(0, omega) * Delay)
+        return D * np.exp(-complex(0, omega) * Delay)
 
     elif delay_dist == 'truncated_gaussian':
         a0 = 0.5 * (1 + erf((-Delay / Delay_sd + 1j * omega * Delay_sd)
                             / np.sqrt(2)))
         a1 = 0.5 * (1 + erf((-Delay / Delay_sd) / np.sqrt(2)))
         b0 = np.exp(-0.5 * np.power(Delay_sd * omega, 2))
-        b1 = np.exp(-np.complex(0, omega) * Delay)
+        b1 = np.exp(-complex(0, omega) * Delay)
         return (1.0 - a0) / (1.0 - a1) * b0 * b1
 
     elif delay_dist == 'gaussian':
         b0 = np.exp(-0.5 * np.power(Delay_sd * omega, 2))
-        b1 = np.exp(-np.complex(0, omega) * Delay)
+        b1 = np.exp(-complex(0, omega) * Delay)
         return b0 * b1
 
 
@@ -938,7 +938,7 @@ def _fit_transfer_function(transfer_function, omegas):
     def func_abs(omega, tau, h0):
         return np.abs(func(omega, tau, h0))
 
-    fit_tf = np.zeros(np.shape(transfer_function), dtype=np.complex)
+    fit_tf = np.zeros(np.shape(transfer_function), dtype=complex)
     dim = np.shape(transfer_function)[1]
     tau_rate = np.zeros(dim)
     h0 = np.zeros(dim)
