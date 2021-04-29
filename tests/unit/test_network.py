@@ -170,7 +170,10 @@ class Test_calculation_of_dependent_analysis_params:
 
 class Test_saving_and_loading:
     
-    def test_save_creates_h5_file(self, tmpdir, network):
+    def test_save_creates_h5_file(self, mocker, tmpdir, network):
+        # create mocking method
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         # create temp directory
         tmp_test = tmpdir.mkdir('tmp_test')
         # calculate and save mean_input in tmp dir
@@ -186,16 +189,23 @@ class Test_saving_and_loading:
         # pass test if test file created
         assert any(matches)
 
-    def test_save_created_output_file_with_results(self, tmpdir, network):
+    def test_save_created_output_file_with_results(
+            self, mocker, tmpdir, network):
+        # create mocking method
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         network.mean_input()
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.save('test.h5')
             output = lmt.input_output.load_val_unit_dict_from_h5('test.h5')
-            assert 'mean_input' in output['results'].keys()
+            assert 'test' in output['results'].keys()
 
-    def test_save_overwriting_existing_file_raises_error(self, tmpdir,
+    def test_save_overwriting_existing_file_raises_error(self, mocker, tmpdir,
                                                          network):
+        # create mocking method
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
         file = 'file.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
@@ -204,21 +214,27 @@ class Test_saving_and_loading:
                 network.save(file=file)
                 network.save(file=file)
 
-    def test_save_overwrites_existing_file_if_explicitely_told(self, tmpdir,
-                                                               network):
+    def test_save_overwrites_existing_file_if_explicitely_told(
+            self, tmpdir, mocker, network):
         file = 'file.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
+            test_method = make_test_method(42)
+            mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
             network.mean_input()
             network.save(file=file)
-            network.network_params['tau_m'] = 100 * ureg.ms
+            test_method = make_test_method(43)
+            mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
             new_mean = network.mean_input()
             network.save(file=file, overwrite=True)
             output = lmt.input_output.load_val_unit_dict_from_h5(file)
-            assert_array_equal(output['results']['mean_input'], new_mean)
+            assert_array_equal(output['results']['test'], new_mean)
             
-    def test_load_correctly_sets_network_dictionaries(self, tmpdir, network):
-        network.firing_rates()
+    def test_load_correctly_sets_network_dictionaries(self, tmpdir,
+                                                      mocker, network):
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input()
         nparams = network.network_params
         aparams = network.analysis_params
         results = network.results
@@ -239,10 +255,20 @@ class Test_saving_and_loading:
 
 class Test_meta_functions:
 
-    def test_show(self, network):
+    def test_show(self, mocker, network):
         assert network.show() == []
+        
+        @lmt.Network._check_and_store(['inner'])
+        def test_method_inner(self):
+            return 1
+        
+        @lmt.Network._check_and_store(['outer'])
+        def test_method_outer(self):
+            return test_method_inner(self)
+        
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method_outer)
         network.mean_input()
-        assert network.show() == ['firing_rates', 'mean_input']
+        assert network.show() == ['inner', 'outer']
 
     def test_change_network_parameters(self, network):
         new_tau_m = 1000 * ureg.ms
@@ -289,7 +315,7 @@ class Test_meta_functions:
     @pytest.mark.xfail
     def test_extend_analysis_frequencies(self):
         raise NotImplementedError
-
+    
 
 def make_test_method(output):
     @lmt.Network._check_and_store(['test'])
@@ -548,7 +574,126 @@ class Test_check_and_store_decorator:
         assert 2 * result11 == result21
         assert 2 * result12 == result22
         
+    def test_standard_value_for_analysis_key_is_not_passed(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis'])
+        def test_method(self, key=2):
+            return key * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input()
+        assert network.analysis_params['analysis'] == 2
+        assert network.results['result'] == 2 * ureg.mV
+        
+    def test_standard_value_for_analysis_key_is_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis'])
+        def test_method(self, key=2):
+            return key * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        key = 5
+        network.mean_input(key=key)
+        assert network.analysis_params['analysis'] == key
+        assert network.results['result'] == key * ureg.mV
+        
+    def test_standard_values_for_two_analysis_keys_are_not_passed(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input()
+        assert network.analysis_params['analysis1'] == 2
+        assert network.analysis_params['analysis2'] == 3
+        assert network.results['result'] == 6 * ureg.mV
+        
+    def test_standard_values_for_two_analysis_keys_are_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(key1=3, key2=4)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 4
+        assert network.results['result'] == 12 * ureg.mV
             
+    def test_only_first_standard_value_is_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(key1=3)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 3
+        assert network.results['result'] == 9 * ureg.mV
+            
+    def test_only_second_standard_value_is_passed_explicitely(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(key2=5)
+        assert network.analysis_params['analysis1'] == 2
+        assert network.analysis_params['analysis2'] == 5
+        assert network.results['result'] == 10 * ureg.mV
+        
+    def test_one_positional_and_one_kwarg_with_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1', 'analysis2'])
+        def test_method(self, key1=2, key2=3):
+            return key1 * key2 * 1 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, key2=5)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 5
+        assert network.results['result'] == 15 * ureg.mV
+            
+    def test_one_and_two_are_passed_with_three_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1',
+                                                   'analysis2',
+                                                   'analysis3'])
+        def test_method(self, key1=1, key2=2, key3=3):
+            return key1 * key2 * key3 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, 4)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 4
+        assert network.analysis_params['analysis3'] == 3
+        assert network.results['result'] == 36 * ureg.mV
+    
+    def test_one_and_three_are_passed_with_three_mixed_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1',
+                                                   'analysis2',
+                                                   'analysis3'])
+        def test_method(self, key1, key2=2, key3=3):
+            return key1 * key2 * key3 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, key3=5)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 2
+        assert network.analysis_params['analysis3'] == 5
+        assert network.results['result'] == 30 * ureg.mV
+            
+    def test_one_and_three_are_passed_with_std_args(
+            self, mocker, network):
+        @lmt.Network._check_and_store(['result'], ['analysis1',
+                                                   'analysis2',
+                                                   'analysis3'])
+        def test_method(self, key1=1, key2=2, key3=3):
+            return key1 * key2 * key3 * ureg.mV
+        mocker.patch('lif_meanfield_tools.Network.mean_input', new=test_method)
+        network.mean_input(3, key3=5)
+        assert network.analysis_params['analysis1'] == 3
+        assert network.analysis_params['analysis2'] == 2
+        assert network.analysis_params['analysis3'] == 5
+        assert network.results['result'] == 30 * ureg.mV
+        
+        
+@pytest.mark.skip
 class Test_functionality:
     """A lot of those tests might actually be superfluous."""
 

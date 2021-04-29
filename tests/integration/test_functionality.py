@@ -2,7 +2,8 @@ import pytest
 
 import lif_meanfield_tools as lmt
 from ..checks import (assert_quantity_array_equal,
-                      check_quantity_dicts_are_equal)
+                      check_quantity_dicts_are_equal,
+                      )
 
 
 def save_and_load(network, tmpdir):
@@ -14,15 +15,24 @@ def save_and_load(network, tmpdir):
 
 class Test_Network_functions_give_correct_results:
     
-    def test_firing_rates(self, network, std_results):
-        firing_rates = network.firing_rates()
-        assert_quantity_array_equal(firing_rates, std_results['firing_rates'])
+    def test_firing_rates_shift(self, network, std_results):
+        firing_rates = network.firing_rates(method='shift')
+        assert_quantity_array_equal(
+            firing_rates, std_results['firing_rates'])
+    
+    def test_firing_rates_taylor(self, network, std_results):
+        firing_rates = network.firing_rates(method='taylor')
+        assert_quantity_array_equal(
+            firing_rates, std_results['firing_rates_taylor'])
         
     def test_mean_input(self, network, std_results):
+        network.firing_rates()
         mean_input = network.mean_input()
-        assert_quantity_array_equal(mean_input, std_results['mean_input'])
+        assert_quantity_array_equal(mean_input,
+                                    std_results['mean_input'])
         
     def test_standard_deviation(self, network, std_results):
+        network.firing_rates()
         std_input = network.std_input()
         assert_quantity_array_equal(std_input, std_results['std_input'])
     
@@ -33,78 +43,68 @@ class Test_Network_functions_give_correct_results:
                                       std_input=std_results['std_input'])
         check_quantity_dicts_are_equal(working_point,
                                        expected_working_point)
-    
+                                       
     def test_delay_dist_matrix(self, network, std_results):
         ddm = network.delay_dist_matrix()
-        assert_quantity_array_equal(ddm, std_results['delay_dist'])
+        assert_quantity_array_equal(ddm, std_results['delay_dist_matrix'])
     
     def test_delay_dist_matrix_single(self, network, std_results):
         ddm = network.delay_dist_matrix(network.analysis_params['omega'])
-        assert_quantity_array_equal(ddm, std_results['delay_dist_single'])
-    
-    def test_transfer_function(self, network, std_results):
-        transfer_fn = network.transfer_function()
-        assert_quantity_array_equal(transfer_fn,
-                                    std_results['transfer_function'])
+        assert_quantity_array_equal(ddm,
+                                    std_results['delay_dist_matrix_single'])
     
     def test_transfer_function_taylor(self, network, std_results):
+        network.working_point()
         transfer_fn = network.transfer_function(method='taylor')
-        assert_quantity_array_equal(transfer_fn,
-                                    std_results['tf_taylor'])
+        assert_quantity_array_equal(transfer_fn, std_results['tf_taylor'])
     
     def test_transfer_function_shift(self, network, std_results):
+        network.working_point()
         transfer_fn = network.transfer_function(method='shift')
-        assert_quantity_array_equal(transfer_fn,
-                                    std_results['tf_shift'])
+        assert_quantity_array_equal(transfer_fn, std_results['tf_shift'])
     
     def test_transfer_function_single(self, network, std_results):
+        network.working_point()
         transfer_fn = network.transfer_function(
             network.analysis_params['omega'])
-        assert_quantity_array_equal(transfer_fn,
-                                    std_results['transfer_function_single'])
+        assert_quantity_array_equal(
+            transfer_fn, std_results['transfer_function_single'])
     
     def test_sensitivity_measure(self, network, std_results):
+        network.working_point()
         sm = network.sensitivity_measure(network.analysis_params['omega'])
         assert_quantity_array_equal(sm, std_results['sensitivity_measure'])
     
     def test_power_spectra(self, network, std_results):
+        network.working_point()
+        network.transfer_function()
+        network.delay_dist_matrix()
         ps = network.power_spectra()
         assert_quantity_array_equal(ps, std_results['power_spectra'])
     
     def test_eigenvalue_spectra(self, network, std_results):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         es = network.eigenvalue_spectra('MH')
-        assert_quantity_array_equal(es, std_results['eigenvalue_spectra_MH'])
-        
-    def test_eigenvalue_spectra_taylor(self, network, std_results):
-        es = network.eigenvalue_spectra('MH', method='taylor')
         assert_quantity_array_equal(
-            es, std_results['eigenvalue_spectra_taylor_MH'])
+            es, std_results['eigenvalue_spectra_MH'])
     
     def test_r_eigenvec_spectra(self, network, std_results):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         es = network.r_eigenvec_spectra('MH')
-        assert_quantity_array_equal(es, std_results['r_eigenvec_spectra_MH'])
-    
-    def test_r_eigenvec_spectra_taylor(self, network, std_results):
-        es = network.r_eigenvec_spectra('MH', method='taylor')
         assert_quantity_array_equal(
-            es, std_results['r_eigenvec_spectra_taylor_MH'])
-        
-    def test_r_eigenvec_spectra_with_method(self, network, std_results):
-        es = network.r_eigenvec_spectra('MH', method='shift')
-        assert_quantity_array_equal(es, std_results['r_eigenvec_spectra_MH'])
+            es, std_results['r_eigenvec_spectra_MH'])
     
     def test_l_eigenvec_spectra(self, network, std_results):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function(method='shift')
         es = network.l_eigenvec_spectra('MH')
-        assert_quantity_array_equal(es, std_results['l_eigenvec_spectra_MH'])
-        
-    def test_l_eigenvec_spectra_taylor(self, network, std_results):
-        es = network.l_eigenvec_spectra('MH', method='taylor')
         assert_quantity_array_equal(
-            es, std_results['l_eigenvec_spectra_taylor_MH'])
-
-    def test_l_eigenvec_spectra_with_method(self, network, std_results):
-        es = network.l_eigenvec_spectra('MH', method='shift')
-        assert_quantity_array_equal(es, std_results['l_eigenvec_spectra_MH'])
+            es, std_results['l_eigenvec_spectra_MH'])
     
     def test_additional_rates_for_fixed_input(self, network, std_results):
         mean_input_set = network.network_params['mean_input_set']
@@ -124,12 +124,14 @@ class Test_saving_and_loading:
         assert_quantity_array_equal(saved, loaded)
         
     def test_mean_input(self, network, tmpdir):
+        network.firing_rates()
         saved = network.mean_input()
         save_and_load(network, tmpdir)
         loaded = network.results['mean_input']
         assert_quantity_array_equal(saved, loaded)
         
     def test_standard_deviation(self, network, tmpdir):
+        network.firing_rates()
         saved = network.std_input()
         save_and_load(network, tmpdir)
         loaded = network.results['std_input']
@@ -149,28 +151,31 @@ class Test_saving_and_loading:
     def test_delay_dist_matrix(self, network, tmpdir):
         saved = network.delay_dist_matrix()
         save_and_load(network, tmpdir)
-        loaded = network.results['delay_dist']
+        loaded = network.results['delay_dist_matrix']
         assert_quantity_array_equal(saved, loaded)
     
     def test_delay_dist_matrix_single(self, network, tmpdir):
         saved = network.delay_dist_matrix(network.analysis_params['omega'])
         save_and_load(network, tmpdir)
-        loaded = network.results['delay_dist_single']
+        loaded = network.results['delay_dist_matrix_single']
         assert_quantity_array_equal(saved, loaded)
     
     def test_transfer_function(self, network, tmpdir):
+        network.working_point()
         saved = network.transfer_function()
         save_and_load(network, tmpdir)
         loaded = network.results['transfer_function']
         assert_quantity_array_equal(saved, loaded)
     
     def test_transfer_function_single(self, network, tmpdir):
+        network.working_point()
         saved = network.transfer_function(network.analysis_params['omega'])
         save_and_load(network, tmpdir)
         loaded = network.results['transfer_function_single']
         assert_quantity_array_equal(saved, loaded)
     
     def test_sensitivity_measure(self, network, tmpdir):
+        network.working_point()
         sm_saved = network.sensitivity_measure(
             network.analysis_params['omega'])
         save_and_load(network, tmpdir)
@@ -178,24 +183,36 @@ class Test_saving_and_loading:
         assert_quantity_array_equal(sm_saved, sm_loaded)
     
     def test_power_spectra(self, network, tmpdir):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         saved = network.power_spectra()
         save_and_load(network, tmpdir)
         loaded = network.results['power_spectra']
         assert_quantity_array_equal(saved, loaded)
     
     def test_eigenvalue_spectra(self, network, tmpdir):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         saved = network.eigenvalue_spectra('MH')
         save_and_load(network, tmpdir)
         loaded = network.results['eigenvalue_spectra']
         assert_quantity_array_equal(saved, loaded)
     
     def test_r_eigenvec_spectra(self, network, tmpdir):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         saved = network.r_eigenvec_spectra('MH')
         save_and_load(network, tmpdir)
         loaded = network.results['r_eigenvec_spectra']
         assert_quantity_array_equal(saved, loaded)
     
     def test_l_eigenvec_spectra(self, network, tmpdir):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         saved = network.l_eigenvec_spectra('MH')
         save_and_load(network, tmpdir)
         loaded = network.results['l_eigenvec_spectra']
@@ -238,11 +255,13 @@ class Test_temporary_storage_of_results:
                                     network.results['firing_rates'])
     
     def test_mean_input(self, network):
+        network.firing_rates()
         mean_input = network.mean_input()
         assert_quantity_array_equal(mean_input,
                                     network.results['mean_input'])
     
     def test_std_input(self, network):
+        network.firing_rates()
         std_input = network.std_input()
         assert_quantity_array_equal(std_input,
                                     network.results['std_input'])
@@ -259,15 +278,16 @@ class Test_temporary_storage_of_results:
     def test_delay_dist_matrix(self, network):
         delay_dist_matrix = network.delay_dist_matrix()
         assert_quantity_array_equal(delay_dist_matrix,
-                                    network.results['delay_dist'])
+                                    network.results['delay_dist_matrix'])
     
     def test_delay_dist_matrix_single(self, network):
         omega = network.analysis_params['omega']
         delay_dist_matrix = network.delay_dist_matrix(omega)
-        assert_quantity_array_equal(delay_dist_matrix,
-                                    network.results['delay_dist_single'])
+        assert_quantity_array_equal(
+            delay_dist_matrix, network.results['delay_dist_matrix_single'])
     
     def test_transfer_function(self, network):
+        network.working_point()
         transfer_function_taylor = network.transfer_function(method='taylor')
         assert_quantity_array_equal(transfer_function_taylor,
                                     network.results['transfer_function'])
@@ -276,6 +296,7 @@ class Test_temporary_storage_of_results:
                                     network.results['transfer_function'])
     
     def test_transfer_function_single(self, network):
+        network.working_point()
         omega = network.analysis_params['omega']
         transfer_function_taylor = network.transfer_function(omega,
                                                              method='taylor')
@@ -291,17 +312,24 @@ class Test_temporary_storage_of_results:
             )
     
     def test_sensitivity_measure(self, network):
+        network.working_point()
         omega = network.analysis_params['omega']
         sensitivity_measure = network.sensitivity_measure(omega)
         assert_quantity_array_equal(sensitivity_measure,
                                     network.results['sensitivity_measure'])
     
     def test_power_spectra(self, network):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         power_spectra = network.power_spectra()
         assert_quantity_array_equal(power_spectra,
                                     network.results['power_spectra'])
     
     def test_eigenvalue_spectra(self, network):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         eigenvalue_spectra_mh = network.eigenvalue_spectra('MH')
         assert_quantity_array_equal(eigenvalue_spectra_mh,
                                     network.results['eigenvalue_spectra'])
@@ -314,6 +342,9 @@ class Test_temporary_storage_of_results:
             network.results['eigenvalue_spectra'])
         
     def test_r_eigenvec_spectra(self, network):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         r_eigenvec_spectra_mh = network.r_eigenvec_spectra('MH')
         assert_quantity_array_equal(r_eigenvec_spectra_mh,
                                     network.results['r_eigenvec_spectra'])
@@ -325,6 +356,9 @@ class Test_temporary_storage_of_results:
                                     network.results['r_eigenvec_spectra'])
         
     def test_l_eigenvec_spectra(self, network):
+        network.working_point()
+        network.delay_dist_matrix()
+        network.transfer_function()
         l_eigenvec_spectra_mh = network.l_eigenvec_spectra('MH')
         assert_quantity_array_equal(l_eigenvec_spectra_mh,
                                     network.results['l_eigenvec_spectra'])
@@ -348,12 +382,14 @@ class Test_correct_return_value_for_second_call:
     
     @pytest.mark.parametrize('method', ['taylor', 'shift'])
     def test_transfer_function(self, network, method):
+        network.working_point()
         transfer_function_taylor_0 = network.transfer_function(method=method)
         transfer_function_taylor_1 = network.transfer_function(method=method)
         assert_quantity_array_equal(transfer_function_taylor_0,
                                     transfer_function_taylor_1)
 
     def test_transfer_function_first_taylor_then_shift(self, network):
+        network.working_point()
         transfer_function_taylor = network.transfer_function(method='taylor')
         transfer_function_shift = network.transfer_function(method='shift')
         with pytest.raises(AssertionError):
@@ -362,6 +398,7 @@ class Test_correct_return_value_for_second_call:
 
     def test_transfer_function_single_first_taylor_then_shift(self, network):
         omega = network.analysis_params['omega']
+        network.working_point()
         tf_taylor = network.transfer_function(omega, method='taylor')
         tf_shift = network.transfer_function(omega, method='shift')
         with pytest.raises(AssertionError):

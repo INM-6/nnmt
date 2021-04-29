@@ -50,6 +50,7 @@ import inspect
 from . import ureg
 from . import input_output as io
 from . import meanfield_calcs
+from .utils import build_full_arg_list
 
 
 class Network(object):
@@ -281,13 +282,17 @@ class Network(object):
 
             new_params = []
             if analysis_keys is not None:
-                # add not passed standard arguments to args
-                if len(analysis_keys) != len(args):
-                    default_args = inspect.getfullargspec(func).defaults
-                    args = list(args)
-                    args.extend(default_args)
-                    args = tuple(args)
-                # convert new params to list
+                # add not passed standard arguments to args:
+                # need to add self first because function signature expects
+                # self at first position
+                args = list(args)
+                args.insert(0, self)
+                args = build_full_arg_list(inspect.signature(func),
+                                           args, kwargs)
+                # remove self
+                args.pop(0)
+                # empty kwargs which are now included in args
+                kwargs = {}
                 for i, key in enumerate(analysis_keys):
                     new_params.append(args[i])
 
@@ -466,9 +471,22 @@ class Network(object):
         """
         pass
 
-    @_check_and_store(['firing_rates'])
-    def firing_rates(self):
-        """ Calculates firing rates """
+    @_check_and_store(['firing_rates'], ['firing_rates_method'])
+    def firing_rates(self, method='shift'):
+        """
+        Calculates firing rates.
+        
+        Parameters:
+        -----------
+        method: str
+            The method used for adjusting the Siegert formula to exp shaped
+            PSCs. Options: 'shift', 'taylor'. Default is 'shift'
+            
+        Returns:
+        --------
+        Quantity(np.ndarray, 'Hertz'):
+            Firing rates for different populations.
+        """
         return meanfield_calcs.firing_rates(self.network_params['dimension'],
                                             self.network_params['tau_m'],
                                             self.network_params['tau_s'],
@@ -482,38 +500,45 @@ class Network(object):
                                             self.network_params['K_ext'],
                                             self.network_params['g'],
                                             self.network_params['nu_e_ext'],
-                                            self.network_params['nu_i_ext'])
+                                            self.network_params['nu_i_ext'],
+                                            method)
 
     @_check_and_store(['mean_input'])
     def mean_input(self):
         """ Calculates mean """
-        return meanfield_calcs.mean(self.firing_rates(),
-                                    self.network_params['K'],
-                                    self.network_params['J'],
-                                    self.network_params['j'],
-                                    self.network_params['tau_m'],
-                                    self.network_params['nu_ext'],
-                                    self.network_params['K_ext'],
-                                    self.network_params['g'],
-                                    self.network_params['nu_e_ext'],
-                                    self.network_params['nu_i_ext'])
+        try:
+            return meanfield_calcs.mean(self.results['firing_rates'],
+                                        self.network_params['K'],
+                                        self.network_params['J'],
+                                        self.network_params['j'],
+                                        self.network_params['tau_m'],
+                                        self.network_params['nu_ext'],
+                                        self.network_params['K_ext'],
+                                        self.network_params['g'],
+                                        self.network_params['nu_e_ext'],
+                                        self.network_params['nu_i_ext'])
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
     @_check_and_store(['std_input'])
     def std_input(self):
         """ Calculates variance """
-        return meanfield_calcs.standard_deviation(
-            self.firing_rates(),
-            self.network_params['K'],
-            self.network_params['J'],
-            self.network_params['j'],
-            self.network_params['tau_m'],
-            self.network_params['nu_ext'],
-            self.network_params['K_ext'],
-            self.network_params['g'],
-            self.network_params['nu_e_ext'],
-            self.network_params['nu_i_ext'])
+        try:
+            return meanfield_calcs.standard_deviation(
+                self.results['firing_rates'],
+                self.network_params['K'],
+                self.network_params['J'],
+                self.network_params['j'],
+                self.network_params['tau_m'],
+                self.network_params['nu_ext'],
+                self.network_params['K_ext'],
+                self.network_params['g'],
+                self.network_params['nu_e_ext'],
+                self.network_params['nu_i_ext'])
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
-    def working_point(self):
+    def working_point(self, method='shift'):
         """
         Calculates stationary working point of the network.
 
@@ -527,7 +552,7 @@ class Network(object):
 
         # then do calculations
         working_point = {}
-        working_point['firing_rates'] = self.firing_rates()
+        working_point['firing_rates'] = self.firing_rates(method=method)
         working_point['mean_input'] = self.mean_input()
         working_point['std_input'] = self.std_input()
 
@@ -556,7 +581,7 @@ class Network(object):
             omega = 2 * np.pi * freq
             return self.delay_dist_matrix_single(omega)
 
-    @_check_and_store(['delay_dist'])
+    @_check_and_store(['delay_dist_matrix'])
     def delay_dist_matrix_multi(self):
         """
         Calculates delay distribution matrix for all omegas.
@@ -574,7 +599,8 @@ class Network(object):
             self.network_params['delay_dist'],
             self.analysis_params['omegas'])
 
-    @_check_and_store(['delay_dist_single'], ['delay_dist_freqs'])
+    @_check_and_store(['delay_dist_matrix_single'],
+                      ['delay_dist_matrix_freqs'])
     def delay_dist_matrix_single(self, omega):
         """
         Calculates delay distribution matrix for one omega.
@@ -604,6 +630,8 @@ class Network(object):
         freq: Quantity(float, 'Hertz')
             Optional paramter. If given, transfer function is only calculated
             for this frequency.
+        method: str
+            Options: 'shift', 'taylor'. Default is 'shift'.
 
         Returns:
         --------
@@ -628,19 +656,22 @@ class Network(object):
             Transfer functions for all populations evaluated at specified
             omegas.
         """
-        transfer_functions = meanfield_calcs.transfer_function(
-            self.mean_input(),
-            self.std_input(),
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.network_params['tau_r'],
-            self.network_params['V_th_rel'],
-            self.network_params['V_0_rel'],
-            self.network_params['dimension'],
-            self.analysis_params['omegas'],
-            method=method)
-
-        return transfer_functions
+        try:
+            transfer_functions = meanfield_calcs.transfer_function(
+                self.results['mean_input'],
+                self.results['std_input'],
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_th_rel'],
+                self.network_params['V_0_rel'],
+                self.network_params['dimension'],
+                self.analysis_params['omegas'],
+                method=method)
+            return transfer_functions
+        
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
     @_check_and_store(['transfer_function_single'], ['transfer_freqs',
                                                      'transfer_single_method'])
@@ -656,19 +687,22 @@ class Network(object):
         """
         omega = freq * 2 * np.pi
 
-        transfer_functions = meanfield_calcs.transfer_function(
-            self.mean_input(),
-            self.std_input(),
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.network_params['tau_r'],
-            self.network_params['V_th_rel'],
-            self.network_params['V_0_rel'],
-            self.network_params['dimension'],
-            [omega],
-            method=method)
+        try:
+            transfer_functions = meanfield_calcs.transfer_function(
+                self.results['mean_input'],
+                self.results['std_input'],
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_th_rel'],
+                self.network_params['V_0_rel'],
+                self.network_params['dimension'],
+                [omega],
+                method=method)
+            return transfer_functions
 
-        return transfer_functions
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
     @_check_and_store(['sensitivity_measure'], ['sensitivity_freqs',
                                                 'sensitivity_method'])
@@ -692,17 +726,20 @@ class Network(object):
         omega = freq * 2 * np.pi
 
         # calculate needed transfer_function
-        transfer_function = meanfield_calcs.transfer_function(
-            self.mean_input(),
-            self.std_input(),
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.network_params['tau_r'],
-            self.network_params['V_th_rel'],
-            self.network_params['V_0_rel'],
-            self.network_params['dimension'],
-            [omega],
-            method=method)
+        try:
+            transfer_function = meanfield_calcs.transfer_function(
+                self.results['mean_input'],
+                self.results['std_input'],
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_th_rel'],
+                self.network_params['V_0_rel'],
+                self.network_params['dimension'],
+                [omega],
+                method=method)
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
         if omega.magnitude < 0:
             transfer_function = np.conjugate(transfer_function)
@@ -726,25 +763,27 @@ class Network(object):
             omega)
 
     @_check_and_store(['power_spectra'])
-    def power_spectra(self, method='shift'):
+    def power_spectra(self):
         """
         Calculates power spectra.
         """
-        return meanfield_calcs.power_spectra(
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.network_params['dimension'],
-            self.network_params['J'],
-            self.network_params['K'],
-            self.delay_dist_matrix(),
-            self.network_params['N'],
-            self.firing_rates(),
-            self.transfer_function(method=method),
-            self.analysis_params['omegas'])
+        try:
+            return meanfield_calcs.power_spectra(
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['dimension'],
+                self.network_params['J'],
+                self.network_params['K'],
+                self.results['delay_dist_matrix'],
+                self.network_params['N'],
+                self.results['firing_rates'],
+                self.results['transfer_function'],
+                self.analysis_params['omegas'])
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
-    @_check_and_store(['eigenvalue_spectra'], ['eigenvalue_matrix',
-                                               'eigenvalue_method'])
-    def eigenvalue_spectra(self, matrix, method='shift'):
+    @_check_and_store(['eigenvalue_spectra'], ['eigenvalue_matrix'])
+    def eigenvalue_spectra(self, matrix):
         """
         Calculates the eigenvalues of the specified matrix at given frequency.
 
@@ -760,21 +799,23 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Eigenvalues.
         """
-        return meanfield_calcs.eigen_spectra(
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.transfer_function(method=method),
-            self.network_params['dimension'],
-            self.delay_dist_matrix(),
-            self.network_params['J'],
-            self.network_params['K'],
-            self.analysis_params['omegas'],
-            'eigvals',
-            matrix)
+        try:
+            return meanfield_calcs.eigen_spectra(
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.results['transfer_function'],
+                self.network_params['dimension'],
+                self.results['delay_dist_matrix'],
+                self.network_params['J'],
+                self.network_params['K'],
+                self.analysis_params['omegas'],
+                'eigvals',
+                matrix)
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
-    @_check_and_store(['r_eigenvec_spectra'], ['r_eigenvec_matrix',
-                                               'r_eigenvec_method'])
-    def r_eigenvec_spectra(self, matrix, method='shift'):
+    @_check_and_store(['r_eigenvec_spectra'], ['r_eigenvec_matrix'])
+    def r_eigenvec_spectra(self, matrix):
         """
         Calculates the right eigenvecs of the specified matrix at given freq.
 
@@ -790,21 +831,23 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Right eigenvectors.
         """
-        return meanfield_calcs.eigen_spectra(
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.transfer_function(method=method),
-            self.network_params['dimension'],
-            self.delay_dist_matrix(),
-            self.network_params['J'],
-            self.network_params['K'],
-            self.analysis_params['omegas'],
-            'reigvecs',
-            matrix)
+        try:
+            return meanfield_calcs.eigen_spectra(
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.results['transfer_function'],
+                self.network_params['dimension'],
+                self.results['delay_dist_matrix'],
+                self.network_params['J'],
+                self.network_params['K'],
+                self.analysis_params['omegas'],
+                'reigvecs',
+                matrix)
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
-    @_check_and_store(['l_eigenvec_spectra'], ['l_eigenvec_matrix',
-                                               'l_eigenvec_method'])
-    def l_eigenvec_spectra(self, matrix, method='shift'):
+    @_check_and_store(['l_eigenvec_spectra'], ['l_eigenvec_matrix'])
+    def l_eigenvec_spectra(self, matrix):
         """
         Calculates the left eigenvecs of the specified matrix at given freq.
 
@@ -820,20 +863,26 @@ class Network(object):
         Quantity(np.ndarray, 'dimensionless')
             Left eigenvectors.
         """
-        return meanfield_calcs.eigen_spectra(
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.transfer_function(method=method),
-            self.network_params['dimension'],
-            self.delay_dist_matrix(),
-            self.network_params['J'],
-            self.network_params['K'],
-            self.analysis_params['omegas'],
-            'leigvecs',
-            matrix)
+        try:
+            return meanfield_calcs.eigen_spectra(
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.results['transfer_function'],
+                self.network_params['dimension'],
+                self.results['delay_dist_matrix'],
+                self.network_params['J'],
+                self.network_params['K'],
+                self.analysis_params['omegas'],
+                'leigvecs',
+                matrix)
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
-    @_check_and_store(['nu_e_ext', 'nu_i_ext'])
-    def additional_rates_for_fixed_input(self, mean_input_set, std_input_set):
+    @_check_and_store(['nu_e_ext', 'nu_i_ext'], ['mean_input_set',
+                                                 'std_input_set',
+                                                 'additional_rates_method'])
+    def additional_rates_for_fixed_input(self, mean_input_set, std_input_set,
+                                         method='shift'):
         """
         Calculate additional external excitatory and inhibitory Poisson input
         rates such that the input prescribed by the mean and standard deviation
@@ -845,6 +894,9 @@ class Network(object):
             prescribed mean input for each population
         std_input_set: Quantity(np.ndarray, 'mV')
             prescribed standard deviation of input for each population
+        method: str
+            The method used for adjusting the Siegert formula to exp shaped
+            PSCs. Options: 'shift', 'taylor'. Default is 'shift'
 
         Returns:
         --------
@@ -866,7 +918,8 @@ class Network(object):
                 self.network_params['j'],
                 self.network_params['nu_ext'],
                 self.network_params['K_ext'],
-                self.network_params['g'])
+                self.network_params['g'],
+                method=method)
         return nu_e_ext, nu_i_ext
 
     def fit_transfer_function(self):
@@ -890,23 +943,26 @@ class Network(object):
         tf0_ecs: Quantity(np.ndarray, 'hertz/millivolt')
             Effective coupling strength scaled to transfer function.
         """
-        tau_rate, W_rate, W_rate_sim, fit_tf = (
-            meanfield_calcs.fit_transfer_function(
-                self.transfer_function(),
-                self.analysis_params['omegas'],
-                self.network_params['tau_m'],
-                self.network_params['J'],
-                self.network_params['K']))
+        try:
+            tau_rate, W_rate, W_rate_sim, fit_tf = (
+                meanfield_calcs.fit_transfer_function(
+                    self.results['transfer_function'],
+                    self.analysis_params['omegas'],
+                    self.network_params['tau_m'],
+                    self.network_params['J'],
+                    self.network_params['K']))
 
-        w_ecs = meanfield_calcs.effective_coupling_strength(
-            self.network_params['tau_m'],
-            self.network_params['tau_s'],
-            self.network_params['tau_r'],
-            self.network_params['V_0_rel'],
-            self.network_params['V_th_rel'],
-            self.network_params['J'],
-            self.mean_input(),
-            self.std_input())
+            w_ecs = meanfield_calcs.effective_coupling_strength(
+                self.network_params['tau_m'],
+                self.network_params['tau_s'],
+                self.network_params['tau_r'],
+                self.network_params['V_0_rel'],
+                self.network_params['V_th_rel'],
+                self.network_params['J'],
+                self.results['mean_input'],
+                self.results['std_input'])
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
         # scale to transfer function and adapt unit
         tf0_ecs = (w_ecs / (self.network_params['J']
@@ -974,30 +1030,34 @@ class Network(object):
         eigenval_max: Quantity(complex, '1/s')
         eigenvals: Quantity(np.ndarray, '1/s')
         """
-        (alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max,
-         eigenvals) = (
-            meanfield_calcs.linear_interpolation_alpha(
-                k_wavenumbers,
-                self.analysis_params['branches'],
-                self.network_params['tau_rate'],
-                self.network_params['W_rate'],
-                self.network_params['width'],
-                self.network_params['d_e'],
-                self.network_params['d_i'],
-                self.mean_input(),
-                self.std_input(),
-                self.network_params['tau_m'],
-                self.network_params['tau_s'],
-                self.network_params['tau_r'],
-                self.network_params['V_0_rel'],
-                self.network_params['V_th_rel'],
-                self.network_params['J'],
-                self.network_params['K'],
-                self.network_params['dimension'],
-                ))
+        try:
+            (alphas, lambdas_chareq, lambdas_integral, k_eig_max, eigenval_max,
+             eigenvals) = (
+                meanfield_calcs.linear_interpolation_alpha(
+                    k_wavenumbers,
+                    self.analysis_params['branches'],
+                    self.network_params['tau_rate'],
+                    self.network_params['W_rate'],
+                    self.network_params['width'],
+                    self.network_params['d_e'],
+                    self.network_params['d_i'],
+                    self.results['mean_input'],
+                    self.results['std_input'],
+                    self.network_params['tau_m'],
+                    self.network_params['tau_s'],
+                    self.network_params['tau_r'],
+                    self.network_params['V_0_rel'],
+                    self.network_params['V_th_rel'],
+                    self.network_params['J'],
+                    self.network_params['K'],
+                    self.network_params['dimension'],
+                    ))
 
-        return (alphas, lambdas_chareq, lambdas_integral, k_eig_max,
-                eigenval_max, eigenvals)
+            return (alphas, lambdas_chareq, lambdas_integral, k_eig_max,
+                    eigenval_max, eigenvals)
+        
+        except KeyError as key:
+            raise RuntimeError(f'You first need to calculate the {key}.')
 
     def compute_profile_characteristics(self):
         """

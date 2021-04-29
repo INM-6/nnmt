@@ -37,6 +37,7 @@ _d_xi_eff_r_d_lambda
 _solve_chareq_numerically_alpha
 """
 from __future__ import print_function
+from functools import partial
 import warnings
 import numpy as np
 import scipy.optimize as sopt
@@ -53,9 +54,10 @@ from .utils import check_positive_params, check_k_in_fast_synaptic_regime
 
 @check_positive_params
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
-                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz))
+                      ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz,
+                      None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, method='shift'):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -89,43 +91,55 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
         firing rate of additional external excitatory Poisson input
     nu_i_ext: Quantity(float, 'hertz')
         firing rate of additional external inhibitory Poisson input
-
+    method: str
+        The method used for adjusting the Siegert formula to exp shaped PSCs.
+        Options: 'shift', 'taylor'. Default is 'shift'
+        
     Returns:
     --------
     Quantity(np.ndarray, 'hertz')
         Array of firing rates of each population in hertz.
     '''
 
-    def rate_function(mu, sigma):
-        """Calculate stationary firing rate with given parameters"""
-        return aux_calcs._nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
-                                    sigma)
-
-    def get_rate_difference(nu):
-        """Calculate difference between new iteration step and previous one"""
+    def get_rate_difference(_, nu, firing_rate_func):
+        """
+        Calculate difference between new iteration step and previous one.
+        """
         # new mean
         mu = _mean(nu, K, J, j, tau_m, nu_ext, K_ext, g, nu_e_ext, nu_i_ext)
-
         # new std
         sigma = _standard_deviation(nu, K, J, j, tau_m, nu_ext, K_ext,
                                     g, nu_e_ext, nu_i_ext)
-
-        new_nu = np.array([x for x in list(map(rate_function, mu, sigma))])
-
+        new_nu = firing_rate_func(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu,
+                                  sigma)
         return -nu + new_nu
 
+    if method == 'shift':
+        get_rate_difference = partial(get_rate_difference,
+                                      firing_rate_func=aux_calcs._nu0_fb)
+    elif method == 'taylor':
+        get_rate_difference = partial(get_rate_difference,
+                                      firing_rate_func=aux_calcs._nu0_fb433)
+    else:
+        raise ValueError(f'Method {method} not implemented.')
+    
     # do iteration procedure, until stationary firing rates are found
-    dt = 0.05
-    y = np.zeros((2, int(dimension)))
-    eps = 1.0
-    while eps >= 1e-5:
-        delta_y = get_rate_difference(y[0])
-        y[1] = y[0] + delta_y * dt
-        epsilon = (y[1] - y[0])
-        eps = max(np.abs(epsilon))
-        y[0] = y[1]
-
-    return y[1]
+    eps_tol = 1e-12
+    t_max = 1000
+    maxiter = 1000
+    y0 = np.zeros(int(dimension))
+    for _ in range(maxiter):
+        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
+                             t_eval=[t_max - 1, t_max], method='LSODA')
+        assert sol.success is True
+        eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
+        if eps < eps_tol:
+            return sol.y[:, 1]
+        else:
+            y0 = sol.y[:, 1]
+    msg = f'Rate iteration failed to converge after {maxiter} iterations. '
+    msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
+    raise RuntimeError(msg)
 
 
 @check_positive_params
@@ -483,19 +497,19 @@ def delay_dist_matrix_single(dimension, Delay, Delay_sd, delay_dist, omega):
 
     if delay_dist == 'none':
         D = np.ones((int(dimension), int(dimension)))
-        return D * np.exp(-np.complex(0, omega) * Delay)
+        return D * np.exp(-complex(0, omega) * Delay)
 
     elif delay_dist == 'truncated_gaussian':
         a0 = 0.5 * (1 + erf((-Delay / Delay_sd + 1j * omega * Delay_sd)
                             / np.sqrt(2)))
         a1 = 0.5 * (1 + erf((-Delay / Delay_sd) / np.sqrt(2)))
         b0 = np.exp(-0.5 * np.power(Delay_sd * omega, 2))
-        b1 = np.exp(-np.complex(0, omega) * Delay)
+        b1 = np.exp(-complex(0, omega) * Delay)
         return (1.0 - a0) / (1.0 - a1) * b0 * b1
 
     elif delay_dist == 'gaussian':
         b0 = np.exp(-0.5 * np.power(Delay_sd * omega, 2))
-        b1 = np.exp(-np.complex(0, omega) * Delay)
+        b1 = np.exp(-complex(0, omega) * Delay)
         return b0 * b1
 
 
@@ -766,11 +780,13 @@ def eigen_spectra(tau_m, tau_s, transfer_function, dimension,
 @check_positive_params
 @ureg.wraps((ureg.Hz, ureg.Hz), (ureg.mV, ureg.mV, ureg.s, ureg.s, ureg.s,
                                  ureg.mV, ureg.mV,
-                                 None, ureg.mV, ureg.mV, ureg.Hz, None, None))
+                                 None, ureg.mV, ureg.mV, ureg.Hz, None, None,
+                                 None))
 def additional_rates_for_fixed_input(mu_set, sigma_set,
                                      tau_m, tau_s, tau_r,
                                      V_0_rel, V_th_rel,
-                                     K, J, j, nu_ext, K_ext, g):
+                                     K, J, j, nu_ext, K_ext, g,
+                                     method='shift'):
     """
     Calculate additional external excitatory and inhibitory Poisson input
     rates such that the input fixed by the mean and standard deviation
@@ -814,12 +830,19 @@ def additional_rates_for_fixed_input(mu_set, sigma_set,
     nu_i_ext: Quantity(np.ndarray, 'hertz')
         additional external inhibitory rate needed for fixed input
     """
-    target_rates = np.zeros(len(mu_set))
-    for i in np.arange(len(mu_set)):
+    if method == 'shift':
         # target rates for set mean and standard deviation of input
-        target_rates[i] = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r,
-                                               V_th_rel, V_0_rel,
-                                               mu_set[i], sigma_set[i])
+        target_rates = aux_calcs._nu0_fb(tau_m, tau_s, tau_r, V_th_rel,
+                                         V_0_rel, mu_set, sigma_set)
+    elif method == 'taylor':
+        target_rates = np.zeros(len(mu_set))
+        for i in np.arange(len(mu_set)):
+            # target rates for set mean and standard deviation of input
+            target_rates[i] = aux_calcs._nu0_fb433(tau_m, tau_s, tau_r,
+                                                   V_th_rel, V_0_rel,
+                                                   mu_set[i], sigma_set[i])
+    else:
+        raise ValueError('Chosen method not implemented')
 
     # additional external rates set to 0 for local-only contributions
     mu_loc = _mean(nu=target_rates, K=K, J=J, j=j, tau_m=tau_m,
@@ -915,7 +938,7 @@ def _fit_transfer_function(transfer_function, omegas):
     def func_abs(omega, tau, h0):
         return np.abs(func(omega, tau, h0))
 
-    fit_tf = np.zeros(np.shape(transfer_function), dtype=np.complex)
+    fit_tf = np.zeros(np.shape(transfer_function), dtype=complex)
     dim = np.shape(transfer_function)[1]
     tau_rate = np.zeros(dim)
     h0 = np.zeros(dim)

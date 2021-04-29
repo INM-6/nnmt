@@ -1,11 +1,9 @@
 import pytest
 import numpy as np
-from scipy.special import erf, zetac
+from scipy.special import erf, zetac, erfcx
 from scipy.integrate import quad
 
-from ..checks import (assert_array_almost_equal,
-                      assert_units_equal,
-                      check_pos_params_neg_raise_exception,
+from ..checks import (check_pos_params_neg_raise_exception,
                       check_correct_output_for_several_mus_and_sigmas,
                       check_almost_correct_output_for_several_mus_and_sigmas,
                       check_V_0_larger_V_th_raise_exception,
@@ -14,11 +12,10 @@ from ..checks import (assert_array_almost_equal,
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.aux_calcs import (
-    siegert1,
-    siegert2,
+    _get_erfcx_integral_gl_order,
+    _erfcx_integral,
     nu0_fb433,
     nu0_fb,
-    nu_0,
     Phi,
     Phi_prime_mu,
     d_nu_d_mu,
@@ -76,64 +73,27 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     return nu
 
 
-class Test_siegert1:
+class Test_siegert_helper:
+    def test_erfcx_quadrature_order_detection(self):
+        rtol = 1e-12
+        a = np.random.uniform(0, 10)
+        b = a + np.random.uniform(0, 90)
+        params = {'start_order': 1, 'epsrel': rtol, 'maxiter': 20}
+        order = _get_erfcx_integral_gl_order(y_th=b, y_r=a, **params)
+        I_quad = quad(erfcx, a, b, epsabs=0, epsrel=rtol)[0]
+        I_gl = _erfcx_integral(a, b, order=order)[0]
+        err = np.abs(I_gl/I_quad - 1)
+        assert err <= rtol
 
-    func = staticmethod(siegert1)
-    rtol = 1e-10
-
-    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_V_0_larger_V_th_raise_exception(self, std_params):
-        check_V_0_larger_V_th_raise_exception(self.func, std_params)
-
-    def test_mu_larger_V_th_raises_exception(self, std_params):
-        std_params['mu'] = 1.1 * std_params['V_th_rel']
-        with pytest.raises(ValueError):
-            self.func(**std_params)
-        
-    def test_gives_similar_results_as_real_siegert(
-            self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        if any(params['mu'] > params['V_th_rel']):
-            with pytest.raises(ValueError):
-                self.func(**params)
-        else:
-            check_almost_correct_output_for_several_mus_and_sigmas(
-                self.func, real_siegert, params, self.rtol)
-            
-
-class Test_siegert2:
-
-    func = staticmethod(siegert2)
-    rtol = 1e-10
-
-    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
-        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
-
-    def test_V_0_larger_V_th_raise_exception(self, std_params):
-        check_V_0_larger_V_th_raise_exception(self.func, std_params)
-
-    def test_mu_smaller_V_th_raises_exception(self, std_params):
-        std_params['mu'] = 0.9 * std_params['V_th_rel']
-        with pytest.raises(ValueError):
-            self.func(**std_params)
-
-    def test_gives_similar_results_as_real_siegert(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
-        mus = params.pop('mu')
-        sigmas = params.pop('sigma')
-        for mu, sigma in zip(mus, sigmas):
-            params['mu'] = mu
-            params['sigma'] = sigma
-            if mu > 0.95 * params['V_th_rel']:
-                expected = real_siegert(**params)
-                result = self.func(**params)
-                assert_array_almost_equal(expected, result, self.rtol)
-                assert_units_equal(expected, result)
-            else:
-                with pytest.raises(ValueError):
-                    self.func(**params)
+    def test_erfcx_quadrature_analytical_limit(self):
+        a = 100  # noise free limit a -> oo
+        b = a + np.linspace(1, 100, 100)
+        I_ana = np.log(b/a) / np.sqrt(np.pi)  # asymptotic result for a -> oo
+        params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 20}
+        order = _get_erfcx_integral_gl_order(y_th=b, y_r=a, **params)
+        I_gl = _erfcx_integral(a, b, order=order)
+        err = np.abs(I_gl/I_ana - 1)
+        assert np.all(err <= 1e-4)
 
 
 class Test_nu0_fb433:
@@ -160,7 +120,7 @@ class Test_nu0_fb433:
         params = output_fixtures_mean_driven.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
-        
+
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
@@ -172,7 +132,7 @@ class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
     rtol = 0.05
-    
+
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 
@@ -192,31 +152,12 @@ class Test_nu0_fb:
         params = output_fixtures_mean_driven.pop('params')
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
-        
+
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
         check_correct_output_for_several_mus_and_sigmas(
             self.func, params, output)
-
-
-class Test_nu_0:
-
-    func = staticmethod(nu_0)
-
-    def test_sieger1_is_called_if_mu_smaller_V_th_rel(self, mocker,
-                                                      std_params):
-        std_params['mu'] = std_params['V_th_rel'] * 0.9
-        mock = mocker.patch('lif_meanfield_tools.aux_calcs.siegert1')
-        self.func(**std_params)
-        mock.assert_called_once()
-
-    def test_sieger2_is_called_if_mu_bigger_V_th_rel(self, mocker,
-                                                     std_params):
-        std_params['mu'] = std_params['V_th_rel'] * 1.1
-        mock = mocker.patch('lif_meanfield_tools.aux_calcs.siegert2')
-        self.func(**std_params)
-        mock.assert_called_once()
 
 
 class Test_Phi:
@@ -305,7 +246,7 @@ class Test_d_nu_d_mu_fb433:
         std_params['sigma'] = 0 * ureg.mV
         with pytest.raises(ZeroDivisionError):
             self.func(**std_params)
-        
+
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         outputs = output_test_fixtures.pop('output')
