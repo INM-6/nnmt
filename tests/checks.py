@@ -13,10 +13,10 @@ ureg = lmt.ureg
 def pint_wrap(func):
     """
     Pint wrapper for numpy assert statements.
-    
+
     Numpy asserts given a quantity give an UnstrippedWarning. This wrapper
     makes them handle quantities correctly.
-    
+
     Note that only magnitudes are passed to the wrapped function.
     """
     def decorator_wrap(*args, **kwargs):
@@ -58,7 +58,7 @@ def assert_units_equal(var_1, var_2):
         assert var_1.units == var_2.units
     except AttributeError:
         pass
-    
+
 
 def assert_dimensionality_equal(var_1, var_2):
     """Checks whether unit of var_1 and of var_2 have same dimensionality."""
@@ -66,7 +66,7 @@ def assert_dimensionality_equal(var_1, var_2):
         assert var_1.dimensionality == var_2.dimensionality
     except AttributeError:
         pass
-    
+
 
 def check_pos_params_neg_raise_exception(func, params, pos_key):
     """Test whether exception is raised if always pos param gets negative."""
