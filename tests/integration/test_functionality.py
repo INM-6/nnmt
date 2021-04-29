@@ -15,15 +15,15 @@ def save_and_load(network, tmpdir):
 
 class Test_Network_functions_give_correct_results:
     
-    def test_firing_rates_scef(self, network, std_results):
-        firing_rates = network.firing_rates()
+    def test_firing_rates_shift(self, network, std_results):
+        firing_rates = network.firing_rates(method='shift')
         assert_quantity_array_equal(
             firing_rates, std_results['firing_rates'])
     
-    def test_firing_rates_hds2017(self, network, std_results):
-        firing_rates = network.firing_rates(method='hds2017')
+    def test_firing_rates_taylor(self, network, std_results):
+        firing_rates = network.firing_rates(method='taylor')
         assert_quantity_array_equal(
-            firing_rates, std_results['firing_rates_hds2017'])
+            firing_rates, std_results['firing_rates_taylor'])
         
     def test_mean_input(self, network, std_results):
         network.firing_rates()

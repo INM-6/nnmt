@@ -153,7 +153,21 @@ Here, `<property>` can be replaced by lots of stuff, like for example
 complete list of `Network` methods at the end of this section. When such a method
 is called, the network first checks whether this quantity has been calculated
 before. If so, it returns the stored value. If not, it does the calculations,
-stores the results, and returns them.
+stores the results, and returns them. If you want to calculate properties that
+need another quantity to be calculated first, you will receive an error message
+telling you which quantities to calculate first. For example the `power_spectra`
+need the `delay_dist_matrix` and the `transfer_function`, which in turn needs
+the `working_point` So a correct call would look like
+```
+  network.working_point()
+  network.transfer_function()
+  network.delay_dist_matrix()
+  network.power_spectra()
+```
+Functions like `transfer_function` will use the previously calculated results.
+This allows you to use different methods for calculating the same quantities
+(like `taylor` and `shift` for the firing rates and the tranfer function) in a
+building block like fashion.
 
 Sometimes, you might want to know a property for some specific parameter, like
 for example the `power_spectra` at a certain frequency. Then, you need to pass

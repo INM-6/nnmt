@@ -230,8 +230,11 @@ class Test_saving_and_loading:
             output = lmt.input_output.load_val_unit_dict_from_h5(file)
             assert_array_equal(output['results']['test'], new_mean)
             
-    def test_load_correctly_sets_network_dictionaries(self, tmpdir, network):
-        network.firing_rates()
+    def test_load_correctly_sets_network_dictionaries(self, tmpdir,
+                                                      mocker, network):
+        test_method = make_test_method(42)
+        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
+        network.mean_input()
         nparams = network.network_params
         aparams = network.analysis_params
         results = network.results
@@ -690,7 +693,7 @@ class Test_check_and_store_decorator:
         assert network.results['result'] == 30 * ureg.mV
         
         
-@pytest.mark.xfail
+@pytest.mark.skip
 class Test_functionality:
     """A lot of those tests might actually be superfluous."""
 

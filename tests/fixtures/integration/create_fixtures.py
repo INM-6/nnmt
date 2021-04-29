@@ -43,9 +43,9 @@ if __name__ == '__main__':
         omega = network.analysis_params['omega']
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
-        network.results['firing_rates_hds2017'] = network.firing_rates(
-            method='hds2017')
-        network.working_point(method='scef')
+        network.results['firing_rates_taylor'] = network.firing_rates(
+            method='taylor')
+        network.working_point(method='shift')
         network.delay_dist_matrix()
         network.delay_dist_matrix(omega)
         network.results['tf_taylor'] = network.transfer_function(
