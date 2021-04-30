@@ -20,6 +20,7 @@ output_test_fixtures: parametrizes needed args and results for tested regimes.
 import pytest
 import numpy as np
 from inspect import signature
+import h5py_wrapper as h5
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.input_output import load_val_unit_dict_from_h5
@@ -526,3 +527,13 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                     in zip(output, params)]
         metafunc.parametrize("output_fixtures_mean_driven", fixtures,
                              ids=ids_all_regimes[1:])
+
+    elif "unit_fixtures" in metafunc.fixturenames:
+        file = metafunc.cls.fixtures
+        fixtures = h5.load(unit_fix_path + file)
+        ids = sorted(fixtures.keys())
+        fixture_list = [dict(output=fixtures[id]['output'],
+                        params=fixtures[id]['params'])
+                        for id in ids]
+        # import pdb; pdb.set_trace()
+        metafunc.parametrize("unit_fixtures", fixture_list, ids=ids)

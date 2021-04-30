@@ -92,7 +92,6 @@ class Test_firing_rate_shift:
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
 
-    @pytest.mark.xfail
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         
@@ -128,7 +127,6 @@ class Test_firing_rate_taylor:
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
 
-    @pytest.mark.xfail
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')

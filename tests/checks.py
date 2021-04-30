@@ -88,6 +88,8 @@ def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
     params = params.copy()
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
+    assert len(mus) == len(sigmas)
+    assert len(mus) == len(outputs)
     for mu, sigma, output in zip(mus, sigmas, outputs):
         params['mu'] = mu
         params['sigma'] = sigma

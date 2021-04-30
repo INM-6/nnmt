@@ -3,6 +3,11 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.special import erf, erfcx
 
+from numpy.testing import (
+    assert_array_equal,
+    assert_array_almost_equal
+    )
+
 
 from ...checks import (check_pos_params_neg_raise_exception,
                        check_correct_output_for_several_mus_and_sigmas,
@@ -13,7 +18,6 @@ from ...checks import (check_pos_params_neg_raise_exception,
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.lif.delta.static as delta
-from lif_meanfield_tools.utils import _strip_units
 
 ureg = lmt.ureg
 
@@ -26,13 +30,16 @@ def integrand(x):
 
 def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """ Siegert formula as given in Fourcaud Brunel 2002 eq. 4.11 """
-
-    y_th = (V_th_rel - mu) / sigma
-    y_r = (V_0_rel - mu) / sigma
-
-    nu = 1 / (tau_r + np.sqrt(np.pi) * tau_m
-              * quad(integrand, y_r, y_th, epsabs=1e-6)[0])
-
+    mu = np.atleast_1d(mu)
+    sigma = np.atleast_1d(sigma)
+    
+    nu = np.zeros(len(mu))
+    for i, (mu, sigma) in enumerate(zip(mu, sigma)):
+        y_th = (V_th_rel - mu) / sigma
+        y_r = (V_0_rel - mu) / sigma
+    
+        nu[i] = 1 / (tau_r + np.sqrt(np.pi) * tau_m
+                     * quad(integrand, y_r, y_th, epsabs=1e-6)[0])
     return nu
 
 
@@ -67,7 +74,8 @@ class Test_firing_rates_wrapper:
 class Test_firing_rates:
     
     func = staticmethod(delta._firing_rate)
-    rtol = 0.05
+    fixtures = 'lif_delta_firing_rate.h5'
+    decimal = 15
 
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
@@ -77,20 +85,19 @@ class Test_firing_rates:
     def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
 
-    def test_gives_similar_results_as_real_siegert(
-            self, output_fixtures_mean_driven):
-        params = output_fixtures_mean_driven.pop('params')
-        _strip_units(params)
-        check_almost_correct_output_for_several_mus_and_sigmas(
-            self.func, real_siegert, params, self.rtol)
-
-    @pytest.mark.xfail
-    def test_correct_output(self, output_test_fixtures):
-        params = output_test_fixtures.pop('params')
+    def test_gives_similar_results_as_real_siegert_if_siegert_converges(
+            self, unit_fixtures):
+        params = unit_fixtures.pop('params')
         
-        output = output_test_fixtures.pop('output')
-        check_correct_output_for_several_mus_and_sigmas(
-            self.func, params, output)
+        siegert = real_siegert(**params)
+        if not np.any(np.isnan(siegert)):
+            assert_array_almost_equal(self.func(**params), siegert,
+                                      decimal=self.decimal)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_array_equal(self.func(**params), output)
 
 
 class Test_siegert_helper:
