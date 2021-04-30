@@ -134,7 +134,7 @@ def check_if_positive(parameters, parameter_names):
     """Check that will raise an error if parameters are negative."""
     for parameter, parameter_name in zip(parameters, parameter_names):
         try:
-            if any(p < 0 for p in pint_array(parameter).flatten()):
+            if np.any(np.atleast_1d(parameter) < 0):
                 raise ValueError('{} should be larger than zero!'.format(
                     parameter_name))
         except TypeError:
@@ -183,15 +183,12 @@ def _check_positive_params(func):
 
 def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
     """ Check whether we are in fast synaptic regime."""
-    k = np.sqrt(tau_s / tau_m)
-    if (np.sqrt(0.1) < k) & (k < 1):
+    k = np.atleast_1d(np.sqrt(tau_s / tau_m))
+    if np.any((np.sqrt(0.1) < k)):
         k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
                      'calculation of firing rates via Taylor expansion!'
                      ).format(k)
         warnings.warn(k_warning)
-    if 1 <= k:
-        raise ValueError('k=sqrt(tau_s/tau_m) is too large for calculation of '
-                         'firing rates via Taylor expansion!')
         
         
 def _check_k_in_fast_synaptic_regime(func):

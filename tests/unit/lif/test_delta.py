@@ -8,7 +8,6 @@ from numpy.testing import (
     assert_array_almost_equal
     )
 
-
 from ...checks import (check_pos_params_neg_raise_exception,
                        check_correct_output_for_several_mus_and_sigmas,
                        check_almost_correct_output_for_several_mus_and_sigmas,
@@ -17,7 +16,7 @@ from ...checks import (check_pos_params_neg_raise_exception,
 
 
 import lif_meanfield_tools as lmt
-import lif_meanfield_tools.lif.delta.static as delta
+import lif_meanfield_tools.lif.delta as delta
 
 ureg = lmt.ureg
 
@@ -32,12 +31,11 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """ Siegert formula as given in Fourcaud Brunel 2002 eq. 4.11 """
     mu = np.atleast_1d(mu)
     sigma = np.atleast_1d(sigma)
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
     
     nu = np.zeros(len(mu))
-    for i, (mu, sigma) in enumerate(zip(mu, sigma)):
-        y_th = (V_th_rel - mu) / sigma
-        y_r = (V_0_rel - mu) / sigma
-    
+    for i, (mu, sigma, y_th, y_r) in enumerate(zip(mu, sigma, y_th, y_r)):
         nu[i] = 1 / (tau_r + np.sqrt(np.pi) * tau_m
                      * quad(integrand, y_r, y_th, epsabs=1e-6)[0])
     return nu
@@ -55,7 +53,7 @@ class Test_firing_rates_wrapper:
     
     def mock_firing_rate_integration(self, mocker):
         mocker.patch(
-            'lif_meanfield_tools.lif.static._firing_rate_integration',
+            'lif_meanfield_tools.lif._static._firing_rate_integration',
             return_value=1
             )
     

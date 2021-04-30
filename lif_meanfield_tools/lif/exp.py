@@ -205,12 +205,13 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
                                                   V_0_rel[overflow_mask],
                                                   mu[overflow_mask],
                                                   sigma[overflow_mask])
-    result[regular_mask] = _delta_firing_rate(tau_m[regular_mask],
-                                             tau_r[regular_mask],
-                                             V_th_rel[regular_mask],
-                                             V_0_rel[regular_mask],
-                                             mu[regular_mask],
-                                             sigma[regular_mask])
+    if np.any(regular_mask):
+        result[regular_mask] = _delta_firing_rate(tau_m[regular_mask],
+                                                 tau_r[regular_mask],
+                                                 V_th_rel[regular_mask],
+                                                 V_0_rel[regular_mask],
+                                                 mu[regular_mask],
+                                                 sigma[regular_mask])
 
     dPhi = _Phi(x_th[regular_mask]) - _Phi(x_r[regular_mask])
     

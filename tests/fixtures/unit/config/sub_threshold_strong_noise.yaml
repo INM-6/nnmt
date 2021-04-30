@@ -6,6 +6,10 @@ tau_r:
   val: 2.0
   unit: ms
   
+tau_s:
+  val: 1
+  unit: ms
+  
 V_th_rel:
   val: 20.0
   unit: mV
