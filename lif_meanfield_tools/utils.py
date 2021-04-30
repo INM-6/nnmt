@@ -143,7 +143,7 @@ def check_if_positive(parameters, parameter_names):
                     parameter_name))
 
 
-def check_positive_params(func):
+def _check_positive_params(func):
     all_pos_params = ['C',
                       'K',
                       'K_ext',
@@ -194,7 +194,7 @@ def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
                          'firing rates via Taylor expansion!')
         
         
-def check_k_in_fast_synaptic_regime(func):
+def _check_k_in_fast_synaptic_regime(func):
     @wraps(func)
     def decorator_check(*args, **kwargs):
         signature = inspect.signature(func)

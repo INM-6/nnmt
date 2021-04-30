@@ -1,24 +1,23 @@
 import numpy as np
-from scipy.special import erf, zetac
+from scipy.special import (
+    erf as _erf,
+    zetac as _zetac
+    )
 
-from ... import ureg
-from ...utils import (check_if_positive,
-                      check_positive_params,
-                      check_k_in_fast_synaptic_regime,
-                      check_for_valid_k_in_fast_synaptic_regime,
-                      _check_and_store)
+from .. import ureg as ureg
+from ..utils import (_check_positive_params,
+                     _check_k_in_fast_synaptic_regime,
+                     _check_and_store)
 
-from ..static import (_firing_rate_integration,
-                      mean_input as _mean_input,
-                      std_input as _std_input)
+from . import _static
                       
-from ..delta.static import _firing_rate as delta_firing_rate
+from .delta import _firing_rate as _delta_firing_rate
 
 
-prefix = 'lif.exp.'
+_prefix = 'lif.exp.'
 
 
-@_check_and_store(prefix, ['firing_rates'], ['firing_rates_method'])
+@_check_and_store(_prefix, ['firing_rates'], ['firing_rates_method'])
 def firing_rates(network, method='shift'):
     """
     Calculates stationary firing rates for exp PSCs.
@@ -87,16 +86,17 @@ def firing_rates(network, method='shift'):
             "parameters.")
     
     if method == 'shift':
-        return _firing_rate_integration(_firing_rate_shift,
-                                        firing_rate_params,
-                                        input_params) * ureg.Hz
+        return _static._firing_rate_integration(_firing_rate_shift,
+                                                firing_rate_params,
+                                                input_params) * ureg.Hz
     elif method == 'taylor':
-        return _firing_rate_integration(_firing_rate_taylor,
-                                        firing_rate_params,
-                                        input_params) * ureg.Hz
+        return _static._firing_rate_integration(_firing_rate_taylor,
+                                                firing_rate_params,
+                                                input_params) * ureg.Hz
 
 
-@check_positive_params
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
 def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
                  method='shift'):
     """
@@ -133,8 +133,6 @@ def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
     if np.any(V_th_rel - V_0_rel < 0):
         raise ValueError('V_th should be larger than V_0!')
     
-    check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
-    
     if method == 'taylor':
         return _firing_rate_taylor(
             tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
@@ -145,8 +143,8 @@ def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
         raise ValueError(f'Method {method} not implemented.')
     
 
-@check_positive_params
-@check_k_in_fast_synaptic_regime
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
 def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calcs stationary firing rates for exp PSCs using a Taylor expansion.
@@ -175,9 +173,9 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float or np.array:
         Stationary firing rate in Hz.
     """
-    # use zetac function (zeta-1) because zeta is not giving finite values for
+    # use _zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
-    alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
+    alpha = np.sqrt(2.) * abs(_zetac(0.5) + 1)
 
     mu = np.atleast_1d(mu)
     sigma = np.atleast_1d(sigma)
@@ -201,13 +199,13 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     
     # white noise firing rate
     if np.any(overflow_mask):
-        result[overflow_mask] = delta_firing_rate(tau_m[overflow_mask],
+        result[overflow_mask] = _delta_firing_rate(tau_m[overflow_mask],
                                                   tau_r[overflow_mask],
                                                   V_th_rel[overflow_mask],
                                                   V_0_rel[overflow_mask],
                                                   mu[overflow_mask],
                                                   sigma[overflow_mask])
-    result[regular_mask] = delta_firing_rate(tau_m[regular_mask],
+    result[regular_mask] = _delta_firing_rate(tau_m[regular_mask],
                                              tau_r[regular_mask],
                                              V_th_rel[regular_mask],
                                              V_0_rel[regular_mask],
@@ -243,11 +241,11 @@ def _Phi(s):
     noise and dynamic boundary conditions. 1–23 (2014).
     """
     return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
-                                  * (1 + erf(s / np.sqrt(2))))
+                                  * (1 + _erf(s / np.sqrt(2))))
 
 
-@check_positive_params
-@check_k_in_fast_synaptic_regime
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
 def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rates including synaptic filtering.
@@ -277,19 +275,19 @@ def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     float or np.array:
         Stationary firing rate in Hz.
     """
-    # using zetac (zeta-1), because zeta is giving nan result for arguments
+    # using _zetac (zeta-1), because zeta is giving nan result for arguments
     # smaller 1
-    alpha = np.sqrt(2) * abs(zetac(0.5) + 1)
+    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
     # effective threshold
     # additional factor sigma is canceled in siegert
     V_th1 = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # effective reset
     V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # use standard Siegert with modified threshold and reset
-    return delta_firing_rate(tau_m, tau_r, V_th1, V_01, mu, sigma)
+    return _delta_firing_rate(tau_m, tau_r, V_th1, V_01, mu, sigma)
 
 
-@_check_and_store(prefix, ['mean_input'])
+@_check_and_store(_prefix, ['mean_input'])
 def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
@@ -333,10 +331,10 @@ def mean_input(network):
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    return _mean_input(network, prefix)
+    return _static._mean_input(network, _prefix)
 
 
-@_check_and_store(prefix, ['std_input'])
+@_check_and_store(_prefix, ['std_input'])
 def std_input(network):
     '''
     Calc standard deviation of inputs to populations.
@@ -380,4 +378,4 @@ def std_input(network):
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    return _std_input(network, prefix)
+    return _static._std_input(network, _prefix)

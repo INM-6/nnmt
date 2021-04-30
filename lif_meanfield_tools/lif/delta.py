@@ -1,20 +1,21 @@
 import numpy as np
-from scipy.special import erfcx, dawsn, roots_legendre
-from scipy.integrate import quad
+from scipy.special import (
+    erfcx as _erfcx,
+    dawsn as _dawsn,
+    roots_legendre as _roots_legendre
+    )
+from scipy.integrate import quad as _quad
 
-from ..static import (_firing_rate_integration,
-                      mean_input as _mean_input,
-                      std_input as _std_input)
-
-from ...utils import (_check_and_store,
-                      check_positive_params)
-from ... import ureg
-
-
-prefix = 'lif.delta.'
+from . import _static
+from ..utils import (_check_and_store,
+                     _check_positive_params)
+from .. import ureg
 
 
-@_check_and_store(prefix, ['firing_rates'])
+_prefix = 'lif.delta.'
+
+
+@_check_and_store(_prefix, ['firing_rates'])
 def firing_rates(network):
     """
     Calculates stationary firing rates for delta shaped PSCs.
@@ -68,12 +69,12 @@ def firing_rates(network):
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
     
-    return _firing_rate_integration(_firing_rate,
-                                    firing_rate_params,
-                                    input_params) * ureg.Hz
+    return _static._firing_rate_integration(_firing_rate,
+                                            firing_rate_params,
+                                            input_params) * ureg.Hz
 
 
-@check_positive_params
+@_check_positive_params
 def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     """
     Calculates stationary firing rate for delta shaped PSCs.
@@ -149,7 +150,7 @@ def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
     b = max(np.abs(y_th).max(), np.abs(y_r).max())
 
     # adaptive quadrature from scipy.integrate for comparison
-    I_quad = quad(erfcx, a, b, epsabs=0, epsrel=epsrel)[0]
+    I_quad = _quad(_erfcx, a, b, epsabs=0, epsrel=epsrel)[0]
 
     # increase order to reach desired accuracy
     order = start_order
@@ -168,10 +169,10 @@ def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
 def _erfcx_integral(a, b, order):
     """Fixed order Gauss-Legendre quadrature of erfcx from a to b."""
     assert np.all(a >= 0) and np.all(b >= 0)
-    x, w = roots_legendre(order)
+    x, w = _roots_legendre(order)
     x = x[:, np.newaxis]
     w = w[:, np.newaxis]
-    return (b - a) * np.sum(w * erfcx((b - a) * x / 2 + (b + a) / 2),
+    return (b - a) * np.sum(w * _erfcx((b - a) * x / 2 + (b + a) / 2),
                             axis=0) / 2
 
 
@@ -186,8 +187,8 @@ def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
-    Int = (2 * dawsn(y_th) - 2
-           * np.exp(y_r**2 - y_th**2) * dawsn(y_r))
+    Int = (2 * _dawsn(y_th) - 2
+           * np.exp(y_r**2 - y_th**2) * _dawsn(y_r))
     Int -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
     return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
@@ -196,12 +197,12 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     """Calculate Siegert for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
-    Int = 2 * dawsn(y_th)
+    Int = 2 * _dawsn(y_th)
     Int += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
     return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
-@_check_and_store(prefix, ['mean_input'])
+@_check_and_store(_prefix, ['mean_input'])
 def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
@@ -245,10 +246,10 @@ def mean_input(network):
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    return _mean_input(network, prefix)
+    return _static._mean_input(network, _prefix)
 
 
-@_check_and_store(prefix, ['std_input'])
+@_check_and_store(_prefix, ['std_input'])
 def std_input(network):
     '''
     Calc standard deviation of inputs to populations.
@@ -292,4 +293,4 @@ def std_input(network):
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    return _std_input(network, prefix)
+    return _static._std_input(network, _prefix)
