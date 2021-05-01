@@ -5,8 +5,6 @@ meanfield_calcs.
 Functions:
 nu0_fb433
 nu_0
-siegert1
-siegert2
 Phi
 Phi_prime_mu
 d_nu_d_mu_fb433
@@ -176,8 +174,10 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
                                 y_r=y_r[mask_exc], **params)
     nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
                                 y_r=y_r[mask_inh], **params)
+    nu[mask_inh] *= np.exp(-y_th[mask_inh]**2)
     nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
                                       y_r=y_r[mask_interm], **params)
+    nu[mask_interm] *= np.exp(-y_th[mask_interm]**2)
 
     # assign units if necessary
     if return_units:
@@ -226,7 +226,7 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 
 def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
-
+    """Helper function implementing nu0_fb without quantities."""
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -286,21 +286,21 @@ def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
 
 
 def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
-    """Calculate Siegert for 0 < y_th."""
+    """Calculate Siegert without exp(-y_th**2) factor for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
     I_erfcx = 2 * dawsn(y_th) - 2 * np.exp(y_r**2 - y_th**2) * dawsn(y_r)
     I_erfcx -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
+    return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
-    """Calculate Siegert for y_r <= 0 <= y_th."""
+    """Calculate Siegert without exp(-y_th**2) factor for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
     I_erfcx = 2 * dawsn(y_th)
     I_erfcx += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
+    return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def Phi(s):
