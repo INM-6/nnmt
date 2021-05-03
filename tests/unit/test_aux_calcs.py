@@ -86,6 +86,7 @@ class Test_siegert_helper:
         assert err <= rtol
 
     def test_erfcx_quadrature_analytical_limit(self):
+        rtol = 1e-4  # limited by deviation from noise-free asymptotics
         a = 100  # noise free limit a -> oo
         b = a + np.linspace(1, 100, 100)
         I_ana = np.log(b/a) / np.sqrt(np.pi)  # asymptotic result for a -> oo
@@ -93,10 +94,10 @@ class Test_siegert_helper:
         order = _get_erfcx_integral_gl_order(y_th=b, y_r=a, **params)
         I_gl = _erfcx_integral(a, b, order=order)
         err = np.abs(I_gl/I_ana - 1)
-        assert np.all(err <= 1e-4)
+        assert np.all(err <= rtol)
 
 
-class Test_nu0:
+class Test_nu_0:
 
     func = staticmethod(nu0_fb)
     rtol = 1e-6
@@ -104,7 +105,7 @@ class Test_nu0:
     def test_gives_similar_results_as_real_shifted_siegert(
             self, output_fixtures_mean_driven):
         params = output_fixtures_mean_driven.pop('params')
-        params['tau_s'] *= 0  # reduces nu_fb to nu_0
+        params['tau_s'] *= 0  # reduces nu0_fb to nu_0
         check_almost_correct_output_for_several_mus_and_sigmas(
             self.func, real_shifted_siegert, params, self.rtol)
 
@@ -112,7 +113,9 @@ class Test_nu0:
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
-    rtol = 1e-6
+    # Lower rtol than for nu0_fb because it is compared to real_shifted_siegert
+    # instead of the corresponding Taylor approximation.
+    rtol = 1e-3
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
