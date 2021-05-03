@@ -9,8 +9,6 @@ from numpy.testing import (
     )
 
 from ...checks import (check_pos_params_neg_raise_exception,
-                       check_correct_output_for_several_mus_and_sigmas,
-                       check_almost_correct_output_for_several_mus_and_sigmas,
                        check_V_0_larger_V_th_raise_exception,
                        )
 

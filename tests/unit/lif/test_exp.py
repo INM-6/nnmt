@@ -1,27 +1,21 @@
 import pytest
 import numpy as np
-from scipy.integrate import quad
-from scipy.special import erf, erfcx, zetac
+from scipy.special import zetac
 
 from numpy.testing import (
     assert_array_equal,
-    assert_array_almost_equal,
     assert_allclose
     )
 
 from ...checks import (check_pos_params_neg_raise_exception,
-                       check_correct_output_for_several_mus_and_sigmas,
-                       check_almost_correct_output_for_several_mus_and_sigmas,
                        check_V_0_larger_V_th_raise_exception,
                        check_warning_is_given_if_k_is_critical,
-                       check_exception_is_raised_if_k_is_too_large
                        )
 
 from .test_delta import real_siegert
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.lif.exp as exp
-from lif_meanfield_tools.utils import _strip_units
 
 ureg = lmt.ureg
 
