@@ -48,7 +48,7 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     y_r = (V_0_rel - mu) / sigma
 
     nu = 1 / (tau_r + np.sqrt(np.pi) * tau_m
-              * quad(integrand, y_r, y_th, epsabs=1e-6)[0])
+              * quad(integrand, y_r, y_th, epsabs=1e-12)[0])
 
     return nu
 
@@ -65,8 +65,8 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     k = np.sqrt(tau_s / tau_m)
 
-    V_th_eff = V_th_rel + sigma * alpha * k / np.sqrt(2)
-    V_0_eff = V_0_rel + sigma * alpha * k / np.sqrt(2)
+    V_th_eff = V_th_rel + sigma * alpha * k / 2
+    V_0_eff = V_0_rel + sigma * alpha * k / 2
 
     nu = real_siegert(tau_m, tau_r, V_th_eff, V_0_eff, mu, sigma)
 
@@ -96,10 +96,23 @@ class Test_siegert_helper:
         assert np.all(err <= 1e-4)
 
 
+class Test_nu0:
+
+    func = staticmethod(nu0_fb)
+    rtol = 1e-6
+
+    def test_gives_similar_results_as_real_shifted_siegert(
+            self, output_fixtures_mean_driven):
+        params = output_fixtures_mean_driven.pop('params')
+        params['tau_s'] *= 0  # reduces nu_fb to nu_0
+        check_almost_correct_output_for_several_mus_and_sigmas(
+            self.func, real_shifted_siegert, params, self.rtol)
+
+
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
-    rtol = 0.05
+    rtol = 1e-6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
@@ -131,7 +144,7 @@ class Test_nu0_fb433:
 class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
-    rtol = 0.05
+    rtol = 1e-6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
