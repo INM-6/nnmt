@@ -113,6 +113,7 @@ class Test_nu_0:
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
+    output_key = 'nu0_fb433'
     # Lower rtol than for nu0_fb because it is compared to real_shifted_siegert
     # instead of the corresponding Taylor approximation.
     rtol = 1e-3
@@ -147,6 +148,7 @@ class Test_nu0_fb433:
 class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
+    output_key = 'nu0_fb'
     rtol = 1e-6
 
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
