@@ -227,7 +227,7 @@ class Test_d_nu_d_mu_fb433:
 
     func = staticmethod(d_nu_d_mu_fb433)
     output_key = 'd_nu_d_mu_fb433'
-
+    
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
 

@@ -3,6 +3,7 @@ import pytest
 from ..checks import (check_pos_params_neg_raise_exception,
                       check_correct_output,
                       assert_array_equal,
+                      assert_allclose,
                       assert_units_equal,
                       check_V_0_larger_V_th_raise_exception,
                       check_warning_is_given_if_k_is_critical,
@@ -292,7 +293,7 @@ class Test_additional_rates_for_fixed_input:
         params = output_test_fixtures['params']
         output = output_test_fixtures['output']
         result = self.func(**params)[key]
-        assert_array_equal(result, output[key])
+        assert_allclose(result, output[key])
         assert_units_equal(result, output[key])
 
 
