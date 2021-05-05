@@ -5,8 +5,6 @@ meanfield_calcs.
 Functions:
 nu0_fb433
 nu_0
-siegert1
-siegert2
 Phi
 Phi_prime_mu
 d_nu_d_mu_fb433
@@ -85,35 +83,9 @@ def _nu0_fb433(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
 
-    mu = np.atleast_1d(mu)
-    sigma = np.atleast_1d(sigma)
-    result = np.zeros(len(mu))
-
-    for i, (mu, sigma) in enumerate(zip(mu, sigma)):
-
-        # additional prefactor sqrt(2) because its x from Schuecker 2015
-        x_th = np.sqrt(2.) * (V_th_rel - mu) / sigma
-        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
-
-        # preventing overflow in np.exponent in Phi(s)
-        # note: this simply returns the white noise result... is this ok?
-
-        if x_th > 20.0 / np.sqrt(2.):
-            result[i] = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        else:
-            # white noise firing rate
-            r = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-
-            dPhi = Phi(x_th) - Phi(x_r)
-            # colored noise firing rate (might this lead to negative rates?)
-            result[i] = (r - np.sqrt(tau_s / tau_m) * alpha
-                         / (tau_m * np.sqrt(2)) * dPhi * (r * tau_m)**2)
-
-    # convert back to scalar if only one value calculated
-    if result.shape == (1,):
-        return result.item(0)
-    else:
-        return result
+    nu0 = nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    nu0_dPhi = _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    return nu0 * (1 - np.sqrt(tau_s * tau_m / 2) * alpha * nu0_dPhi)
 
 
 def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
@@ -169,7 +141,7 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     mask_inh = 0 < y_r
     mask_interm = (y_r <= 0) & (0 <= y_th)
 
-    # calculate siegert
+    # calculate rescaled siegert
     nu = np.zeros(shape=y_th.shape)
     params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
     nu[mask_exc] = _siegert_exc(y_th=y_th[mask_exc],
@@ -178,6 +150,10 @@ def nu_0(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
                                 y_r=y_r[mask_inh], **params)
     nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
                                       y_r=y_r[mask_interm], **params)
+
+    # include exponential contributions
+    nu[mask_inh] *= np.exp(-y_th[mask_inh]**2)
+    nu[mask_interm] *= np.exp(-y_th[mask_interm]**2)
 
     # assign units if necessary
     if return_units:
@@ -226,7 +202,7 @@ def nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
 
 
 def _nu0_fb(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
-
+    """Helper function implementing nu0_fb without quantities."""
     pos_parameters = [tau_m, tau_s, tau_r, sigma]
     pos_parameter_names = ['tau_m', 'tau_s', 'tau_r', 'sigma']
     check_if_positive(pos_parameters, pos_parameter_names)
@@ -286,21 +262,21 @@ def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
 
 
 def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
-    """Calculate Siegert for 0 < y_th."""
+    """Calculate Siegert without exp(-y_th**2) factor for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
     I_erfcx = 2 * dawsn(y_th) - 2 * np.exp(y_r**2 - y_th**2) * dawsn(y_r)
     I_erfcx -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
+    return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
-    """Calculate Siegert for y_r <= 0 <= y_th."""
+    """Calculate Siegert without exp(-y_th**2) factor for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
     I_erfcx = 2 * dawsn(y_th)
     I_erfcx += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
+    return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * I_erfcx)
 
 
 def Phi(s):
@@ -317,6 +293,87 @@ def Phi(s):
     """
     return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
                                   * (1 + erf(s / np.sqrt(2))))
+
+
+def _Phi_neg(s):
+    """Calculate Phi(s) for negative arguments"""
+    assert np.all(s <= 0)
+    return np.sqrt(np.pi / 2.) * erfcx(np.abs(s) / np.sqrt(2))
+
+
+def _Phi_pos(s):
+    """Calculate Phi(s) without exp(-s**2 / 2) factor for positive arguments"""
+    assert np.all(s >= 0)
+    return np.sqrt(np.pi / 2.) * (2 - np.exp(-s**2 / 2.)*erfcx(s / np.sqrt(2)))
+
+
+def _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    """Calculate nu0 * ( Phi(sqrt(2)*y_th) - Psi(sqrt(2)*y_r) ) safely."""
+    if np.any(V_th_rel - V_0_rel < 0):
+        raise ValueError('V_th should be larger than V_0!')
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    # strip units
+    if isinstance(y_th, ureg.Quantity):
+        y_th = y_th.to(ureg.dimensionless).magnitude
+        y_r = y_r.to(ureg.dimensionless).magnitude
+    return_units = isinstance(tau_m, ureg.Quantity)
+    if return_units:
+        tau_m = tau_m.to(ureg.s).magnitude
+        tau_r = tau_r.to(ureg.s).magnitude
+
+    # bring into appropriate shape
+    y_th = np.atleast_1d(y_th)
+    y_r = np.atleast_1d(y_r)
+    assert y_th.shape == y_r.shape
+    assert y_th.ndim == y_r.ndim == 1
+
+    # determine order of quadrature
+    params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
+    gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
+
+    # separate domains
+    mask_exc = y_th < 0
+    mask_inh = 0 < y_r
+    mask_interm = (y_r <= 0) & (0 <= y_th)
+
+    # calculate rescaled siegert
+    nu = np.zeros(shape=y_th.shape)
+    params = {'tau_m': tau_m, 't_ref': tau_r, 'gl_order': gl_order}
+    nu[mask_exc] = _siegert_exc(y_th=y_th[mask_exc],
+                                y_r=y_r[mask_exc], **params)
+    nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
+                                y_r=y_r[mask_inh], **params)
+    nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
+                                      y_r=y_r[mask_interm], **params)
+
+    # calculate rescaled Phi
+    Phi_th = np.zeros(shape=y_th.shape)
+    Phi_r = np.zeros(shape=y_r.shape)
+    Phi_th[mask_exc] = _Phi_neg(s=np.sqrt(2)*y_th[mask_exc])
+    Phi_r[mask_exc] = _Phi_neg(s=np.sqrt(2)*y_r[mask_exc])
+    Phi_th[mask_inh] = _Phi_pos(s=np.sqrt(2)*y_th[mask_inh])
+    Phi_r[mask_inh] = _Phi_pos(s=np.sqrt(2)*y_r[mask_inh])
+    Phi_th[mask_interm] = _Phi_pos(s=np.sqrt(2)*y_th[mask_interm])
+    Phi_r[mask_interm] = _Phi_neg(s=np.sqrt(2)*y_r[mask_interm])
+
+    # include exponential contributions
+    Phi_r[mask_inh] *= np.exp(-y_th[mask_inh]**2 + y_r[mask_inh]**2)
+    Phi_r[mask_interm] *= np.exp(-y_th[mask_interm]**2)
+
+    # assign units if necessary
+    if return_units:
+        nu = nu / ureg.s
+
+    # calculate nu * dPhi
+    nu_dPhi = nu * (Phi_th - Phi_r)
+
+    # convert back to scalar if only one value calculated
+    if nu_dPhi.shape == (1,):
+        return nu_dPhi.item(0)
+    else:
+        return nu_dPhi
 
 
 def Phi_prime_mu(s, sigma):
