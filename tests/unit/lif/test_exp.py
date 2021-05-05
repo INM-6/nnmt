@@ -3,7 +3,6 @@ import numpy as np
 from scipy.special import zetac
 
 from numpy.testing import (
-    assert_array_equal,
     assert_allclose
     )
 

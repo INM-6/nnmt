@@ -4,7 +4,6 @@ from scipy.integrate import quad
 from scipy.special import erf, erfcx
 
 from numpy.testing import (
-    assert_array_equal,
     assert_allclose
     )
 
