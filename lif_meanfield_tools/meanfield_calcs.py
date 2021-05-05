@@ -55,9 +55,10 @@ from .utils import check_positive_params, check_k_in_fast_synaptic_regime
 @check_positive_params
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
                       ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz,
-                      None))
+                      ureg.Hz, None, None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, method='shift'):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, nu_0, method='shift',
+                 fp_iteration=True):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -123,23 +124,41 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     else:
         raise ValueError(f'Method {method} not implemented.')
 
-    # do iteration procedure, until stationary firing rates are found
-    eps_tol = 1e-12
-    t_max = 1000
-    maxiter = 1000
-    y0 = np.zeros(int(dimension))
-    for _ in range(maxiter):
-        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
-                             t_eval=[t_max - 1, t_max], method='LSODA')
-        assert sol.success is True
-        eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
-        if eps < eps_tol:
-            return sol.y[:, 1]
+    if fp_iteration:
+        # do iteration procedure, until stationary firing rates are found
+        eps_tol = 1e-7
+        t_max = 1000
+        maxiter = 1000
+        y0 = np.zeros(int(dimension)) + nu_0
+        for _ in range(maxiter):
+            sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
+                                 t_eval=[t_max - 1, t_max],
+                                 # t_eval=np.linspace(0, t_max, 5001),
+                                 method='LSODA')
+            assert sol.success is True
+            # import matplotlib.pyplot as plt
+            # plt.plot(sol.y.T)
+            # plt.show()
+            eps = max(np.abs(sol.y[:, -1] - sol.y[:, -2]))
+            if eps < eps_tol:
+                return sol.y[:, -1]
+            else:
+                y0 = sol.y[:, -1]
+        msg = f'Rate iteration failed to converge after {maxiter} iterations. '
+        msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
+        raise RuntimeError(msg)
+    else:
+        def mse_rate_difference(nu):
+            return np.mean(get_rate_difference(None, nu)**2)
+
+        eps_tol = 1e-7
+        y0 = np.zeros(int(dimension)) + nu_0
+        res = sopt.minimize(mse_rate_difference, y0,
+                            bounds=((0, np.inf), (0, np.inf)))
+        if res.fun < eps_tol:
+            return res.x
         else:
-            y0 = sol.y[:, 1]
-    msg = f'Rate iteration failed to converge after {maxiter} iterations. '
-    msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
-    raise RuntimeError(msg)
+            return np.array([np.nan] * int(dimension))
 
 
 @check_positive_params
