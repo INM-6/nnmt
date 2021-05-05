@@ -30,6 +30,7 @@ from lif_meanfield_tools.meanfield_calcs import (
 from lif_meanfield_tools.aux_calcs import (
     nu0_fb433,
     nu_0,
+    nu0_fb,
     d_nu_d_mu,
     d_nu_d_mu_fb433,
     d_nu_d_nu_in_fb,
@@ -360,6 +361,21 @@ def fix_nu0_fb433(network, file):
                   sigma)
         for mu, sigma in zip(network.mean_input(), network.std_input())]
     network.save(file, overwrite=True)
+    
+
+def fix_nu0_fb(network, file):
+    """Calc nu0_fb and save as h5 using network.save()."""
+    network.working_point()
+    network.results['nu0_fb'] = [
+        nu0_fb(network.network_params['tau_m'],
+               network.network_params['tau_s'],
+               network.network_params['tau_r'],
+               network.network_params['V_th_rel'],
+               network.network_params['V_0_rel'],
+               mu,
+               sigma)
+        for mu, sigma in zip(network.mean_input(), network.std_input())]
+    network.save(file, overwrite=True)
 
 
 def fix_nu_0(network, file):
@@ -439,11 +455,12 @@ if __name__ == '__main__':
             fix_additional_rates_for_fixed_input(network, file_path)
             fix_eff_coupling_strength(network, file_path)
             fix_nu0_fb433(network, file_path)
+            fix_nu0_fb(network, file_path)
             fix_nu_0(network, file_path)
             fix_d_nu_d_mu(network, file_path)
             fix_d_nu_d_mu_fb433(network, file_path)
             fix_d_nu_d_nu_in_fb(network, file_path)
-            #
+            
             # test network for loading
             network = lmt.Network(param_file, analysis_param_file)
             fix_network_loading(network, f'{fixture_path}test_network.h5')
