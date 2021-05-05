@@ -9,7 +9,7 @@ plt.style.use('frontiers.mplstyle')
 
 
 # ===== parameters =====
-nu_ext_steps = 250  # number of external rates (x-axis)
+nu_ext_steps = 25  # number of external rates (x-axis)
 # common parameters for all plots
 params_all = dict(
     dimension=2,  # E and I
@@ -65,31 +65,33 @@ params_ndm = dict(
 
 # ===== self-consistent rates =====
 def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps,
-                 fp_iteration=True):
+                 fp_iteration=True, print_rates=False):
     params.update(params_all)
     nu_ext_arr = np.linspace(nu_ext_min, nu_ext_max, nu_ext_steps)*ureg.Hz
     nu_arr = np.zeros((nu_ext_steps+1, 2))*ureg.Hz
     for i, nu_ext in enumerate(nu_ext_arr):
-        nu_arr[i+1] = firing_rates(nu_0=nu_0*ureg.Hz, nu_ext=nu_ext,
+        nu_arr[i+1] = firing_rates(nu_0=(nu_0, nu_0)*ureg.Hz, nu_ext=nu_ext,
                                    fp_iteration=fp_iteration, **params)
-        # print(nu_ext, nu_arr[i+1])
+        if print_rates:
+            print(nu_ext, nu_arr[i+1])
     nu_ext_arr = np.insert(nu_ext_arr, 0, 0)
     return nu_ext_arr, nu_arr
 
 
 print('Calculating self-consitent rates...')
-# TODO: optimize intervals & find unstable branches
+# TODO: optimize intervals & find more unstable branches
 print('Saturation-driven nonlinearity...')
 nu_ext_sdn, nu_sdn = solve_theory(params_sdn, 0, 1, 100, nu_ext_steps)
 # print('Saturation-driven multisolution...')
-nu_ext_sdm_a, nu_sdm_a = solve_theory(params_sdm, 10, 1, 100, nu_ext_steps)
+nu_ext_sdm_a, nu_sdm_a = solve_theory(params_sdm, 0, 1, 9, nu_ext_steps)
 nu_ext_sdm_b, nu_sdm_b = solve_theory(params_sdm, 500, 1, 100, nu_ext_steps)
-nu_ext_sdm_c, nu_sdm_c = solve_theory(params_sdm, 10, 1, 100, nu_ext_steps,
+nu_ext_sdm_c, nu_sdm_c = solve_theory(params_sdm, 10, 1, 20, nu_ext_steps,
                                       fp_iteration=False)
 print('Response-onset supersaturation...')
-nu_ext_ros, nu_ros = solve_theory(params_ros, 0, 0.5, 50, nu_ext_steps)
+nu_ext_ros_a, nu_ros_a = solve_theory(params_ros, 0, 0.5, 50, nu_ext_steps)
+nu_ext_ros_b, nu_ros_b = solve_theory(params_ros, 10, 7.5, 12.5, nu_ext_steps)
 print('Mean-driven multisolution...')
-nu_ext_mdm_a, nu_mdm_a = solve_theory(params_mdm, 0, 0.1, 10, nu_ext_steps,
+nu_ext_mdm_a, nu_mdm_a = solve_theory(params_mdm, 0, 0.1, 5, nu_ext_steps,
                                       fp_iteration=False)
 nu_ext_mdm_b, nu_mdm_b = solve_theory(params_mdm, 50, 0.1, 10, nu_ext_steps,
                                       fp_iteration=False)
@@ -102,8 +104,8 @@ nu_ext_ndm_b, nu_ndm_b = solve_theory(params_ndm, 500, 0.05, 5, nu_ext_steps)
 def plot_rates(ax, nu_ext_arr_lst, nu_arr_lst, xmax, ymax, xlabel, ylabel,
                title, colors, label, label_prms):
     ax.set_prop_cycle(color=colors)
-    for i, nu_ext in enumerate(nu_ext_arr_lst):
-        ax.plot(nu_ext, nu_arr_lst[i], 'o')
+    for i, nu_arr in enumerate(nu_arr_lst):
+        ax.plot(nu_ext_arr_lst[i], nu_arr, 'o')
     ax.set_xlim(0, xmax)
     ax.set_ylim(0, ymax)
     ax.set_xticks((0, xmax))
@@ -132,7 +134,8 @@ plot_rates(fig.add_subplot(gs[0, 1]),
            r'$\nu_X$ [spks/s]', '', 'SDM',
            colors, '(B)', label_prms)
 # Response-onset supersaturation
-plot_rates(fig.add_subplot(gs[0, 2]), [nu_ext_ros], [nu_ros], 50, 5,
+plot_rates(fig.add_subplot(gs[0, 2]), [nu_ext_ros_a, nu_ext_ros_b],
+           [nu_ros_a, nu_ros_b], 50, 5,
            r'$\nu_X$ [spks/s]', '', 'ROS',
            colors, '(C)', label_prms)
 # Mean-driven multisolution
