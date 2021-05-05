@@ -116,7 +116,7 @@ class Test_firing_rate_shift:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        assert_array_equal(self.func(**params), output)
+        assert_allclose(self.func(**params), output)
         
 
 class Test_firing_rate_taylor:
@@ -125,7 +125,7 @@ class Test_firing_rate_taylor:
     fixtures = 'lif_exp_firing_rate_taylor.h5'
     # Lower rtol than for nu0_fb because it is compared to real_shifted_siegert
     # instead of the corresponding Taylor approximation.
-    rtol = 6e-2
+    rtol = 0.2
 
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
@@ -154,7 +154,7 @@ class Test_firing_rate_taylor:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        assert_array_equal(self.func(**params), output)
+        assert_allclose(self.func(**params), output)
     
         
 class Test_Phi:

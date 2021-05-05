@@ -122,7 +122,7 @@ def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     mask_inh = 0 < y_r
     mask_interm = (y_r <= 0) & (0 <= y_th)
 
-    # calculate siegert
+    # calculate rescaled siegert
     nu = np.zeros(shape=y_th.shape)
     params = {'tau_m': tau_m[mask_exc], 't_ref': tau_r[mask_exc],
               'gl_order': gl_order}
@@ -136,6 +136,11 @@ def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
               'gl_order': gl_order}
     nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
                                       y_r=y_r[mask_interm], **params)
+
+    # include exponential contributions
+    nu[mask_inh] *= np.exp(-y_th[mask_inh]**2)
+    nu[mask_interm] *= np.exp(-y_th[mask_interm]**2)
+
     # convert back to scalar if only one value calculated
     if nu.shape == (1,):
         return nu.item(0)
@@ -184,22 +189,22 @@ def _siegert_exc(y_th, y_r, tau_m, t_ref, gl_order):
 
 
 def _siegert_inh(y_th, y_r, tau_m, t_ref, gl_order):
-    """Calculate Siegert for 0 < y_th."""
+    """Calculate Siegert without exp(-y_th**2) factor for 0 < y_th."""
     assert np.all(0 < y_r)
     e_V_th_2 = np.exp(-y_th**2)
     Int = (2 * _dawsn(y_th) - 2
            * np.exp(y_r**2 - y_th**2) * _dawsn(y_r))
     Int -= e_V_th_2 * _erfcx_integral(y_r, y_th, gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
+    return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
 def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
-    """Calculate Siegert for y_r <= 0 <= y_th."""
+    """Calculate Siegert without exp(-y_th**2) factor for y_r <= 0 <= y_th."""
     assert np.all((y_r <= 0) & (0 <= y_th))
     e_V_th_2 = np.exp(-y_th**2)
     Int = 2 * _dawsn(y_th)
     Int += e_V_th_2 * _erfcx_integral(y_th, np.abs(y_r), gl_order)
-    return e_V_th_2 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
+    return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
 @_check_and_store(_prefix, ['mean_input'])

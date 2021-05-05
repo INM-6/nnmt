@@ -31,9 +31,14 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     sigma = np.atleast_1d(sigma)
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
+    # this brings tau_m and tau_r into the correct vectorized form if they are
+    # scalars and doesn't do anything if they are arrays of appropriate size
+    tau_m = tau_m + y_th - y_th
+    tau_r = tau_r + y_th - y_th
     
     nu = np.zeros(len(mu))
-    for i, (mu, sigma, y_th, y_r) in enumerate(zip(mu, sigma, y_th, y_r)):
+    for i, (mu, sigma, y_th, y_r, tau_m, tau_r) in enumerate(
+            zip(mu, sigma, y_th, y_r, tau_m, tau_r)):
         nu[i] = 1 / (tau_r + np.sqrt(np.pi) * tau_m
                      * quad(integrand, y_r, y_th, epsabs=1e-6)[0])
     return nu
@@ -92,7 +97,7 @@ class Test_firing_rates:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        assert_array_equal(self.func(**params), output)
+        assert_allclose(self.func(**params), output)
 
 
 class Test_siegert_helper:

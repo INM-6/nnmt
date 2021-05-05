@@ -2,7 +2,8 @@ import warnings
 import numpy as np
 from scipy.special import (
     erf as _erf,
-    zetac as _zetac
+    zetac as _zetac,
+    erfcx as _erfcx,
     )
 
 from .. import ureg as ureg
@@ -12,7 +13,13 @@ from ..utils import (_check_positive_params,
 
 from . import _static
                       
-from .delta import _firing_rate as _delta_firing_rate
+from .delta import (
+    _firing_rate as _delta_firing_rate,
+    _get_erfcx_integral_gl_order,
+    _siegert_exc,
+    _siegert_inh,
+    _siegert_interm,
+    )
 
 
 _prefix = 'lif.exp.'
@@ -178,52 +185,9 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(_zetac(0.5) + 1)
 
-    mu = np.atleast_1d(mu)
-    sigma = np.atleast_1d(sigma)
-    x_th = (np.sqrt(2.) * (V_th_rel - mu) / sigma)
-    x_r = (np.sqrt(2.) * (V_0_rel - mu) / sigma)
-    # this brings tau_m and tau_r into the correct vectorized form if they are
-    # scalars and doesn't do anything if they are arrays of appropriate size
-    V_0_rel = V_0_rel + x_th - x_th
-    V_th_rel = V_th_rel + x_th - x_th
-    tau_m = tau_m + x_th - x_th
-    tau_s = tau_s + x_th - x_th
-    tau_r = tau_r + x_th - x_th
-
-    # preventing overflow in np.exponent in Phi(s)
-    # note: this simply returns the white noise result... is this ok?
-    result = np.zeros(len(mu))
-    
-    # do slightly different calculations for large thresholds
-    overflow_mask = x_th > 20.0 / np.sqrt(2.)
-    regular_mask = np.invert(overflow_mask)
-    
-    # white noise firing rate
-    if np.any(overflow_mask):
-        result[overflow_mask] = _delta_firing_rate(tau_m[overflow_mask],
-                                                  tau_r[overflow_mask],
-                                                  V_th_rel[overflow_mask],
-                                                  V_0_rel[overflow_mask],
-                                                  mu[overflow_mask],
-                                                  sigma[overflow_mask])
-    if np.any(regular_mask):
-        result[regular_mask] = _delta_firing_rate(tau_m[regular_mask],
-                                                 tau_r[regular_mask],
-                                                 V_th_rel[regular_mask],
-                                                 V_0_rel[regular_mask],
-                                                 mu[regular_mask],
-                                                 sigma[regular_mask])
-
-    dPhi = _Phi(x_th[regular_mask]) - _Phi(x_r[regular_mask])
-    
-    # colored noise firing rate (might this lead to negative rates?)
-    result[regular_mask] = (result[regular_mask]
-                            - np.sqrt(tau_s[regular_mask]
-                                      / tau_m[regular_mask])
-                            * alpha
-                            / (tau_m[regular_mask] * np.sqrt(2)) * dPhi
-                            * (result[regular_mask] * tau_m[regular_mask])**2)
-                            
+    nu0 = _delta_firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    nu0_dPhi = _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    result = nu0 * (1 - np.sqrt(tau_s * tau_m / 2) * alpha * nu0_dPhi)
     if np.any(result < 0):
         warnings.warn("Negative firing rates detected. You might be in an "
                       "invalid regime. Use `method='shift'` for "
@@ -249,6 +213,81 @@ def _Phi(s):
     """
     return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
                                   * (1 + _erf(s / np.sqrt(2))))
+    
+
+def _Phi_neg(s):
+    """Calculate Phi(s) for negative arguments"""
+    assert np.all(s <= 0)
+    return np.sqrt(np.pi / 2.) * _erfcx(np.abs(s) / np.sqrt(2))
+
+
+def _Phi_pos(s):
+    """Calculate Phi(s) without exp(-s**2 / 2) factor for positive arguments"""
+    assert np.all(s >= 0)
+    return np.sqrt(np.pi / 2.) * (2 - np.exp(-s**2 / 2.)
+                                  * _erfcx(s / np.sqrt(2)))
+
+
+def _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    """Calculate nu0 * ( Phi(sqrt(2)*y_th) - Psi(sqrt(2)*y_r) ) safely."""
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+    # bring into appropriate shape
+    y_th = np.atleast_1d(y_th)
+    y_r = np.atleast_1d(y_r)
+    # this brings tau_m and tau_r into the correct vectorized form if they are
+    # scalars and doesn't do anything if they are arrays of appropriate size
+    tau_m = tau_m + y_th - y_th
+    tau_r = tau_r + y_th - y_th
+    assert y_th.shape == y_r.shape
+    assert y_th.ndim == y_r.ndim == 1
+
+    # determine order of quadrature
+    params = {'start_order': 10, 'epsrel': 1e-12, 'maxiter': 10}
+    gl_order = _get_erfcx_integral_gl_order(y_th=y_th, y_r=y_r, **params)
+
+    # separate domains
+    mask_exc = y_th < 0
+    mask_inh = 0 < y_r
+    mask_interm = (y_r <= 0) & (0 <= y_th)
+
+    # calculate rescaled siegert
+    nu = np.zeros(shape=y_th.shape)
+    params = {'tau_m': tau_m[mask_exc], 't_ref': tau_r[mask_exc],
+              'gl_order': gl_order}
+    nu[mask_exc] = _siegert_exc(y_th=y_th[mask_exc],
+                                y_r=y_r[mask_exc], **params)
+    params = {'tau_m': tau_m[mask_inh], 't_ref': tau_r[mask_inh],
+              'gl_order': gl_order}
+    nu[mask_inh] = _siegert_inh(y_th=y_th[mask_inh],
+                                y_r=y_r[mask_inh], **params)
+    params = {'tau_m': tau_m[mask_interm], 't_ref': tau_r[mask_interm],
+              'gl_order': gl_order}
+    nu[mask_interm] = _siegert_interm(y_th=y_th[mask_interm],
+                                      y_r=y_r[mask_interm], **params)
+
+    # calculate rescaled Phi
+    Phi_th = np.zeros(shape=y_th.shape)
+    Phi_r = np.zeros(shape=y_r.shape)
+    Phi_th[mask_exc] = _Phi_neg(s=np.sqrt(2) * y_th[mask_exc])
+    Phi_r[mask_exc] = _Phi_neg(s=np.sqrt(2) * y_r[mask_exc])
+    Phi_th[mask_inh] = _Phi_pos(s=np.sqrt(2) * y_th[mask_inh])
+    Phi_r[mask_inh] = _Phi_pos(s=np.sqrt(2) * y_r[mask_inh])
+    Phi_th[mask_interm] = _Phi_pos(s=np.sqrt(2) * y_th[mask_interm])
+    Phi_r[mask_interm] = _Phi_neg(s=np.sqrt(2) * y_r[mask_interm])
+
+    # include exponential contributions
+    Phi_r[mask_inh] *= np.exp(-y_th[mask_inh]**2 + y_r[mask_inh]**2)
+    Phi_r[mask_interm] *= np.exp(-y_th[mask_interm]**2)
+
+    # calculate nu * dPhi
+    nu_dPhi = nu * (Phi_th - Phi_r)
+
+    # convert back to scalar if only one value calculated
+    if nu_dPhi.shape == (1,):
+        return nu_dPhi.item(0)
+    else:
+        return nu_dPhi
 
 
 @_check_positive_params

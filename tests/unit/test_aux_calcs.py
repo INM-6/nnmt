@@ -73,6 +73,7 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     return nu
 
 
+@pytest.mark.transfered
 class Test_siegert_helper:
     def test_erfcx_quadrature_order_detection(self):
         rtol = 1e-12
@@ -97,6 +98,7 @@ class Test_siegert_helper:
         assert np.all(err <= rtol)
 
 
+@pytest.mark.transfered
 class Test_nu_0:
 
     func = staticmethod(nu0_fb)
@@ -110,6 +112,7 @@ class Test_nu_0:
             self.func, real_shifted_siegert, params, self.rtol)
 
 
+@pytest.mark.transfered
 class Test_nu0_fb433:
 
     func = staticmethod(nu0_fb433)
@@ -178,6 +181,7 @@ class Test_nu0_fb:
             self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_Phi:
 
     func = staticmethod(Phi)
