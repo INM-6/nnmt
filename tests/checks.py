@@ -52,6 +52,11 @@ def assert_quantity_array_almost_equal(qarray1, qarray2, rtol=1e-14):
     assert_units_equal(qarray1, qarray2)
 
 
+def assert_quantity_allclose(qarray1, qarray2, rtol=1e-7):
+    assert_allclose(qarray1, qarray2, rtol)
+    assert_units_equal(qarray1, qarray2)
+
+
 def assert_units_equal(var_1, var_2):
     """Checks whether unit of var_1 and of var_2 conincide."""
     try:
@@ -75,16 +80,17 @@ def check_pos_params_neg_raise_exception(func, params, pos_key):
         func(**params)
 
 
-def check_correct_output(func, params, output, updates=None):
+def check_correct_output(func, params, output, updates=None, rtol=1e-7):
     if updates:
         params = params.copy()
         params.update(updates)
     result = func(**params)
-    assert_array_equal(result, output)
+    assert_allclose(result, output, rtol=rtol)
     assert_units_equal(result, output)
 
 
-def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
+def check_correct_output_for_several_mus_and_sigmas(func, params, outputs,
+                                                    rtol=1e-7):
     params = params.copy()
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
@@ -96,7 +102,7 @@ def check_correct_output_for_several_mus_and_sigmas(func, params, outputs):
         result = func(**params)
         if isinstance(result, ureg.Quantity):
             result.ito(output.units)
-        assert_array_equal(output, result)
+        assert_allclose(output, result, rtol=rtol)
         assert_units_equal(output, result)
 
 
@@ -105,6 +111,7 @@ def check_almost_correct_output_for_several_mus_and_sigmas(func, alt_func,
                                                            rtol):
     mus = params.pop('mu')
     sigmas = params.pop('sigma')
+    assert len(mus) == len(sigmas)
     for mu, sigma in zip(mus, sigmas):
         params['mu'] = mu
         params['sigma'] = sigma
@@ -156,6 +163,20 @@ def check_quantity_dicts_are_equal(dict1, dict2):
                 check_quantity_dicts_are_equal(dict1[key], dict2[key])
             else:
                 assert_array_equal(dict1[key], dict2[key])
+                assert_units_equal(dict1[key], dict2[key])
+                
+                
+def check_quantity_dicts_are_allclose(dict1, dict2, rtol=1e-7):
+    keys = sorted(dict1.keys())
+    for key in keys:
+        assert key in dict2
+        try:
+            assert dict1[key] == dict2[key]
+        except ValueError:
+            if isinstance(dict1[key], dict):
+                check_quantity_dicts_are_allclose(dict1[key], dict2[key], rtol)
+            else:
+                assert_allclose(dict1[key], dict2[key], rtol=rtol)
                 assert_units_equal(dict1[key], dict2[key])
 
 

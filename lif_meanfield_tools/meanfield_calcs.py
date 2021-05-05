@@ -97,7 +97,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     method: str
         The method used for adjusting the Siegert formula to exp shaped PSCs.
         Options: 'shift', 'taylor'. Default is 'shift'
-        
+
     Returns:
     --------
     Quantity(np.ndarray, 'hertz')
@@ -125,7 +125,7 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
                                       firing_rate_func=aux_calcs._nu0_fb433)
     else:
         raise ValueError(f'Method {method} not implemented.')
-    
+
     # do iteration procedure, until stationary firing rates are found
     eps_tol = 1e-12
     t_max = 1000
@@ -936,7 +936,7 @@ def _fit_transfer_function(transfer_function, omegas):
     """
     def func(omega, tau, h0):
         return h0 / (1. + 1j * omega * tau)
-    
+
     # absolute value for fitting
     def func_abs(omega, tau, h0):
         return np.abs(func(omega, tau, h0))
