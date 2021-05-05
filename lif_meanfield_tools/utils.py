@@ -271,6 +271,17 @@ def _strip_units(dict):
             pass
 
 
+def _to_si_units(dict):
+    """
+    Convert dict of quantities to si units.
+    """
+    for key, item in dict.items():
+        try:
+            dict[key] = item.to_base_units()
+        except AttributeError:
+            pass
+
+
 def build_full_arg_list(signature, args, kwargs):
     """
     Creates a full list of arguments including standard arguments.

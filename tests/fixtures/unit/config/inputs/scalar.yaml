@@ -1,0 +1,33 @@
+tau_m:
+  val: 10.0
+  unit: ms
+  
+nu:
+  val: 10
+  unit: Hz
+  
+J:
+  val:
+    - 0.2
+  unit: mV
+  
+K:
+  val:
+    - 1234
+  
+nu_ext:
+  val: 0.1
+  unit: Hz
+  
+J_ext:
+  val:
+    - 0.1
+  unit: mV
+
+K_ext:
+  val:
+    - 123
+
+tau_m_ext:
+  val: 15.0
+  unit: ms

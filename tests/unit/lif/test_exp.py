@@ -10,12 +10,15 @@ from numpy.testing import (
 from ...checks import (check_pos_params_neg_raise_exception,
                        check_V_0_larger_V_th_raise_exception,
                        check_warning_is_given_if_k_is_critical,
-                       )
+                       check_correct_output)
 
 from .test_delta import real_siegert
 
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.lif.exp as exp
+
+from lif_meanfield_tools.utils import _strip_units
+
 
 ureg = lmt.ureg
 
@@ -34,12 +37,34 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
     k = np.sqrt(tau_s / tau_m)
 
-    V_th_eff = V_th_rel + sigma * alpha * k / np.sqrt(2)
-    V_0_eff = V_0_rel + sigma * alpha * k / np.sqrt(2)
+    V_th_eff = V_th_rel + sigma * alpha * k / 2
+    V_0_eff = V_0_rel + sigma * alpha * k / 2
 
     nu = real_siegert(tau_m, tau_r, V_th_eff, V_0_eff, mu, sigma)
 
     return nu
+
+
+@pytest.mark.old
+class Test_firing_rates:
+
+    func = staticmethod(exp._firing_rate_shift)
+    output_key = 'firing_rates'
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params, pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_params):
+        _strip_units(std_params)
+        check_V_0_larger_V_th_raise_exception(self.func, std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        _strip_units(params)
+        # _strip_units(output)
+        output = output.magnitude / 1000
+        check_correct_output(self.func, params, output)
 
 
 class Test_firing_rates_wrapper:
@@ -68,8 +93,8 @@ class Test_firing_rate_shift:
     
     func = staticmethod(exp._firing_rate_shift)
     fixtures = 'lif_exp_firing_rate_shift.h5'
-    rtol = 0.2
-
+    rtol = 1e-7
+    
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_unitless_params,
@@ -81,7 +106,7 @@ class Test_firing_rate_shift:
     def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
         check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
 
-    def test_gives_similar_results_as_real_shifted_siegert_if_siegert_converges(
+    def test_gives_similar_results_as_real_shifted_siegert_if_it_converges(
             self, unit_fixtures):
         params = unit_fixtures.pop('params')
         siegert = real_shifted_siegert(**params)
@@ -98,7 +123,9 @@ class Test_firing_rate_taylor:
     
     func = staticmethod(exp._firing_rate_taylor)
     fixtures = 'lif_exp_firing_rate_taylor.h5'
-    rtol = 0.2
+    # Lower rtol than for nu0_fb because it is compared to real_shifted_siegert
+    # instead of the corresponding Taylor approximation.
+    rtol = 6e-2
 
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
@@ -111,18 +138,24 @@ class Test_firing_rate_taylor:
     def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
         check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
 
-    def test_gives_similar_results_as_real_shifted_siegert_if_siegert_converges(
+    def test_gives_similar_results_as_real_shifted_siegert_if_it_converges(
             self, unit_fixtures):
         params = unit_fixtures.pop('params')
         siegert = real_shifted_siegert(**params)
-        if not np.any(np.isnan(siegert)):
-            assert_allclose(self.func(**params), siegert, rtol=self.rtol)
+        result = self.func(**params)
+        if not np.any(result < 0):
+            if not np.any(np.isnan(siegert)):
+                assert_allclose(result, siegert, rtol=self.rtol)
+            else:
+                pytest.skip('Shifted Siegert did not converge.')
+        else:
+            pytest.skip('Negative rates detected.')
 
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_array_equal(self.func(**params), output)
-        
+    
         
 class Test_Phi:
 

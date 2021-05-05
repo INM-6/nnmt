@@ -102,7 +102,7 @@ def _input_calc(network, prefix, input_func):
     return input_func(rates, **params) * ureg.V
     
 
-def _mean_input(nu, J, K, tau_m, nu_ext=0, J_ext=0, K_ext=0, tau_m_ext=0):
+def _mean_input(nu, J, K, tau_m, nu_ext, J_ext, K_ext, tau_m_ext):
     """ Compute mean input without quantities. """
     # contribution from within the network
     m0 = np.dot(K * J, tau_m * nu)
@@ -113,7 +113,7 @@ def _mean_input(nu, J, K, tau_m, nu_ext=0, J_ext=0, K_ext=0, tau_m_ext=0):
     return m
 
 
-def _std_input(nu, J, K, tau_m, nu_ext=0, J_ext=0, K_ext=0, tau_m_ext=0):
+def _std_input(nu, J, K, tau_m, nu_ext, J_ext, K_ext, tau_m_ext):
     """ Compute standard deviation of input without quantities. """
     # contribution from within the network to variance
     var0 = np.dot(K * J**2, tau_m * nu)

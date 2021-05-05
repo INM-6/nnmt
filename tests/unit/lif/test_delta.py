@@ -5,7 +5,7 @@ from scipy.special import erf, erfcx
 
 from numpy.testing import (
     assert_array_equal,
-    assert_array_almost_equal
+    assert_allclose
     )
 
 from ...checks import (check_pos_params_neg_raise_exception,
@@ -71,7 +71,7 @@ class Test_firing_rates:
     
     func = staticmethod(delta._firing_rate)
     fixtures = 'lif_delta_firing_rate.h5'
-    decimal = 15
+    rtol = 1e-4
 
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
@@ -87,8 +87,7 @@ class Test_firing_rates:
         
         siegert = real_siegert(**params)
         if not np.any(np.isnan(siegert)):
-            assert_array_almost_equal(self.func(**params), siegert,
-                                      decimal=self.decimal)
+            assert_allclose(self.func(**params), siegert, rtol=self.rtol)
 
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')

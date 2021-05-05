@@ -54,6 +54,8 @@ all_pos_keys = ['C',
                 'tau_s',
                 'tau_r',
                 'nu_ext',
+                'K_ext',
+                'tau_m_ext'
                 ]
 
 # list of tested parameter regimes for correct output tests

@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from scipy.special import (
     erf as _erf,
@@ -223,6 +224,11 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
                             / (tau_m[regular_mask] * np.sqrt(2)) * dPhi
                             * (result[regular_mask] * tau_m[regular_mask])**2)
                             
+    if np.any(result < 0):
+        warnings.warn("Negative firing rates detected. You might be in an "
+                      "invalid regime. Use `method='shift'` for "
+                      "calculating the firing rates instead.")
+        
     if result.shape == (1,):
         return result.item(0)
     else:
