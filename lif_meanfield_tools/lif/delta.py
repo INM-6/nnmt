@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special import (
+    erf as _erf,
     erfcx as _erfcx,
     dawsn as _dawsn,
     roots_legendre as _roots_legendre
@@ -299,3 +300,42 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
 #         Array of mean inputs to each population in V.
 #     '''
 #     return _static._std_input(network, _prefix)
+
+
+def _derivative_of_firing_rates_wrt_mean_input(tau_m, tau_r, V_th_rel, V_0_rel,
+                                               mu, sigma):
+    """
+    Derivative of the stationary firing rate without synaptic filtering
+    with respect to the mean input
+
+    Parameters
+    ----------
+    tau_m : float
+        Membrane time constant in seconds.
+    tau_s : float
+        Synaptic time constant in seconds.
+    tau_r : float
+        Refractory time in seconds.
+    V_th_rel : float
+        Relative threshold potential in mV.
+    V_0_rel : float
+        Relative reset potential in mV.
+    mu : float
+        Mean neuron activity in mV.
+    sigma : float
+        Standard deviation of neuron activity in mV.
+
+    Returns
+    -------
+    float
+        Zero frequency limit of white noise transfer function in Hz/mV.
+    """
+    if np.any(sigma == 0):
+        raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+    nu0 = _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    return (np.sqrt(np.pi) * tau_m * np.power(nu0, 2) / sigma
+            * (np.exp(y_th**2) * (1 + _erf(y_th)) - np.exp(y_r**2)
+               * (1 + _erf(y_r))))

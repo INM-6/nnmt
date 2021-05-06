@@ -1,5 +1,6 @@
 import warnings
 import numpy as np
+import mpmath
 from scipy.special import (
     erf as _erf,
     zetac as _zetac,
@@ -15,6 +16,7 @@ from . import _static
                       
 from .delta import (
     _firing_rate as _delta_firing_rate,
+    _derivative_of_firing_rates_wrt_mean_input,
     _get_erfcx_integral_gl_order,
     _siegert_exc,
     _siegert_inh,
@@ -425,3 +427,178 @@ def std_input(network):
         Array of mean inputs to each population in V.
     '''
     return _static._std_input(network, _prefix)
+
+
+@_check_and_store(_prefix, ['transfer_function'], ['transfer_function_method'])
+def transfer_function(network, method='shift'):
+    """
+    Calculates transfer function.
+    
+    Parameters
+    ----------
+    network : lif_meanfield_tools.create.Network or child class instance.
+        Network with the network parameters listed in the following.
+    method : str
+        Method used to calculate the tranfser function. Options: 'shift' or
+        'taylor'. Default is 'shift'.
+    
+    Network parameters
+    ------------------
+    tau_m : float
+        Membrane time constant in s.
+    tau_s : float
+        Synaptic time constant in s.
+    tau_r : float
+        Refractory time in s.
+    V_0_rel : float
+        Relative reset potential in V.
+    V_th_rel : float
+        Relative threshold potential in V.
+    
+    Analysis Parameters
+    -------------------
+    omegas : float or np.ndarray
+        Input frequencies to population in Hz.
+        
+    Network results
+    ---------------
+    mean_input : float or np.ndarray
+        Mean neuron activity of one population in V.
+    std_input : float or np.ndarray
+        Standard deviation of neuron activity of one population in V.
+
+    Returns
+    -------
+    ureg.Quantity(np.array, 'hertz/millivolt'):
+        Transfer functions for each population with the following shape:
+        (number of populations, number of populations)
+    """
+    
+    list_of_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel', 'V_0_rel']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+        params['omegas'] = network.analysis_params['omegas']
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for calculating the transfer function!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    try:
+        mean_input = (
+            network.results['lif.exp.mean_input'].to_base_units().magnitude)
+        std_input = (
+            network.results['lif.exp.std_input'].to_base_units().magnitude)
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    if method == 'shift':
+        return _transfer_function_shift(mu=mean_input, sigma=std_input,
+                                        **params) * ureg.Hz / ureg.V
+    elif method == 'taylor':
+        return _transfer_function_taylor(mu=mean_input, sigma=std_input,
+                                         **params) * ureg.Hz / ureg.V
+
+
+def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                             V_0_rel, omegas, synaptic_filter=True):
+    """
+    Calcs value of transfer func for one population at given frequency omega.
+
+    Calculates transfer function according to $\tilde{n}$ in Schuecker et al.
+    (2015). The expression is to first order equivalent to
+    `transfer_function_1p_taylor`. Since the underlying theory is correct to
+    first order, the two expressions are exchangeable.
+
+    The difference here is that the linear response of the system is considered
+    with respect to a perturbation of the input to the current I, leading to an
+    additional low pass filtering 1/(1+i w tau_s).
+    Compare with the second equation of Eq. 18 and the text below Eq. 29.
+
+    Parameters:
+    -----------
+    mu: Quantity(float, 'millivolt')
+        Mean neuron activity of one population in mV.
+    sigma: Quantity(float, 'millivolt')
+        Standard deviation of neuron activity of one population in mV.
+    tau_m: Quantity(float, 'millisecond')
+        Membrane time constant.
+    tau_s: Quantity(float, 'millisecond')
+        Synaptic time constant.
+    tau_r: Quantity(float, 'millisecond')
+        Refractory time.
+    V_th_rel: Quantity(float, 'millivolt')
+        Relative threshold potential.
+    V_0_rel: Quantity(float, 'millivolt')
+        Relative reset potential.
+    omegas: Quantity(float, 'hertz')
+        Input frequency to population.
+
+    Returns:
+    --------
+    Quantity(float, 'hertz/millivolt')
+    """
+    
+    # effective threshold and reset
+    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    V_th_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    V_0_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    tau_m = tau_m + V_th_rel - V_th_rel
+    tau_r = tau_r + V_th_rel - V_th_rel
+    tau_s = tau_s + V_th_rel - V_th_rel
+
+    # for frequency zero the exact expression is given by the derivative of
+    # f-I-curve
+    small_omega_mask = omegas < 1e-15
+    regular_mask = np.invert(small_omega_mask)
+    result = np.zeros((len(omegas), len(mu)), dtype=complex)
+    
+    if np.any(small_omega_mask):
+        result[small_omega_mask] = _derivative_of_firing_rates_wrt_mean_input(
+            tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    if np.any(regular_mask):
+        nu = _delta_firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
+        z = -0.5 + 1j * np.outer(omegas, tau_m)
+
+        frac = ((_d_Psi(z, x_t) - _d_Psi(z, x_r))
+                / (_Psi(z, x_t) - _Psi(z, x_r)))
+
+        result[regular_mask] = (np.sqrt(2.)
+                                / sigma[np.newaxis]
+                                * nu[np.newaxis]
+                                / (1. + 1j * np.outer(omegas, tau_m))
+                                * frac)
+    if synaptic_filter:
+        # additional low-pass filter due to perturbation to the input current
+        return result / (1. + 1j * np.outer(omegas, tau_s))
+    return result
+
+
+def _Psi(z, x):
+    """
+    Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
+    """
+    x = np.atleast_1d(x)
+    z = np.atleast_1d(z)
+    assert z.shape[1] == x.shape[0]
+    parabolic_cylinder_fn = np.array(
+        [[complex(mpmath.pcfu(_z, -_x)) for _x, _z in zip(x, _z)] for _z in z]
+        )
+    return np.exp(0.25 * x**2) * parabolic_cylinder_fn
+
+
+def _d_Psi(z, x):
+    """
+    First derivative of Psi using recurrence relations.
+
+    (Eq.: 12.8.9 in http://dlmf.nist.gov/12.8)
+    """
+    z = np.atleast_1d(z)
+    assert z.shape[1] == x.shape[0]
+    return (1. / 2. + z) * _Psi(z + 1, x)
+
+
+def _transfer_function_taylor():
+    pass

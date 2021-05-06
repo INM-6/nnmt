@@ -16,7 +16,10 @@ from .test_delta import real_siegert
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.lif.exp as exp
 
-from lif_meanfield_tools.utils import _strip_units
+from lif_meanfield_tools.utils import (
+    _strip_units,
+    _to_si_units,
+    )
 
 
 ureg = lmt.ureg
@@ -167,3 +170,24 @@ class Test_Phi:
         for s, output in zip(s_values, outputs):
             result = self.func(s)
             assert result == output
+
+
+class Test_transfer_function_shift():
+
+    func = staticmethod(exp._transfer_function_shift)
+    output_key = 'tf_shift'
+
+    # def test_pos_params_neg_raise_exception(self, std_params_tf, pos_keys):
+    #     check_pos_params_neg_raise_exception(self.func, std_params_tf,
+    #                                          pos_keys)
+    #
+    # def test_warning_is_given_if_k_is_critical(self, std_params_tf):
+    #     check_warning_is_given_if_k_is_critical(self.func, std_params_tf)
+    #
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        output = output.magnitude * 1000
+        _to_si_units(params)
+        _strip_units(params)
+        assert_allclose(self.func(**params), output)

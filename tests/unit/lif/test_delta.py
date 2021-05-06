@@ -121,3 +121,20 @@ class Test_siegert_helper:
         I_gl = delta._erfcx_integral(a, b, order=order)
         err = np.abs(I_gl / I_ana - 1)
         assert np.all(err <= 1e-4)
+
+
+class Test_derivative_of_firing_rates_wrt_mean_input:
+
+    func = staticmethod(delta._derivative_of_firing_rates_wrt_mean_input)
+    output_key = 'd_nu_d_mu'
+
+    def test_zero_sigma_raises_error(self, std_params):
+        std_params['sigma'] = 0
+        with pytest.raises(ZeroDivisionError):
+            self.func(**std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        lmt.utils._strip_units(params)
+        outputs = output_test_fixtures.pop('output')
+        assert_allclose(self.func(**params), outputs)
