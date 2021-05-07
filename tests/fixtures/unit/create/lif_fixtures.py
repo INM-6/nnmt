@@ -53,9 +53,10 @@ def create_and_save_fixtures(func, regime_params, regimes, file):
     regime_params = extract_required_params(func,
                                             regime_params)
     for regime, params in zip(regimes, regime_params):
+        output = func(**params)
         results[regime] = {
             'params': params,
-            'output': func(**params)
+            'output': output
             }
     h5.save(file, results, overwrite_dataset=True)
     
@@ -102,5 +103,14 @@ if __name__ == '__main__':
             create_and_save_fixtures(lmt.lif._static._std_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_std_input.h5')
+        elif module == 'transfer_functions':
+            create_and_save_fixtures(lmt.lif.exp._transfer_function_shift,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_transfer_function_shift.h5')
+            create_and_save_fixtures(lmt.lif.exp._transfer_function_taylor,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_transfer_function_taylor.h5')
         else:
             print('No such module')

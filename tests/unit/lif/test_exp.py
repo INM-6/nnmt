@@ -117,8 +117,32 @@ class Test_firing_rate_shift:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
+        print(output)
         assert_allclose(self.func(**params), output)
-        
+    
+    def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
+        params = unit_fixtures_fully_vectorized.pop('params')
+        vectorized_output = self.func(**params)
+        single_outputs = np.zeros(vectorized_output.shape, dtype=complex)
+        mus = params.pop('mu')
+        sigmas = params.pop('sigma')
+        tau_ms = params.pop('tau_m')
+        tau_rs = params.pop('tau_r')
+        tau_ss = params.pop('tau_s')
+        V_th_rels = params.pop('V_th_rel')
+        V_0_rels = params.pop('V_0_rel')
+        for j, (mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel
+                ) in enumerate(
+                    zip(mus, sigmas, tau_ms, tau_rs, tau_ss, V_th_rels,
+                        V_0_rels)):
+            single_outputs[j] = self.func(mu=mu, sigma=sigma,
+                                          tau_m=tau_m, tau_s=tau_s,
+                                          tau_r=tau_r,
+                                          V_th_rel=V_th_rel,
+                                          V_0_rel=V_0_rel)
+        from numpy.testing import assert_array_equal
+        assert_array_equal(vectorized_output, single_outputs)
+    
 
 class Test_firing_rate_taylor:
     
@@ -155,7 +179,31 @@ class Test_firing_rate_taylor:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
+        print(output)
         assert_allclose(self.func(**params), output)
+        
+    def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
+        params = unit_fixtures_fully_vectorized.pop('params')
+        vectorized_output = self.func(**params)
+        single_outputs = np.zeros(vectorized_output.shape, dtype=complex)
+        mus = params.pop('mu')
+        sigmas = params.pop('sigma')
+        tau_ms = params.pop('tau_m')
+        tau_rs = params.pop('tau_r')
+        tau_ss = params.pop('tau_s')
+        V_th_rels = params.pop('V_th_rel')
+        V_0_rels = params.pop('V_0_rel')
+        for j, (mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel
+                ) in enumerate(
+                    zip(mus, sigmas, tau_ms, tau_rs, tau_ss, V_th_rels,
+                        V_0_rels)):
+            single_outputs[j] = self.func(mu=mu, sigma=sigma,
+                                          tau_m=tau_m, tau_s=tau_s,
+                                          tau_r=tau_r,
+                                          V_th_rel=V_th_rel,
+                                          V_0_rel=V_0_rel)
+        from numpy.testing import assert_array_equal
+        assert_array_equal(vectorized_output, single_outputs)
     
         
 class Test_Phi:
@@ -172,7 +220,7 @@ class Test_Phi:
 
 
 @pytest.mark.old
-class Test_transfer_function_shift():
+class Test_transfer_function_shift_old():
 
     func = staticmethod(exp._transfer_function_shift)
     output_key = 'tf_shift'
@@ -191,3 +239,177 @@ class Test_transfer_function_shift():
         _to_si_units(params)
         _strip_units(params)
         assert_allclose(self.func(**params), output)
+        
+        
+@pytest.mark.old
+class Test_transfer_function_taylor_old():
+
+    func = staticmethod(exp._transfer_function_taylor)
+    output_key = 'tf_taylor'
+
+    # def test_pos_params_neg_raise_exception(self, std_params_tf, pos_keys):
+    #     check_pos_params_neg_raise_exception(self.func, std_params_tf,
+    #                                          pos_keys)
+    #
+    # def test_warning_is_given_if_k_is_critical(self, std_params_tf):
+    #     check_warning_is_given_if_k_is_critical(self.func, std_params_tf)
+    #
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        output = output_test_fixtures.pop('output')
+        output = output.magnitude * 1000
+        _to_si_units(params)
+        _strip_units(params)
+        assert_allclose(self.func(**params), output)
+
+
+class Test_Phi_prime_mu:
+
+    func = staticmethod(exp._Phi_prime_mu)
+
+    def test_negative_sigma_raises_error(self):
+        sigma = -1 * ureg.mV
+        s = 1
+        with pytest.raises(ValueError):
+            self.func(s, sigma)
+
+    def test_correct_output(self):
+        fixtures = np.load(fixture_path + 'Phi_prime_mu.npz')
+        s_values = fixtures['s_values']
+        sigmas = fixtures['sigmas']
+        outputs = fixtures['outputs']
+        for s, sigma, output in zip(s_values, sigmas, outputs):
+            result = self.func(s, sigma)
+            assert result == output
+
+    def test_zero_sigma_raises_error(self):
+        sigma = 0 * ureg.mV
+        s = 1
+        with pytest.raises(ZeroDivisionError):
+            self.func(s, sigma)
+            
+
+class Test_transfer_function_shift:
+    
+    func = staticmethod(exp._transfer_function_shift)
+    fixtures = 'lif_exp_transfer_function_shift.h5'
+    rtol = 1e-7
+    
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
+        check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
+        
+    def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+        
+    def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
+        params = unit_fixtures_fully_vectorized.pop('params')
+        vectorized_output = self.func(**params)
+        single_outputs = np.zeros(vectorized_output.shape, dtype=complex)
+        mus = params.pop('mu')
+        sigmas = params.pop('sigma')
+        tau_ms = params.pop('tau_m')
+        tau_rs = params.pop('tau_r')
+        tau_ss = params.pop('tau_s')
+        V_th_rels = params.pop('V_th_rel')
+        V_0_rels = params.pop('V_0_rel')
+        for i, omega in enumerate(params.pop('omegas')):
+            for j, (mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel
+                    ) in enumerate(
+                    zip(mus, sigmas, tau_ms, tau_rs, tau_ss, V_th_rels,
+                        V_0_rels)):
+                single_outputs[i, j] = self.func(mu=mu, sigma=sigma,
+                                                 omegas=omega, tau_m=tau_m,
+                                                 tau_s=tau_s, tau_r=tau_r,
+                                                 V_th_rel=V_th_rel,
+                                                 V_0_rel=V_0_rel)
+        from numpy.testing import assert_array_equal
+        assert_array_equal(vectorized_output, single_outputs)
+        
+
+class Test_transfer_function_taylor:
+    
+    func = staticmethod(exp._transfer_function_taylor)
+    fixtures = 'lif_exp_transfer_function_taylor.h5'
+    rtol = 1e-7
+    
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
+        check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
+        
+    def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+        
+    def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
+        params = unit_fixtures_fully_vectorized.pop('params')
+        vectorized_output = self.func(**params)
+        single_outputs = np.zeros(vectorized_output.shape, dtype=complex)
+        mus = params.pop('mu')
+        sigmas = params.pop('sigma')
+        tau_ms = params.pop('tau_m')
+        tau_rs = params.pop('tau_r')
+        tau_ss = params.pop('tau_s')
+        V_th_rels = params.pop('V_th_rel')
+        V_0_rels = params.pop('V_0_rel')
+        for i, omega in enumerate(params.pop('omegas')):
+            for j, (mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel
+                    ) in enumerate(
+                    zip(mus, sigmas, tau_ms, tau_rs, tau_ss, V_th_rels,
+                        V_0_rels)):
+                single_outputs[i, j] = self.func(mu=mu, sigma=sigma,
+                                                 omegas=omega, tau_m=tau_m,
+                                                 tau_s=tau_s, tau_r=tau_r,
+                                                 V_th_rel=V_th_rel,
+                                                 V_0_rel=V_0_rel)
+        from numpy.testing import assert_array_equal
+        assert_array_equal(vectorized_output, single_outputs)
+        
+
+class Test_derivative_of_firing_rates_wrt_mean_input:
+
+    func = staticmethod(exp._derivative_of_firing_rates_wrt_mean_input)
+    output_key = 'd_nu_d_mu_fb433'
+    
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
+        check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
+
+    def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
+
+    def test_zero_sigma_raises_error(self, std_params):
+        std_params['sigma'] = 0 * ureg.mV
+        with pytest.raises(ZeroDivisionError):
+            self.func(**std_params)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        outputs = output_test_fixtures.pop('output')
+        _to_si_units(params)
+        _strip_units(params)
+        outputs = outputs.magnitude * 1000
+        from ...checks import check_correct_output_for_several_mus_and_sigmas
+        check_correct_output_for_several_mus_and_sigmas(self.func, params,
+                                                        outputs)

@@ -539,3 +539,14 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                         for id in ids]
         # import pdb; pdb.set_trace()
         metafunc.parametrize("unit_fixtures", fixture_list, ids=ids)
+
+    elif "unit_fixtures_fully_vectorized" in metafunc.fixturenames:
+        file = metafunc.cls.fixtures
+        fixtures = h5.load(unit_fix_path + file)
+        ids = sorted(fixtures.keys())
+        fixture_list = [dict(output=fixtures[id]['output'],
+                        params=fixtures[id]['params'])
+                        for id in ids if id == 'fully_vectorized']
+        # import pdb; pdb.set_trace()
+        metafunc.parametrize("unit_fixtures_fully_vectorized", fixture_list,
+                             ids=['fully_vectorized'])
