@@ -541,29 +541,28 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     --------
     Quantity(float, 'hertz/millivolt')
     """
-    
+    # ensure right vectorized format
     omegas = np.atleast_1d(omegas)
-    mu = np.atleast_1d(mu)
-    sigma = np.atleast_1d(sigma)
-    
+    mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel = (
+        _equalize_shape(mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel))
+
     # effective threshold and reset
     alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
     V_th_shifted = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     V_0_shifted = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
-    tau_m = tau_m + V_th_shifted - V_th_shifted
-    tau_r = tau_r + V_th_shifted - V_th_shifted
-    tau_s = tau_s + V_th_shifted - V_th_shifted
-
-    # for frequency zero the exact expression is given by the derivative of
-    # f-I-curve
-    small_omega_mask = omegas < 1e-15
-    regular_mask = np.invert(small_omega_mask)
+    
+    zero_omega_mask = omegas < 1e-15
+    regular_mask = np.invert(zero_omega_mask)
+    
     result = np.zeros((len(omegas), len(mu)), dtype=complex)
     
-    if np.any(small_omega_mask):
-        result[small_omega_mask] = (
+    # for frequency zero the exact expression is given by the derivative of
+    # f-I-curve
+    if np.any(zero_omega_mask):
+        result[zero_omega_mask] = (
             _derivative_of_delta_firing_rates_wrt_mean_input(
                 tau_m, tau_r, V_th_shifted, V_0_shifted, mu, sigma))
+        
     if np.any(regular_mask):
         nu = _delta_firing_rate(tau_m, tau_r, V_th_shifted, V_0_shifted,
                                 mu, sigma)
@@ -581,8 +580,7 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                                                       tau_m))
                                 * frac)
     if synaptic_filter:
-        # additional low-pass filter due to perturbation to the input current
-        return result / (1. + 1j * np.outer(omegas, tau_s))
+        result *= _synaptic_filter(omegas, tau_s)
     return result
 
 
@@ -623,20 +621,24 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     -------
     Quantity(float, 'hertz/millivolt')
     """
-    # for frequency zero the exact expression is given by the derivative of
-    # f-I-curve
+    # ensure right vectorized format
     omegas = np.atleast_1d(omegas)
-    mu = np.atleast_1d(mu)
-    sigma = np.atleast_1d(sigma)
-    small_omega_mask = omegas < 1e-15
-    regular_mask = np.invert(small_omega_mask)
+    mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel = (
+        _equalize_shape(mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel))
+    
+    zero_omega_mask = omegas < 1e-15
+    regular_mask = np.invert(zero_omega_mask)
+    
     result = np.zeros((len(omegas), len(mu)), dtype=complex)
     
-    if np.any(small_omega_mask):
-        result[small_omega_mask] = (
+    # for frequency zero the exact expression is given by the derivative of
+    # f-I-curve
+    if np.any(zero_omega_mask):
+        result[zero_omega_mask] = (
             _derivative_of_firing_rates_wrt_mean_input(
                 tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
             )
+        
     if np.any(regular_mask):
         delta_rates = _delta_firing_rate(
             tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
@@ -644,12 +646,11 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         exp_rates = _firing_rate_taylor(
             tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
         exp_rates = np.atleast_1d(exp_rates)[np.newaxis]
+        
+        # effective threshold and reset
         x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
-        # effective threshold and reset
-        tau_m = tau_m + x_t - x_t
-        tau_r = tau_r + x_t - x_t
-        tau_s = tau_s + x_t - x_t
+        
         z = -0.5 + 1j * np.outer(omegas[regular_mask], tau_m)
         alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
         k = np.sqrt(tau_s / tau_m)
@@ -664,10 +665,36 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
             * (a1 + a3))
 
     if synaptic_filter:
-        # additional low-pass filter due to perturbation to the input current
-        return result / (1. + 1j * np.outer(omegas, tau_s))
+        result *= _synaptic_filter(omegas, tau_s)
     return result
 
+
+def _synaptic_filter(omegas, tau_s):
+    """Additional low-pass filter due to perturbation to the input current."""
+    return 1 / (1. + 1j * np.outer(omegas, tau_s))
+
+
+def _equalize_shape(*args):
+    """Brings list of arrays and scalars into similar 1d shape if possible."""
+    args = [np.atleast_1d(arg) for arg in args]
+    max_arg = args[0]
+    for arg in args[1:]:
+        if len(arg) > len(max_arg):
+            max_arg = arg
+    args = [_similar_array(arg, max_arg) for arg in args]
+    return args
+
+
+def _similar_array(x, array):
+    """Returns an array of x of similar shape as array."""
+    x = np.atleast_1d(x)
+    if x.shape == array.shape:
+        return x
+    elif len(x) == 1:
+        return np.ones(array.shape) * x
+    else:
+        raise RuntimeError(f'Unclear how to shape {x} into shape of {array}.')
+    
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
