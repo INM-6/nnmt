@@ -371,3 +371,37 @@ class Test_check_and_store_decorator:
         assert network.analysis_params['analysis2'] == 2
         assert network.analysis_params['analysis3'] == 5
         assert network.results['result'] == 30 * ureg.mV
+
+    def test_results_are_calculated_if_dependent_quantity_has_been_updated(
+            self, network):
+        
+        @lmt.utils._check_and_store(['rates'], ['rates_method'])
+        def rates(network, method):
+            if method == 'shift':
+                return 1
+            elif method == 'taylor':
+                return 2
+            
+        @lmt.utils._check_and_store(['mean'], depends_on=['rates'])
+        def mean(network):
+            return network.results['rates']
+        
+        rates(network, 'shift')
+        mean(network)
+        rates(network, 'taylor')
+        mean(network)
+        assert network.results['mean'] == 2
+            
+    def test_prefix_is_added_to_results_and_analysis_params(self, network):
+        
+        prefix = 'prefix.'
+        
+        @lmt.utils._check_and_store(['rates'], ['rates_method'],
+                                    prefix=prefix)
+        def rates(network, method):
+            return 1
+        
+        rates(network, 'shift')
+        assert (prefix + 'rates') in network.results.keys()
+        assert (prefix + 'rates_method') in network.analysis_params.keys()
+            

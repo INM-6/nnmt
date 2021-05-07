@@ -28,7 +28,7 @@ from .delta import (
 _prefix = 'lif.exp.'
 
 
-@_check_and_store(_prefix, ['firing_rates'], ['firing_rates_method'])
+@_check_and_store(['firing_rates'], ['firing_rates_method'], prefix=_prefix)
 def firing_rates(network, method='shift'):
     """
     Calculates stationary firing rates for exp PSCs.
@@ -336,7 +336,8 @@ def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
     return _delta_firing_rate(tau_m, tau_r, V_th1, V_01, mu, sigma)
 
 
-@_check_and_store(_prefix, ['mean_input'])
+@_check_and_store(['mean_input'], depends_on=['lif.exp.firing_rates'],
+                  prefix=_prefix)
 def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
@@ -383,7 +384,8 @@ def mean_input(network):
     return _static._mean_input(network, _prefix)
 
 
-@_check_and_store(_prefix, ['std_input'])
+@_check_and_store(['std_input'], depends_on=['lif.exp.firing_rates'],
+                  prefix=_prefix)
 def std_input(network):
     '''
     Calc standard deviation of inputs to populations.
@@ -430,7 +432,9 @@ def std_input(network):
     return _static._std_input(network, _prefix)
 
 
-@_check_and_store(_prefix, ['transfer_function'], ['transfer_function_method'])
+@_check_and_store(['transfer_function'], ['transfer_function_method'],
+                  depends_on=['lif.exp.mean_input', 'lif.exp.std_input'],
+                  prefix=_prefix)
 def transfer_function(network, method='shift'):
     """
     Calculates transfer function.

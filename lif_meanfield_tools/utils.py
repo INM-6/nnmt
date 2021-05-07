@@ -4,6 +4,7 @@ This module contains helper functions.
 
 import inspect
 import warnings
+import time
 from functools import wraps
 import numpy as np
 from decorator import decorator
@@ -12,7 +13,8 @@ import hashlib
 from . import ureg
 
 
-def _check_and_store(prefix, result_keys, analysis_keys=None):
+def _check_and_store(result_keys, analysis_keys=None, depends_on=None,
+                     prefix=''):
     """
     Decorator function that checks whether result are already existing.
 
@@ -83,15 +85,32 @@ def _check_and_store(prefix, result_keys, analysis_keys=None):
         # calculate hash from result and analysis keys and analysis params
         label = str(result_keys) + str(analysis_keys) + str(new_params)
         h = hashlib.md5(label.encode('utf-8')).hexdigest()
+        
+        new_results = None
         # check if hash already exists and get corresponding result
         if h in results_hash_dict.keys():
-            # if only one key is present don't use list
-            if len(result_keys) == 1:
-                new_results = results_hash_dict[h][result_keys[0]]
-            else:
-                new_results = [results_hash_dict[h][key]
-                               for key in result_keys]
-        else:
+            time_stamp = results_hash_dict[h]['time']
+            up_to_date = True
+            if depends_on is not None:
+                dep_time_stamps = []
+                for key in depends_on:
+                    dep_time_stamps.append(
+                        [value['time']
+                         for value in results_hash_dict.values()
+                         if key in value])
+                if np.any(np.array(dep_time_stamps) > time_stamp):
+                    up_to_date = False
+            # if all dependend values are older than the most recent
+            # version of the requested quantity, return old result
+            if up_to_date:
+                # if only one key is present don't use list
+                if len(result_keys) == 1:
+                    new_results = results_hash_dict[h][result_keys[0]]
+                else:
+                    new_results = [results_hash_dict[h][key]
+                                   for key in result_keys]
+                    
+        if new_results is None:
             # if not, calculate new result
             new_results = func(network, *args, **kwargs)
 
@@ -107,7 +126,8 @@ def _check_and_store(prefix, result_keys, analysis_keys=None):
                     analysis_dict[key] = param
                 hash_dict['analysis_params'] = analysis_dict
             results_hash_dict[h] = hash_dict
-            
+        # make new time stamp
+        results_hash_dict[h]['time'] = time.time()
         # create new results and analysis_params entries
         if len(result_keys) == 1:
             results[result_keys[0]] = new_results

@@ -16,7 +16,7 @@ from .. import ureg
 _prefix = 'lif.delta.'
 
 
-@_check_and_store(_prefix, ['firing_rates'])
+@_check_and_store(['firing_rates'], prefix=_prefix)
 def firing_rates(network):
     """
     Calculates stationary firing rates for delta shaped PSCs.
@@ -208,7 +208,7 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
-# @_check_and_store(_prefix, ['mean_input'])
+# @_check_and_store(['mean_input'], prefix=_prefix)
 # def mean_input(network):
 #     '''
 #     Calc mean inputs to populations as function of firing rates of populations.
@@ -255,7 +255,7 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
 #     return _static._mean_input(network, _prefix)
 #
 #
-# @_check_and_store(_prefix, ['std_input'])
+# @_check_and_store(['std_input'], prefix=_prefix)
 # def std_input(network):
 #     '''
 #     Calc standard deviation of inputs to populations.
