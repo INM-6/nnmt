@@ -16,7 +16,8 @@ from . import _static
                       
 from .delta import (
     _firing_rate as _delta_firing_rate,
-    _derivative_of_firing_rates_wrt_mean_input,
+    _derivative_of_firing_rates_wrt_mean_input
+    as _derivative_of_delta_firing_rates_wrt_mean_input,
     _get_erfcx_integral_gl_order,
     _siegert_exc,
     _siegert_inh,
@@ -500,6 +501,8 @@ def transfer_function(network, method='shift'):
                                          **params) * ureg.Hz / ureg.V
 
 
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
 def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
                              V_0_rel, omegas, synaptic_filter=True):
     """
@@ -539,13 +542,17 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     Quantity(float, 'hertz/millivolt')
     """
     
+    omegas = np.atleast_1d(omegas)
+    mu = np.atleast_1d(mu)
+    sigma = np.atleast_1d(sigma)
+    
     # effective threshold and reset
     alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
-    V_th_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
-    V_0_rel += sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
-    tau_m = tau_m + V_th_rel - V_th_rel
-    tau_r = tau_r + V_th_rel - V_th_rel
-    tau_s = tau_s + V_th_rel - V_th_rel
+    V_th_shifted = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    V_0_shifted = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    tau_m = tau_m + V_th_shifted - V_th_shifted
+    tau_r = tau_r + V_th_shifted - V_th_shifted
+    tau_s = tau_s + V_th_shifted - V_th_shifted
 
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
@@ -554,26 +561,164 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     result = np.zeros((len(omegas), len(mu)), dtype=complex)
     
     if np.any(small_omega_mask):
-        result[small_omega_mask] = _derivative_of_firing_rates_wrt_mean_input(
-            tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        result[small_omega_mask] = (
+            _derivative_of_delta_firing_rates_wrt_mean_input(
+                tau_m, tau_r, V_th_shifted, V_0_shifted, mu, sigma))
     if np.any(regular_mask):
-        nu = _delta_firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-        x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
-        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
-        z = -0.5 + 1j * np.outer(omegas, tau_m)
+        nu = _delta_firing_rate(tau_m, tau_r, V_th_shifted, V_0_shifted,
+                                mu, sigma)
+        nu = np.atleast_1d(nu)[np.newaxis]
+        x_t = np.sqrt(2.) * (V_th_shifted - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_shifted - mu) / sigma
+        z = -0.5 + 1j * np.outer(omegas[regular_mask], tau_m)
 
         frac = ((_d_Psi(z, x_t) - _d_Psi(z, x_r))
                 / (_Psi(z, x_t) - _Psi(z, x_r)))
 
         result[regular_mask] = (np.sqrt(2.)
-                                / sigma[np.newaxis]
-                                * nu[np.newaxis]
-                                / (1. + 1j * np.outer(omegas, tau_m))
+                                / sigma[np.newaxis] * nu
+                                / (1. + 1j * np.outer(omegas[regular_mask],
+                                                      tau_m))
                                 * frac)
     if synaptic_filter:
         # additional low-pass filter due to perturbation to the input current
         return result / (1. + 1j * np.outer(omegas, tau_s))
     return result
+
+
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
+def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
+                              V_0_rel, omegas, synaptic_filter=True):
+    """
+    Calcs value of transfer func for one population at given frequency omega.
+
+    The calculation is done according to Eq. 93 in Schuecker et al (2014).
+
+    The difference here is that the linear response of the system is considered
+    with respect to a perturbation of the input to the current I, leading to an
+    additional low pass filtering 1/(1+i w tau_s).
+    Compare with the second equation of Eq. 18 and the text below Eq. 29.
+
+    Parameters
+    ----------
+    mu : Quantity(float, 'millivolt')
+        Mean neuron activity of one population in mV.
+    sigma : Quantity(float, 'millivolt')
+        Standard deviation of neuron activity of one population in mV.
+    tau_m : Quantity(float, 'millisecond')
+        Membrane time constant.
+    tau_s : Quantity(float, 'millisecond')
+        Synaptic time constant.
+    tau_r : Quantity(float, 'millisecond')
+        Refractory time.
+    V_th_rel : Quantity(float, 'millivolt')
+        Relative threshold potential.
+    V_0_rel : Quantity(float, 'millivolt')
+        Relative reset potential.
+    omega : Quantity(flaot, 'hertz')
+        Input frequency to population.
+
+    Returns
+    -------
+    Quantity(float, 'hertz/millivolt')
+    """
+    # for frequency zero the exact expression is given by the derivative of
+    # f-I-curve
+    omegas = np.atleast_1d(omegas)
+    mu = np.atleast_1d(mu)
+    sigma = np.atleast_1d(sigma)
+    small_omega_mask = omegas < 1e-15
+    regular_mask = np.invert(small_omega_mask)
+    result = np.zeros((len(omegas), len(mu)), dtype=complex)
+    
+    if np.any(small_omega_mask):
+        result[small_omega_mask] = (
+            _derivative_of_firing_rates_wrt_mean_input(
+                tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+            )
+    if np.any(regular_mask):
+        delta_rates = _delta_firing_rate(
+            tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        delta_rates = np.atleast_1d(delta_rates)[np.newaxis]
+        exp_rates = _firing_rate_taylor(
+            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        exp_rates = np.atleast_1d(exp_rates)[np.newaxis]
+        x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
+        x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
+        # effective threshold and reset
+        tau_m = tau_m + x_t - x_t
+        tau_r = tau_r + x_t - x_t
+        tau_s = tau_s + x_t - x_t
+        z = -0.5 + 1j * np.outer(omegas[regular_mask], tau_m)
+        alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+        k = np.sqrt(tau_s / tau_m)
+        A = alpha * tau_m * delta_rates * k / np.sqrt(2)
+        a0 = _Psi(z, x_t) - _Psi(z, x_r)
+        a1 = (_d_Psi(z, x_t) - _d_Psi(z, x_r)) / a0
+        a3 = (A / tau_m / exp_rates
+              * (-a1**2 + (_d_2_Psi(z, x_t) - _d_2_Psi(z, x_r)) / a0))
+        result[regular_mask] = (
+            np.sqrt(2.) / sigma * exp_rates
+            / (1. + 1j * np.outer(omegas[regular_mask], tau_m))
+            * (a1 + a3))
+
+    if synaptic_filter:
+        # additional low-pass filter due to perturbation to the input current
+        return result / (1. + 1j * np.outer(omegas, tau_s))
+    return result
+
+
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
+def _derivative_of_firing_rates_wrt_mean_input(tau_m, tau_s, tau_r, V_th_rel,
+                                               V_0_rel, mu, sigma):
+    """
+    Derivative of the stationary firing rates with synaptic filtering
+    with respect to the mean input
+
+    See Appendix B in
+    Schuecker, J., Diesmann, M. & Helias, M.
+    Reduction of colored noise in excitable systems to white
+    noise and dynamic boundary conditions. 1–23 (2014).
+
+    Parameters:
+    -----------
+    tau_m: float
+        Membrane time constant in seconds.
+    tau_s: float
+        Synaptic time constant in seconds.
+    tau_r: float
+        Refractory time in seconds.
+    V_th_rel: float
+        Relative threshold potential in mV.
+    V_0_rel: float
+        Relative reset potential in mV.
+    mu: float
+        Mean neuron activity in mV.
+    sigma:
+        Standard deviation of neuron activity in mV.
+
+    Returns:
+    --------
+    float:
+        Zero frequency limit of colored noise transfer function in Hz/mV.
+    """
+    if np.any(sigma == 0):
+        raise ZeroDivisionError('Function contains division by sigma!')
+
+    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
+    x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
+    integral = 1 / tau_m / _delta_firing_rate(
+        tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    prefactor = np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
+    dnudmu = _derivative_of_delta_firing_rates_wrt_mean_input(
+        tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    dPhi_prime = _Phi_prime_mu(x_th, sigma) - _Phi_prime_mu(x_r, sigma)
+    dPhi = _Phi(x_th) - _Phi(x_r)
+    phi = dPhi_prime * integral + (2 * np.sqrt(2) / sigma) * dPhi**2
+    return dnudmu - prefactor * phi / integral**3
 
 
 def _Psi(z, x):
@@ -600,5 +745,24 @@ def _d_Psi(z, x):
     return (1. / 2. + z) * _Psi(z + 1, x)
 
 
-def _transfer_function_taylor():
-    pass
+def _d_2_Psi(z, x):
+    """
+    Second derivative of Psi using recurrence relations.
+
+    (Eq.: 12.8.9 in http://dlmf.nist.gov/12.8)
+    """
+    return (1. / 2. + z) * (3. / 2. + z) * _Psi(z + 2, x)
+
+
+def _Phi_prime_mu(s, sigma):
+    """
+    Derivative of the helper function _Phi(s) with respect to the mean input
+    """
+    if np.any(sigma < 0):
+        raise ValueError('sigma needs to be larger than zero!')
+    if np.any(sigma == 0):
+        raise ZeroDivisionError('Function contains division by sigma!')
+
+    return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
+                                      * (1 + _erf(s / np.sqrt(2)))
+                                      + np.sqrt(2) / np.sqrt(np.pi))
