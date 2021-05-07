@@ -15,7 +15,7 @@ from ..utils import (_check_positive_params,
 from . import _static
                       
 from .delta import (
-    _firing_rate as _delta_firing_rate,
+    _firing_rates_for_given_input as _delta_firing_rate,
     _derivative_of_firing_rates_wrt_mean_input
     as _derivative_of_delta_firing_rates_wrt_mean_input,
     _get_erfcx_integral_gl_order,
@@ -38,158 +38,183 @@ def firing_rates(network, method='shift'):
     deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
     expansion around k = sqrt(tau_s/tau_m).
 
-    Parameters:
-    -----------
-    network: lif_meanfield_tools.create.Network or child class instance.
+    Parameters
+    ----------
+    network : lif_meanfield_tools.networks.Network or child class instance.
         Network with the network parameters listed in the following.
-    method: str
+    method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
         or 'taylor'. Default is 'shift'.
     
-    Network parameters:
-    -------------------
-    tau_m: float
-        Membrane time constant in s.
-    tau_s: float
-        Synaptic time constant in s.
-    tau_r: float
-        Refractory time in s.
-    V_0_rel: float
-        Relative reset potential in V.
-    V_th_rel: float
-        Relative threshold potential in V.
-    K: np.array
-        Indegree matrix.
-    J: np.array
+    Network Parameters
+    ------------------
+    J : np.array
         Weight matrix in V.
-    j: float
-        Synaptic weight in V.
-    nu_ext: float
-        Firing rate of external input in Hz.
-    K_ext: np.array
+    K : np.array
+        Indegree matrix.
+    V_0_rel : float or 1d array
+        Relative reset potential in V.
+    V_th_rel : float or 1d array
+        Relative threshold potential in V.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    tau_r : float or 1d array
+        Refractory time in s.
+    tau_s : float or 1d array
+        Synaptic time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
         Numbers of external input neurons to each population.
-    g: float
-        Relative inhibitory weight.
-    nu_e_ext: float
-        Firing rate of additional external excitatory Poisson input in Hz.
-    nu_i_ext: float
-        Firing rate of additional external inhibitory Poisson input in Hz.
-
-    Returns:
-    --------
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
+    method: str
+        Method used to calculate the firing rates. Options: 'shift', 'taylor'.
+        Default is 'shift'.
+        
+    Returns
+    -------
     Quantity(np.array, 'hertz')
         Array of firing rates of each population in Hz.
     """
-    list_of_firing_rate_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel',
-                                  'V_0_rel']
-    list_of_input_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext',
-                            'tau_m_ext']
+    list_of_params = [
+        'J', 'K',
+        'V_0_rel', 'V_th_rel',
+        'tau_m', 'tau_s', 'tau_r',
+        'K_ext', 'J_ext',
+        'nu_ext',
+        'tau_m_ext',
+        ]
 
     try:
-        firing_rate_params = {key: network.network_params[key]
-                              for key in list_of_firing_rate_params}
-        input_params = {key: network.network_params[key]
-                        for key in list_of_input_params}
+        params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
         raise RuntimeError(
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     
+    return _firing_rates(**params, method=method) * ureg.Hz
+        
+
+def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
+                  nu_ext, tau_m_ext, method='shift'):
+    """
+    Plain calculation of firing rates for exp PSCs.
+    
+    See :code:`lif.exp.firing_rates` for full documentation.
+    """
+    firing_rate_params = {
+        'V_0_rel': V_0_rel,
+        'V_th_rel': V_th_rel,
+        'tau_m': tau_m,
+        'tau_r': tau_r,
+        'tau_s': tau_s,
+        }
+    input_params = {
+        'J': J,
+        'K': K,
+        'tau_m': tau_m,
+        'J_ext': J_ext,
+        'K_ext': K_ext,
+        'nu_ext': nu_ext,
+        'tau_m_ext': tau_m_ext,
+        }
+    
     if method == 'shift':
         return _static._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,
-                                                input_params) * ureg.Hz
+                                                input_params)
     elif method == 'taylor':
         return _static._firing_rate_integration(_firing_rate_taylor,
                                                 firing_rate_params,
-                                                input_params) * ureg.Hz
+                                                input_params)
 
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
-def _firing_rate(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma,
-                 method='shift'):
+def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     """
-    Calcs stationary firing rates for exp PSCs
+    Calculates stationary firing rates including synaptic filtering.
 
-    See `firing_rates` for full documentation.
+    Based on Fourcaud & Brunel 2002, using shift of the integration boundaries
+    in the white noise Siegert formula, as derived in Schuecker 2015.
 
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_s: float
-        Synaptic time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float
+    Parameters
+    ----------
+    V_th_rel : float or np.array
         Relative threshold potential in mV.
-    V_0_rel: float
+    V_0_rel : float or np.array
         Relative reset potential in mV.
-    mu: float
+    mu : float or np.array
         Mean neuron activity in mV.
-    sigma: float
+    sigma : float or np.array
         Standard deviation of neuron activity in mV.
-    method: str
-        Method used for adjusting the Siegert functions for exponentially
-        shaped post synaptic currents. Options: 'shift', 'taylor'. Default is
-        'shift'.
-    
-    Returns:
-    --------
-    float:
+    tau_m : float or 1d array
+        Membrane time constant in seconds.
+    tau_r : float or 1d array
+        Refractory time in seconds.
+    tau_s : float or 1d array
+        Synaptic time constant in seconds.
+
+    Returns
+    -------
+    float or np.array
         Stationary firing rate in Hz.
     """
-    if np.any(V_th_rel - V_0_rel < 0):
-        raise ValueError('V_th should be larger than V_0!')
-    
-    if method == 'taylor':
-        return _firing_rate_taylor(
-            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
-    elif method == 'shift':
-        return _firing_rate_shift(
-            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
-    else:
-        raise ValueError(f'Method {method} not implemented.')
-    
+    # using _zetac (zeta-1), because zeta is giving nan result for arguments
+    # smaller 1
+    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    # effective threshold
+    # additional factor sigma is canceled in siegert
+    V_th1 = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    # effective reset
+    V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
+    # use standard Siegert with modified threshold and reset
+    return _delta_firing_rate(V_01, V_th1, mu, sigma, tau_m, tau_r)
+
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
-def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
+def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     """
     Calcs stationary firing rates for exp PSCs using a Taylor expansion.
-
-    See `firing_rates` for full documentation.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_s: float
-        Synaptic time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float or np.array
-        Relative threshold potential in mV.
-    V_0_rel: float or np.array
-        Relative reset potential in mV.
-    mu: float or np.array
-        Mean neuron activity in mV.
-    sigma: float or np.array
-        Standard deviation of neuron activity in mV.
     
-    Returns:
-    --------
-    float or np.array:
+    Calculates the stationary firing rate of a neuron with synaptic filter of
+    time constant tau_s driven by Gaussian noise with mean mu and standard
+    deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
+    expansion around k = sqrt(tau_s/tau_m).
+
+    Parameters
+    ----------
+    V_th_rel : float or np.array
+        Relative threshold potential in mV.
+    V_0_rel : float or np.array
+        Relative reset potential in mV.
+    mu : float or np.array
+        Mean neuron activity in mV.
+    sigma : float or np.array
+        Standard deviation of neuron activity in mV.
+    tau_m : float or 1d array
+        Membrane time constant in seconds.
+    tau_r : float or 1d array
+        Refractory time in seconds.
+    tau_s : float or 1d array
+        Synaptic time constant in seconds.
+
+    Returns
+    -------
+    float or np.array
         Stationary firing rate in Hz.
     """
     # use _zetac function (zeta-1) because zeta is not giving finite values for
     # arguments smaller 1.
     alpha = np.sqrt(2.) * abs(_zetac(0.5) + 1)
 
-    nu0 = _delta_firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
-    nu0_dPhi = _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    nu0 = _delta_firing_rate(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
+    nu0_dPhi = _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
     result = nu0 * (1 - np.sqrt(tau_s * tau_m / 2) * alpha * nu0_dPhi)
     if np.any(result < 0):
         warnings.warn("Negative firing rates detected. You might be in an "
@@ -200,48 +225,17 @@ def _firing_rate_taylor(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
         return result.item(0)
     else:
         return result
-
-
-def _Phi(s):
-    """
-    helper function to calculate stationary firing rates with synaptic
-    filtering
-
-    corresponds to u^-2 F in Eq. 53 of the following publication
-
-
-    Schuecker, J., Diesmann, M. & Helias, M.
-    Reduction of colored noise in excitable systems to white
-    noise and dynamic boundary conditions. 1–23 (2014).
-    """
-    return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
-                                  * (1 + _erf(s / np.sqrt(2))))
     
-
-def _Phi_neg(s):
-    """Calculate Phi(s) for negative arguments"""
-    assert np.all(s <= 0)
-    return np.sqrt(np.pi / 2.) * _erfcx(np.abs(s) / np.sqrt(2))
-
-
-def _Phi_pos(s):
-    """Calculate Phi(s) without exp(-s**2 / 2) factor for positive arguments"""
-    assert np.all(s >= 0)
-    return np.sqrt(np.pi / 2.) * (2 - np.exp(-s**2 / 2.)
-                                  * _erfcx(s / np.sqrt(2)))
-
-
-def _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+    
+def _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
     """Calculate nu0 * ( Phi(sqrt(2)*y_th) - Psi(sqrt(2)*y_r) ) safely."""
+    # bring into appropriate shape
+    V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r = _equalize_shape(
+        V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
+    
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
-    # bring into appropriate shape
-    y_th = np.atleast_1d(y_th)
-    y_r = np.atleast_1d(y_r)
-    # this brings tau_m and tau_r into the correct vectorized form if they are
-    # scalars and doesn't do anything if they are arrays of appropriate size
-    tau_m = tau_m + y_th - y_th
-    tau_r = tau_r + y_th - y_th
+
     assert y_th.shape == y_r.shape
     assert y_th.ndim == y_r.ndim == 1
 
@@ -291,50 +285,20 @@ def _nu0_dPhi(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
         return nu_dPhi.item(0)
     else:
         return nu_dPhi
+    
+
+def _Phi_neg(s):
+    """Calculate Phi(s) for negative arguments"""
+    assert np.all(s <= 0)
+    return np.sqrt(np.pi / 2.) * _erfcx(np.abs(s) / np.sqrt(2))
 
 
-@_check_positive_params
-@_check_k_in_fast_synaptic_regime
-def _firing_rate_shift(tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma):
-    """
-    Calculates stationary firing rates including synaptic filtering.
-
-    Based on Fourcaud & Brunel 2002, using shift of the integration boundaries
-    in the white noise Siegert formula, as derived in Schuecker 2015.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in seconds.
-    tau_s: float
-        Synaptic time constant in seconds.
-    tau_r: float
-        Refractory time in seconds.
-    V_th_rel: float or np.array
-        Relative threshold potential in mV.
-    V_0_rel: float or np.array
-        Relative reset potential in mV.
-    mu: float or np.array
-        Mean neuron activity in mV.
-    sigma: float or np.array
-        Standard deviation of neuron activity in mV.
-
-    Returns:
-    --------
-    float or np.array:
-        Stationary firing rate in Hz.
-    """
-    # using _zetac (zeta-1), because zeta is giving nan result for arguments
-    # smaller 1
-    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
-    # effective threshold
-    # additional factor sigma is canceled in siegert
-    V_th1 = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
-    # effective reset
-    V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
-    # use standard Siegert with modified threshold and reset
-    return _delta_firing_rate(tau_m, tau_r, V_th1, V_01, mu, sigma)
-
+def _Phi_pos(s):
+    """Calculate Phi(s) without exp(-s**2 / 2) factor for positive arguments"""
+    assert np.all(s >= 0)
+    return np.sqrt(np.pi / 2.) * (2 - np.exp(-s**2 / 2.)
+                                  * _erfcx(s / np.sqrt(2)))
+    
 
 @_check_and_store(['mean_input'], depends_on=['lif.exp.firing_rates'],
                   prefix=_prefix)
@@ -344,92 +308,130 @@ def mean_input(network):
 
     Following Fourcaud & Brunel (2002).
     
-    Parameters:
-    -----------
-    network: lif_meanfield_tools.create.Network or child class instance.
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
         
-    Network results:
-    ----------------
-    nu: Quantity(np.array, 'hertz')
+    Network results
+    ---------------
+    nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
     
-    Network parameters:
-    -------------------
-    tau_m: float
-        Membrane time constant in s.
-    K: np.array
-        Indegree matrix.
-    J: np.array
+    Network parameters
+    ------------------
+    J : np.array
         Weight matrix in V.
-    j: float
-        Synaptic weight in V.
-    nu_ext: float
-        Firing rate of external input in Hz.
-    K_ext: np.array
+    K : np.array
+        Indegree matrix.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
         Numbers of external input neurons to each population.
-    g: float
-        Relative inhibitory weight.
-    nu_e_ext: float
-        Firing rate of additional external excitatory Poisson input in Hz.
-    nu_i_ext: float
-        Firing rate of additional external inhibitory Poisson input in Hz.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
 
-    Returns:
-    --------
+    Returns
+    -------
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    return _static._mean_input(network, _prefix)
+    try:
+        rates = (
+            network.results['lif.exp.firing_rates'].to_base_units().magnitude)
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
+                      'tau_m_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    
+    return _mean_input(nu=rates, **params) * ureg.V
+
+
+def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+    """
+    Plain calculation of mean neuronal input.
+    
+    See :code:`lif.exp.mean_input` for full documentation.
+    """
+    return _static._mean_input(nu, J, K, tau_m,
+                               J_ext, K_ext, nu_ext, tau_m_ext)
 
 
 @_check_and_store(['std_input'], depends_on=['lif.exp.firing_rates'],
                   prefix=_prefix)
 def std_input(network):
     '''
-    Calc standard deviation of inputs to populations.
-    
+    Calculates standard deviation of inputs to populations.
+
     Following Fourcaud & Brunel (2002).
     
-    Parameters:
-    -----------
-    network: lif_meanfield_tools.create.Network or child class instance.
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
         
-    Network results:
-    ----------------
-    nu: Quantity(np.array, 'hertz')
+    Network results
+    ---------------
+    nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
     
-    Network parameters:
-    -------------------
-    tau_m: float
-        Membrane time constant in s.
-    K: np.array
-        Indegree matrix.
-    J: np.array
+    Network parameters
+    ------------------
+    J : np.array
         Weight matrix in V.
-    j: float
-        Synaptic weight in V.
-    nu_ext: float
-        Firing rate of external input in Hz.
-    K_ext: np.array
+    K : np.array
+        Indegree matrix.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
         Numbers of external input neurons to each population.
-    g: float
-        Relative inhibitory weight.
-    nu_e_ext: float
-        Firing rate of additional external excitatory Poisson input in Hz.
-    nu_i_ext: float
-        Firing rate of additional external inhibitory Poisson input in Hz.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
 
-    Returns:
-    --------
+    Returns
+    -------
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    return _static._std_input(network, _prefix)
+    try:
+        rates = (
+            network.results['lif.exp.firing_rates'].to_base_units().magnitude)
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
+                      'tau_m_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    
+    return _std_input(nu=rates, **params) * ureg.V
+
+
+def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+    """
+    Plain calculation of standard deviation of neuronal input.
+    
+    See :code:`lif.exp.mean_input` for full documentation.
+    """
+    return _static._std_input(nu, J, K, tau_m,
+                              J_ext, K_ext, nu_ext, tau_m_ext)
 
 
 @_check_and_store(['transfer_function'], ['transfer_function_method'],
@@ -565,11 +567,11 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     if np.any(zero_omega_mask):
         result[zero_omega_mask] = (
             _derivative_of_delta_firing_rates_wrt_mean_input(
-                tau_m, tau_r, V_th_shifted, V_0_shifted, mu, sigma))
+                V_0_shifted, V_th_shifted, mu, sigma, tau_m, tau_r))
         
     if np.any(regular_mask):
-        nu = _delta_firing_rate(tau_m, tau_r, V_th_shifted, V_0_shifted,
-                                mu, sigma)
+        nu = _delta_firing_rate(V_0_shifted, V_th_shifted, mu, sigma, tau_m,
+                                tau_r)
         nu = np.atleast_1d(nu)[np.newaxis]
         x_t = np.sqrt(2.) * (V_th_shifted - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_shifted - mu) / sigma
@@ -640,15 +642,15 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     if np.any(zero_omega_mask):
         result[zero_omega_mask] = (
             _derivative_of_firing_rates_wrt_mean_input(
-                tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+                V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
             )
         
     if np.any(regular_mask):
         delta_rates = _delta_firing_rate(
-            tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+            V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
         delta_rates = np.atleast_1d(delta_rates)[np.newaxis]
         exp_rates = _firing_rate_taylor(
-            tau_m, tau_s, tau_r, V_th_rel, V_0_rel, mu, sigma)
+            V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
         exp_rates = np.atleast_1d(exp_rates)[np.newaxis]
         
         # effective threshold and reset
@@ -702,8 +704,8 @@ def _similar_array(x, array):
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
-def _derivative_of_firing_rates_wrt_mean_input(tau_m, tau_s, tau_r, V_th_rel,
-                                               V_0_rel, mu, sigma):
+def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
+                                               tau_m, tau_r, tau_s):
     """
     Derivative of the stationary firing rates with synaptic filtering
     with respect to the mean input
@@ -742,14 +744,30 @@ def _derivative_of_firing_rates_wrt_mean_input(tau_m, tau_s, tau_r, V_th_rel,
     x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
     integral = 1 / tau_m / _delta_firing_rate(
-        tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
     prefactor = np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
     dnudmu = _derivative_of_delta_firing_rates_wrt_mean_input(
-        tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+        V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
     dPhi_prime = _Phi_prime_mu(x_th, sigma) - _Phi_prime_mu(x_r, sigma)
     dPhi = _Phi(x_th) - _Phi(x_r)
     phi = dPhi_prime * integral + (2 * np.sqrt(2) / sigma) * dPhi**2
     return dnudmu - prefactor * phi / integral**3
+
+
+def _Phi(s):
+    """
+    helper function to calculate stationary firing rates with synaptic
+    filtering
+
+    corresponds to u^-2 F in Eq. 53 of the following publication
+
+
+    Schuecker, J., Diesmann, M. & Helias, M.
+    Reduction of colored noise in excitable systems to white
+    noise and dynamic boundary conditions. 1–23 (2014).
+    """
+    return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
+                                  * (1 + _erf(s / np.sqrt(2))))
 
 
 def _Psi(z, x):

@@ -21,62 +21,89 @@ def firing_rates(network):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
-    Parameters:
-    -----------
-    network: lif_meanfield_tools.create.Network or child class instance.
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
         Network with the network parameters listed in the following.
     
-    Network parameters:
-    -------------------
-    tau_m: float
-        Membrane time constant in s.
-    tau_r: float
-        Refractory time in s.
-    V_0_rel: float
-        Relative reset potential in V.
-    V_th_rel: float
-        Relative threshold potential in V.
-    K: np.array
-        Indegree matrix.
-    J: np.array
+    Network parameters
+    ------------------
+    J : np.array
         Weight matrix in V.
-    j: float
-        Synaptic weight in V.
-    nu_ext: float
-        Firing rate of external input in Hz.
-    K_ext: np.array
+    K : np.array
+        Indegree matrix.
+    V_0_rel : float or 1d array
+        Relative reset potential in V.
+    V_th_rel : float or 1d array
+        Relative threshold potential in V.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    tau_r : float or 1d array
+        Refractory time in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
         Numbers of external input neurons to each population.
-    g: float
-        Relative inhibitory weight.
-    nu_e_ext: float
-        Firing rate of additional external excitatory Poisson input in Hz.
-    nu_i_ext: float
-        Firing rate of additional external inhibitory Poisson input in Hz.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
 
     Returns:
     --------
     Quantity(np.array, 'hertz')
         Array of firing rates of each population in Hz.
     """
-    list_of_firing_rate_params = ['tau_m', 'tau_r', 'V_th_rel', 'V_0_rel']
-    list_of_input_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext',
-                            'tau_m_ext']
+    list_of_params = [
+        'J', 'K',
+        'V_0_rel', 'V_th_rel',
+        'tau_m', 'tau_r',
+        'K_ext', 'J_ext',
+        'nu_ext',
+        'tau_m_ext',
+        ]
 
     try:
-        firing_rate_params = {key: network.network_params[key]
-                              for key in list_of_firing_rate_params}
-        input_params = {key: network.network_params[key]
-                        for key in list_of_input_params}
+        params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
-        raise RuntimeError(f'You are missing {param} for this calculation.')
+        raise RuntimeError(
+            f"You are missing {param} for calculating the firing rate!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
     
-    return _static._firing_rate_integration(_firing_rate,
+    return _firing_rates(**params) * ureg.Hz
+
+
+def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
+                  tau_m_ext):
+    """
+    Plain calculation of firing rates for delta PSCs.
+    
+    See :code:`lif.delta.firing_rates` for full documentation.
+    """
+    firing_rate_params = {
+        'V_0_rel': V_0_rel,
+        'V_th_rel': V_th_rel,
+        'tau_m': tau_m,
+        'tau_r': tau_r,
+        }
+    input_params = {
+        'J': J,
+        'K': K,
+        'tau_m': tau_m,
+        'J_ext': J_ext,
+        'K_ext': K_ext,
+        'nu_ext': nu_ext,
+        'tau_m_ext': tau_m_ext,
+        }
+    
+    return _static._firing_rate_integration(_firing_rates_for_given_input,
                                             firing_rate_params,
-                                            input_params) * ureg.Hz
+                                            input_params)
 
 
 @_check_positive_params
-def _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
+def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
     """
     Calculates stationary firing rate for delta shaped PSCs.
     
@@ -302,8 +329,8 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
 #     return _static._std_input(network, _prefix)
 
 
-def _derivative_of_firing_rates_wrt_mean_input(tau_m, tau_r, V_th_rel, V_0_rel,
-                                               mu, sigma):
+def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
+                                               tau_m, tau_r):
     """
     Derivative of the stationary firing rate without synaptic filtering
     with respect to the mean input
@@ -335,7 +362,8 @@ def _derivative_of_firing_rates_wrt_mean_input(tau_m, tau_r, V_th_rel, V_0_rel,
 
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
-    nu0 = _firing_rate(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma)
+    nu0 = _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m,
+                                        tau_r)
     return (np.sqrt(np.pi) * tau_m * np.power(nu0, 2) / sigma
             * (np.exp(y_th**2) * (1 + _erf(y_th)) - np.exp(y_r**2)
                * (1 + _erf(y_r))))

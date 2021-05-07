@@ -73,7 +73,7 @@ class Test_firing_rates_wrapper:
 
 class Test_firing_rates:
     
-    func = staticmethod(delta._firing_rate)
+    func = staticmethod(delta._firing_rates_for_given_input)
     fixtures = 'lif_delta_firing_rate.h5'
     rtol = 1e-4
 

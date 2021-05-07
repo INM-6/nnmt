@@ -3,7 +3,7 @@ import numpy as np
 from scipy.special import zetac
 
 from numpy.testing import (
-    assert_allclose
+    assert_allclose,
     )
 
 from ...checks import (check_pos_params_neg_raise_exception,
@@ -123,7 +123,7 @@ class Test_firing_rate_shift:
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
         params = unit_fixtures_fully_vectorized.pop('params')
         vectorized_output = self.func(**params)
-        single_outputs = np.zeros(vectorized_output.shape, dtype=complex)
+        single_outputs = np.zeros(vectorized_output.shape)
         mus = params.pop('mu')
         sigmas = params.pop('sigma')
         tau_ms = params.pop('tau_m')
@@ -140,8 +140,7 @@ class Test_firing_rate_shift:
                                           tau_r=tau_r,
                                           V_th_rel=V_th_rel,
                                           V_0_rel=V_0_rel)
-        from numpy.testing import assert_array_equal
-        assert_array_equal(vectorized_output, single_outputs)
+        assert_allclose(vectorized_output, single_outputs)
     
 
 class Test_firing_rate_taylor:
@@ -185,7 +184,7 @@ class Test_firing_rate_taylor:
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
         params = unit_fixtures_fully_vectorized.pop('params')
         vectorized_output = self.func(**params)
-        single_outputs = np.zeros(vectorized_output.shape, dtype=complex)
+        single_outputs = np.zeros(vectorized_output.shape)
         mus = params.pop('mu')
         sigmas = params.pop('sigma')
         tau_ms = params.pop('tau_m')
@@ -202,8 +201,7 @@ class Test_firing_rate_taylor:
                                           tau_r=tau_r,
                                           V_th_rel=V_th_rel,
                                           V_0_rel=V_0_rel)
-        from numpy.testing import assert_array_equal
-        assert_array_equal(vectorized_output, single_outputs)
+        assert_allclose(vectorized_output, single_outputs)
     
         
 class Test_Phi:
@@ -332,8 +330,7 @@ class Test_transfer_function_shift:
                                                  tau_s=tau_s, tau_r=tau_r,
                                                  V_th_rel=V_th_rel,
                                                  V_0_rel=V_0_rel)
-        from numpy.testing import assert_array_equal
-        assert_array_equal(vectorized_output, single_outputs)
+        assert_allclose(vectorized_output, single_outputs)
         
 
 class Test_transfer_function_taylor:
@@ -379,8 +376,7 @@ class Test_transfer_function_taylor:
                                                  tau_s=tau_s, tau_r=tau_r,
                                                  V_th_rel=V_th_rel,
                                                  V_0_rel=V_0_rel)
-        from numpy.testing import assert_array_equal
-        assert_array_equal(vectorized_output, single_outputs)
+        assert_allclose(vectorized_output, single_outputs)
         
 
 class Test_derivative_of_firing_rates_wrt_mean_input:
