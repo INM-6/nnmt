@@ -64,7 +64,6 @@ class Test_firing_rates:
         params = output_test_fixtures.pop('params')
         output = output_test_fixtures.pop('output')
         _strip_units(params)
-        # _strip_units(output)
         output = output.magnitude / 1000
         check_correct_output(self.func, params, output)
 
@@ -172,6 +171,7 @@ class Test_Phi:
             assert result == output
 
 
+@pytest.mark.old
 class Test_transfer_function_shift():
 
     func = staticmethod(exp._transfer_function_shift)
