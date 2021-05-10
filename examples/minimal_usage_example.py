@@ -3,20 +3,20 @@ import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
 # instantiate network
-network = lmt.Network(network_params='network_params_microcircuit.yaml',
-                      analysis_params='analysis_params.yaml')
+network = lmt.networks.Microcircuit('network_params_microcircuit.yaml',
+                                    'analysis_params.yaml')
 
 # calculate working point
-working_point = network.working_point()
+wp = lmt.lif.exp.working_point(network)
 
 # print results
 print('Working point:')
-print('mean input: {}'.format(working_point['mean_input']))
-print('std input: {}'.format(working_point['std_input']))
-print('firing rates: {}'.format(working_point['firing_rates']))
+print(f"mean input: {wp['mean_input']}")
+print(f"std input: {wp['std_input']}")
+print(f"firing rates: {wp['firing_rates']}")
 
-# print(network.transfer_function())
-print(network.transfer_function(10 * ureg.Hz))
+# calculate transfer function
+tf = lmt.lif.exp.transfer_function(network)
+print(tf)
 
-# save results
-network.save()
+network.save('test.h5')
