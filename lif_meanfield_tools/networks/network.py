@@ -228,3 +228,24 @@ class Network():
         else:
             return Network(self.network_params_yaml, self.analysis_params_yaml,
                            new_network_params, new_analysis_params)
+
+    def clear_results(self, results=None):
+        """
+        Remove calculated results or specified ones from internal dicts.
+        
+        Parameters
+        ----------
+        results: None or list
+            List of results to be removed. Default is None.
+        """
+        if results is not None:
+            hashs = []
+            for result in results:
+                for hash in self.results_hash_dict.keys():
+                    if result in self.results_hash_dict[hash]:
+                        hashs.append(hash)
+                        self.results.pop(result)
+                [self.results_hash_dict.pop(hash) for hash in hashs]
+        else:
+            self.results_hash_dict = {}
+            self.results = {}
