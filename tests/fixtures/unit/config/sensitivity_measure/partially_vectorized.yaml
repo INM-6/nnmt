@@ -1,0 +1,32 @@
+tau_m:
+  val:
+    - 10.0
+    - 15.0
+  unit: ms
+  
+J:
+  val:
+    - 0.2
+    - -0.6
+  unit: mV
+  
+K:
+  val:
+    - - 8765
+      - 2345
+    - - 8987
+      - 2123
+
+transfer_function:
+  val:
+    - 1
+    - 10
+  unit: hertz / millivolt
+  
+D:
+  val:
+    - - 1
+      - 2
+    - - 10
+      - 20
+  unit: ms

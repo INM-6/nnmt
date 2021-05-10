@@ -496,3 +496,49 @@ class Test_derivative_of_firing_rates_wrt_mean_input:
         from ...checks import check_correct_output_for_several_mus_and_sigmas
         check_correct_output_for_several_mus_and_sigmas(self.func, params,
                                                         outputs)
+
+
+class Test_effective_connectivity:
+    
+    func = staticmethod(exp._effective_connectivity)
+    fixtures = 'lif_exp_effective_connectivity.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+@pytest.mark.old
+class Test_sensitivity_measure_old:
+
+    func = staticmethod(exp._sensitivity_measure)
+    # need transfer_function_single and delay_dist_single as input arguments
+    output_keys = ['sensitivity_measure', 'transfer_function_single',
+                   'delay_dist_matrix_single']
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params,
+                                             pos_keys)
+
+    def test_correct_output(self, output_test_fixtures):
+        params = output_test_fixtures.pop('params')
+        lmt.utils._to_si_units(params)
+        lmt.utils._strip_units(params)
+        output = output_test_fixtures.pop('output')
+        params['transfer_function'] = output[1].magnitude * 1000
+        params['D'] = output[2]
+        output = output[0]
+        result = self.func(**params)[0]
+        assert_allclose(result, output)
+        
+
+class Test_sensitivity_measure:
+    
+    func = staticmethod(exp._sensitivity_measure)
+    fixtures = 'lif_exp_sensitivity_measure.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)

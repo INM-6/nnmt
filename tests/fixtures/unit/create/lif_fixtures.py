@@ -112,5 +112,16 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_transfer_function_taylor.h5')
+        elif module == 'sensitivity_measure':
+            create_and_save_fixtures(lmt.lif.exp._effective_connectivity,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_effective_connectivity.h5')
+            create_and_save_fixtures(lmt.lif.exp._sensitivity_measure,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_sensitivity_measure.h5')
+            
+            
         else:
             print('No such module')

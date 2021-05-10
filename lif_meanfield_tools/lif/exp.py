@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 import mpmath
+import scipy.linalg as slinalg
 from scipy.special import (
     erf as _erf,
     zetac as _zetac,
@@ -478,7 +479,7 @@ def transfer_function(network, method='shift'):
     -------
     ureg.Quantity(np.array, 'hertz/millivolt'):
         Transfer functions for each population with the following shape:
-        (number of populations, number of populations)
+        (number of freqencies, number of populations)
     """
     
     list_of_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel', 'V_0_rel']
@@ -815,3 +816,217 @@ def _Phi_prime_mu(s, sigma):
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
                                       * (1 + _erf(s / np.sqrt(2)))
                                       + np.sqrt(2) / np.sqrt(np.pi))
+
+
+@_check_and_store(['effective_connectivity'],
+                  depends_on=['lif.exp.transfer_function'],
+                  prefix=_prefix)
+def effective_connectivity(network):
+    """
+    Effective connectivity for different frequencies.
+    
+    Note that the frequencies of the transfer function and the delay
+    distribution matrix need to be matching.
+    
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+
+    Network results
+    ---------------
+    transfer_function : np.ndarray
+        Transfer function for given frequencies in Hz/mV.
+    
+    Network Parameters
+    ----------
+    D : np.ndarray
+        Unitless delay distribution of shape
+        (len(omegas), len(populations), len(populations)).
+    J : np.ndarray
+        Weight matrix in mV.
+    K : np.ndarray
+        Indegree matrix.
+    tau_m : float
+        Membrane time constant in s.
+    
+    Returns:
+    --------
+    np.ndarray
+        Effective connectivity matrix.
+    """
+    
+    list_of_params = ['D', 'J', 'K', 'tau_m']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for calculating the effective "
+            "connectivity!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    try:
+        transfer_function = (
+            network.results[
+                'lif.exp.transfer_function'].to_base_units().magnitude)
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _effective_connectivity(transfer_function, **params)
+
+
+def _effective_connectivity(transfer_function, D, J, K, tau_m):
+    """
+    Effective connectivity for different frequencies.
+    
+    See equation 12 and following in Bos 2015.
+    
+    Note that the frequencies of the transfer function and the delay
+    distribution matrix need to be matching.
+
+    Network results
+    ---------------
+    transfer_function : np.ndarray
+        Transfer_function for given frequencies in hertz/mV.
+    
+    Parameters
+    ----------
+    D : np.ndarray
+        Unitless delay distribution of shape
+        (len(omegas), len(populations), len(populations)).
+    J : np.ndarray
+        Weight matrix in mV.
+    K : np.ndarray
+        Indegree matrix.
+    tau_m : float
+        Membrane time constant in s.
+    
+    Returns:
+    --------
+    np.ndarray
+        Effective connectivity matrix.
+    """
+    # This ensures that it also works if transfer function has only been
+    # calculated for a single frequency. But it should be removed once we have
+    # made sure that the frequency dependend quantities always return an object
+    # with the frequencies indexed by the first axis.
+    if len(D.shape) == 1:
+        tf = transfer_function
+    elif len(D.shape) == 2:
+        tf = np.tile(transfer_function, (K.shape[0], 1)).T
+    elif len(D.shape) == 3:
+        tf = np.tile(transfer_function.T, (K.shape[0], 1, 1))
+        tf = np.einsum('ijk->kji', tf)
+    else:
+        raise RuntimeError('Delay distribution matrix has no valid format.')
+    return tau_m * J * K * tf * D
+
+
+@_check_and_store(['sensitivity_measure'],
+                  depends_on=['lif.exp.transfer_function'],
+                  prefix=_prefix)
+def sensitivity_measure(network):
+    """
+    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
+    
+    Note that the frequencies of the transfer function and the effective
+    connectivity need to be matching.
+    
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+
+    Newtork results
+    ---------------
+    transfer_function : Quantity(np.ndarray, 'hertz/mV')
+        Transfer_function for given frequency omega.
+        
+    Network Parameters
+    ------------------
+    D : np.ndarray
+        Delay distribution matrix at given frequencies.
+    J : np.ndarray
+        Weight matrix in mV.
+    K : np.ndarray
+        Indegree matrix.
+    tau_m : float or np.ndarray
+        Membrane time constant.
+
+    Returns
+    -------
+    np.ndarray
+        Sensitivity measure.
+    """
+    
+    list_of_params = ['D', 'J', 'K', 'tau_m']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for calculating the effective "
+            "connectivity!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    try:
+        transfer_function = (
+            network.results[
+                'lif.exp.transfer_function'].to_base_units().magnitude)
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _effective_connectivity(transfer_function, **params)
+
+
+@_check_positive_params
+def _sensitivity_measure(transfer_function, D, J, K, tau_m):
+    """
+    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
+
+    Parameters
+    ----------
+    transfer_function : np.ndarray
+        Transfer_function for given frequencies omega in Hz/V
+
+    Network Parameters
+    ------------------
+    D : np.ndarray
+        Delay distribution matrix at given frequencies.
+    J : np.ndarray
+        Weight matrix in mV.
+    K : np.ndarray
+        Indegree matrix.
+    tau_m : float or np.ndarray
+        Membrane time constant.
+
+    Returns
+    -------
+    np.ndarray
+        Sensitivity measure of shape
+        (num analysis freqs, num populations, num populations)
+    """
+    MH = _effective_connectivity(transfer_function, D, J, K, tau_m)
+
+    # This ensures that it also works if transfer function has only been
+    # calculated for a single frequency. But it should be removed once we have
+    # made sure that the frequency dependend quantities always return an object
+    # with the frequencies indexed by the first axis.
+    if len(MH.shape) == 2:
+        MH = np.expand_dims(MH, axis=0)
+        
+    T = np.zeros(MH.shape, dtype=complex)
+    for i, MH_of_omega in enumerate(MH):
+        e, U_l, U_r = slinalg.eig(MH_of_omega, left=True, right=True)
+        index = None
+        if index is None:
+            # find eigenvalue closest to one
+            index = np.argmin(np.abs(e - 1))
+        T[i] = np.outer(U_l[:, index].conj(), U_r[:, index])
+        T[i] /= np.dot(U_l[:, index].conj(), U_r[:, index])
+        T[i] *= MH_of_omega
+
+    return T
