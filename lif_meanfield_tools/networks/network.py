@@ -122,7 +122,6 @@ class Network():
                     base_unit = ureg.parse_unit_name(input_unit)[0][1]
                 except IndexError:
                     base_unit = str(ureg(input_unit).to_base_units().units)
-                print(base_unit)
                 quantity = ureg.Quantity(dict[key], base_unit)
                 quantity.ito(input_unit)
                 dict[key] = quantity
