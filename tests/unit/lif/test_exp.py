@@ -215,8 +215,30 @@ class Test_Phi:
         for s, output in zip(s_values, outputs):
             result = self.func(s)
             assert result == output
+            
 
+class Test_mean_input:
 
+    func = staticmethod(exp._mean_input)
+    fixtures = 'lif_mean_input.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+        
+        
+class Test_std_input:
+
+    func = staticmethod(exp._std_input)
+    fixtures = 'lif_std_input.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+        
+        
 @pytest.mark.old
 class Test_transfer_function_shift_old():
 
