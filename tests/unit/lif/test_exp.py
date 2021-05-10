@@ -48,7 +48,7 @@ def real_shifted_siegert(tau_m, tau_s, tau_r,
 
 
 @pytest.mark.old
-class Test_firing_rates:
+class Test_firing_rates_old:
 
     func = staticmethod(exp._firing_rate_shift)
     output_key = 'firing_rates'
@@ -88,7 +88,8 @@ class Test_firing_rates_wrapper:
         self.mock_firing_rate_integration(mocker)
         result = self.func(network)
         assert isinstance(result, ureg.Quantity)
-    
+        
+
 
 class Test_firing_rate_shift:
     
@@ -226,6 +227,38 @@ class Test_mean_input:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
+
+
+class Test_mean_input_wrapper:
+    
+    func = staticmethod(exp.mean_input)
+    
+    def mock_mean_input(self, mocker):
+        mocker.patch(
+            'lif_meanfield_tools.lif.exp._mean_input',
+            return_value=1
+            )
+    
+    def test_raise_exception_if_not_all_parameters_available(self, mocker,
+                                                             empty_network):
+        self.mock_mean_input(mocker)
+        empty_network.results['lif.exp.firing_rates'] = np.array([1]) * ureg.Hz
+        with pytest.raises(RuntimeError):
+            self.func(empty_network)
+            
+    def test_raise_exception_if_rates_not_available(self, mocker,
+                                                    empty_network):
+        
+        self.mock_mean_input(mocker)
+        empty_network.network_params['tau_m'] = 1
+        empty_network.network_params['K'] = 1
+        empty_network.network_params['J'] = 1
+        empty_network.network_params['tau_m_ext'] = 1
+        empty_network.network_params['K_ext'] = 1
+        empty_network.network_params['J_ext'] = 1
+        empty_network.network_params['nu_ext'] = 1
+        with pytest.raises(RuntimeError):
+            self.func(empty_network)
         
         
 class Test_std_input:
@@ -237,6 +270,38 @@ class Test_std_input:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
+        
+        
+class Test_std_input_wrapper:
+    
+    func = staticmethod(exp.std_input)
+    
+    def mock_std_input(self, mocker):
+        mocker.patch(
+            'lif_meanfield_tools.lif.exp._std_input',
+            return_value=1
+            )
+    
+    def test_raise_exception_if_not_all_parameters_available(self, mocker,
+                                                             empty_network):
+        self.mock_std_input(mocker)
+        empty_network.results['lif.exp.firing_rates'] = np.array([1]) * ureg.Hz
+        with pytest.raises(RuntimeError):
+            self.func(empty_network)
+            
+    def test_raise_exception_if_rates_not_available(self, mocker,
+                                                    empty_network):
+        
+        self.mock_std_input(mocker)
+        empty_network.network_params['tau_m'] = 1
+        empty_network.network_params['K'] = 1
+        empty_network.network_params['J'] = 1
+        empty_network.network_params['tau_m_ext'] = 1
+        empty_network.network_params['K_ext'] = 1
+        empty_network.network_params['J_ext'] = 1
+        empty_network.network_params['nu_ext'] = 1
+        with pytest.raises(RuntimeError):
+            self.func(empty_network)
         
         
 @pytest.mark.old
