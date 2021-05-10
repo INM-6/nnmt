@@ -29,6 +29,56 @@ from .delta import (
 _prefix = 'lif.exp.'
 
 
+def working_point(network, method='shift'):
+    """
+    Calculates working point for exp PSCs.
+
+    Parameters
+    ----------
+    network : lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters listed in the following.
+    method : str
+        Method used to integrate the adapted Siegert function. Options: 'shift'
+        or 'taylor'. Default is 'shift'.
+    
+    Network Parameters
+    ------------------
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    V_0_rel : float or 1d array
+        Relative reset potential in V.
+    V_th_rel : float or 1d array
+        Relative threshold potential in V.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    tau_r : float or 1d array
+        Refractory time in s.
+    tau_s : float or 1d array
+        Synaptic time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
+    method: str
+        Method used to calculate the firing rates. Options: 'shift', 'taylor'.
+        Default is 'shift'.
+        
+    Returns
+    -------
+    dict
+        Dictionary containing firing rates, mean input and std input.
+    """
+    return {'firing_rates': firing_rates(network, method),
+            'mean_input': mean_input(network),
+            'std_input': std_input(network)}
+    
+    
 @_check_and_store(['firing_rates'], ['firing_rates_method'], prefix=_prefix)
 def firing_rates(network, method='shift'):
     """
