@@ -73,9 +73,9 @@ class Network():
             self.results = {}
             self.results_hash_dict = {}
             
-            # input unit dict
-            self.input_units = {}
-            
+        # input unit dict
+        self.input_units = {}
+        
     def _convert_param_dicts_to_base_units_and_strip_units(self):
         """
         Converts the parameter dicts to base units and strips the units.
