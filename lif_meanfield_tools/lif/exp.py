@@ -25,6 +25,7 @@ from .delta import (
     _siegert_interm,
     )
 
+pcfu_vec = np.frompyfunc(mpmath.pcfu, 2, 1)
 
 _prefix = 'lif.exp.'
 
@@ -608,7 +609,7 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     V_th_shifted = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     V_0_shifted = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     
-    zero_omega_mask = omegas < 1e-15
+    zero_omega_mask = np.abs(omegas) < 1e-15
     regular_mask = np.invert(zero_omega_mask)
     
     result = np.zeros((len(omegas), len(mu)), dtype=complex)
@@ -828,9 +829,7 @@ def _Psi(z, x):
     x = np.atleast_1d(x)
     z = np.atleast_1d(z)
     assert z.shape[1] == x.shape[0]
-    parabolic_cylinder_fn = np.array(
-        [[complex(mpmath.pcfu(_z, -_x)) for _x, _z in zip(x, _z)] for _z in z]
-        )
+    parabolic_cylinder_fn = pcfu_vec(z, -x).astype(complex)
     return np.exp(0.25 * x**2) * parabolic_cylinder_fn
 
 
