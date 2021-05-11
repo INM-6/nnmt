@@ -1079,3 +1079,42 @@ def _sensitivity_measure(transfer_function, D, J, K, tau_m):
         T[i] *= MH_of_omega
 
     return T
+
+
+@_check_positive_params
+def _power_spectra(nu, transfer_function, D, J, K, N,
+                   tau_m):
+    """
+    Calcs vector of power spectra for all populations at given frequencies.
+
+    See: Eq. 18 in Bos et al. (2016)
+    Shape of output: (len(omegas), len(populations))
+
+    Parameters
+    ----------
+    nu : np.ndarray
+        Firing rates of the different populations in Hz.
+    transfer_function : np.ndarray
+        Transfer_function for given frequencies in Hz/V.
+    D : np.ndarray
+        Delay distribution matrix at given frequencies.
+    J : np.ndarray
+        Weight matrix in mV.
+    K : np.ndarray
+        Indegree matrix.
+    tau_m : float or np.ndarray
+        Membrane time constant in s.
+
+    Returns
+    -------
+    np.ndarray
+        Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
+    """
+    power = np.zeros(transfer_function.shape)
+    for i, (tf_of_omega) in enumerate(transfer_function):
+        MH = _effective_connectivity(tf_of_omega, D[i], J, K, tau_m)
+        Q = np.linalg.inv(np.identity(len(N)) - MH)
+        A = np.diag(np.ones(len(N))) * nu / N
+        C = np.dot(Q, np.dot(A, np.transpose(np.conjugate(Q))))
+        power[i] = np.absolute(np.diag(C))
+    return power

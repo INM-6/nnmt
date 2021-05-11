@@ -121,6 +121,11 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_sensitivity_measure.h5')
+            create_and_save_fixtures(lmt.lif.exp._power_spectra,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_power_spectra.h5')
+            
             
             
         else:
