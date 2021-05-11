@@ -973,6 +973,39 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     return tau_m * J * K * tf * D
 
 
+@_check_and_store(['propagator'],
+                  depends_on=['lif.exp.effective_connectivity'],
+                  prefix=_prefix)
+def propagator(network):
+    """
+    Propagator for different frequencies.
+    
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+
+    Network results
+    ---------------
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
+    
+    Returns:
+    --------
+    np.ndarray
+        Propagator for different frequencies. Shape:
+        (num freqs, num populations, num populations).
+    """
+    try:
+        effective_connectivity = (
+            network.results['lif.exp.effective_connectivity'])
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _propagator(effective_connectivity)
+
+
 def _propagator(effective_connectivity):
     """
     Propagator of network.
@@ -1049,7 +1082,7 @@ def sensitivity_measure(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _effective_connectivity(transfer_function, **params)
+    return _sensitivity_measure(transfer_function, **params)
 
 
 @_check_positive_params
@@ -1102,9 +1135,75 @@ def _sensitivity_measure(transfer_function, D, J, K, tau_m):
     return T
 
 
+@_check_and_store(['power_spectra'],
+                  depends_on=[
+                      'lif.exp.firing_rates',
+                      'lif.exp.effective_connectivity'],
+                  prefix=_prefix)
+def power_spectra(network):
+    """
+    Calcs vector of power spectra for all populations at given frequencies.
+
+    See: Eq. 18 in Bos et al. (2016)
+    Shape of output: (len(omegas), len(populations))
+    
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+
+    Newtork results
+    ---------------
+    nu : Quantity(np.array, 'hertz')
+        Firing rates of populations in Hz.
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
+        
+    Network parameters
+    ------------------
+    D : np.ndarray
+        Delay distribution matrix at given frequencies.
+    J : np.ndarray
+        Weight matrix in mV.
+    K : np.ndarray
+        Indegree matrix.
+    N : np.ndarray
+        Number of neurons in each population.
+    tau_m : float or np.ndarray
+        Membrane time constant in s.
+
+    Returns
+    -------
+    np.ndarray
+        Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
+    """
+    
+    list_of_params = ['J', 'K', 'N', 'tau_m']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for calculating the effective "
+            "connectivity!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    try:
+        nu = (
+            network.results[
+                'lif.exp.firing_rates'].to_base_units().magnitude)
+        effective_connectivity = (
+            network.results[
+                'lif.exp.effective_connectivity'].to_base_units().magnitude)
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _power_spectra(nu, effective_connectivity, **params)
+
+
 @_check_positive_params
-def _power_spectra(nu, transfer_function, D, J, K, N,
-                   tau_m):
+def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
     """
     Calcs vector of power spectra for all populations at given frequencies.
 
@@ -1115,14 +1214,14 @@ def _power_spectra(nu, transfer_function, D, J, K, N,
     ----------
     nu : np.ndarray
         Firing rates of the different populations in Hz.
-    transfer_function : np.ndarray
-        Transfer_function for given frequencies in Hz/V.
-    D : np.ndarray
-        Delay distribution matrix at given frequencies.
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
     J : np.ndarray
         Weight matrix in mV.
     K : np.ndarray
         Indegree matrix.
+    N : np.ndarray
+        Number of neurons in each population.
     tau_m : float or np.ndarray
         Membrane time constant in s.
 
@@ -1131,90 +1230,10 @@ def _power_spectra(nu, transfer_function, D, J, K, N,
     np.ndarray
         Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
     """
-    power = np.zeros(transfer_function.shape)
-    for i, (tf_of_omega) in enumerate(transfer_function):
-        MH = _effective_connectivity(tf_of_omega, D[i], J, K, tau_m)
-        Q = np.linalg.inv(np.identity(len(N)) - MH)
+    power = np.zeros(effective_connectivity.shape[0:2])
+    for i, W in enumerate(effective_connectivity):
+        Q = np.linalg.inv(np.identity(len(N)) - W)
         A = np.diag(np.ones(len(N))) * nu / N
         C = np.dot(Q, np.dot(A, np.transpose(np.conjugate(Q))))
         power[i] = np.absolute(np.diag(C))
     return power
-
-
-@_check_positive_params
-def _eigen_spectra(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s,
-                   omegas, quantity, matrix):
-    """
-    Calcs eigenvals, left and right eigenvecs of matrix at given frequency.
-
-    Parameters:
-    -----------
-    tau_m: Quantity(float, 'millisecond')
-        Membrane time constant.
-    tau_s: Quantity(float, 'millisecond')
-        Synaptic time constant.
-    transfer_function: Quantity(np.ndarray, 'hertz/mV')
-        Transfer_function for given frequency omega.
-    dimension: int
-        Number of populations.
-    delay_dist_matrix: Quantity(np.ndarray, 'dimensionless')
-        Delay distribution matrix at given frequency.
-    J: Quantity(np.ndarray, 'millivolt')
-        Weight matrix.
-    K: np.ndarray
-        Indegree matrix.
-    omegas: Quantity(np.ndarray, 'hertz')
-        Input angular frequency to population.
-    quantity: str
-        Specifies, what is returned. Options are 'eigvals', 'reigvecs',
-        'leigvecs'.
-    matrix: str
-        String specifying which matrix is analysed. Options are the effective
-        connectivity matrix 'MH', the propagator 'prop' and the inverse
-        propagator 'prop_inv'.
-
-    Returns:
-    --------
-    Quantity(np.ndarray, 'dimensionless')
-        Either eigenvalues corresponding to given frequencies or right or left
-        eigenvectors corresponding to given frequencies.
-    """
-
-    def eigen_spectra_single_freq(tau_m, tau_s, transfer_function, dimension,
-                                  delay_dist_matrix, J, K, omega, matrix):
-
-        MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
-                                     dimension, delay_dist_matrix).magnitude
-
-        if matrix == 'MH':
-            eig, vr = np.linalg.eig(MH)
-            vl = np.linalg.inv(vr)
-            return eig, np.transpose(vr), vl
-
-        Q = np.linalg.inv(np.identity(dimension) - MH)
-        P = np.dot(Q, MH)
-        if matrix == 'prop':
-            eig, vr = np.linalg.eig(P)
-        elif matrix == 'prop_inv':
-            eig, vr = np.linalg.eig(np.linalg.inv(P))
-        vl = np.linalg.inv(vr)
-
-        return eig, np.transpose(vr), vl
-
-    if quantity == 'eigvals':
-        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
-                                         dimension, delay_dist_matrix[i], J, K,
-                                         omega, matrix)[0]
-               for i, omega in enumerate(omegas)]
-    elif quantity == 'reigvecs':
-        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
-                                         dimension, delay_dist_matrix[i], J, K,
-                                         omega, matrix)[1]
-               for i, omega in enumerate(omegas)]
-    elif quantity == 'leigvecs':
-        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
-                                         dimension, delay_dist_matrix[i], J, K,
-                                         omega, matrix)[2]
-               for i, omega in enumerate(omegas)]
-
-    return np.transpose(eig)
