@@ -508,6 +508,17 @@ class Test_effective_connectivity:
         assert_allclose(self.func(**params), output)
 
 
+class Test_propagator:
+    
+    func = staticmethod(exp._propagator)
+    fixtures = 'lif_exp_propagator.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
 @pytest.mark.old
 class Test_sensitivity_measure_old:
 
@@ -555,5 +566,53 @@ class Test_power_spectra:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        print(output)
         assert_allclose(self.func(**params), output)
+
+
+# class Test_eigen_spectra_effective_connectivity_old:
+#
+#     func = staticmethod(exp._effective_connectivity)
+#     output_keys = ['eigenvalue_spectra_MH', 'regime']
+#
+#     def test_correct_output_eigvals_MH(self, output_test_fixtures):
+#         params = output_test_fixtures.pop('params')
+#         # _to_si_units(params)
+#         _strip_units(params)
+#         params['tau_m'] /= 1000
+#         output = output_test_fixtures.pop('output')[0].T
+#         result = np.array([np.linalg.eig(E)[0] for E in self.func(**params)])
+#         assert_allclose(result, output)
+#     #
+#
+#
+# class Test_eigen_spectra_propagator_old:
+#
+#     func = staticmethod(exp._propagator)
+#     output_keys = ['eigenvalue_spectra_prop', 'regime']
+#
+#     def test_correct_output_eigvals_prop(self, output_test_fixtures):
+#         params = output_test_fixtures.pop('params')
+#         _strip_units(params)
+#         params['tau_m'] /= 1000
+#         output = output_test_fixtures.pop('output')[0].T
+#         result = np.array([np.linalg.eig(P)[0] for P in self.func(**params)])
+#         assert_allclose(result, output)
+
+    # def test_correct_output_eigvals_prop(self, output_test_fixtures):
+    #     params = output_test_fixtures.pop('params')
+    #     _to_si_units(params)
+    #     _strip_units(params)
+    #     params['quantity'] = 'eigvals'
+    #     params['matrix'] = 'prop'
+    #     output = output_test_fixtures.pop('output')[1]
+    #     check_correct_output(self.func, params, output)
+    #
+    # def test_correct_output_eigvals_prop_inv(self, output_test_fixtures):
+    #     params = output_test_fixtures.pop('params')
+    #     _to_si_units(params)
+    #     _strip_units(params)
+    #     params['quantity'] = 'eigvals'
+    #     params['matrix'] = 'prop_inv'
+    #     output = output_test_fixtures.pop('output')
+    #     output = output[2]
+    #     check_correct_output(self.func, params, output)

@@ -952,8 +952,8 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     tau_m : float
         Membrane time constant in s.
     
-    Returns:
-    --------
+    Returns
+    -------
     np.ndarray
         Effective connectivity matrix.
     """
@@ -971,6 +971,27 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     else:
         raise RuntimeError('Delay distribution matrix has no valid format.')
     return tau_m * J * K * tf * D
+
+
+def _propagator(effective_connectivity):
+    """
+    Propagator of network.
+
+    Parameters
+    ----------
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
+    
+    Returns
+    -------
+    np.ndarray
+        Propagator.
+    """
+    Q = np.linalg.inv(np.identity(effective_connectivity.shape[-1])
+                      - effective_connectivity)
+    prop = np.array([np.dot(q, e)
+                     for (q, e) in zip(Q, effective_connectivity)])
+    return prop
 
 
 @_check_and_store(['sensitivity_measure'],
@@ -1118,3 +1139,82 @@ def _power_spectra(nu, transfer_function, D, J, K, N,
         C = np.dot(Q, np.dot(A, np.transpose(np.conjugate(Q))))
         power[i] = np.absolute(np.diag(C))
     return power
+
+
+@_check_positive_params
+def _eigen_spectra(transfer_function, delay_dist_matrix, J, K, tau_m, tau_s,
+                   omegas, quantity, matrix):
+    """
+    Calcs eigenvals, left and right eigenvecs of matrix at given frequency.
+
+    Parameters:
+    -----------
+    tau_m: Quantity(float, 'millisecond')
+        Membrane time constant.
+    tau_s: Quantity(float, 'millisecond')
+        Synaptic time constant.
+    transfer_function: Quantity(np.ndarray, 'hertz/mV')
+        Transfer_function for given frequency omega.
+    dimension: int
+        Number of populations.
+    delay_dist_matrix: Quantity(np.ndarray, 'dimensionless')
+        Delay distribution matrix at given frequency.
+    J: Quantity(np.ndarray, 'millivolt')
+        Weight matrix.
+    K: np.ndarray
+        Indegree matrix.
+    omegas: Quantity(np.ndarray, 'hertz')
+        Input angular frequency to population.
+    quantity: str
+        Specifies, what is returned. Options are 'eigvals', 'reigvecs',
+        'leigvecs'.
+    matrix: str
+        String specifying which matrix is analysed. Options are the effective
+        connectivity matrix 'MH', the propagator 'prop' and the inverse
+        propagator 'prop_inv'.
+
+    Returns:
+    --------
+    Quantity(np.ndarray, 'dimensionless')
+        Either eigenvalues corresponding to given frequencies or right or left
+        eigenvectors corresponding to given frequencies.
+    """
+
+    def eigen_spectra_single_freq(tau_m, tau_s, transfer_function, dimension,
+                                  delay_dist_matrix, J, K, omega, matrix):
+
+        MH = _effective_connectivity(omega, transfer_function, tau_m, J, K,
+                                     dimension, delay_dist_matrix).magnitude
+
+        if matrix == 'MH':
+            eig, vr = np.linalg.eig(MH)
+            vl = np.linalg.inv(vr)
+            return eig, np.transpose(vr), vl
+
+        Q = np.linalg.inv(np.identity(dimension) - MH)
+        P = np.dot(Q, MH)
+        if matrix == 'prop':
+            eig, vr = np.linalg.eig(P)
+        elif matrix == 'prop_inv':
+            eig, vr = np.linalg.eig(np.linalg.inv(P))
+        vl = np.linalg.inv(vr)
+
+        return eig, np.transpose(vr), vl
+
+    if quantity == 'eigvals':
+        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                         dimension, delay_dist_matrix[i], J, K,
+                                         omega, matrix)[0]
+               for i, omega in enumerate(omegas)]
+    elif quantity == 'reigvecs':
+        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                         dimension, delay_dist_matrix[i], J, K,
+                                         omega, matrix)[1]
+               for i, omega in enumerate(omegas)]
+    elif quantity == 'leigvecs':
+        eig = [eigen_spectra_single_freq(tau_m, tau_s, transfer_function[i],
+                                         dimension, delay_dist_matrix[i], J, K,
+                                         omega, matrix)[2]
+               for i, omega in enumerate(omegas)]
+
+    return np.transpose(eig)

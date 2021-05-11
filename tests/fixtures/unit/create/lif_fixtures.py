@@ -125,8 +125,9 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_power_spectra.h5')
-            
-            
-            
+            create_and_save_fixtures(lmt.lif.exp._propagator,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_propagator.h5')
         else:
             print('No such module')
