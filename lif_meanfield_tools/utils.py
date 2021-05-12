@@ -150,6 +150,76 @@ def _check_and_store(result_keys, analysis_keys=None, depends_on=None,
     return decorator_check_and_store
 
 
+def _cache(func, params, result_keys, network):
+    """
+    Cache resuls of func(**params) into network dictionaries using result_keys.
+    
+    This function serves as a wrapper for functions that calculate quantities
+    which are to be stored in the network's result dicts. First it creates a
+    hash using the function name, the passed parameters, and the result keys,
+    and checks whether this hash is a key of the network's results_hash_dict.
+    If this is the case, the old result is returned. If not, the new result is
+    calculated and stored in the results_hash_dict and the results dict. Then
+    the new result is returned.
+
+    Parameters
+    ----------
+    func : function
+        Function whose return value should be cached.
+    params : dict
+        Parameters passed on to func.
+    result_keys : str or list of str
+        Specifies under which keys the result should be stored.
+    network : lif_meanfield_tools.networks.Network or child class instance.
+        The network whose dicts are used for storing the results.
+
+    Returns
+    -------
+    func(**params)
+    """
+    # make sure result keys are array
+    result_keys = np.atleast_1d(result_keys)
+    
+    # create unique hash for given function parameter combination
+    label = str((func.__name__, result_keys, tuple(sorted(params.items()))))
+    h = hashlib.md5(label.encode('utf-8')).hexdigest()
+    
+    # collect results
+    results = getattr(network, 'results')
+    results_hash_dict = getattr(network, 'results_hash_dict')
+    
+    # if corresponding result exists return cached value
+    if h in results_hash_dict.keys():
+        if len(result_keys) == 1:
+            new_results = results_hash_dict[h][result_keys[0]]
+        else:
+            new_results = [results_hash_dict[h][key] for key in result_keys]
+    # if corresponding result does not exists return newly calculated value
+    else:
+        new_results = func(**params)
+        if len(result_keys) == 1:
+            hash_dict = {result_keys[0]: new_results}
+        else:
+            hash_dict = {key: new_results[i]
+                         for i, key in enumerate(result_keys)}
+        hash_dict['params'] = params
+        # add entry to hash dict
+        results_hash_dict[h] = hash_dict
+        
+    # update results
+    if len(result_keys) == 1:
+        results[result_keys[0]] = new_results
+    else:
+        for i, key in enumerate(result_keys):
+            results[key] = new_results[i]
+
+    # update network.results and network.results_hash_dict
+    setattr(network, 'results', results)
+    setattr(network, 'results_hash_dict', results_hash_dict)
+    
+    return new_results
+    
+
 def check_if_positive(parameters, parameter_names):
     """Check that will raise an error if parameters are negative."""
     for parameter, parameter_name in zip(parameters, parameter_names):
