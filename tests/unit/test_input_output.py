@@ -288,21 +288,24 @@ class Test_save_network:
                 io.save_network(file, network)
                 io.save_network(file, network)
             
-    def test_save_creates_correct_output(self, tmpdir, mocker, network):
+    def test_save_creates_correct_output(self, tmpdir, empty_network):
         file = 'test.h5'
         keys = ['results', 'results_hash_dict', 'network_params',
                 'analysis_params']
         
-        @lmt.Network._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return 1 * ureg.ms
+        def _test_func(x):
+            return x
     
-        mocker.patch.object(lmt.Network, 'mean_input', new=test_method)
-        network.mean_input(np.array([1, 2, 3]) * ureg.ms)
+        def test_function(network):
+            return lmt.utils._cache(_test_func, {'x': 1}, 'test', network)
+    
+        empty_network.network_params['a'] = 1
+        empty_network.analysis_params['a'] = 1
+        test_function(empty_network)
         
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            io.save_network(file, network)
+            io.save_network(file, empty_network, overwrite=True)
             output = h5.load(file)
             for key in keys:
                 assert key in output.keys()

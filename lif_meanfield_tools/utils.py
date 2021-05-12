@@ -178,7 +178,12 @@ def _cache(func, params, result_keys, network):
     func(**params)
     """
     # make sure result keys are array
-    result_keys = np.atleast_1d(result_keys)
+    # here we convert them to a list, because otherwise you might run into a
+    # bug of the h5py_wrapper, which saves the type of the keys and after
+    # converting them to a numpy array they are numpy strings
+    # this then leads to a problem when loading the h5 file, because the
+    # h5py_wrapper doesn't know the numpy string type.
+    result_keys = np.atleast_1d(result_keys).tolist()
     
     # create unique hash for given function parameter combination
     label = str((func.__name__, result_keys, tuple(sorted(params.items()))))
