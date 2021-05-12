@@ -11,7 +11,7 @@ from scipy.special import (
 from .. import ureg as ureg
 from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
-                     _check_and_store)
+                     _cache)
 
 from . import _static
                       
@@ -79,8 +79,7 @@ def working_point(network, method='shift'):
             'mean_input': mean_input(network),
             'std_input': std_input(network)}
     
-    
-@_check_and_store(['firing_rates'], ['firing_rates_method'], prefix=_prefix)
+
 def firing_rates(network, method='shift'):
     """
     Calculates stationary firing rates for exp PSCs.
@@ -148,7 +147,9 @@ def firing_rates(network, method='shift'):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     
-    return _firing_rates(**params, method=method) * ureg.Hz
+    params['method'] = method
+    return _cache(_firing_rates, params, _prefix + 'firing_rates',
+                  network) * ureg.Hz
         
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
@@ -352,8 +353,6 @@ def _Phi_pos(s):
                                   * _erfcx(s / np.sqrt(2)))
     
 
-@_check_and_store(['mean_input'], depends_on=['lif.exp.firing_rates'],
-                  prefix=_prefix)
 def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
@@ -393,12 +392,6 @@ def mean_input(network):
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    try:
-        rates = (
-            network.results['lif.exp.firing_rates'].to_base_units().magnitude)
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
     list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
                       'tau_m_ext']
     try:
@@ -406,7 +399,13 @@ def mean_input(network):
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
     
-    return _mean_input(nu=rates, **params) * ureg.V
+    try:
+        params['nu'] = network.results['lif.exp.firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _cache(_mean_input, params, _prefix + 'mean_input',
+                  network) * ureg.V
 
 
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
@@ -419,8 +418,6 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
                                J_ext, K_ext, nu_ext, tau_m_ext)
 
 
-@_check_and_store(['std_input'], depends_on=['lif.exp.firing_rates'],
-                  prefix=_prefix)
 def std_input(network):
     '''
     Calculates standard deviation of inputs to populations.
@@ -460,12 +457,6 @@ def std_input(network):
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    try:
-        rates = (
-            network.results['lif.exp.firing_rates'].to_base_units().magnitude)
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
     list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
                       'tau_m_ext']
     try:
@@ -473,7 +464,13 @@ def std_input(network):
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
     
-    return _std_input(nu=rates, **params) * ureg.V
+    try:
+        params['nu'] = network.results['lif.exp.firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _cache(_std_input, params, _prefix + 'std_input',
+                  network) * ureg.V
 
 
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
@@ -486,10 +483,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
                               J_ext, K_ext, nu_ext, tau_m_ext)
 
 
-@_check_and_store(['transfer_function'], ['transfer_function_method'],
-                  depends_on=['lif.exp.mean_input', 'lif.exp.std_input'],
-                  prefix=_prefix)
-def transfer_function(network, method='shift'):
+def transfer_function(network, freqs=None, method='shift'):
     """
     Calculates transfer function.
     
@@ -497,6 +491,9 @@ def transfer_function(network, method='shift'):
     ----------
     network : lif_meanfield_tools.create.Network or child class instance.
         Network with the network parameters listed in the following.
+    freqs : np.ndarray
+        Frequencies for which transfer function should be calculated. You can
+        use this if you do not want to use the networks analysis_params.
     method : str
         Method used to calculate the tranfser function. Options: 'shift' or
         'taylor'. Default is 'shift'.
@@ -537,26 +534,29 @@ def transfer_function(network, method='shift'):
 
     try:
         params = {key: network.network_params[key] for key in list_of_params}
-        params['omegas'] = network.analysis_params['omegas']
+        if freqs is None:
+            params['omegas'] = network.analysis_params['omegas']
+        else:
+            params['omegas'] = freqs * 2 * np.pi
     except KeyError as param:
         raise RuntimeError(
             f"You are missing {param} for calculating the transfer function!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     try:
-        mean_input = (
-            network.results['lif.exp.mean_input'].to_base_units().magnitude)
-        std_input = (
-            network.results['lif.exp.std_input'].to_base_units().magnitude)
+        params['mu'] = network.results['lif.exp.mean_input']
+        params['sigma'] = network.results['lif.exp.std_input']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
     if method == 'shift':
-        return _transfer_function_shift(mu=mean_input, sigma=std_input,
-                                        **params) * ureg.Hz / ureg.V
+        return _cache(_transfer_function_shift, params,
+                      _prefix + 'transfer_function', network
+                      ) * ureg.Hz / ureg.V
     elif method == 'taylor':
-        return _transfer_function_taylor(mu=mean_input, sigma=std_input,
-                                         **params) * ureg.Hz / ureg.V
+        return _cache(_transfer_function_taylor, params,
+                      _prefix + 'transfer_function', network
+                      ) * ureg.Hz / ureg.V
 
 
 @_check_positive_params
@@ -867,9 +867,6 @@ def _Phi_prime_mu(s, sigma):
                                       + np.sqrt(2) / np.sqrt(np.pi))
 
 
-@_check_and_store(['effective_connectivity'],
-                  depends_on=['lif.exp.transfer_function'],
-                  prefix=_prefix)
 def effective_connectivity(network):
     """
     Effective connectivity for different frequencies.
@@ -917,14 +914,15 @@ def effective_connectivity(network):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     try:
-        transfer_function = (
-            network.results[
-                'lif.exp.transfer_function'].to_base_units().magnitude)
+        params['transfer_function'] = (
+            network.results['lif.exp.transfer_function'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _effective_connectivity(transfer_function, **params)
-
+    params['transfer_function'] = transfer_function
+    return _cache(_effective_connectivity, params,
+                  _prefix + 'effective_connectivity', network)
+                  
 
 def _effective_connectivity(transfer_function, D, J, K, tau_m):
     """
@@ -973,9 +971,6 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     return tau_m * J * K * tf * D
 
 
-@_check_and_store(['propagator'],
-                  depends_on=['lif.exp.effective_connectivity'],
-                  prefix=_prefix)
 def propagator(network):
     """
     Propagator for different frequencies.
@@ -997,13 +992,14 @@ def propagator(network):
         Propagator for different frequencies. Shape:
         (num freqs, num populations, num populations).
     """
+    params = {}
     try:
-        effective_connectivity = (
+        params['effective_connectivity'] = (
             network.results['lif.exp.effective_connectivity'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _propagator(effective_connectivity)
+    return _cache(_propagator, params, _prefix + 'propagator', network)
 
 
 def _propagator(effective_connectivity):
@@ -1027,9 +1023,6 @@ def _propagator(effective_connectivity):
     return prop
 
 
-@_check_and_store(['sensitivity_measure'],
-                  depends_on=['lif.exp.transfer_function'],
-                  prefix=_prefix)
 def sensitivity_measure(network):
     """
     Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
@@ -1043,68 +1036,36 @@ def sensitivity_measure(network):
         Network with the network parameters and previously calculated results
         listed in the following.
 
-    Newtork results
+    Network results
     ---------------
-    transfer_function : Quantity(np.ndarray, 'hertz/mV')
-        Transfer_function for given frequency omega.
-        
-    Network Parameters
-    ------------------
-    D : np.ndarray
-        Delay distribution matrix at given frequencies.
-    J : np.ndarray
-        Weight matrix in mV.
-    K : np.ndarray
-        Indegree matrix.
-    tau_m : float or np.ndarray
-        Membrane time constant.
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
 
     Returns
     -------
     np.ndarray
         Sensitivity measure.
     """
-    
-    list_of_params = ['D', 'J', 'K', 'tau_m']
-
+    params = {}
     try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(
-            f"You are missing {param} for calculating the effective "
-            "connectivity!\n"
-            "Have a look into the documentation for more details on 'lif' "
-            "parameters.")
-    try:
-        transfer_function = (
-            network.results[
-                'lif.exp.transfer_function'].to_base_units().magnitude)
+        params['effective_connectivity'] = (
+            network.results['lif.exp.effective_connectivity'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _sensitivity_measure(transfer_function, **params)
+    return _cache(_sensitivity_measure, params,
+                  _prefix + 'sensitivity_measure', network)
 
 
 @_check_positive_params
-def _sensitivity_measure(transfer_function, D, J, K, tau_m):
+def _sensitivity_measure(effective_connectivity):
     """
     Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
 
     Parameters
     ----------
-    transfer_function : np.ndarray
-        Transfer_function for given frequencies omega in Hz/V
-
-    Network Parameters
-    ------------------
-    D : np.ndarray
-        Delay distribution matrix at given frequencies.
-    J : np.ndarray
-        Weight matrix in mV.
-    K : np.ndarray
-        Indegree matrix.
-    tau_m : float or np.ndarray
-        Membrane time constant.
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
 
     Returns
     -------
@@ -1112,34 +1073,28 @@ def _sensitivity_measure(transfer_function, D, J, K, tau_m):
         Sensitivity measure of shape
         (num analysis freqs, num populations, num populations)
     """
-    MH = _effective_connectivity(transfer_function, D, J, K, tau_m)
 
     # This ensures that it also works if transfer function has only been
     # calculated for a single frequency. But it should be removed once we have
     # made sure that the frequency dependend quantities always return an object
     # with the frequencies indexed by the first axis.
-    if len(MH.shape) == 2:
-        MH = np.expand_dims(MH, axis=0)
+    if len(effective_connectivity.shape) == 2:
+        effective_connectivity = np.expand_dims(effective_connectivity, axis=0)
         
-    T = np.zeros(MH.shape, dtype=complex)
-    for i, MH_of_omega in enumerate(MH):
-        e, U_l, U_r = slinalg.eig(MH_of_omega, left=True, right=True)
+    T = np.zeros(effective_connectivity.shape, dtype=complex)
+    for i, eff_conn_of_omega in enumerate(effective_connectivity):
+        e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
         index = None
         if index is None:
             # find eigenvalue closest to one
             index = np.argmin(np.abs(e - 1))
         T[i] = np.outer(U_l[:, index].conj(), U_r[:, index])
         T[i] /= np.dot(U_l[:, index].conj(), U_r[:, index])
-        T[i] *= MH_of_omega
+        T[i] *= eff_conn_of_omega
 
     return T
 
 
-@_check_and_store(['power_spectra'],
-                  depends_on=[
-                      'lif.exp.firing_rates',
-                      'lif.exp.effective_connectivity'],
-                  prefix=_prefix)
 def power_spectra(network):
     """
     Calcs vector of power spectra for all populations at given frequencies.
@@ -1162,8 +1117,6 @@ def power_spectra(network):
         
     Network parameters
     ------------------
-    D : np.ndarray
-        Delay distribution matrix at given frequencies.
     J : np.ndarray
         Weight matrix in mV.
     K : np.ndarray
@@ -1190,16 +1143,13 @@ def power_spectra(network):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     try:
-        nu = (
-            network.results[
-                'lif.exp.firing_rates'].to_base_units().magnitude)
-        effective_connectivity = (
-            network.results[
-                'lif.exp.effective_connectivity'].to_base_units().magnitude)
+        params['nu'] = network.results['lif.exp.firing_rates']
+        params['effective_connectivity'] = (
+            network.results['lif.exp.effective_connectivity'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _power_spectra(nu, effective_connectivity, **params)
+    return _cache(_power_spectra, params, _prefix + 'power_spectra', network)
 
 
 @_check_positive_params

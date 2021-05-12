@@ -8,7 +8,7 @@ from scipy.special import (
 from scipy.integrate import quad as _quad
 
 from . import _static
-from ..utils import (_check_and_store,
+from ..utils import (_cache,
                      _check_positive_params)
 from .. import ureg
 
@@ -16,7 +16,6 @@ from .. import ureg
 _prefix = 'lif.delta.'
 
 
-@_check_and_store(['firing_rates'], prefix=_prefix)
 def firing_rates(network):
     """
     Calculates stationary firing rates for delta shaped PSCs.
@@ -71,7 +70,8 @@ def firing_rates(network):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     
-    return _firing_rates(**params) * ureg.Hz
+    return _cache(_firing_rates, params, _prefix + 'firing_rates',
+                  network) * ureg.Hz
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
