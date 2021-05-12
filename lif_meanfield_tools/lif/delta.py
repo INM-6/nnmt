@@ -235,99 +235,135 @@ def _siegert_interm(y_th, y_r, tau_m, t_ref, gl_order):
     return 1 / (e_V_th_2 * t_ref + tau_m * np.sqrt(np.pi) * Int)
 
 
-# @_check_and_store(['mean_input'], prefix=_prefix)
-# def mean_input(network):
-#     '''
-#     Calc mean inputs to populations as function of firing rates of populations.
-#
-#     Following Fourcaud & Brunel (2002).
-#
-#     Parameters:
-#     -----------
-#     network: lif_meanfield_tools.create.Network or child class instance.
-#         Network with the network parameters and previously calculated results
-#         listed in the following.
-#
-#     Network results:
-#     ----------------
-#     nu: Quantity(np.array, 'hertz')
-#         Firing rates of populations in Hz.
-#
-#     Network parameters:
-#     -------------------
-#     tau_m: float
-#         Membrane time constant in s.
-#     K: np.array
-#         Indegree matrix.
-#     J: np.array
-#         Weight matrix in V.
-#     j: float
-#         Synaptic weight in V.
-#     nu_ext: float
-#         Firing rate of external input in Hz.
-#     K_ext: np.array
-#         Numbers of external input neurons to each population.
-#     g: float
-#         Relative inhibitory weight.
-#     nu_e_ext: float
-#         Firing rate of additional external excitatory Poisson input in Hz.
-#     nu_i_ext: float
-#         Firing rate of additional external inhibitory Poisson input in Hz.
-#
-#     Returns:
-#     --------
-#     Quantity(np.array, 'volt')
-#         Array of mean inputs to each population in V.
-#     '''
-#     return _static._mean_input(network, _prefix)
-#
-#
-# @_check_and_store(['std_input'], prefix=_prefix)
-# def std_input(network):
-#     '''
-#     Calc standard deviation of inputs to populations.
-#
-#     Following Fourcaud & Brunel (2002).
-#
-#     Parameters:
-#     -----------
-#     network: lif_meanfield_tools.create.Network or child class instance.
-#         Network with the network parameters and previously calculated results
-#         listed in the following.
-#
-#     Network results:
-#     ----------------
-#     nu: Quantity(np.array, 'hertz')
-#         Firing rates of populations in Hz.
-#
-#     Network parameters:
-#     -------------------
-#     tau_m: float
-#         Membrane time constant in s.
-#     K: np.array
-#         Indegree matrix.
-#     J: np.array
-#         Weight matrix in V.
-#     j: float
-#         Synaptic weight in V.
-#     nu_ext: float
-#         Firing rate of external input in Hz.
-#     K_ext: np.array
-#         Numbers of external input neurons to each population.
-#     g: float
-#         Relative inhibitory weight.
-#     nu_e_ext: float
-#         Firing rate of additional external excitatory Poisson input in Hz.
-#     nu_i_ext: float
-#         Firing rate of additional external inhibitory Poisson input in Hz.
-#
-#     Returns:
-#     --------
-#     Quantity(np.array, 'volt')
-#         Array of mean inputs to each population in V.
-#     '''
-#     return _static._std_input(network, _prefix)
+def mean_input(network):
+    '''
+    Calc mean inputs to populations as function of firing rates of populations.
 
+    Following Fourcaud & Brunel (2002).
+    
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+        
+    Network results
+    ---------------
+    nu : Quantity(np.array, 'hertz')
+        Firing rates of populations in Hz.
+    
+    Network parameters
+    ------------------
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
+
+    Returns
+    -------
+    Quantity(np.array, 'volt')
+        Array of mean inputs to each population in V.
+    '''
+    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
+                      'tau_m_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    
+    try:
+        params['nu'] = network.results[_prefix + 'firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _cache(_mean_input, params, _prefix + 'mean_input',
+                  network) * ureg.V
+
+
+def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+    """
+    Plain calculation of mean neuronal input.
+    
+    See :code:`lif.delta.mean_input` for full documentation.
+    """
+    return _static._mean_input(nu, J, K, tau_m,
+                               J_ext, K_ext, nu_ext, tau_m_ext)
+
+
+def std_input(network):
+    '''
+    Calculates standard deviation of inputs to populations.
+
+    Following Fourcaud & Brunel (2002).
+    
+    Parameters
+    ----------
+    network: lif_meanfield_tools.networks.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+        
+    Network results
+    ---------------
+    nu : Quantity(np.array, 'hertz')
+        Firing rates of populations in Hz.
+    
+    Network parameters
+    ------------------
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    tau_m_ext : float or 1d array
+        Membrane time constants of external populations.
+
+    Returns
+    -------
+    Quantity(np.array, 'volt')
+        Array of mean inputs to each population in V.
+    '''
+    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
+                      'tau_m_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    
+    try:
+        params['nu'] = network.results[_prefix + 'firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    
+    return _cache(_std_input, params, _prefix + 'std_input',
+                  network) * ureg.V
+
+
+def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+    """
+    Plain calculation of standard deviation of neuronal input.
+    
+    See :code:`lif.exp.mean_input` for full documentation.
+    """
+    return _static._std_input(nu, J, K, tau_m,
+                              J_ext, K_ext, nu_ext, tau_m_ext)
+    
 
 def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
                                                tau_m, tau_r):
