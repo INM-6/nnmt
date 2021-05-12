@@ -127,6 +127,14 @@ class Test_derivative_of_firing_rates_wrt_mean_input:
 
     func = staticmethod(delta._derivative_of_firing_rates_wrt_mean_input)
     output_key = 'd_nu_d_mu'
+    
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
+        check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
 
     def test_zero_sigma_raises_error(self, std_params):
         std_params['sigma'] = 0

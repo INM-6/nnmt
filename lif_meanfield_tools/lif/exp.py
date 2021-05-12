@@ -826,9 +826,6 @@ def _Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
     """
-    x = np.atleast_1d(x)
-    z = np.atleast_1d(z)
-    assert z.shape[1] == x.shape[0]
     parabolic_cylinder_fn = pcfu_vec(z, -x).astype(complex)
     return np.exp(0.25 * x**2) * parabolic_cylinder_fn
 
@@ -839,8 +836,6 @@ def _d_Psi(z, x):
 
     (Eq.: 12.8.9 in http://dlmf.nist.gov/12.8)
     """
-    z = np.atleast_1d(z)
-    assert z.shape[1] == x.shape[0]
     return (1. / 2. + z) * _Psi(z + 1, x)
 
 

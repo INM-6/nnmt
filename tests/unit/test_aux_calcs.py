@@ -148,6 +148,7 @@ class Test_nu0_fb433:
             self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_nu0_fb:
 
     func = staticmethod(nu0_fb)
@@ -195,6 +196,7 @@ class Test_Phi:
             assert result == output
 
 
+@pytest.mark.transfered
 class Test_Phi_prime_mu:
 
     func = staticmethod(Phi_prime_mu)
@@ -221,6 +223,7 @@ class Test_Phi_prime_mu:
             self.func(s, sigma)
 
 
+@pytest.mark.transfered
 class Test_d_nu_d_mu:
 
     func = staticmethod(d_nu_d_mu)
@@ -245,6 +248,7 @@ class Test_d_nu_d_mu:
                                                         outputs)
 
 
+@pytest.mark.transfered
 class Test_d_nu_d_mu_fb433:
 
     func = staticmethod(d_nu_d_mu_fb433)
@@ -312,6 +316,7 @@ class Test_d_nu_d_nu_in_fb:
                                                         output)
 
 
+@pytest.mark.transfered
 class Test_Psi:
 
     func = staticmethod(Psi)
@@ -329,6 +334,7 @@ class Test_Psi:
             assert result == output
 
 
+@pytest.mark.transfered
 class Test_d_Psi:
 
     func = staticmethod(d_Psi)
@@ -346,6 +352,7 @@ class Test_d_Psi:
             assert result == output
 
 
+@pytest.mark.transfered
 class Test_d_2_Psi:
 
     func = staticmethod(d_2_Psi)
