@@ -3,6 +3,8 @@ import numpy as np
 from .network import Network
 from .. import ureg
 
+import lif_meanfield_tools as lmt
+
 
 class Microcircuit(Network):
     
@@ -19,6 +21,12 @@ class Microcircuit(Network):
         derived_analysis_params = (
             self._calculate_dependent_analysis_parameters())
         self.analysis_params.update(derived_analysis_params)
+        
+        self.network_params['D'] = lmt.networks.utils.delay_dist_matrix(
+            self.network_params['Delay'].magnitude,
+            self.network_params['Delay_sd'].magnitude,
+            self.network_params['delay_dist'],
+            self.analysis_params['omegas'])
         
         self._convert_param_dicts_to_base_units_and_strip_units()
         
