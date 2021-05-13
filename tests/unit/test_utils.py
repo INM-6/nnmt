@@ -19,6 +19,17 @@ def make_test_method(output):
     return test_method
 
 
+def make_cache_test_func(output):
+    def cache_test_func(network):
+        params = dict(output=output)
+        return lmt.utils._cache(_test_func, params, 'test', network)
+    return cache_test_func
+        
+        
+def _test_func(output):
+    return output
+
+
 def make_test_method_with_key(output, key):
     @lmt.utils._check_and_store(['test'], key)
     def test_method(self, key):
@@ -46,362 +57,79 @@ test_methods = [make_test_method(result_types[key])
 keys = [analysis_key_types[key] for key in key_names]
 results = [result_types[key] for key in result_ids]
 
+cache_test_funcs = [make_cache_test_func(result_types[key])
+                    for key in result_ids]
 
-class Test_check_and_store_decorator:
 
-    @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
+class Test_cache:
+    
+    @pytest.mark.parametrize('test_func, result',
+                             zip(cache_test_funcs, results),
                              ids=result_ids)
-    def test_save_results(self, network, test_method, result):
-        test_method(network)
+    def test_save_results_in_network_dicts(self, network, test_func, result):
+        test_func(network)
         try:
             assert network.results['test'] == result
         except ValueError:
             assert_array_equal(network.results['test'], result)
             assert_units_equal(network.results['test'], result)
-
-    @pytest.mark.parametrize('test_method, result', zip(test_methods, results),
-                             ids=result_ids)
-    def test_returns_existing_result(self, network, test_method,
-                                     result):
-        test_method(network)
+        
+        rhd_entry = network.results_hash_dict.popitem()[1]
+        
+        assert 'test' in rhd_entry
         try:
-            assert test_method(network) == result
+            assert rhd_entry['test'] == result
         except ValueError:
-            assert_array_equal(test_method(network), result)
-            assert_units_equal(test_method(network), result)
+            assert_array_equal(rhd_entry['test'], result)
+            assert_units_equal(rhd_entry['test'], result)
+        
+        assert 'params' in rhd_entry
+        check_quantity_dicts_are_equal(rhd_entry['params'],
+                                       dict(output=result))
+            
+    @pytest.mark.parametrize('test_func, result',
+                             zip(cache_test_funcs, results),
+                             ids=result_ids)
+    def test_returns_existing_result(self, network, test_func,
+                                     result):
+        test_func(network)
+        try:
+            assert test_func(network) == result
+        except ValueError:
+            assert_array_equal(test_func(network), result)
+            assert_units_equal(test_func(network), result)
 
     def test_result_not_calculated_twice(self, mocker, network):
-        mock = mocker.Mock()
+        mock = mocker.Mock(__name__='mocker', return_value=1)
         
-        @lmt.utils._check_and_store(['test'])
         def test_function(network):
-            return mock()
+            return lmt.utils._cache(mock, dict(a=1), 'test', network)
         
         test_function(network)
         test_function(network)
         mock.assert_called_once()
-
-    @pytest.mark.parametrize('key', keys, ids=key_names)
-    @pytest.mark.parametrize('result', results, ids=result_ids)
-    def test_saves_new_analysis_key_with_param_and_results(self,
-                                                           network,
-                                                           key,
-                                                           result):
-        test_method = make_test_method_with_key(result, ['test_key'])
-        test_method(network, key)
-        try:
-            assert network.results['test'] == result
-        except ValueError:
-            assert_array_equal(network.results['test'], result)
-            assert_units_equal(network.results['test'], result)
-
-    @pytest.mark.parametrize('key', keys, ids=key_names)
-    @pytest.mark.parametrize('result', results, ids=result_ids)
-    def test_returns_existing_analysis_key_with_param_and_results(self,
-                                                                  network,
-                                                                  key,
-                                                                  result):
-        test_method = make_test_method_with_key(result, ['test_key'])
-        test_method(network, key)
-        try:
-            assert test_method(network, key) == result
-        except ValueError:
-            assert_array_equal(test_method(network, key), result)
-            assert_units_equal(test_method(network, key), result)
-
-    @pytest.mark.parametrize('key', keys, ids=key_names)
-    @pytest.mark.parametrize('result', results, ids=result_ids)
-    def test_saves_new_param_and_results_for_existing_analysis_key(self,
-                                                                   network,
-                                                                   key,
-                                                                   result):
-        test_method = make_test_method_with_key(result, ['test_key'])
-        test_method(network, key)
-        test_method(network, 2 * key)
-        try:
-            assert network.results['test'] == result
-        except ValueError:
-            assert_array_equal(network.results['test'], result)
-            assert_units_equal(network.results['test'], result)
-
-    def test_returns_existing_key_param_results_for_second_param(self,
-                                                                 network):
-        @lmt.utils._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return key
-        omegas = [10 * ureg.Hz, 11 * ureg.Hz]
-        test_method(network, omegas[0])
-        test_method(network, omegas[1])
-        assert test_method(network, omegas[1]) == omegas[1]
-
-    def test_result_not_calculated_twice_for_same_key(self,
-                                                      mocker,
-                                                      network):
-        mock = mocker.Mock()
         
-        @lmt.utils._check_and_store(['test'], ['key'])
-        def test_function(network, key):
-            return mock(key)
+    def test_result_calculated_twice_for_differing_params(self, mocker,
+                                                          empty_network):
+        network = empty_network
+        mock = mocker.Mock(__name__='mocker')
         
-        test_function(network, 'key1')
-        test_function(network, 'key1')
-        mock.assert_called_once()
-
-    def test_result_not_calculated_twice_for_second_key(self,
-                                                        mocker,
-                                                        network):
-        mock = mocker.Mock()
+        def test_function(network, a):
+            params = dict(a=a)
+            return lmt.utils._cache(mock, params, 'test', network)
         
-        @lmt.utils._check_and_store(['test'], ['key'])
-        def test_function(network, key):
-            return mock(key)
-        
-        test_function(network, 10 * ureg.Hz)
-        test_function(network, 11 * ureg.Hz)
-        test_function(network, 11 * ureg.Hz)
+        test_function(network, 1)
+        test_function(network, 2)
         assert mock.call_count == 2
-
-    def test_result_calculated_twice_for_differing_keys(self,
-                                                        network):
-        @lmt.utils._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return key
-        omegas = [10 * ureg.Hz, 11 * ureg.Hz]
-        test_method(network, omegas[0])
-        test_method(network, omegas[1])
-        assert len(network.results_hash_dict) == 2
         
-    def test_updates_results_and_analysis_params(self, network):
+    def test_result_calculated_twice_for_differing_result_keys(self, mocker,
+                                                               empty_network):
+        network = empty_network
+        mock = mocker.Mock(__name__='mocker')
         
-        @lmt.utils._check_and_store(['test'], ['test_key'])
-        def test_method(self, key):
-            return key
+        def test_function(network, key):
+            return lmt.utils._cache(mock, dict(a=1), key, network)
         
-        omegas = [10 * ureg.Hz, 11 * ureg.Hz]
-        test_method(network, omegas[0])
-        results0 = network.results.copy()
-        analysis_params0 = network.analysis_params.copy()
-        test_method(network, omegas[1])
-        results1 = network.results.copy()
-        analysis_params1 = network.analysis_params.copy()
-        test_method(network, omegas[0])
-        results2 = network.results.copy()
-        analysis_params2 = network.analysis_params.copy()
-        check_quantity_dicts_are_equal(results0, results2)
-        with pytest.raises(AssertionError):
-            check_quantity_dicts_are_equal(results0, results1)
-        check_quantity_dicts_are_equal(analysis_params0, analysis_params2)
-        with pytest.raises(AssertionError):
-            check_quantity_dicts_are_equal(analysis_params0, analysis_params1)
-            
-    def test_results_stored_in_result_dict_for_two_result_keys(
-            self, network):
-        @lmt.utils._check_and_store(['result1', 'result2'])
-        def test_method(self):
-            return 1 * ureg.mV, 2 * ureg.mV
-        test_method(network)
-        assert 1 * ureg.mV == network.results['result1']
-        assert 2 * ureg.mV == network.results['result2']
-        
-    def test_results_stored_in_results_hash_dict_for_two_result_keys(
-            self, network):
-        @lmt.utils._check_and_store(['result1', 'result2'])
-        def test_method(self):
-            return 1 * ureg.mV, 2 * ureg.mV
-        test_method(network)
-        # get only element in results_hash_dict
-        results_entry = list(network.results_hash_dict.values())[0]
-        assert 1 * ureg.mV in results_entry.values()
-        assert 2 * ureg.mV in results_entry.values()
-        
-    def test_results_stored_for_two_result_keys_with_one_analysis_key(
-            self, network):
-        @lmt.utils._check_and_store(['result1', 'result2'], ['analysis1'])
-        def test_method(self, key):
-            return 1 * ureg.mV, 2 * ureg.mV
-        test_method(network, 1 * ureg.ms)
-        assert 1 * ureg.mV == network.results['result1']
-        assert 2 * ureg.mV == network.results['result2']
-        assert 1 * ureg.ms == network.analysis_params['analysis1']
-            
-    def test_results_stored_for_two_result_keys_with_two_analysis_keys(
-            self, network):
-        @lmt.utils._check_and_store(['result1', 'result2'],
-                                    ['analysis1', 'analysis2'])
-        def test_method(self, key1, key2):
-            return 1 * ureg.mV, 2 * ureg.mV
-        test_method(network, 1 * ureg.ms, 2 * ureg.ms)
-        assert 1 * ureg.mV == network.results['result1']
-        assert 2 * ureg.mV == network.results['result2']
-        assert 1 * ureg.ms == network.analysis_params['analysis1']
-        assert 2 * ureg.ms == network.analysis_params['analysis2']
-        
-    def test_stores_in_results_hash_dict_two_result_keys_two_analysis_keys(
-            self, network):
-        @lmt.utils._check_and_store(['result1', 'result2'],
-                                    ['analysis1', 'analysis2'])
-        def test_method(self, key1, key2):
-            return 1 * ureg.mV, 2 * ureg.mV
-        test_method(network, 1 * ureg.ms, 2 * ureg.ms)
-        # get only element in results_hash_dict
-        results_entry = list(network.results_hash_dict.values())[0]
-        assert 1 * ureg.mV in results_entry.values()
-        assert 2 * ureg.mV in results_entry.values()
-        assert 1 * ureg.ms in results_entry['analysis_params'].values()
-        assert 2 * ureg.ms in results_entry['analysis_params'].values()
-        
-    def test_results_updated_in_result_dict_two_result_keys_one_analysis_key(
-            self, network):
-        @lmt.utils._check_and_store(['result1', 'result2'], ['analysis'])
-        def test_method(self, key):
-            return key * 1 * ureg.mV, key * 2 * ureg.mV
-        test_method(network, 1)
-        result11 = network.results['result1']
-        result12 = network.results['result2']
-        test_method(network, 2)
-        result21 = network.results['result1']
-        result22 = network.results['result2']
-        assert 2 * result11 == result21
-        assert 2 * result12 == result22
-        
-    def test_standard_value_for_analysis_key_is_not_passed(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis'])
-        def test_method(self, key=2):
-            return key * 1 * ureg.mV
-        test_method(network)
-        assert network.analysis_params['analysis'] == 2
-        assert network.results['result'] == 2 * ureg.mV
-        
-    def test_standard_value_for_analysis_key_is_passed_explicitely(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis'])
-        def test_method(self, key=2):
-            return key * 1 * ureg.mV
-        key = 5
-        test_method(network, key=key)
-        assert network.analysis_params['analysis'] == key
-        assert network.results['result'] == key * ureg.mV
-        
-    def test_standard_values_for_two_analysis_keys_are_not_passed(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1', 'analysis2'])
-        def test_method(self, key1=2, key2=3):
-            return key1 * key2 * 1 * ureg.mV
-        test_method(network)
-        assert network.analysis_params['analysis1'] == 2
-        assert network.analysis_params['analysis2'] == 3
-        assert network.results['result'] == 6 * ureg.mV
-        
-    def test_standard_values_for_two_analysis_keys_are_passed_explicitely(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1', 'analysis2'])
-        def test_method(self, key1=2, key2=3):
-            return key1 * key2 * 1 * ureg.mV
-        test_method(network, key1=3, key2=4)
-        assert network.analysis_params['analysis1'] == 3
-        assert network.analysis_params['analysis2'] == 4
-        assert network.results['result'] == 12 * ureg.mV
-            
-    def test_only_first_standard_value_is_passed_explicitely(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1', 'analysis2'])
-        def test_method(self, key1=2, key2=3):
-            return key1 * key2 * 1 * ureg.mV
-        test_method(network, key1=3)
-        assert network.analysis_params['analysis1'] == 3
-        assert network.analysis_params['analysis2'] == 3
-        assert network.results['result'] == 9 * ureg.mV
-            
-    def test_only_second_standard_value_is_passed_explicitely(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1', 'analysis2'])
-        def test_method(self, key1=2, key2=3):
-            return key1 * key2 * 1 * ureg.mV
-        test_method(network, key2=5)
-        assert network.analysis_params['analysis1'] == 2
-        assert network.analysis_params['analysis2'] == 5
-        assert network.results['result'] == 10 * ureg.mV
-        
-    def test_one_positional_and_one_kwarg_with_std_args(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1', 'analysis2'])
-        def test_method(self, key1=2, key2=3):
-            return key1 * key2 * 1 * ureg.mV
-        test_method(network, 3, key2=5)
-        assert network.analysis_params['analysis1'] == 3
-        assert network.analysis_params['analysis2'] == 5
-        assert network.results['result'] == 15 * ureg.mV
-            
-    def test_one_and_two_are_passed_with_three_std_args(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1',
-                                                 'analysis2',
-                                                 'analysis3'])
-        def test_method(self, key1=1, key2=2, key3=3):
-            return key1 * key2 * key3 * ureg.mV
-        test_method(network, 3, 4)
-        assert network.analysis_params['analysis1'] == 3
-        assert network.analysis_params['analysis2'] == 4
-        assert network.analysis_params['analysis3'] == 3
-        assert network.results['result'] == 36 * ureg.mV
-    
-    def test_one_and_three_are_passed_with_three_mixed_std_args(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1',
-                                                 'analysis2',
-                                                 'analysis3'])
-        def test_method(self, key1, key2=2, key3=3):
-            return key1 * key2 * key3 * ureg.mV
-        test_method(network, 3, key3=5)
-        assert network.analysis_params['analysis1'] == 3
-        assert network.analysis_params['analysis2'] == 2
-        assert network.analysis_params['analysis3'] == 5
-        assert network.results['result'] == 30 * ureg.mV
-            
-    def test_one_and_three_are_passed_with_std_args(
-            self, network):
-        @lmt.utils._check_and_store(['result'], ['analysis1',
-                                                 'analysis2',
-                                                 'analysis3'])
-        def test_method(self, key1=1, key2=2, key3=3):
-            return key1 * key2 * key3 * ureg.mV
-        test_method(network, 3, key3=5)
-        assert network.analysis_params['analysis1'] == 3
-        assert network.analysis_params['analysis2'] == 2
-        assert network.analysis_params['analysis3'] == 5
-        assert network.results['result'] == 30 * ureg.mV
-
-    def test_results_are_calculated_if_dependent_quantity_has_been_updated(
-            self, network):
-        
-        @lmt.utils._check_and_store(['rates'], ['rates_method'])
-        def rates(network, method):
-            if method == 'shift':
-                return 1
-            elif method == 'taylor':
-                return 2
-            
-        @lmt.utils._check_and_store(['mean'], depends_on=['rates'])
-        def mean(network):
-            return network.results['rates']
-        
-        rates(network, 'shift')
-        mean(network)
-        rates(network, 'taylor')
-        mean(network)
-        assert network.results['mean'] == 2
-            
-    def test_prefix_is_added_to_results_and_analysis_params(self, network):
-        
-        prefix = 'prefix.'
-        
-        @lmt.utils._check_and_store(['rates'], ['rates_method'],
-                                    prefix=prefix)
-        def rates(network, method):
-            return 1
-        
-        rates(network, 'shift')
-        assert (prefix + 'rates') in network.results.keys()
-        assert (prefix + 'rates_method') in network.analysis_params.keys()
-            
+        test_function(network, 'test1')
+        test_function(network, 'test2')
+        assert mock.call_count == 2
