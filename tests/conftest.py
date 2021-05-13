@@ -119,6 +119,16 @@ def network():
 
 
 @pytest.fixture
+def microcircuit():
+    """Standard microcircuit network with testing analysis params."""
+    microcircuit = lmt.networks.Microcircuit(
+        network_params=(config_path + 'network_params_microcircuit.yaml'),
+        analysis_params=(config_path + 'analysis_params_test.yaml')
+        )
+    return microcircuit
+
+
+@pytest.fixture
 def empty_network():
     """Network object with no parameters."""
     return lmt.networks.Network()
