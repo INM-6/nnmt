@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 
 from .. import ureg
 from .. import input_output as io
@@ -24,10 +25,12 @@ class Network():
 
     Parameters:
     -----------
-    network_params: str
-        Specifies path to yaml file containing network parameters.
-    analysis_params: str
-        Specifies path to yaml file containing analysis parameters.
+    network_params: str or dict
+        Path to yaml file containing network parameters or dictionary of
+        network parameters.
+    analysis_params: str of dict
+        Path to yaml file containing analysis parameters or dictionary of
+        analysis parameters.
     file: str
         File name of h5 file from which network can be loaded. Default is
         `None`.
@@ -54,20 +57,28 @@ class Network():
             if network_params is None:
                 self.network_params_yaml = ''
                 self.network_params = {}
-            else:
+            elif isinstance(network_params, str):
                 self.network_params_yaml = network_params
                 # read from yaml and convert to quantities
                 self.network_params = io.load_val_unit_dict_from_yaml(
                     network_params)
+            elif isinstance(network_params, dict):
+                self.network_params = network_params
+            else:
+                raise ValueError('Invalid value for `network_params`.')
 
             # no yaml file for analysis parameters given
             if analysis_params is None:
                 self.analysis_params_yaml = ''
                 self.analysis_params = {}
-            else:
+            elif isinstance(analysis_params, str):
                 self.analysis_params_yaml = analysis_params
                 self.analysis_params = io.load_val_unit_dict_from_yaml(
                     analysis_params)
+            elif isinstance(analysis_params, dict):
+                self.analysis_params = analysis_params
+            else:
+                raise ValueError('Invalid value for `network_params`.')
                         
             # empty results
             self.results = {}
@@ -225,8 +236,7 @@ class Network():
             self.results_hash_dict = {}
             return self
         else:
-            return Network(self.network_params_yaml, self.analysis_params_yaml,
-                           new_network_params, new_analysis_params)
+            return Network(new_network_params, new_analysis_params)
 
     def clear_results(self, results=None):
         """
@@ -238,13 +248,14 @@ class Network():
             List of results to be removed. Default is None.
         """
         if results is not None:
+            results = np.atleast_1d(results).tolist()
             hashs = []
             for result in results:
                 for hash in self.results_hash_dict.keys():
                     if result in self.results_hash_dict[hash]:
                         hashs.append(hash)
                         self.results.pop(result)
-                [self.results_hash_dict.pop(hash) for hash in hashs]
+            [self.results_hash_dict.pop(hash) for hash in hashs]
         else:
             self.results_hash_dict = {}
             self.results = {}
