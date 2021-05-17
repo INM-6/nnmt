@@ -164,7 +164,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # be fine
         bos_code_data = bos_code_result['delay_dist']
         omega = network.analysis_params['omega']
-        test_data = lmt.networks.utils.delay_dist_matrix(
+        test_data = lmt.networks.utils._delay_dist_matrix(
             network.network_params['Delay'],
             network.network_params['Delay_sd'],
             network.network_params['delay_dist'],
