@@ -914,7 +914,6 @@ def effective_connectivity(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    params['transfer_function'] = transfer_function
     return _cache(_effective_connectivity, params,
                   _prefix + 'effective_connectivity', network)
                   
