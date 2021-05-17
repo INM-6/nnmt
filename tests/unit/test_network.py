@@ -12,6 +12,7 @@ import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
 
+@pytest.mark.transfered
 class Test_initialization:
 
     @pytest.mark.parametrize('key, value', [('tau_m', 10 * ureg.ms),
@@ -93,6 +94,7 @@ class Test_initialization:
         assert hasattr(network, 'results_hash_dict')
     
     
+@pytest.mark.transfered
 class Test_calculation_of_dependent_network_params:
     """
     Depends strongly on network_params_microcircuit.yaml in
@@ -141,6 +143,7 @@ class Test_calculation_of_dependent_network_params:
         assert_units_equal(network.network_params['Delay_sd'], Delay_sd)
 
 
+@pytest.mark.transfered
 class Test_calculation_of_dependent_analysis_params:
     """Depends strongly on analysis_params_test.yaml in tests/fixtures."""
 
@@ -168,6 +171,7 @@ class Test_calculation_of_dependent_analysis_params:
                            k_wavenumbers)
 
 
+@pytest.mark.transfered
 class Test_saving_and_loading:
     
     def test_save_creates_h5_file(self, mocker, tmpdir, network):
@@ -253,6 +257,7 @@ class Test_saving_and_loading:
             check_quantity_dicts_are_equal(rhd, network.results_hash_dict)
             
 
+@pytest.mark.transfered
 class Test_meta_functions:
 
     def test_show(self, mocker, network):
@@ -352,6 +357,7 @@ keys = [analysis_key_types[key] for key in key_names]
 results = [result_types[key] for key in result_ids]
 
 
+@pytest.mark.transfered
 class Test_check_and_store_decorator:
 
     @pytest.mark.parametrize('test_method, result', zip(test_methods, results),

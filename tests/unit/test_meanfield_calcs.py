@@ -22,6 +22,7 @@ from lif_meanfield_tools.meanfield_calcs import (
     effective_coupling_strength)
 
 
+@pytest.mark.transfered
 class Test_firing_rates:
 
     func = staticmethod(firing_rates)
@@ -39,6 +40,7 @@ class Test_firing_rates:
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_mean:
 
     func = staticmethod(mean)
@@ -53,6 +55,7 @@ class Test_mean:
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_standard_deviation:
 
     func = staticmethod(standard_deviation)
@@ -67,6 +70,7 @@ class Test_standard_deviation:
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_transfer_function:
 
     func = staticmethod(transfer_function)
@@ -81,6 +85,7 @@ class Test_transfer_function:
         mocked_tf.assert_called_once()
 
 
+@pytest.mark.transfered
 class Test_transfer_function_1p_shift():
 
     func = staticmethod(transfer_function)
@@ -103,6 +108,7 @@ class Test_transfer_function_1p_shift():
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_transfer_function_1p_taylor():
 
     func = staticmethod(transfer_function)
@@ -125,6 +131,7 @@ class Test_transfer_function_1p_taylor():
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_delay_dist_matrix:
 
     func = staticmethod(delay_dist_matrix)
@@ -136,6 +143,7 @@ class Test_delay_dist_matrix:
         mocked_tf.assert_called_once()
 
 
+@pytest.mark.transfered
 class Test_delay_dist_matrix_single:
 
     func = staticmethod(delay_dist_matrix)
@@ -151,6 +159,7 @@ class Test_delay_dist_matrix_single:
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_sensitivity_measure:
 
     func = staticmethod(sensitivity_measure)
@@ -171,6 +180,7 @@ class Test_sensitivity_measure:
         check_correct_output(self.func, params, output)
 
 
+@pytest.mark.transfered
 class Test_power_spectra:
 
     func = staticmethod(power_spectra)
