@@ -37,42 +37,29 @@ if __name__ == '__main__':
         fixture_path = 'integration/data/'
         config_path = 'integration/config/'
 
-        network = lmt.Network(config_path + 'network_params.yaml',
-                              config_path + 'analysis_params.yaml')
+        network = lmt.networks.Microcircuit(
+            config_path + 'network_params.yaml',
+            config_path + 'analysis_params.yaml')
         
         omega = network.analysis_params['omega']
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
-        network.results['firing_rates_taylor'] = network.firing_rates(
-            method='taylor')
-        network.working_point(method='shift')
-        network.delay_dist_matrix()
-        network.delay_dist_matrix(omega)
-        network.results['tf_taylor'] = network.transfer_function(
-            method='taylor')
-        network.results['tf_shift'] = network.transfer_function(
-            method='shift')
-        network.transfer_function(omega)
-        network.sensitivity_measure(omega)
-        network.power_spectra()
-        network.results['eigenvalue_spectra_MH'] = (
-            network.eigenvalue_spectra('MH'))
-        network.results['r_eigenvec_spectra_MH'] = (
-            network.r_eigenvec_spectra('MH'))
-        network.results['l_eigenvec_spectra_MH'] = (
-            network.l_eigenvec_spectra('MH'))
-        network.results['eigenvalue_spectra_prop'] = (
-            network.eigenvalue_spectra('prop'))
-        network.results['r_eigenvec_spectra_prop'] = (
-            network.r_eigenvec_spectra('prop'))
-        network.results['l_eigenvec_spectra_prop'] = (
-            network.l_eigenvec_spectra('prop'))
-        network.results['eigenvalue_spectra_prop_inv'] = (
-            network.eigenvalue_spectra('prop_inv'))
-        network.results['r_eigenvec_spectra_prop_inv'] = (
-            network.r_eigenvec_spectra('prop_inv'))
-        network.results['l_eigenvec_spectra_prop_inv'] = (
-            network.l_eigenvec_spectra('prop_inv'))
-        network.additional_rates_for_fixed_input(mean_input_set,
-                                                 std_input_set)
-        network.save(file=fixture_path + 'std_results.h5')
+        network.results[
+            'lif.exp.firing_rates_taylor'] = lmt.lif.exp.firing_rates(
+            network, method='taylor')
+        lmt.lif.exp.working_point(network, method='shift')
+        network.results[
+            'delay_dist_matrix'] = lmt.networks.utils.delay_dist_matrix(
+                network)
+        network.results['lif.exp.tf_single'] = lmt.lif.exp.transfer_function(
+            network, omega)
+        network.results['lif.exp.tf_taylor'] = lmt.lif.exp.transfer_function(
+            network, method='taylor')
+        network.results['lif.exp.tf_shift'] = lmt.lif.exp.transfer_function(
+            network, method='shift')
+        lmt.lif.exp.effective_connectivity(network)
+        lmt.lif.exp.sensitivity_measure(network)
+        lmt.lif.exp.power_spectra(network)
+        # lmt.lif.exp.additional_rates_for_fixed_input(
+        #     network, mean_input_set, std_input_set)
+        network.save(file=fixture_path + 'std_results.h5', overwrite=True)
