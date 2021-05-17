@@ -49,7 +49,11 @@ class Microcircuit(Network):
         # convert weights in pA (current) to weights in mV (voltage)
         tau_s_div_C = self.network_params['tau_s'] / self.network_params['C']
         derived_params['j'] = (tau_s_div_C
-                               * self.network_params['w']).to(ureg.mV)
+                               * self.network_params['w'])
+        try:
+            derived_params['j'].ito(ureg.mV)
+        except AttributeError:
+            pass
 
         # weight matrix in pA (current)
         W = np.ones((dim, dim)) * self.network_params['w']
@@ -58,7 +62,11 @@ class Microcircuit(Network):
         derived_params['W'] = W
 
         # weight matrix in mV (voltage)
-        derived_params['J'] = (tau_s_div_C * derived_params['W']).to(ureg.mV)
+        derived_params['J'] = (tau_s_div_C * derived_params['W'])
+        try:
+            derived_params['J'].ito(ureg.mV)
+        except AttributeError:
+            pass
         
         # delay matrix
         D = np.ones((dim, dim)) * self.network_params['d_e']
@@ -78,7 +86,11 @@ class Microcircuit(Network):
         
         derived_params['J_ext'] = (
             tau_s_div_C * np.ones(self.network_params['K_ext'].shape)
-            * self.network_params['w_ext']).to(ureg.mV)
+            * self.network_params['w_ext'])
+        try:
+            derived_params['J_ext'].ito(ureg.mV)
+        except AttributeError:
+            pass
 
         return derived_params
 
@@ -97,24 +109,43 @@ class Microcircuit(Network):
         w_min = 2 * np.pi * self.analysis_params['f_min']
         w_max = 2 * np.pi * self.analysis_params['f_max']
         dw = 2 * np.pi * self.analysis_params['df']
+        
+        try:
+            w_min = w_min.magnitude
+            w_max = w_max.magnitude
+            dw = dw.magnitude
+        except AttributeError:
+            pass
 
         # enable usage of quantities
-        @ureg.wraps(ureg.Hz, (ureg.Hz, ureg.Hz, ureg.Hz))
         def calc_evaluated_omegas(w_min, w_max, dw):
             """ Calculates omegas at which functions are to be evaluated """
             return np.arange(w_min, w_max, dw)
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
+        
+        try:
+            w_min = w_min.magnitude
+            w_max = w_max.magnitude
+            dw = dw.magnitude
+        except AttributeError:
+            pass
 
-        @ureg.wraps((1 / ureg.mm).units,
-                    ((1 / ureg.mm).units, (1 / ureg.mm).units,
-                     (1 / ureg.mm).units))
         def calc_evaluated_wavenumbers(k_min, k_max, dk):
             return np.arange(k_min, k_max, dk)
 
+        k_min = self.analysis_params['k_min']
+        k_max = self.analysis_params['k_max']
+        dk = self.analysis_params['dk']
+
+        try:
+            k_min = k_min.magnitude
+            k_max = k_max.magnitude
+            dk = dk.magnitude
+        except AttributeError:
+            pass
+
         derived_params['k_wavenumbers'] = (
-            calc_evaluated_wavenumbers(self.analysis_params['k_min'],
-                                       self.analysis_params['k_max'],
-                                       self.analysis_params['dk']))
+            calc_evaluated_wavenumbers(k_min, k_max, dk))
 
         return derived_params
