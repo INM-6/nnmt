@@ -7,8 +7,23 @@ import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
 
+def delay_dist_matrix(network):
+    params = {}
+    try:
+        params['Delay'] = network.network_params['Delay']
+        params['Delay_sd'] = network.network_params['Delay_sd']
+        params['delay_dist'] = network.network_params['delay_dist']
+        params['omegas'] = network.analysis_params['omegas']
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for calculating the delay'
+                           ' distribution matrix.')
+    lmt.utils._to_si_units(params)
+    lmt.utils._strip_units(params)
+    return _delay_dist_matrix(**params)
+
+
 @lmt.utils._check_positive_params
-def delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
+def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.
 
