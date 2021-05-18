@@ -64,12 +64,7 @@ class Test_firing_rates_wrapper:
         self.mock_firing_rate_integration(mocker)
         with pytest.raises(RuntimeError):
             self.func(empty_network)
-        
-    def test_returns_unit(self, mocker, network):
-        self.mock_firing_rate_integration(mocker)
-        result = self.func(network)
-        assert isinstance(result, ureg.Quantity)
-    
+            
 
 class Test_firing_rates:
     

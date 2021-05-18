@@ -3,6 +3,9 @@ import numpy as np
 
 from .. import ureg
 from .. import input_output as io
+from ..utils import (
+    _convert_from_si_to_prefixed,
+    )
 
 
 class Network():
@@ -88,7 +91,6 @@ class Network():
             self.results = {}
             self.results_hash_dict = {}
         
-        
     def _convert_param_dicts_to_base_units_and_strip_units(self):
         """
         Converts the parameter dicts to base units and strips the units.
@@ -131,34 +133,28 @@ class Network():
         for key in dict.keys():
             try:
                 input_unit = self.input_units[key]
-                try:
-                    base_unit = ureg.parse_unit_name(input_unit)[0][1]
-                except IndexError:
-                    base_unit = str(ureg(input_unit).to_base_units().units)
-                quantity = ureg.Quantity(dict[key], base_unit)
-                quantity.ito(input_unit)
-                dict[key] = quantity
+                dict[key] = _convert_from_si_to_prefixed(dict[key], input_unit)
             except KeyError:
                 pass
         return dict
-
+    
     def _add_result_units(self):
         """
         Adds units stored in networks result_units dict to results dict.
         """
         
         for key, unit in self.result_units.items():
-            self.results[key] *= ureg.Unit(unit)
+            self.results[key] = ureg.Quantity(self.results[key], unit)
         
-    def _convert_and_strip_result_units(self):
+    def _strip_result_units(self):
         """
         Converts units to SI and strips units from results dict.
         """
         
         for key, value in self.results.items():
             if isinstance(value, ureg.Quantity):
-                self.results[key] = value.to_base_units().magnitude
-                self.result_units[key] = value.units
+                self.results[key] = value.magnitude
+                self.result_units[key] = str(value.units)
 
     def save(self, file, overwrite=False):
         """
@@ -180,7 +176,7 @@ class Network():
         self._add_result_units()
         io.save_network(file, self, overwrite)
         self._convert_param_dicts_to_base_units_and_strip_units()
-        self._convert_and_strip_result_units()
+        self._strip_result_units()
         
     def save_results(self, file):
         """
@@ -217,7 +213,7 @@ class Network():
          self.results,
          self.results_hash_dict) = io.load_network(file)
         self._convert_param_dicts_to_base_units_and_strip_units()
-        self._convert_and_strip_result_units()
+        self._strip_result_units()
 
     def show(self):
         """Returns which results have already been calculated."""

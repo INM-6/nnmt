@@ -12,29 +12,15 @@ import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
 
-def make_test_method(output):
-    @lmt.utils._check_and_store(['test'])
-    def test_method(self):
-        return output
-    return test_method
-
-
 def make_cache_test_func(output):
     def cache_test_func(network):
         params = dict(output=output)
-        return lmt.utils._cache(_test_func, params, 'test', network)
+        return lmt.utils._cache(network, _test_func, params, 'test')
     return cache_test_func
         
         
 def _test_func(output):
     return output
-
-
-def make_test_method_with_key(output, key):
-    @lmt.utils._check_and_store(['test'], key)
-    def test_method(self, key):
-        return output
-    return test_method
 
 
 result_types = dict(numerical=1,
@@ -52,8 +38,7 @@ analysis_key_types = dict(numerical=1,
                           )
 result_ids = sorted(result_types.keys())
 key_names = sorted(analysis_key_types.keys())
-test_methods = [make_test_method(result_types[key])
-                for key in result_ids]
+
 keys = [analysis_key_types[key] for key in key_names]
 results = [result_types[key] for key in result_ids]
 
@@ -103,7 +88,7 @@ class Test_cache:
         mock = mocker.Mock(__name__='mocker', return_value=1)
         
         def test_function(network):
-            return lmt.utils._cache(mock, dict(a=1), 'test', network)
+            return lmt.utils._cache(network, mock, dict(a=1), 'test')
         
         test_function(network)
         test_function(network)
@@ -116,7 +101,7 @@ class Test_cache:
         
         def test_function(network, a):
             params = dict(a=a)
-            return lmt.utils._cache(mock, params, 'test', network)
+            return lmt.utils._cache(network, mock, params, 'test')
         
         test_function(network, 1)
         test_function(network, 2)
@@ -128,8 +113,97 @@ class Test_cache:
         mock = mocker.Mock(__name__='mocker')
         
         def test_function(network, key):
-            return lmt.utils._cache(mock, dict(a=1), key, network)
+            return lmt.utils._cache(network, mock, dict(a=1), key)
         
         test_function(network, 'test1')
         test_function(network, 'test2')
         assert mock.call_count == 2
+        
+    def test_saves_scalar_result_units_into_result_unit_dict(self, mocker,
+                                                             empty_network):
+        network = empty_network
+        mock = mocker.Mock(__name__='mocker', return_value=1)
+        
+        def test_function(network):
+            return lmt.utils._cache(network, mock, dict(a=1), 'test',
+                                    'millivolt')
+        
+        test_function(network)
+        
+        assert network.result_units['test'] == 'millivolt'
+        
+    def test_saves_list_of_result_units_into_result_unit_dict(self, mocker,
+                                                              empty_network):
+        network = empty_network
+        mock = mocker.Mock(__name__='mocker', return_value=(1, 2))
+        
+        def test_function(network):
+            return lmt.utils._cache(network, mock, dict(a=1),
+                                    ['test1', 'test2'],
+                                    ['millivolt', 'millisecond'])
+        
+        test_function(network)
+        
+        assert network.result_units['test1'] == 'millivolt'
+        assert network.result_units['test2'] == 'millisecond'
+
+
+class Test_convert_from_si_to_prefixed:
+    
+    func = staticmethod(lmt.utils._convert_from_si_to_prefixed)
+    
+    def test_to_milli(self):
+        quantity = self.func(0.001, 'millivolt')
+        assert 1 == quantity.magnitude
+        assert 'millivolt' == str(quantity.units)
+    
+    def test_base_to_base(self):
+        quantity = self.func(1, 'volt')
+        assert 1 == quantity.magnitude
+        assert 'volt' == str(quantity.units)
+    
+    def test_base_to_kilo(self):
+        quantity = self.func(100, 'kilovolt')
+        assert 0.1 == quantity.magnitude
+        assert 'kilovolt' == str(quantity.units)
+    
+    def test_complex_units(self):
+        quantity = self.func(1, 'volt / millisecond')
+        assert 0.001 == quantity.magnitude
+        assert 'volt / millisecond' == str(quantity.units)
+        
+    def test_inverse_units(self):
+        quantity = self.func(1, '1 / millisecond')
+        assert 0.001 == quantity.magnitude
+        assert '1 / millisecond' == str(quantity.units)
+
+
+class Test_convert_from_prefixed_to_si:
+    
+    func = staticmethod(lmt.utils._convert_from_prefixed_to_si)
+    
+    def test_from_milli(self):
+        quantity = self.func(1, 'millivolt')
+        assert 0.001 == quantity.magnitude
+        assert 'volt' == str(quantity.units)
+    
+    def test_base_from_base(self):
+        quantity = self.func(1, 'volt')
+        assert 1 == quantity.magnitude
+        assert 'volt' == str(quantity.units)
+    
+    def test_base_from_kilo(self):
+        quantity = self.func(0.01, 'kilovolt')
+        assert 10 == quantity.magnitude
+        assert 'volt' == str(quantity.units)
+
+    @pytest.mark.xfail
+    def test_complex_units(self):
+        quantity = self.func(1, 'volt / millisecond')
+        assert 1000 == quantity.magnitude
+        assert 'volt / second' == str(quantity.units)
+        
+    def test_inverse_units(self):
+        quantity = self.func(1, '1 / millisecond')
+        assert 1000 == quantity.magnitude
+        assert '1 / second' == str(quantity.units)

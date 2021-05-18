@@ -150,8 +150,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         ground_truth_data = ground_truth_result[
             'fig_microcircuit']['rates_calc']
         bos_code_data = bos_code_result['firing_rates']
-        test_data = lmt.lif.exp.firing_rates(network, method='taylor'
-                                             ).magnitude
+        test_data = lmt.lif.exp.firing_rates(network, method='taylor')
         # check ground truth data vs data generated via old code
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
         # check ground truth data vs data generated via lmt

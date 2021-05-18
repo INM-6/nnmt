@@ -76,8 +76,8 @@ class Test_unit_stripping:
 
     def test_result_units_stripped(self, empty_network):
         empty_network.results['test'] = 10 * ureg.ms
-        empty_network._convert_and_strip_result_units()
-        assert empty_network.results['test'] == 0.01
+        empty_network._strip_result_units()
+        assert empty_network.results['test'] == 10
         
 
 class Test_adding_units_again:
@@ -103,7 +103,7 @@ class Test_adding_units_again:
         mock = mocker.Mock(__name__='mocker', return_value=1 * ureg.mV)
         
         def test_function(network):
-            return lmt.utils._cache(mock, dict(a=1), 'test', network)
+            return lmt.utils._cache(network, mock, dict(a=1), 'test')
         
         test_function(network)
         network._add_result_units()

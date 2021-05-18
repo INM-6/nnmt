@@ -11,7 +11,7 @@ import hashlib
 from . import ureg
 
 
-def _cache(func, params, result_keys, network):
+def _cache(network, func, params, result_keys, units=None):
     """
     Cache resuls of func(**params) into network dictionaries using result_keys.
     
@@ -19,20 +19,24 @@ def _cache(func, params, result_keys, network):
     which are to be stored in the network's result dicts. First it creates a
     hash using the function name, the passed parameters, and the result keys,
     and checks whether this hash is a key of the network's results_hash_dict.
-    If this is the case, the old result is returned. If not, the new result is
-    calculated and stored in the results_hash_dict and the results dict. Then
-    the new result is returned.
+    If this is the case, the old result is returned.
+    
+    If not, the new result is calculated and stored in the results_hash_dict
+    and the results dict. The unit of the returned result is stored in the
+    network's result_units dict. Then the new result is returned.
 
     Parameters
     ----------
+    network : lif_meanfield_tools.networks.Network or child class instance.
+        The network whose dicts are used for storing the results.
     func : function
         Function whose return value should be cached.
     params : dict
         Parameters passed on to func.
     result_keys : str or list of str
         Specifies under which keys the result should be stored.
-    network : lif_meanfield_tools.networks.Network or child class instance.
-        The network whose dicts are used for storing the results.
+    units : str or list of str
+        Units of results. Default is ``None``.
 
     Returns
     -------
@@ -62,12 +66,16 @@ def _cache(func, params, result_keys, network):
             new_results = [results_hash_dict[h][key] for key in result_keys]
     # if corresponding result does not exists return newly calculated value
     else:
+        # calculate new results
         new_results = func(**params)
+            
+        # create hash dict entry
         if len(result_keys) == 1:
             hash_dict = {result_keys[0]: new_results}
         else:
-            hash_dict = {key: new_results[i]
-                         for i, key in enumerate(result_keys)}
+            assert len(result_keys) == len(new_results)
+            hash_dict = dict(zip(result_keys, new_results))
+    
         hash_dict['params'] = params
         # add entry to hash dict
         results_hash_dict[h] = hash_dict
@@ -82,6 +90,14 @@ def _cache(func, params, result_keys, network):
     # update network.results and network.results_hash_dict
     setattr(network, 'results', results)
     setattr(network, 'results_hash_dict', results_hash_dict)
+
+    # update units
+    if units is not None:
+        units = np.atleast_1d(units).tolist()
+        result_units = getattr(network, 'result_units')
+        assert len(result_keys) == len(units)
+        result_units.update(dict(zip(result_keys, units)))
+        setattr(network, 'result_units', result_units)
     
     return new_results
     
@@ -236,6 +252,30 @@ def _to_si_units(dict):
             dict[key] = item.to_base_units()
         except AttributeError:
             pass
+        
+        
+def _convert_from_si_to_prefixed(magnitude, unit):
+    """ Converts a SI magnitude to the given unit. """
+    try:
+        base_unit = ureg.parse_unit_name(unit)[0][1]
+    except IndexError:
+        base_unit = str(ureg(unit).to_base_units().units)
+    quantity = ureg.Quantity(magnitude, base_unit)
+    quantity.ito(unit)
+    return quantity
+
+
+def _convert_from_prefixed_to_si(magnitude, unit):
+    """
+    Converts a given unit magnitude to the corresponding SI unit magnitude.
+    """
+    try:
+        base_unit = ureg.parse_unit_name(unit)[0][1]
+    except IndexError:
+        base_unit = str(ureg(unit).to_base_units().units)
+    quantity = ureg.Quantity(magnitude, unit)
+    quantity.ito(base_unit)
+    return quantity
 
 
 def build_full_arg_list(signature, args, kwargs):

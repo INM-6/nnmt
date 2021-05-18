@@ -297,7 +297,7 @@ class Test_save_network:
             return x
     
         def test_function(network):
-            return lmt.utils._cache(_test_func, {'x': 1}, 'test', network)
+            return lmt.utils._cache(network, _test_func, {'x': 1}, 'test')
     
         empty_network.network_params['a'] = 1
         empty_network.analysis_params['a'] = 1

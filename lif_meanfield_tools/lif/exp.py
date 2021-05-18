@@ -148,8 +148,8 @@ def firing_rates(network, method='shift'):
             "parameters.")
     
     params['method'] = method
-    return _cache(_firing_rates, params, _prefix + 'firing_rates',
-                  network) * ureg.Hz
+    return _cache(network,
+                  _firing_rates, params, _prefix + 'firing_rates', 'hertz')
         
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
@@ -404,8 +404,7 @@ def mean_input(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_mean_input, params, _prefix + 'mean_input',
-                  network) * ureg.V
+    return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
@@ -469,8 +468,7 @@ def std_input(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_std_input, params, _prefix + 'std_input',
-                  network) * ureg.V
+    return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
@@ -550,13 +548,13 @@ def transfer_function(network, freqs=None, method='shift'):
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
     if method == 'shift':
-        return _cache(_transfer_function_shift, params,
-                      _prefix + 'transfer_function', network
-                      ) * ureg.Hz / ureg.V
+        return _cache(network, _transfer_function_shift, params,
+                      _prefix + 'transfer_function',
+                      'hertz / volt')
     elif method == 'taylor':
-        return _cache(_transfer_function_taylor, params,
-                      _prefix + 'transfer_function', network
-                      ) * ureg.Hz / ureg.V
+        return _cache(network, _transfer_function_taylor, params,
+                      _prefix + 'transfer_function',
+                      'hertz / volt')
 
 
 @_check_positive_params
@@ -878,7 +876,7 @@ def effective_connectivity(network):
     Network results
     ---------------
     transfer_function : np.ndarray
-        Transfer function for given frequencies in Hz/mV.
+        Transfer function for given frequencies in Hz/V.
     
     Network Parameters
     ----------
@@ -914,8 +912,8 @@ def effective_connectivity(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_effective_connectivity, params,
-                  _prefix + 'effective_connectivity', network)
+    return _cache(network, _effective_connectivity, params,
+                  _prefix + 'effective_connectivity', 'hertz / volt')
                   
 
 def _effective_connectivity(transfer_function, D, J, K, tau_m):
@@ -993,7 +991,7 @@ def propagator(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_propagator, params, _prefix + 'propagator', network)
+    return _cache(network, _propagator, params, _prefix + 'propagator')
 
 
 def _propagator(effective_connectivity):
@@ -1047,8 +1045,8 @@ def sensitivity_measure(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_sensitivity_measure, params,
-                  _prefix + 'sensitivity_measure', network)
+    return _cache(network, _sensitivity_measure, params,
+                  _prefix + 'sensitivity_measure')
 
 
 @_check_positive_params
@@ -1143,7 +1141,8 @@ def power_spectra(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_power_spectra, params, _prefix + 'power_spectra', network)
+    return _cache(network, _power_spectra, params,
+                  _prefix + 'power_spectra', 'hertz ** 2')
 
 
 @_check_positive_params

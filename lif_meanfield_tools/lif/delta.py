@@ -70,8 +70,8 @@ def firing_rates(network):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
     
-    return _cache(_firing_rates, params, _prefix + 'firing_rates',
-                  network) * ureg.Hz
+    return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
+                  'hertz')
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
@@ -286,8 +286,7 @@ def mean_input(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_mean_input, params, _prefix + 'mean_input',
-                  network) * ureg.V
+    return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
@@ -351,8 +350,7 @@ def std_input(network):
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     
-    return _cache(_std_input, params, _prefix + 'std_input',
-                  network) * ureg.V
+    return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
