@@ -1,8 +1,12 @@
 import numpy as np
 from scipy.special import erf as _erf
 
-import lif_meanfield_tools as lmt
+from ..utils import (
+    _to_si_units,
+    _strip_units
+    )
 
+import lif_meanfield_tools as lmt
 
 ureg = lmt.ureg
 
