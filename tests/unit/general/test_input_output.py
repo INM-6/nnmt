@@ -12,7 +12,7 @@ import yaml
 import lif_meanfield_tools as lmt
 import lif_meanfield_tools.input_output as io
 
-from ..checks import (check_file_in_tmpdir,
+from ...checks import (check_file_in_tmpdir,
                       check_quantity_dicts_are_equal,
                       check_dict_contains_no_quantity,
                       check_dict_contains_no_val_unit_dict,

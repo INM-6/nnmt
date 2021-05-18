@@ -58,7 +58,7 @@ def network(exemplary_frequency_idx):
             config_path + 'Bos2016_network_params.yaml',
             config_path + 'Bos2016_analysis_params.yaml')
     network.network_params['D'] = (
-        lmt.models.utils.delay_dist_matrix(network)
+        lmt.network_properties.delay_dist_matrix(network)
         )
     
     lmt.lif.exp.working_point(network, method='taylor')
@@ -163,7 +163,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # be fine
         bos_code_data = bos_code_result['delay_dist']
         omega = network.analysis_params['omega']
-        test_data = lmt.models.utils._delay_dist_matrix(
+        test_data = lmt.network_properties._delay_dist_matrix(
             network.network_params['Delay'],
             network.network_params['Delay_sd'],
             network.network_params['delay_dist'],
@@ -182,7 +182,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         freqs = np.array([omega / np.pi / 2])
         lmt.lif.exp.transfer_function(network, freqs=freqs, method='taylor')
         D_old = network.network_params['D']
-        network.network_params['D'] = lmt.models.utils._delay_dist_matrix(
+        network.network_params['D'] = lmt.network_properties._delay_dist_matrix(
             network.network_params['Delay'],
             network.network_params['Delay_sd'],
             network.network_params['delay_dist'],
@@ -276,7 +276,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # test sensitivity measure
         omegas = np.array([fmax * 2 * np.pi])
         network.analysis_params['omegas'] = omegas
-        network.network_params['D'] = lmt.models.utils.delay_dist_matrix(
+        network.network_params['D'] = lmt.network_properties.delay_dist_matrix(
             network)
         lmt.lif.exp.transfer_function(network, method='taylor')
         lmt.lif.exp.effective_connectivity(network)

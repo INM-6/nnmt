@@ -52,7 +52,7 @@ class Test_Network_functions_give_correct_results:
                                           expected_working_point)
                                        
     def test_delay_dist_matrix(self, network, std_results):
-        ddm = lmt.models.utils.delay_dist_matrix(network)
+        ddm = lmt.network_properties.delay_dist_matrix(network)
         assert_allclose(ddm, std_results['delay_dist_matrix'])
     
     def test_transfer_function_taylor(self, network, std_results):
@@ -272,7 +272,7 @@ class Test_temporary_storage_of_results:
                         network.results[self.prefix + 'std_input'])
     
     def test_delay_dist_matrix(self, network):
-        delay_dist_matrix = lmt.models.utils.delay_dist_matrix(network)
+        delay_dist_matrix = lmt.network_properties.delay_dist_matrix(network)
         assert_allclose(delay_dist_matrix,
                         network.network_params['D'])
 

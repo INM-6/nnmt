@@ -22,7 +22,8 @@ class Microcircuit(Network):
             self._calculate_dependent_analysis_parameters())
         self.analysis_params.update(derived_analysis_params)
         
-        self.network_params['D'] = lmt.models.utils.delay_dist_matrix(self)
+        self.network_params['D'] = (
+            lmt.network_properties.delay_dist_matrix(self))
         
         self._convert_param_dicts_to_base_units_and_strip_units()
         

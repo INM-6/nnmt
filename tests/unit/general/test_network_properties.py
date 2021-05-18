@@ -8,7 +8,7 @@ import lif_meanfield_tools as lmt
 
 class Test_delay_dist_matrix:
 
-    func = staticmethod(lmt.models.utils._delay_dist_matrix)
+    func = staticmethod(lmt.network_properties._delay_dist_matrix)
     ids = ['none', 'truncated_gaussian', 'gaussian']
     output_keys = ['delay_dist_{}'.format(id) for id in ids]
 

@@ -49,7 +49,7 @@ if __name__ == '__main__':
             network, method='taylor')
         lmt.lif.exp.working_point(network, method='shift')
         network.results[
-            'delay_dist_matrix'] = lmt.models.utils.delay_dist_matrix(
+            'delay_dist_matrix'] = lmt.network_properties.delay_dist_matrix(
                 network)
         network.results['lif.exp.tf_single'] = lmt.lif.exp.transfer_function(
             network, omega)
