@@ -52,7 +52,7 @@ class Test_Network_functions_give_correct_results:
                                           expected_working_point)
                                        
     def test_delay_dist_matrix(self, network, std_results):
-        ddm = lmt.networks.utils.delay_dist_matrix(network)
+        ddm = lmt.models.utils.delay_dist_matrix(network)
         assert_allclose(ddm, std_results['delay_dist_matrix'])
     
     def test_transfer_function_taylor(self, network, std_results):
@@ -272,7 +272,7 @@ class Test_temporary_storage_of_results:
                         network.results[self.prefix + 'std_input'])
     
     def test_delay_dist_matrix(self, network):
-        delay_dist_matrix = lmt.networks.utils.delay_dist_matrix(network)
+        delay_dist_matrix = lmt.models.utils.delay_dist_matrix(network)
         assert_allclose(delay_dist_matrix,
                         network.network_params['D'])
 
@@ -375,7 +375,7 @@ class Test_negative_firing_rate_regime:
                                      'minimal_negative.yaml')
         analysis_params_file = ('tests/fixtures/integration/config/'
                                 'analysis_params.yaml')
-        network = lmt.networks.Microcircuit(negative_rate_params_file,
+        network = lmt.models.Microcircuit(negative_rate_params_file,
                                             analysis_params_file)
         firing_rates = lmt.lif.exp.firing_rates(network)
         assert not any(firing_rates < 0)

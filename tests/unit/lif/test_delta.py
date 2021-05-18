@@ -46,7 +46,7 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 @pytest.fixture
 def empty_network():
     """Network object with no parameters."""
-    return lmt.networks.Network()
+    return lmt.models.Network()
 
 
 class Test_firing_rates_wrapper:

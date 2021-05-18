@@ -27,7 +27,7 @@ def _cache(network, func, params, result_keys, units=None):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.networks.Network or child class instance.
+    network : lif_meanfield_tools.models.Network or child class instance.
         The network whose dicts are used for storing the results.
     func : function
         Function whose return value should be cached.

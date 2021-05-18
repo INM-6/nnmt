@@ -14,7 +14,7 @@ ureg = lmt.ureg
 class Test_initialization:
     
     def test_all_dicts_created(self):
-        network = lmt.networks.Network()
+        network = lmt.models.Network()
         assert hasattr(network, 'network_params')
         assert hasattr(network, 'analysis_params')
         assert hasattr(network, 'results')
@@ -35,7 +35,7 @@ class Test_initialization:
         assert network.analysis_params[key] == value
 
     def test_loading_of_existing_results(self, unit_fixture_path):
-        network = lmt.networks.Network(
+        network = lmt.models.Network(
             file=f'{unit_fixture_path}test_network.h5')
         assert len(network.network_params.items()) != 0
         assert len(network.analysis_params.items()) != 0

@@ -16,7 +16,7 @@ def network():
     Because of the pytest scope the same network will be used for all tests of
     a single test class.
     """
-    network = lmt.networks.Microcircuit(
+    network = lmt.models.Microcircuit(
         network_params=(config_path + 'network_params.yaml'),
         analysis_params=(config_path + 'analysis_params.yaml')
         )
@@ -55,7 +55,7 @@ class Test_instantiate_with_some_passed_quantities_calculate_save_routine:
         analysis_params = network.analysis_params
         omega = analysis_params['omega']
         analysis_params['omega'] *= 2
-        network = lmt.networks.Microcircuit(
+        network = lmt.models.Microcircuit(
             network_params, analysis_params)
         assert network.network_params['tau_m'] == 2 * tau_m
         assert network.analysis_params['omega'] == 2 * omega
@@ -89,7 +89,7 @@ class Test_instantiate_with_passed_dictionaries_calculate_save_routine:
         analysis_params = network.analysis_params
         omega = analysis_params['omega']
         analysis_params['omega'] *= 2
-        network = lmt.networks.Microcircuit(
+        network = lmt.models.Microcircuit(
             network_params=network_params,
             analysis_params=analysis_params)
         assert network.network_params['tau_m'] == 2 * tau_m

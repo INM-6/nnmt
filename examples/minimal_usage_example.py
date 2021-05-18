@@ -3,7 +3,7 @@ import lif_meanfield_tools as lmt
 ureg = lmt.ureg
 
 # instantiate network
-network = lmt.networks.Microcircuit('network_params_microcircuit.yaml',
+network = lmt.models.Microcircuit('network_params_microcircuit.yaml',
                                     'analysis_params.yaml')
 
 # calculate working point

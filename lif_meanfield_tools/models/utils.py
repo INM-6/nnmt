@@ -1,17 +1,13 @@
 import numpy as np
 from scipy.special import erf as _erf
 
-from ..utils import (
-    _to_si_units,
-    _strip_units
-    )
-
 import lif_meanfield_tools as lmt
 
 ureg = lmt.ureg
 
 
 def delay_dist_matrix(network):
+    """Wrapper for ``_delay_dist_matrix``."""
     params = {}
     try:
         params['Delay'] = network.network_params['Delay']
@@ -34,23 +30,19 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     Assumes lower boundary for truncated Gaussian distributed delays to be zero
     (exact would be dt, the minimal time step).
 
-    We had to define the subfunctions ddm_none, ddm_tg and ddm_g, because one
-    cannot pass a string to a function decorated with ureg.wraps. So, that is
-    how we bypass this issue. It is not very elegant though.
-
-    Parameters:
-    -----------
-    Delay: Quantity(np.ndarray, 's')
+    Parameters
+    ----------
+    Delay : Quantity(np.ndarray, 's')
         Delay matrix.
-    Delay_sd: Quantity(np.ndarray, 's')
+    Delay_sd : Quantity(np.ndarray, 's')
         Delay standard deviation matrix.
-    delay_dist: str
+    delay_dist : str
         String specifying delay distribution.
-    omegas: float
+    omegas : float
         Frequency.
 
-    Returns:
-    --------
+    Returns
+    -------
     Quantity(nd.array, 'dimensionless')
         Matrix of delay distribution specific pre-factors at frequency omegas.
     '''

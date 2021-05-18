@@ -52,13 +52,13 @@ def exemplary_frequency_idx(bos_code_result):
 @pytest.fixture(scope='class')
 def network(exemplary_frequency_idx):
     if use_saved_data:
-        network = lmt.networks.Microcircuit(file=fix_path + 'network.h5')
+        network = lmt.models.Microcircuit(file=fix_path + 'network.h5')
     else:
-        network = lmt.networks.Microcircuit(
+        network = lmt.models.Microcircuit(
             config_path + 'Bos2016_network_params.yaml',
             config_path + 'Bos2016_analysis_params.yaml')
     network.network_params['D'] = (
-        lmt.networks.utils.delay_dist_matrix(network)
+        lmt.models.utils.delay_dist_matrix(network)
         )
     
     lmt.lif.exp.working_point(network, method='taylor')
@@ -163,7 +163,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # be fine
         bos_code_data = bos_code_result['delay_dist']
         omega = network.analysis_params['omega']
-        test_data = lmt.networks.utils._delay_dist_matrix(
+        test_data = lmt.models.utils._delay_dist_matrix(
             network.network_params['Delay'],
             network.network_params['Delay_sd'],
             network.network_params['delay_dist'],
@@ -182,7 +182,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         freqs = np.array([omega / np.pi / 2])
         lmt.lif.exp.transfer_function(network, freqs=freqs, method='taylor')
         D_old = network.network_params['D']
-        network.network_params['D'] = lmt.networks.utils._delay_dist_matrix(
+        network.network_params['D'] = lmt.models.utils._delay_dist_matrix(
             network.network_params['Delay'],
             network.network_params['Delay_sd'],
             network.network_params['delay_dist'],
@@ -276,7 +276,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # test sensitivity measure
         omegas = np.array([fmax * 2 * np.pi])
         network.analysis_params['omegas'] = omegas
-        network.network_params['D'] = lmt.networks.utils.delay_dist_matrix(
+        network.network_params['D'] = lmt.models.utils.delay_dist_matrix(
             network)
         lmt.lif.exp.transfer_function(network, method='taylor')
         lmt.lif.exp.effective_connectivity(network)

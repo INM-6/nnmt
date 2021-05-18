@@ -37,7 +37,7 @@ if __name__ == '__main__':
         fixture_path = 'integration/data/'
         config_path = 'integration/config/'
 
-        network = lmt.networks.Microcircuit(
+        network = lmt.models.Microcircuit(
             config_path + 'network_params.yaml',
             config_path + 'analysis_params.yaml')
         
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             network, method='taylor')
         lmt.lif.exp.working_point(network, method='shift')
         network.results[
-            'delay_dist_matrix'] = lmt.networks.utils.delay_dist_matrix(
+            'delay_dist_matrix'] = lmt.models.utils.delay_dist_matrix(
                 network)
         network.results['lif.exp.tf_single'] = lmt.lif.exp.transfer_function(
             network, omega)

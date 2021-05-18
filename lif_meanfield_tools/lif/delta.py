@@ -22,7 +22,7 @@ def firing_rates(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters listed in the following.
     
     Network parameters
@@ -243,7 +243,7 @@ def mean_input(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
         
@@ -307,7 +307,7 @@ def std_input(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
         

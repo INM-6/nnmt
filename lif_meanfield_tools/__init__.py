@@ -3,7 +3,7 @@ ureg = _pint.UnitRegistry()
 
 from . import (
     input_output,
-    networks,
+    models,
     lif,
     )
 

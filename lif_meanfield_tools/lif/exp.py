@@ -36,7 +36,7 @@ def working_point(network, method='shift'):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.networks.Network or child class instance.
+    network : lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters listed in the following.
     method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
@@ -91,7 +91,7 @@ def firing_rates(network, method='shift'):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.networks.Network or child class instance.
+    network : lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters listed in the following.
     method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
@@ -361,7 +361,7 @@ def mean_input(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
         
@@ -425,7 +425,7 @@ def std_input(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
         
@@ -869,7 +869,7 @@ def effective_connectivity(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -969,7 +969,7 @@ def propagator(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -1024,7 +1024,7 @@ def sensitivity_measure(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -1096,7 +1096,7 @@ def power_spectra(network):
     
     Parameters
     ----------
-    network: lif_meanfield_tools.networks.Network or child class instance.
+    network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
