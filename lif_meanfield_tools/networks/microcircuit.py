@@ -139,9 +139,9 @@ class Microcircuit(Network):
         dk = self.analysis_params['dk']
 
         try:
-            k_min = k_min.magnitude
-            k_max = k_max.magnitude
-            dk = dk.magnitude
+            k_min = k_min.to_base_units().magnitude
+            k_max = k_max.to_base_units().magnitude
+            dk = dk.to_base_units().magnitude
         except AttributeError:
             pass
 
