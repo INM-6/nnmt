@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import h5py_wrapper as h5
 
 from ...checks import (assert_array_equal,
                        assert_quantity_array_equal,
@@ -19,6 +20,7 @@ class Test_initialization:
         assert hasattr(network, 'results')
         assert hasattr(network, 'results_hash_dict')
         assert hasattr(network, 'input_units')
+        assert hasattr(network, 'result_units')
 
     @pytest.mark.parametrize('key, value', [('tau_m', 0.01),
                                             ('d_i_sd', 0.000375),
@@ -72,10 +74,9 @@ class Test_unit_stripping:
         assert empty_network.input_units['omega'] == 'hertz'
         assert empty_network.input_units['dk'] == '1 / millimeter'
 
-    @pytest.mark.xfail
     def test_result_units_stripped(self, empty_network):
         empty_network.results['test'] = 10 * ureg.ms
-        empty_network._convert_param_dicts_to_base_units_and_strip_units()
+        empty_network._convert_and_strip_result_units()
         assert empty_network.results['test'] == 0.01
         
 
@@ -97,6 +98,18 @@ class Test_adding_units_again:
         assert empty_network.analysis_params['omega'] == 10 * ureg.Hz
         assert empty_network.analysis_params['dk'] == 10 / ureg.mm
 
+    def test_result_units_are_added_correctly(self, mocker, empty_network):
+        network = empty_network
+        mock = mocker.Mock(__name__='mocker', return_value=1 * ureg.mV)
+        
+        def test_function(network):
+            return lmt.utils._cache(mock, dict(a=1), 'test', network)
+        
+        test_function(network)
+        network._add_result_units()
+        expected = dict(test=1 * ureg.mV)
+        assert_quantity_array_equal(expected, network.results)
+        
 
 class Test_saving_and_loading:
 
@@ -138,10 +151,12 @@ class Test_saving_and_loading:
         network.analysis_params['test'] = 2
         network.results['test'] = 3
         network.results_hash_dict['test'] = 4
+        network.result_units['test'] = 'millivolt'
         nparams = network.network_params
         aparams = network.analysis_params
         results = network.results
         rhd = network.results_hash_dict
+        result_units = network.result_units
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.save('test.h5')
@@ -149,11 +164,24 @@ class Test_saving_and_loading:
             network.analysis_params = {}
             network.results = {}
             network.results_hash_dict = {}
+            network.result_units = {}
             network.load('test.h5')
             check_quantity_dicts_are_equal(nparams, network.network_params)
             check_quantity_dicts_are_equal(aparams, network.analysis_params)
             check_quantity_dicts_are_equal(results, network.results)
             check_quantity_dicts_are_equal(rhd, network.results_hash_dict)
+            check_quantity_dicts_are_equal(result_units, network.result_units)
+                                           
+    def test_save_adds_units_to_results(self, mocker, tmpdir, empty_network):
+        empty_network.results['test'] = 1
+        empty_network.result_units['test'] = 'millivolt'
+        empty_network.save
+        tmp_test = tmpdir.mkdir('tmp_test')
+        with tmp_test.as_cwd():
+            empty_network.save('test.h5')
+            data = h5.load('test.h5')
+            assert data['results']['test']['val'] == 1
+            assert data['results']['test']['unit'] == 'millivolt'
 
 
 class Test_meta_functions:

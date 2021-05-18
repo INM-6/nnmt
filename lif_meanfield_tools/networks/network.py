@@ -50,6 +50,10 @@ class Network():
     """
     
     def __init__(self, network_params=None, analysis_params=None, file=None):
+        
+        self.input_units = {}
+        self.result_units = {}
+        
         if file:
             self.load(file)
         else:
@@ -83,9 +87,7 @@ class Network():
             # empty results
             self.results = {}
             self.results_hash_dict = {}
-            
-        # input unit dict
-        self.input_units = {}
+        
         
     def _convert_param_dicts_to_base_units_and_strip_units(self):
         """
@@ -140,6 +142,24 @@ class Network():
                 pass
         return dict
 
+    def _add_result_units(self):
+        """
+        Adds units stored in networks result_units dict to results dict.
+        """
+        
+        for key, unit in self.result_units.items():
+            self.results[key] *= ureg.Unit(unit)
+        
+    def _convert_and_strip_result_units(self):
+        """
+        Converts units to SI and strips units from results dict.
+        """
+        
+        for key, value in self.results.items():
+            if isinstance(value, ureg.Quantity):
+                self.results[key] = value.to_base_units().magnitude
+                self.result_units[key] = value.units
+
     def save(self, file, overwrite=False):
         """
         Save network to h5 file.
@@ -157,8 +177,10 @@ class Network():
             is one, h5py tries to update the h5 dictionary.
         """
         self._add_units_to_param_dicts_and_convert_to_input_units()
+        self._add_result_units()
         io.save_network(file, self, overwrite)
         self._convert_param_dicts_to_base_units_and_strip_units()
+        self._convert_and_strip_result_units()
         
     def save_results(self, file):
         """
@@ -195,6 +217,7 @@ class Network():
          self.results,
          self.results_hash_dict) = io.load_network(file)
         self._convert_param_dicts_to_base_units_and_strip_units()
+        self._convert_and_strip_result_units()
 
     def show(self):
         """Returns which results have already been calculated."""
