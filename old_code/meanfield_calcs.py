@@ -49,7 +49,10 @@ from scipy.special import zetac, erf
 
 from . import ureg
 from . import aux_calcs
-from .utils import check_positive_params, check_k_in_fast_synaptic_regime
+from .utils import (
+    _check_positive_params as check_positive_params,
+    _check_k_in_fast_synaptic_regime as check_k_in_fast_synaptic_regime
+    )
 
 
 @check_positive_params

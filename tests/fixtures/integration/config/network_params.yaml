@@ -164,6 +164,16 @@ g: 4.0
 nu_ext:
   val: 8.0
   unit: Hz
+  
+# membrane time constant
+tau_m_ext:
+  val: 10.0
+  unit: ms
+
+# PSC amplitude
+w_ext:
+  val: 87.8
+  unit: pA
 
 # number of external neurons
 K_ext:
