@@ -160,5 +160,5 @@ plot_rates(fig.add_subplot(gs[2, 1]),
            r'$\nu_X$ [spks/s]', '', 'NDM',
            colors, '(F)', label_prms)
 # save and show
-plt.savefig('sanzeni_fig8.png', dpi=300)
+# plt.savefig('Sanzeni2020_Fig8.pdf')
 plt.show()
