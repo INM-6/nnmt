@@ -53,7 +53,7 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
                                   rate_func=firing_rate_func)
 
     if nu_0 is None:
-        nu_0 = np.zeros(dimension)
+        nu_0 = np.zeros(int(dimension))
 
     if fixpoint_method == 'ODE':
         # do iteration procedure, until stationary firing rates are found
