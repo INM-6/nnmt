@@ -121,7 +121,7 @@ def plot_rates(ax, nu_ext_arr_lst, nu_arr_lst, xmax, ymax, xlabel, ylabel,
 
 
 print('Plotting...')
-fig = plt.figure(figsize=(3.34646, 3.34646),  # two column figure, 180mm wide
+fig = plt.figure(figsize=(3.34646, 3.34646),  # one column figure, 85mm wide
                  constrained_layout=True)
 gs = gridspec.GridSpec(3, 2, figure=fig)
 label_prms = dict(x=-0.3, y=1.4, fontsize=10, fontweight='bold',
