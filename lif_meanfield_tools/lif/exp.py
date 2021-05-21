@@ -30,7 +30,7 @@ pcfu_vec = np.frompyfunc(mpmath.pcfu, 2, 1)
 _prefix = 'lif.exp.'
 
 
-def working_point(network, method='shift'):
+def working_point(network, method='shift', **kwargs):
     """
     Calculates working point for exp PSCs.
 
@@ -66,21 +66,24 @@ def working_point(network, method='shift'):
         Firing rates of external populations in Hz.
     tau_m_ext : float or 1d array
         Membrane time constants of external populations.
-    method: str
+    method : str
         Method used to calculate the firing rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
 
     Returns
     -------
     dict
         Dictionary containing firing rates, mean input and std input.
     """
-    return {'firing_rates': firing_rates(network, method),
+    return {'firing_rates': firing_rates(network, method, **kwargs),
             'mean_input': mean_input(network),
             'std_input': std_input(network)}
 
 
-def firing_rates(network, method='shift'):
+def firing_rates(network, method='shift', **kwargs):
     """
     Calculates stationary firing rates for exp PSCs.
 
@@ -124,6 +127,9 @@ def firing_rates(network, method='shift'):
     method: str
         Method used to calculate the firing rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
 
     Returns
     -------
@@ -146,8 +152,10 @@ def firing_rates(network, method='shift'):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-
+    
     params['method'] = method
+    params.update(kwargs)
+    
     return _cache(network,
                   _firing_rates, params, _prefix + 'firing_rates', 'hertz')
 
@@ -175,7 +183,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'nu_ext': nu_ext,
         'tau_m_ext': tau_m_ext,
         }
-
+    
     if method == 'shift':
         return _static._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,

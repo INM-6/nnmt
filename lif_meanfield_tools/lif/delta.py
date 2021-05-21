@@ -16,7 +16,7 @@ from .. import ureg
 _prefix = 'lif.delta.'
 
 
-def firing_rates(network):
+def firing_rates(network, **kwargs):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
@@ -47,6 +47,9 @@ def firing_rates(network):
         Firing rates of external populations in Hz.
     tau_m_ext : float or 1d array
         Membrane time constants of external populations.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
 
     Returns:
     --------
@@ -69,6 +72,8 @@ def firing_rates(network):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
+        
+    params.update(kwargs)
 
     return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
                   'hertz')
