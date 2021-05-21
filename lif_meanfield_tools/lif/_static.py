@@ -11,28 +11,46 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
                              eps_tol=1e-7, t_max_ODE=1000, maxiter_ODE=1000):
     """
     Solves the self-consistent eqs for firing rates, mean and std of input.
-    If not specified otherwise, the intial guess nu_0 is a vanishing rate.
+        
+    Parameters
+    ----------
+    firing_rate_func : func
+        Function to be integrated.
+    firing_rates_params : dict
+        Parameters passed to firing_rates_func
+    input_params : dict
+        Parameters passed to functions calculating mean and std of input.
+    nu_0 : None or np.ndarray
+        Initial guess for fixed point integration. If `None` the initial guess
+        is 0 for all populations. Default is `None`.
+    fixpoint_method : str
+        Method used for finding the fixed point. Currently, the following
+        method are implemented: `ODE`, `LSQTSQ`. ODE is a very good choice,
+        which finds stable fixed points even if the initial guess is far from
+        the fixed point. LSQTSQ also finds unstable fixed points but needs a
+        good initial guess. Default is `ODE`.
+                
+        ODE:
+            Solves the initial value problem
+              dnu / ds = - nu + firing_rate_func(nu)
+            with initial value `nu_0` until the criterion for a self-consistent
+            solution
+              max( abs(nu[t_max_ODE-1] - nu[t_max_ODE]) ) < eps_tol
+            is fulfilled. Raises an error if this does not happen within
+            `maxiter_ODE` iterations.
 
-    Currently, the following fixpoint_method are implemented:
-    * ODE
-    * LSQTSQ
-    ODE is a very good choice which finds stable fixed points even if the
-    initial guess is far from the fixed point. LSQTSQ also finds unstable
-    fixed points but needs a good initial guess.
-
-    ODE:
-    Solves the initial value problem
-      dnu / ds = - nu + firing_rate_func(nu)
-    with initial value nu_0 until the criterion for a self-consistent solution
-      max( abs(nu[t_max_ODE-1] - nu[t_max_ODE]) ) < eps_tol
-    is fulfilled. Raises an error if this does not happen within maxiter_ODE
-    iterations.
-
-    LSQTSQ:
-    Determines the minimum of
-      (nu - firing_rate_func(nu))^2
-    using least squares. Raises an error if the solution is a local minimum
-    with mean squared differnce above eps_tol.
+        LSQTSQ :
+            Determines the minimum of
+              (nu - firing_rate_func(nu))^2
+            using least squares. Raises an error if the solution is a local
+            minimum with mean squared differnce above eps_tol.
+    eps_tol : float
+        Maximal incremental stepsize at which to stop the iteration procedure.
+        Default is 1e-7.
+    t_max_ODE : int
+        Default is 1000.
+    maxiter_ODE : int
+        Default is 1000.
     """
 
     dimension = input_params['K'].shape[0]
