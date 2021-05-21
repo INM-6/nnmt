@@ -16,7 +16,7 @@ from .. import ureg
 _prefix = 'lif.delta.'
 
 
-def firing_rates(network):
+def firing_rates(network, **kwargs):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
@@ -24,7 +24,7 @@ def firing_rates(network):
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters listed in the following.
-    
+
     Network parameters
     ------------------
     J : np.array
@@ -47,6 +47,9 @@ def firing_rates(network):
         Firing rates of external populations in Hz.
     tau_m_ext : float or 1d array
         Membrane time constants of external populations.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
 
     Returns:
     --------
@@ -69,16 +72,18 @@ def firing_rates(network):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-    
+        
+    params.update(kwargs)
+
     return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
                   'hertz')
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
-                  tau_m_ext):
+                  tau_m_ext, **kwargs):
     """
     Plain calculation of firing rates for delta PSCs.
-    
+
     See :code:`lif.delta.firing_rates` for full documentation.
     """
     firing_rate_params = {
@@ -96,19 +101,19 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         'nu_ext': nu_ext,
         'tau_m_ext': tau_m_ext,
         }
-    
+
     return _static._firing_rate_integration(_firing_rates_for_given_input,
                                             firing_rate_params,
-                                            input_params)
+                                            input_params, **kwargs)
 
 
 @_check_positive_params
 def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
     """
     Calculates stationary firing rate for delta shaped PSCs.
-    
+
     For more documentation see `firing_rates`.
-    
+
     Parameters:
     -----------
     tau_m: float
@@ -123,7 +128,7 @@ def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
         Mean input to population of neurons.
     sigma: float or np.array
         Standard deviation of input to population of neurons.
-        
+
     Returns:
     float or np.array
         Firing rates in Hz.
@@ -174,8 +179,8 @@ def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
         return nu.item(0)
     else:
         return nu
-    
-    
+
+
 def _get_erfcx_integral_gl_order(y_th, y_r, start_order, epsrel, maxiter):
     """Determine order of Gauss-Legendre quadrature for erfcx integral."""
     # determine maximal integration range
@@ -240,18 +245,18 @@ def mean_input(network):
     Calc mean inputs to populations as function of firing rates of populations.
 
     Following Fourcaud & Brunel (2002).
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-        
+
     Network results
     ---------------
     nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
-    
+
     Network parameters
     ------------------
     J : np.array
@@ -280,19 +285,19 @@ def mean_input(network):
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
-    
+
     try:
         params['nu'] = network.results[_prefix + 'firing_rates']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
     """
     Plain calculation of mean neuronal input.
-    
+
     See :code:`lif.delta.mean_input` for full documentation.
     """
     return _static._mean_input(nu, J, K, tau_m,
@@ -304,18 +309,18 @@ def std_input(network):
     Calculates standard deviation of inputs to populations.
 
     Following Fourcaud & Brunel (2002).
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-        
+
     Network results
     ---------------
     nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
-    
+
     Network parameters
     ------------------
     J : np.array
@@ -344,24 +349,24 @@ def std_input(network):
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
-    
+
     try:
         params['nu'] = network.results[_prefix + 'firing_rates']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
     """
     Plain calculation of standard deviation of neuronal input.
-    
+
     See :code:`lif.exp.mean_input` for full documentation.
     """
     return _static._std_input(nu, J, K, tau_m,
                               J_ext, K_ext, nu_ext, tau_m_ext)
-    
+
 
 def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
                                                tau_m, tau_r):

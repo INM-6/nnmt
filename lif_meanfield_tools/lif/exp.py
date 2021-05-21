@@ -14,7 +14,7 @@ from ..utils import (_check_positive_params,
                      _cache)
 
 from . import _static
-                      
+
 from .delta import (
     _firing_rates_for_given_input as _delta_firing_rate,
     _derivative_of_firing_rates_wrt_mean_input
@@ -30,7 +30,7 @@ pcfu_vec = np.frompyfunc(mpmath.pcfu, 2, 1)
 _prefix = 'lif.exp.'
 
 
-def working_point(network, method='shift'):
+def working_point(network, method='shift', **kwargs):
     """
     Calculates working point for exp PSCs.
 
@@ -41,7 +41,7 @@ def working_point(network, method='shift'):
     method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
         or 'taylor'. Default is 'shift'.
-    
+
     Network Parameters
     ------------------
     J : np.array
@@ -66,21 +66,24 @@ def working_point(network, method='shift'):
         Firing rates of external populations in Hz.
     tau_m_ext : float or 1d array
         Membrane time constants of external populations.
-    method: str
+    method : str
         Method used to calculate the firing rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
-        
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
+
     Returns
     -------
     dict
         Dictionary containing firing rates, mean input and std input.
     """
-    return {'firing_rates': firing_rates(network, method),
+    return {'firing_rates': firing_rates(network, method, **kwargs),
             'mean_input': mean_input(network),
             'std_input': std_input(network)}
-    
 
-def firing_rates(network, method='shift'):
+
+def firing_rates(network, method='shift', **kwargs):
     """
     Calculates stationary firing rates for exp PSCs.
 
@@ -96,7 +99,7 @@ def firing_rates(network, method='shift'):
     method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
         or 'taylor'. Default is 'shift'.
-    
+
     Network Parameters
     ------------------
     J : np.array
@@ -124,7 +127,10 @@ def firing_rates(network, method='shift'):
     method: str
         Method used to calculate the firing rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
-        
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
+
     Returns
     -------
     Quantity(np.array, 'hertz')
@@ -148,15 +154,17 @@ def firing_rates(network, method='shift'):
             "parameters.")
     
     params['method'] = method
+    params.update(kwargs)
+    
     return _cache(network,
                   _firing_rates, params, _prefix + 'firing_rates', 'hertz')
-        
+
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
-                  nu_ext, tau_m_ext, method='shift'):
+                  nu_ext, tau_m_ext, method='shift', **kwargs):
     """
     Plain calculation of firing rates for exp PSCs.
-    
+
     See :code:`lif.exp.firing_rates` for full documentation.
     """
     firing_rate_params = {
@@ -179,11 +187,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     if method == 'shift':
         return _static._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,
-                                                input_params)
+                                                input_params, **kwargs)
     elif method == 'taylor':
         return _static._firing_rate_integration(_firing_rate_taylor,
                                                 firing_rate_params,
-                                                input_params)
+                                                input_params, **kwargs)
 
 
 @_check_positive_params
@@ -234,7 +242,7 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
 def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     """
     Calcs stationary firing rates for exp PSCs using a Taylor expansion.
-    
+
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
     deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
@@ -273,19 +281,19 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
         warnings.warn("Negative firing rates detected. You might be in an "
                       "invalid regime. Use `method='shift'` for "
                       "calculating the firing rates instead.")
-        
+
     if result.shape == (1,):
         return result.item(0)
     else:
         return result
-    
-    
+
+
 def _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
     """Calculate nu0 * ( Phi(sqrt(2)*y_th) - Psi(sqrt(2)*y_r) ) safely."""
     # bring into appropriate shape
     V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r = _equalize_shape(
         V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
-    
+
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
 
@@ -338,7 +346,7 @@ def _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
         return nu_dPhi.item(0)
     else:
         return nu_dPhi
-    
+
 
 def _Phi_neg(s):
     """Calculate Phi(s) for negative arguments"""
@@ -351,25 +359,25 @@ def _Phi_pos(s):
     assert np.all(s >= 0)
     return np.sqrt(np.pi / 2.) * (2 - np.exp(-s**2 / 2.)
                                   * _erfcx(s / np.sqrt(2)))
-    
+
 
 def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
 
     Following Fourcaud & Brunel (2002).
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-        
+
     Network results
     ---------------
     nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
-    
+
     Network parameters
     ------------------
     J : np.array
@@ -398,19 +406,19 @@ def mean_input(network):
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
-    
+
     try:
         params['nu'] = network.results['lif.exp.firing_rates']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
     """
     Plain calculation of mean neuronal input.
-    
+
     See :code:`lif.exp.mean_input` for full documentation.
     """
     return _static._mean_input(nu, J, K, tau_m,
@@ -422,18 +430,18 @@ def std_input(network):
     Calculates standard deviation of inputs to populations.
 
     Following Fourcaud & Brunel (2002).
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-        
+
     Network results
     ---------------
     nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
-    
+
     Network parameters
     ------------------
     J : np.array
@@ -462,19 +470,19 @@ def std_input(network):
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for this calculation.')
-    
+
     try:
         params['nu'] = network.results['lif.exp.firing_rates']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
     """
     Plain calculation of standard deviation of neuronal input.
-    
+
     See :code:`lif.exp.mean_input` for full documentation.
     """
     return _static._std_input(nu, J, K, tau_m,
@@ -484,7 +492,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
 def transfer_function(network, freqs=None, method='shift'):
     """
     Calculates transfer function.
-    
+
     Parameters
     ----------
     network : lif_meanfield_tools.create.Network or child class instance.
@@ -495,7 +503,7 @@ def transfer_function(network, freqs=None, method='shift'):
     method : str
         Method used to calculate the tranfser function. Options: 'shift' or
         'taylor'. Default is 'shift'.
-    
+
     Network parameters
     ------------------
     tau_m : float
@@ -508,12 +516,12 @@ def transfer_function(network, freqs=None, method='shift'):
         Relative reset potential in V.
     V_th_rel : float
         Relative threshold potential in V.
-    
+
     Analysis Parameters
     -------------------
     omegas : float or np.ndarray
         Input frequencies to population in Hz.
-        
+
     Network results
     ---------------
     mean_input : float or np.ndarray
@@ -527,7 +535,7 @@ def transfer_function(network, freqs=None, method='shift'):
         Transfer functions for each population with the following shape:
         (number of freqencies, number of populations)
     """
-    
+
     list_of_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel', 'V_0_rel']
 
     try:
@@ -546,7 +554,7 @@ def transfer_function(network, freqs=None, method='shift'):
         params['sigma'] = network.results['lif.exp.std_input']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     if method == 'shift':
         return _cache(network, _transfer_function_shift, params,
                       _prefix + 'transfer_function',
@@ -606,19 +614,19 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
     V_th_shifted = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     V_0_shifted = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
-    
+
     zero_omega_mask = np.abs(omegas) < 1e-15
     regular_mask = np.invert(zero_omega_mask)
-    
+
     result = np.zeros((len(omegas), len(mu)), dtype=complex)
-    
+
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.any(zero_omega_mask):
         result[zero_omega_mask] = (
             _derivative_of_delta_firing_rates_wrt_mean_input(
                 V_0_shifted, V_th_shifted, mu, sigma, tau_m, tau_r))
-        
+
     if np.any(regular_mask):
         nu = _delta_firing_rate(V_0_shifted, V_th_shifted, mu, sigma, tau_m,
                                 tau_r)
@@ -681,12 +689,12 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     omegas = np.atleast_1d(omegas)
     mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel = (
         _equalize_shape(mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel))
-    
+
     zero_omega_mask = omegas < 1e-15
     regular_mask = np.invert(zero_omega_mask)
-    
+
     result = np.zeros((len(omegas), len(mu)), dtype=complex)
-    
+
     # for frequency zero the exact expression is given by the derivative of
     # f-I-curve
     if np.any(zero_omega_mask):
@@ -694,7 +702,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
             _derivative_of_firing_rates_wrt_mean_input(
                 V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
             )
-        
+
     if np.any(regular_mask):
         delta_rates = _delta_firing_rate(
             V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
@@ -702,11 +710,11 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         exp_rates = _firing_rate_taylor(
             V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
         exp_rates = np.atleast_1d(exp_rates)[np.newaxis]
-        
+
         # effective threshold and reset
         x_t = np.sqrt(2.) * (V_th_rel - mu) / sigma
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
-        
+
         z = -0.5 + 1j * np.outer(omegas[regular_mask], tau_m)
         alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
         k = np.sqrt(tau_s / tau_m)
@@ -750,7 +758,7 @@ def _similar_array(x, array):
         return np.ones(array.shape) * x
     else:
         raise RuntimeError(f'Unclear how to shape {x} into shape of {array}.')
-    
+
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
@@ -863,10 +871,10 @@ def _Phi_prime_mu(s, sigma):
 def effective_connectivity(network):
     """
     Effective connectivity for different frequencies.
-    
+
     Note that the frequencies of the transfer function and the delay
     distribution matrix need to be matching.
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
@@ -877,7 +885,7 @@ def effective_connectivity(network):
     ---------------
     transfer_function : np.ndarray
         Transfer function for given frequencies in Hz/V.
-    
+
     Network Parameters
     ----------
     D : np.ndarray
@@ -889,13 +897,13 @@ def effective_connectivity(network):
         Indegree matrix.
     tau_m : float
         Membrane time constant in s.
-    
+
     Returns:
     --------
     np.ndarray
         Effective connectivity matrix.
     """
-    
+
     list_of_params = ['D', 'J', 'K', 'tau_m']
 
     try:
@@ -911,17 +919,17 @@ def effective_connectivity(network):
             network.results['lif.exp.transfer_function'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _effective_connectivity, params,
                   _prefix + 'effective_connectivity', 'hertz / volt')
-                  
+
 
 def _effective_connectivity(transfer_function, D, J, K, tau_m):
     """
     Effective connectivity for different frequencies.
-    
+
     See equation 12 and following in Bos 2015.
-    
+
     Note that the frequencies of the transfer function and the delay
     distribution matrix need to be matching.
 
@@ -929,7 +937,7 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     ---------------
     transfer_function : np.ndarray
         Transfer_function for given frequencies in hertz/mV.
-    
+
     Parameters
     ----------
     D : np.ndarray
@@ -941,7 +949,7 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
         Indegree matrix.
     tau_m : float
         Membrane time constant in s.
-    
+
     Returns
     -------
     np.ndarray
@@ -966,7 +974,7 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
 def propagator(network):
     """
     Propagator for different frequencies.
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
@@ -977,7 +985,7 @@ def propagator(network):
     ---------------
     effective_connectivity : np.ndarray
         Effective connectivity matrix.
-    
+
     Returns:
     --------
     np.ndarray
@@ -990,7 +998,7 @@ def propagator(network):
             network.results['lif.exp.effective_connectivity'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _propagator, params, _prefix + 'propagator')
 
 
@@ -1002,7 +1010,7 @@ def _propagator(effective_connectivity):
     ----------
     effective_connectivity : np.ndarray
         Effective connectivity matrix.
-    
+
     Returns
     -------
     np.ndarray
@@ -1018,10 +1026,10 @@ def _propagator(effective_connectivity):
 def sensitivity_measure(network):
     """
     Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
-    
+
     Note that the frequencies of the transfer function and the effective
     connectivity need to be matching.
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
@@ -1044,7 +1052,7 @@ def sensitivity_measure(network):
             network.results['lif.exp.effective_connectivity'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _sensitivity_measure, params,
                   _prefix + 'sensitivity_measure')
 
@@ -1072,7 +1080,7 @@ def _sensitivity_measure(effective_connectivity):
     # with the frequencies indexed by the first axis.
     if len(effective_connectivity.shape) == 2:
         effective_connectivity = np.expand_dims(effective_connectivity, axis=0)
-        
+
     T = np.zeros(effective_connectivity.shape, dtype=complex)
     for i, eff_conn_of_omega in enumerate(effective_connectivity):
         e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
@@ -1093,7 +1101,7 @@ def power_spectra(network):
 
     See: Eq. 18 in Bos et al. (2016)
     Shape of output: (len(omegas), len(populations))
-    
+
     Parameters
     ----------
     network: lif_meanfield_tools.models.Network or child class instance.
@@ -1106,7 +1114,7 @@ def power_spectra(network):
         Firing rates of populations in Hz.
     effective_connectivity : np.ndarray
         Effective connectivity matrix.
-        
+
     Network parameters
     ------------------
     J : np.ndarray
@@ -1123,7 +1131,7 @@ def power_spectra(network):
     np.ndarray
         Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
     """
-    
+
     list_of_params = ['J', 'K', 'N', 'tau_m']
 
     try:
@@ -1140,7 +1148,7 @@ def power_spectra(network):
             network.results['lif.exp.effective_connectivity'])
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    
+
     return _cache(network, _power_spectra, params,
                   _prefix + 'power_spectra', 'hertz ** 2')
 

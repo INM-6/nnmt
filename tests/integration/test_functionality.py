@@ -22,8 +22,18 @@ class Test_Network_functions_give_correct_results:
     
     prefix = 'lif.exp.'
     
-    def test_firing_rates_shift(self, network, std_results):
-        firing_rates = lmt.lif.exp.firing_rates(network, method='shift')
+    def test_firing_rates_shift_ODE(self, network, std_results):
+        firing_rates = lmt.lif.exp.firing_rates(network, method='shift',
+                                                fixpoint_method='ODE')
+        print(firing_rates)
+        assert_allclose(
+            firing_rates, std_results[self.prefix + 'firing_rates'])
+        
+    def test_firing_rates_shift_LSTSQ(self, network, std_results):
+        nu_0 = [1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 1.0, 7.0]
+        firing_rates = lmt.lif.exp.firing_rates(network, method='shift',
+                                                fixpoint_method='LSTSQ',
+                                                nu_0=nu_0)
         assert_allclose(
             firing_rates, std_results[self.prefix + 'firing_rates'])
     
