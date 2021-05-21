@@ -250,6 +250,18 @@ sigma_set:
     - 6
     - 5
 
+# PSC amplitude
+w_ext:
+  val: 87.8
+  unit: pA
+
+
+# membrane time constant
+tau_m_ext:
+  val: 10.0
+  unit: ms
+
+
 # results from fit_transfer_function
 tau_rate:
   val:

@@ -14,10 +14,10 @@ from collections import defaultdict
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 
-import lif_meanfield_tools as lmt
-from lif_meanfield_tools import ureg
-
 import h5py_wrapper.wrapper as h5
+
+import lif_meanfield_tools as lmt
+ureg = lmt.ureg
 
 
 config_path = 'tests/fixtures/integration/config/'
@@ -37,6 +37,17 @@ def network_params():
     params = lmt.input_output.load_val_unit_dict_from_yaml(
         config_path + 'Schuecker2015_parameters.yaml')
     params['dimension'] = 1
+    lmt.utils._strip_units(params)
+    return params
+
+
+@pytest.fixture(scope='class')
+def si_network_params():
+    params = lmt.input_output.load_val_unit_dict_from_yaml(
+        config_path + 'Schuecker2015_parameters.yaml')
+    params['dimension'] = 1
+    lmt.utils._to_si_units(params)
+    lmt.utils._strip_units(params)
     return params
 
 
@@ -45,7 +56,7 @@ def frequencies(network_params):
     frequencies = np.logspace(
         network_params['f_start_exponent'],
         network_params['f_end_exponent'],
-        network_params['n_freqs']) * ureg.Hz
+        network_params['n_freqs'])
     return frequencies
     
     
@@ -56,86 +67,80 @@ def omegas(frequencies):
 
 
 @pytest.fixture(scope='class')
-def pre_results(network_params, omegas):
+def pre_results(si_network_params, omegas):
     # calculate lif_meanfield_tools results for different mus and sigmas
-    absolute_values = [[] for i in range(len(indices))]
-    phases = [[] for i in range(len(indices))]
-    zero_freqs = [[] for i in range(len(indices))]
-    nu_0s = [[] for i in range(len(indices))]
-    nu0_fbs = [[] for i in range(len(indices))]
-    nu0_fb433s = [[] for i in range(len(indices))]
+    absolute_values = []
+    phases = []
+    zero_freqs = []
+    nu_0s = []
+    nu0_fbs = []
+    nu0_fb433s = []
     for i, index in enumerate(indices):
-        sigma = network_params[f'sigma_{index}']
-        for mu in network_params[f'mean_input_{index}']:
-            # Stationary firing rates for delta shaped PSCs.
-            nu_0 = lmt.aux_calcs.nu_0(
-                network_params['tau_m'],
-                network_params['tau_r'],
-                network_params['theta'],
-                network_params['V_reset'],
-                mu,
-                sigma)
+        # Stationary firing rates for delta shaped PSCs.
+        nu_0 = lmt.lif.delta._firing_rates_for_given_input(
+            si_network_params['V_reset'],
+            si_network_params['theta'],
+            si_network_params[f'mean_input_{index}'],
+            si_network_params[f'sigma_{index}'],
+            si_network_params['tau_m'],
+            si_network_params['tau_r'])
 
-            # Stationary firing rates for filtered synapses (via Taylor)
-            nu0_fb = lmt.aux_calcs.nu0_fb(
-                network_params['tau_m'],
-                network_params['tau_s'],
-                network_params['tau_r'],
-                network_params['theta'],
-                network_params['V_reset'],
-                mu,
-                sigma)
+        # Stationary firing rates for filtered synapses (via shift)
+        nu0_fb = lmt.lif.exp._firing_rate_shift(
+            si_network_params['V_reset'],
+            si_network_params['theta'],
+            si_network_params[f'mean_input_{index}'],
+            si_network_params[f'sigma_{index}'],
+            si_network_params['tau_m'],
+            si_network_params['tau_r'],
+            si_network_params['tau_s'])
 
-            # Stationary firing rates for exp PSCs. (via shift)
-            nu0_fb433 = lmt.aux_calcs.nu0_fb433(
-                network_params['tau_m'],
-                network_params['tau_s'],
-                network_params['tau_r'],
-                network_params['theta'],
-                network_params['V_reset'],
-                mu,
-                sigma)
+        # Stationary firing rates for exp PSCs. (via Taylor)
+        nu0_fb433 = lmt.lif.exp._firing_rate_taylor(
+            si_network_params['V_reset'],
+            si_network_params['theta'],
+            si_network_params[f'mean_input_{index}'],
+            si_network_params[f'sigma_{index}'],
+            si_network_params['tau_m'],
+            si_network_params['tau_r'],
+            si_network_params['tau_s'])
 
-            # colored noise zero-frequency limit of transfer function
-            transfer_function_zero_freq = lmt.aux_calcs.d_nu_d_mu_fb433(
-                network_params['tau_m'],
-                network_params['tau_s'],
-                network_params['tau_r'],
-                network_params['theta'],
-                network_params['V_reset'],
-                mu,
-                sigma)
-
-            transfer_function = lmt.meanfield_calcs.transfer_function(
-                lmt.utils.pint_array([mu]),
-                lmt.utils.pint_array([sigma]),
-                network_params['tau_m'],
-                network_params['tau_s'],
-                network_params['tau_r'],
-                network_params['theta'],
-                network_params['V_reset'],
-                network_params['dimension'],
-                omegas,
-                synaptic_filter=False)
-            
-            # calculate properties plotted in Schuecker 2015
-            absolute_value = np.abs(transfer_function.magnitude.flatten())
-            phase = (np.angle(transfer_function.magnitude.flatten())
-                     / 2 / np.pi * 360)
-            zero_freq = (transfer_function_zero_freq.to(ureg.Hz / ureg.mV)
-                         ).magnitude,
-            nu_0 = nu_0.to(ureg.Hz).magnitude
-            nu0_fb = nu0_fb.to(ureg.Hz).magnitude
-            nu0_fb433.to(ureg.Hz).magnitude
-            
-            # collect all results
-            absolute_values[i].append(absolute_value)
-            phases[i].append(phase)
-            zero_freqs[i].append(zero_freq)
-            nu_0s[i].append(nu_0)
-            nu0_fbs[i].append(nu0_fb)
-            nu0_fb433s[i].append(nu0_fb433)
-    
+        # colored noise zero-frequency limit of transfer function
+        transfer_function_zero_freq = (
+            lmt.lif.exp._derivative_of_firing_rates_wrt_mean_input(
+                si_network_params['V_reset'],
+                si_network_params['theta'],
+                si_network_params[f'mean_input_{index}'],
+                si_network_params[f'sigma_{index}'],
+                si_network_params['tau_m'],
+                si_network_params['tau_r'],
+                si_network_params['tau_s'])) / 1000
+        
+        transfer_function = lmt.lif.exp._transfer_function_shift(
+            si_network_params[f'mean_input_{index}'],
+            si_network_params[f'sigma_{index}'],
+            si_network_params['tau_m'],
+            si_network_params['tau_s'],
+            si_network_params['tau_r'],
+            si_network_params['theta'],
+            si_network_params['V_reset'],
+            omegas,
+            synaptic_filter=False) / 1000
+        
+        # calculate properties plotted in Schuecker 2015
+        absolute_value = np.abs(transfer_function)
+        phase = (np.angle(transfer_function)
+                 / 2 / np.pi * 360)
+        zero_freq = transfer_function_zero_freq
+        
+        # collect all results
+        absolute_values.append(absolute_value)
+        phases.append(phase)
+        zero_freqs.append(zero_freq)
+        nu_0s.append(nu_0)
+        nu0_fbs.append(nu0_fb)
+        nu0_fb433s.append(nu0_fb433)
+        
     pre_results = dict(
         absolute_values=absolute_values,
         phases=phases,
@@ -154,14 +159,14 @@ def test_result(pre_results, network_params):
     test_results['sigma'] = defaultdict(dict)
     for i, index in enumerate(indices):
         sigma = network_params[f'sigma_{index}']
-        test_results['sigma'][sigma.magnitude]['mu'] = (
+        test_results['sigma'][sigma]['mu'] = (
             defaultdict(dict))
         for j, mu in enumerate(network_params[f'mean_input_{index}']):
             test_results[
-                'sigma'][sigma.magnitude][
-                'mu'][mu.magnitude] = {
-                    'absolute_value': pre_results['absolute_values'][i][j],
-                    'phase': pre_results['phases'][i][j],
+                'sigma'][sigma][
+                'mu'][mu] = {
+                    'absolute_value': pre_results['absolute_values'][i][:, j],
+                    'phase': pre_results['phases'][i][:, j],
                     'zero_freq': pre_results['zero_freqs'][i][j],
                     'nu_0': pre_results['nu_0s'][i][j],
                     'nu0_fb': pre_results['nu0_fbs'][i][j],
@@ -176,10 +181,10 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
                                                        network_params,
                                                        frequencies,
                                                        ground_truth_result):
-        sigma = network_params['sigma_{}'.format(index)].magnitude
-        mu = network_params['mean_input_{}'.format(index)][0].magnitude
+        sigma = network_params['sigma_{}'.format(index)]
+        mu = network_params['mean_input_{}'.format(index)][0]
         ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]
-        assert_array_equal(frequencies.magnitude,
+        assert_array_equal(frequencies,
                            ground_truth_data['frequencies'])
 
     @pytest.mark.parametrize('key', ['absolute_value',
@@ -191,13 +196,9 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
     @pytest.mark.parametrize('index', indices)
     def test_results_coincide(self, key, index, network_params,
                               ground_truth_result, test_result):
-        sigma = network_params['sigma_{}'.format(index)].magnitude
-        for mu in network_params['mean_input_{}'.format(index)].magnitude:
+        sigma = network_params['sigma_{}'.format(index)]
+        for mu in network_params['mean_input_{}'.format(index)]:
             ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]
             test_data = test_result['sigma'][sigma]['mu'][mu]
-            try:
-                assert_allclose(test_data[key].magnitude,
-                                ground_truth_data[key], atol=1e-14)
-            except AttributeError:
-                assert_allclose(test_data[key],
-                                ground_truth_data[key], atol=1e-14)
+            assert_allclose(test_data[key],
+                            ground_truth_data[key], atol=1e-14)
