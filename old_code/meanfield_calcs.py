@@ -58,10 +58,9 @@ from .utils import (
 @check_positive_params
 @ureg.wraps(ureg.Hz, (None, ureg.s, ureg.s, ureg.s, ureg.mV, ureg.mV, None,
                       ureg.mV, ureg.mV, ureg.Hz, None, None, ureg.Hz, ureg.Hz,
-                      ureg.Hz, None, None))
+                      None))
 def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
-                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, nu_0, method='shift',
-                 fp_iteration=True):
+                 nu_ext, K_ext, g, nu_e_ext, nu_i_ext, method='shift'):
     '''
     Returns vector of population firing rates in Hz.
 
@@ -127,32 +126,23 @@ def firing_rates(dimension, tau_m, tau_s, tau_r, V_0_rel, V_th_rel, K, J, j,
     else:
         raise ValueError(f'Method {method} not implemented.')
 
-    if fp_iteration:
-        # do iteration procedure, until stationary firing rates are found
-        eps_tol = 1e-7
-        t_max = 1000
-        maxiter = 1000
-        for _ in range(maxiter):
-            sol = sint.solve_ivp(get_rate_difference, [0, t_max], nu_0,
-                                 t_eval=[t_max - 1, t_max], method='LSODA')
-            assert sol.success is True
-            eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
-            if eps < eps_tol:
-                return sol.y[:, 1]
-            else:
-                nu_0 = sol.y[:, 1]
-        msg = f'Rate iteration failed to converge after {maxiter} iterations. '
-        msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
-        raise RuntimeError(msg)
-    else:
-        # search roots using least squares
-        eps_tol = 1e-7
-        get_rate_difference = partial(get_rate_difference, None)
-        res = sopt.least_squares(get_rate_difference, nu_0, bounds=(0, np.inf))
-        if res.cost < eps_tol:
-            return res.x
+    # do iteration procedure, until stationary firing rates are found
+    eps_tol = 1e-12
+    t_max = 1000
+    maxiter = 1000
+    y0 = np.zeros(int(dimension))
+    for _ in range(maxiter):
+        sol = sint.solve_ivp(get_rate_difference, [0, t_max], y0,
+                             t_eval=[t_max - 1, t_max], method='LSODA')
+        assert sol.success is True
+        eps = max(np.abs(sol.y[:, 1] - sol.y[:, 0]))
+        if eps < eps_tol:
+            return sol.y[:, 1]
         else:
-            return np.array([np.nan] * int(dimension))
+            y0 = sol.y[:, 1]
+    msg = f'Rate iteration failed to converge after {maxiter} iterations. '
+    msg += f'Last maximum difference {eps:e}, desired {eps_tol:e}.'
+    raise RuntimeError(msg)
 
 
 @check_positive_params
