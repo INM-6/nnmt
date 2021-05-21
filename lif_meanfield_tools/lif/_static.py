@@ -11,7 +11,7 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
                              eps_tol=1e-7, t_max_ODE=1000, maxiter_ODE=1000):
     """
     Solves the self-consistent eqs for firing rates, mean and std of input.
-        
+
     Parameters
     ----------
     firing_rate_func : func
@@ -29,12 +29,14 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         which finds stable fixed points even if the initial guess is far from
         the fixed point. LSQTSQ also finds unstable fixed points but needs a
         good initial guess. Default is `ODE`.
-                
+
         ODE:
             Solves the initial value problem
               dnu / ds = - nu + firing_rate_func(nu)
-            with initial value `nu_0` until the criterion for a self-consistent
-            solution
+            with initial value `nu_0` on the interval [0, t_max_ODE].
+            The final value at `t_max_ODE` is used as a new initial value
+            and the initial value problem is solved again. This procedure
+            is iterated until the criterion for a self-consistent solution
               max( abs(nu[t_max_ODE-1] - nu[t_max_ODE]) ) < eps_tol
             is fulfilled. Raises an error if this does not happen within
             `maxiter_ODE` iterations.
@@ -48,9 +50,12 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         Maximal incremental stepsize at which to stop the iteration procedure.
         Default is 1e-7.
     t_max_ODE : int
+        Determines the interval [0, t_max_ODE] on which the initial value
+        problem for the method `ODE` is solved in a single iteration.
         Default is 1000.
     maxiter_ODE : int
-        Default is 1000.
+        Determines the maximum number of iterations of the initial value
+        problem for the method `ODE`. Default is 1000.
     """
 
     dimension = input_params['K'].shape[0]
