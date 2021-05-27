@@ -8,7 +8,6 @@ from scipy.special import (
     erfcx as _erfcx,
     )
 
-from .. import ureg as ureg
 from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
                      _cache)
@@ -921,7 +920,7 @@ def effective_connectivity(network):
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
     return _cache(network, _effective_connectivity, params,
-                  _prefix + 'effective_connectivity', 'hertz / volt')
+                  _prefix + 'effective_connectivity')
 
 
 def _effective_connectivity(transfer_function, D, J, K, tau_m):
