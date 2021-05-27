@@ -86,6 +86,7 @@ class Test_Network_functions_give_correct_results:
     def test_sensitivity_measure(self, network, std_results):
         lmt.lif.exp.working_point(network)
         lmt.lif.exp.transfer_function(network)
+        lmt.network_properties.delay_dist_matrix(network)
         lmt.lif.exp.effective_connectivity(network)
         sm = lmt.lif.exp.sensitivity_measure(
             network,)
@@ -94,6 +95,7 @@ class Test_Network_functions_give_correct_results:
     def test_power_spectra(self, network, std_results):
         lmt.lif.exp.working_point(network)
         lmt.lif.exp.transfer_function(network)
+        lmt.network_properties.delay_dist_matrix(network)
         lmt.lif.exp.effective_connectivity(network)
         ps = lmt.lif.exp.power_spectra(network)
         assert_allclose(ps, std_results[self.prefix + 'power_spectra'])
@@ -143,18 +145,17 @@ class Test_saving_and_loading:
                       std_input=loaded_std)
         check_quantity_dicts_are_equal(saved, loaded)
     
-    @pytest.mark.xfail
     def test_delay_dist_matrix(self, network, tmpdir):
-        saved = network.delay_dist_matrix()
+        saved = lmt.network_properties.delay_dist_matrix(network)
         save_and_load(network, tmpdir)
-        loaded = network.results[self.prefix + 'delay_dist_matrix']
+        loaded = network.results['D']
         assert_quantity_allclose(saved, loaded)
     
-    @pytest.mark.xfail
     def test_delay_dist_matrix_single(self, network, tmpdir):
-        saved = network.delay_dist_matrix(network.analysis_params['omega'])
+        saved = lmt.network_properties.delay_dist_matrix(
+            network, [network.analysis_params['omega'] / 2 / np.pi])
         save_and_load(network, tmpdir)
-        loaded = network.results[self.prefix + 'delay_dist_matrix_single']
+        loaded = network.results['D']
         assert_quantity_allclose(saved, loaded)
     
     def test_transfer_function(self, network, tmpdir):
@@ -164,17 +165,18 @@ class Test_saving_and_loading:
         loaded = network.results[self.prefix + 'transfer_function']
         assert_quantity_allclose(saved, loaded)
     
-    @pytest.mark.xfail
     def test_transfer_function_single(self, network, tmpdir):
-        network.working_point()
-        saved = network.transfer_function(network.analysis_params['omega'])
+        lmt.lif.exp.working_point(network)
+        saved = lmt.lif.exp.transfer_function(
+            network, network.analysis_params['omega'] / 2 / np.pi)
         save_and_load(network, tmpdir)
-        loaded = network.results['transfer_function_single']
+        loaded = network.results[self.prefix + 'transfer_function']
         assert_quantity_allclose(saved, loaded)
     
     def test_sensitivity_measure(self, network, tmpdir):
         lmt.lif.exp.working_point(network)
         lmt.lif.exp.transfer_function(network)
+        lmt.network_properties.delay_dist_matrix(network)
         lmt.lif.exp.effective_connectivity(network)
         sm_saved = lmt.lif.exp.sensitivity_measure(network)
         save_and_load(network, tmpdir)
@@ -184,40 +186,11 @@ class Test_saving_and_loading:
     def test_power_spectra(self, network, tmpdir):
         lmt.lif.exp.working_point(network)
         lmt.lif.exp.transfer_function(network)
+        lmt.network_properties.delay_dist_matrix(network)
         lmt.lif.exp.effective_connectivity(network)
         saved = lmt.lif.exp.power_spectra(network)
         save_and_load(network, tmpdir)
         loaded = network.results[self.prefix + 'power_spectra']
-        assert_quantity_allclose(saved, loaded)
-    
-    @pytest.mark.xfail
-    def test_eigenvalue_spectra(self, network, tmpdir):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function()
-        saved = network.eigenvalue_spectra('MH')
-        save_and_load(network, tmpdir)
-        loaded = network.results['eigenvalue_spectra']
-        assert_quantity_allclose(saved, loaded)
-    
-    @pytest.mark.xfail
-    def test_r_eigenvec_spectra(self, network, tmpdir):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function()
-        saved = network.r_eigenvec_spectra('MH')
-        save_and_load(network, tmpdir)
-        loaded = network.results['r_eigenvec_spectra']
-        assert_quantity_allclose(saved, loaded)
-    
-    @pytest.mark.xfail
-    def test_l_eigenvec_spectra(self, network, tmpdir):
-        network.working_point()
-        network.delay_dist_matrix()
-        network.transfer_function()
-        saved = network.l_eigenvec_spectra('MH')
-        save_and_load(network, tmpdir)
-        loaded = network.results['l_eigenvec_spectra']
         assert_quantity_allclose(saved, loaded)
     
     @pytest.mark.xfail
@@ -283,8 +256,7 @@ class Test_temporary_storage_of_results:
     
     def test_delay_dist_matrix(self, network):
         delay_dist_matrix = lmt.network_properties.delay_dist_matrix(network)
-        assert_allclose(delay_dist_matrix,
-                        network.network_params['D'])
+        assert_allclose(delay_dist_matrix, network.results['D'])
 
     def test_transfer_function(self, network):
         lmt.lif.exp.working_point(network)
@@ -316,6 +288,7 @@ class Test_temporary_storage_of_results:
     def test_sensitivity_measure(self, network):
         lmt.lif.exp.working_point(network)
         lmt.lif.exp.transfer_function(network)
+        lmt.network_properties.delay_dist_matrix(network)
         lmt.lif.exp.effective_connectivity(network)
         sensitivity_measure = lmt.lif.exp.sensitivity_measure(network)
         assert_allclose(sensitivity_measure,
@@ -324,6 +297,7 @@ class Test_temporary_storage_of_results:
     def test_power_spectra(self, network):
         lmt.lif.exp.working_point(network)
         lmt.lif.exp.transfer_function(network)
+        lmt.network_properties.delay_dist_matrix(network)
         lmt.lif.exp.effective_connectivity(network)
         power_spectra = lmt.lif.exp.power_spectra(network)
         assert_allclose(power_spectra,
@@ -386,6 +360,6 @@ class Test_negative_firing_rate_regime:
         analysis_params_file = ('tests/fixtures/integration/config/'
                                 'analysis_params.yaml')
         network = lmt.models.Microcircuit(negative_rate_params_file,
-                                            analysis_params_file)
+                                          analysis_params_file)
         firing_rates = lmt.lif.exp.firing_rates(network)
         assert not any(firing_rates < 0)

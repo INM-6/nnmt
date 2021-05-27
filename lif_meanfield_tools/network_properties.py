@@ -1,25 +1,29 @@
 import numpy as np
 from scipy.special import erf as _erf
+from .utils import _cache
 
 import lif_meanfield_tools as lmt
 
 ureg = lmt.ureg
 
 
-def delay_dist_matrix(network):
+def delay_dist_matrix(network, freqs=None):
     """Wrapper for ``_delay_dist_matrix``."""
     params = {}
     try:
         params['Delay'] = network.network_params['Delay']
         params['Delay_sd'] = network.network_params['Delay_sd']
         params['delay_dist'] = network.network_params['delay_dist']
-        params['omegas'] = network.analysis_params['omegas']
+        if freqs is None:
+            params['omegas'] = network.analysis_params['omegas']
+        else:
+            params['omegas'] = np.atleast_1d(freqs) * 2 * np.pi
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for calculating the delay'
                            ' distribution matrix.')
     lmt.utils._to_si_units(params)
     lmt.utils._strip_units(params)
-    return _delay_dist_matrix(**params)
+    return _cache(network, _delay_dist_matrix, params, 'D')
 
 
 @lmt.utils._check_positive_params

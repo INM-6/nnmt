@@ -903,7 +903,7 @@ def effective_connectivity(network):
         Effective connectivity matrix.
     """
 
-    list_of_params = ['D', 'J', 'K', 'tau_m']
+    list_of_params = ['J', 'K', 'tau_m']
 
     try:
         params = {key: network.network_params[key] for key in list_of_params}
@@ -916,6 +916,7 @@ def effective_connectivity(network):
     try:
         params['transfer_function'] = (
             network.results['lif.exp.transfer_function'])
+        params['D'] = network.results['D']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
