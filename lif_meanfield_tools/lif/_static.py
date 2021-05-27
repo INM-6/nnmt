@@ -164,8 +164,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     # contribution from within the network
     m0 = np.dot(K * J, tau_m * nu)
     # contribution from external sources
-    tau_m = np.atleast_1d(tau_m)
-    m_ext = np.dot(tau_m[np.newaxis].T * K_ext * J_ext, nu_ext)[0]
+    m_ext = tau_m * np.dot(K_ext * J_ext, nu_ext)
     # add them up
     m = m0 + m_ext
     return m
@@ -176,8 +175,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     # contribution from within the network to variance
     var0 = np.dot(K * J**2, tau_m * nu)
     # contribution from external sources to variance
-    tau_m = np.atleast_1d(tau_m)
-    var_ext = np.dot(tau_m[np.newaxis].T * K_ext * J_ext**2, nu_ext)[0]
+    var_ext = tau_m * np.dot(K_ext * J_ext**2, nu_ext)
     # add them up
     var = var0 + var_ext
     # standard deviation is square root of variance
