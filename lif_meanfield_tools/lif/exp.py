@@ -492,6 +492,9 @@ def transfer_function(network, freqs=None, method='shift',
     method : str
         Method used to calculate the tranfser function. Options: 'shift' or
         'taylor'. Default is 'shift'.
+    synaptic_filter : bool
+        Whether an additional synaptic low pass filter is to be used or not.
+        Default is True.
 
     Network parameters
     ------------------
@@ -544,6 +547,8 @@ def transfer_function(network, freqs=None, method='shift',
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
+    params['synaptic_filter'] = synaptic_filter
+
     if method == 'shift':
         return _cache(network, _transfer_function_shift, params,
                       _prefix + 'transfer_function',
@@ -589,6 +594,9 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Relative reset potential.
     omegas: Quantity(float, 'hertz')
         Input frequency to population.
+    synaptic_filter : bool
+        Whether an additional synaptic low pass filter is to be used or not.
+        Default is True.
 
     Returns:
     --------
@@ -669,6 +677,9 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Relative reset potential.
     omega : Quantity(flaot, 'hertz')
         Input frequency to population.
+    synaptic_filter : bool
+        Whether an additional synaptic low pass filter is to be used or not.
+        Default is True.
 
     Returns
     -------
