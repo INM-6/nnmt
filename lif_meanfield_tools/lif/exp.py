@@ -64,8 +64,6 @@ def working_point(network, method='shift', **kwargs):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    tau_m_ext : float or 1d array
-        Membrane time constants of external populations.
     method : str
         Method used to calculate the firing rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
@@ -122,8 +120,6 @@ def firing_rates(network, method='shift', **kwargs):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    tau_m_ext : float or 1d array
-        Membrane time constants of external populations.
     method: str
         Method used to calculate the firing rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
@@ -142,7 +138,6 @@ def firing_rates(network, method='shift', **kwargs):
         'tau_m', 'tau_s', 'tau_r',
         'K_ext', 'J_ext',
         'nu_ext',
-        'tau_m_ext',
         ]
 
     try:
@@ -161,7 +156,7 @@ def firing_rates(network, method='shift', **kwargs):
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
-                  nu_ext, tau_m_ext, method='shift', **kwargs):
+                  nu_ext, method='shift', **kwargs):
     """
     Plain calculation of firing rates for exp PSCs.
 
@@ -181,7 +176,6 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'J_ext': J_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
-        'tau_m_ext': tau_m_ext,
         }
     
     if method == 'shift':
@@ -392,16 +386,13 @@ def mean_input(network):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    tau_m_ext : float or 1d array
-        Membrane time constants of external populations.
 
     Returns
     -------
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
-                      'tau_m_ext']
+    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
     try:
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
@@ -415,14 +406,14 @@ def mean_input(network):
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
-def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of mean neuronal input.
 
     See :code:`lif.exp.mean_input` for full documentation.
     """
     return _static._mean_input(nu, J, K, tau_m,
-                               J_ext, K_ext, nu_ext, tau_m_ext)
+                               J_ext, K_ext, nu_ext)
 
 
 def std_input(network):
@@ -456,16 +447,13 @@ def std_input(network):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    tau_m_ext : float or 1d array
-        Membrane time constants of external populations.
 
     Returns
     -------
     Quantity(np.array, 'volt')
         Array of mean inputs to each population in V.
     '''
-    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext',
-                      'tau_m_ext']
+    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
     try:
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
@@ -479,17 +467,18 @@ def std_input(network):
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
-def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of standard deviation of neuronal input.
 
     See :code:`lif.exp.mean_input` for full documentation.
     """
     return _static._std_input(nu, J, K, tau_m,
-                              J_ext, K_ext, nu_ext, tau_m_ext)
+                              J_ext, K_ext, nu_ext)
 
 
-def transfer_function(network, freqs=None, method='shift'):
+def transfer_function(network, freqs=None, method='shift',
+                      synaptic_filter=True):
     """
     Calculates transfer function.
 

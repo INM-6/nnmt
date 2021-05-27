@@ -11,7 +11,7 @@ plt.style.use('frontiers.mplstyle')
 # common parameters for all plots
 params_all = dict(
     # time constants in s
-    tau_m=20.*1e-3, tau_r=2.*1e-3, tau_m_ext=20.*1e-3,
+    tau_m=20.*1e-3, tau_r=2.*1e-3,
     # reset and threshold voltage relative to leak in mV
     V_0_rel=10., V_th_rel=20.,
 )

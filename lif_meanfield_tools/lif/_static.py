@@ -150,8 +150,7 @@ def _input_calc(network, prefix, input_func):
             network.results[prefix + 'firing_rates'].to_base_units().magnitude)
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
-    list_of_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext',
-                      'tau_m_ext']
+    list_of_params = ['K', 'J', 'tau_m', 'nu_ext', 'K_ext', 'J_ext']
     try:
         params = {key: network.network_params[key] for key in list_of_params}
     except KeyError as param:
@@ -160,23 +159,25 @@ def _input_calc(network, prefix, input_func):
     return input_func(rates, **params) * ureg.V
 
 
-def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """ Compute mean input without quantities. """
     # contribution from within the network
     m0 = np.dot(K * J, tau_m * nu)
     # contribution from external sources
-    m_ext = np.dot(K_ext * J_ext, tau_m_ext * nu_ext)
+    tau_m = np.atleast_1d(tau_m)
+    m_ext = np.dot(tau_m[np.newaxis].T * K_ext * J_ext, nu_ext)[0]
     # add them up
     m = m0 + m_ext
     return m
 
 
-def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, tau_m_ext):
+def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """ Compute standard deviation of input without quantities. """
     # contribution from within the network to variance
     var0 = np.dot(K * J**2, tau_m * nu)
     # contribution from external sources to variance
-    var_ext = np.dot(K_ext * J_ext**2, tau_m_ext * nu_ext)
+    tau_m = np.atleast_1d(tau_m)
+    var_ext = np.dot(tau_m[np.newaxis].T * K_ext * J_ext**2, nu_ext)[0]
     # add them up
     var = var0 + var_ext
     # standard deviation is square root of variance

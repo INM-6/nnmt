@@ -29,13 +29,6 @@ nu_ext:
     - 2
     - 3
   unit: Hz
-
-tau_m_ext:
-  val:
-    - 15.0
-    - 20.0
-    - 18.0
-  unit: ms
   
 J_ext:
   val:

@@ -27,7 +27,3 @@ J_ext:
 K_ext:
   val:
     - 123
-
-tau_m_ext:
-  val: 15.0
-  unit: ms

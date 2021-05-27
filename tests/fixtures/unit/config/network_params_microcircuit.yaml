@@ -256,12 +256,6 @@ w_ext:
   unit: pA
 
 
-# membrane time constant
-tau_m_ext:
-  val: 10.0
-  unit: ms
-
-
 # results from fit_transfer_function
 tau_rate:
   val:

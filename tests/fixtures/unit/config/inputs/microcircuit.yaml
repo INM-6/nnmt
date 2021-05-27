@@ -152,10 +152,6 @@ nu_ext:
 tau_m:
   val: 10.0
   unit: ms
-  
-tau_m_ext:
-  val: 10
-  unit: ms
 
 K_ext:
   - 1600

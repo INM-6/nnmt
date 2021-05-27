@@ -247,7 +247,6 @@ class Test_mean_input_wrapper:
         empty_network.network_params['tau_m'] = 1
         empty_network.network_params['K'] = 1
         empty_network.network_params['J'] = 1
-        empty_network.network_params['tau_m_ext'] = 1
         empty_network.network_params['K_ext'] = 1
         empty_network.network_params['J_ext'] = 1
         empty_network.network_params['nu_ext'] = 1
@@ -290,7 +289,6 @@ class Test_std_input_wrapper:
         empty_network.network_params['tau_m'] = 1
         empty_network.network_params['K'] = 1
         empty_network.network_params['J'] = 1
-        empty_network.network_params['tau_m_ext'] = 1
         empty_network.network_params['K_ext'] = 1
         empty_network.network_params['J_ext'] = 1
         empty_network.network_params['nu_ext'] = 1
