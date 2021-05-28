@@ -254,6 +254,12 @@ def _to_si_units(dict):
             pass
         
         
+def _convert_to_si_and_strip_units(dict):
+    """Converts dict of quantities to si units and strips them."""
+    _to_si_units(dict)
+    _strip_units(dict)
+        
+        
 def _convert_from_si_to_prefixed(magnitude, unit):
     """ Converts a SI magnitude to the given unit. """
     try:
