@@ -1,0 +1,64 @@
+mu_set:
+  val:
+    - -2.0
+    - 3.0
+  unit: mV
+  
+sigma_set:
+  val:
+    - 2.0
+    - 3.0
+  unit: mV
+
+tau_m:
+  val:
+    - 10.0
+    - 15.0
+  unit: ms
+  
+tau_r:
+  val: 2.0
+  unit: ms
+
+tau_s:
+  val: 0.5
+  unit: ms
+
+V_th_rel:
+  val: 15.0
+  unit: mV
+
+V_0_rel:
+  val: 0.0
+  unit: mV
+  
+  
+J:
+  val:
+    - - 0.2
+      - -0.6
+    - - 0.2
+      - -0.6
+  unit: mV
+  
+K:
+  val:
+    - - 8765
+      - 2345
+    - - 8987
+      - 2123
+  
+J_ext:
+  val:
+    - - 0.1
+      - -0.1
+    - - 0.1
+      - -0.1
+  unit: mV
+
+K_ext:
+  val:
+    - - 1234
+      - 2134
+    - - 3214
+      - 4321

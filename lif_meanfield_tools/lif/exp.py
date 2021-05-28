@@ -1188,3 +1188,153 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
         C = np.dot(Q, np.dot(A, np.transpose(np.conjugate(Q))))
         power[i] = np.absolute(np.diag(C))
     return power
+def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
+    """
+    Calculate external rates needed to get fixed mean and std input.
+    
+    Uses least square method to find best fitting solution for external rates
+    such that the mean and standard deviation of the input to the neuronal
+    populations is as close as possible to ``mu_set`` and ``sigma_set``.
+    
+    Generalization of equation E1 of Helias et al. 2013 and the corrected
+    version in appendix F of Senk et al. 2020.
+
+    Parameters
+    ----------
+    network : lif_meanfield_tools.models.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+    mu_set : float or np.array
+        Mean neuron activity in V.
+    sigma_set : float or np.array
+        Standard deviation of neuron activity in V.
+    method : str
+        Method used to calculate the target rates. Options: 'shift', 'taylor'.
+        Default is 'shift'.
+
+    Network parameters
+    ------------------
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    V_th_rel : float or np.array
+        Relative threshold potential in V.
+    V_0_rel : float or np.array
+        Relative reset potential in V.
+    tau_m : float or 1d array
+        Membrane time constant in seconds.
+    tau_r : float or 1d array
+        Refractory time in seconds.
+    tau_s : float or 1d array
+        Synaptic time constant in seconds.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+
+    Returns
+    -------
+    np.ndarray
+        External rates in Hz.
+    """
+
+    list_of_params = ['J', 'K', 'V_0_rel', 'V_th_rel',
+                      'tau_m', 'tau_r', 'tau_s',
+                      'J_ext', 'K_ext']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for calculating the effective "
+            "connectivity!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    
+    params['mu_set'] = mu_set
+    params['sigma_set'] = sigma_set
+    params['method'] = method
+
+    return _cache(network, _external_rates_for_fixed_input, params,
+                  _prefix + 'external_rates_for_fixed_input')
+
+
+@_check_positive_params
+def _external_rates_for_fixed_input(mu_set, sigma_set,
+                                    J, K, V_0_rel, V_th_rel,
+                                    tau_m, tau_r, tau_s,
+                                    J_ext, K_ext,
+                                    method='shift'):
+    """
+    Calculate additional external excitatory and inhibitory Poisson input
+    rates such that the input fixed by the mean and standard deviation
+    is attained.
+    Correction of equation E1 of:
+    Helias M, Tetzlaff T, Diesmann M. Echoes in correlated neural systems.
+    New J Phys. 2013;15(2):023002. doi:10.1088/1367-2630/15/2/023002.
+    See appendix F of Senk et al. 2020.
+
+    Parameters
+    ----------
+    mu_set : float or np.array
+        Mean neuron activity in V.
+    sigma_set : float or np.array
+        Standard deviation of neuron activity in V.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    V_th_rel : float or np.array
+        Relative threshold potential in V.
+    V_0_rel : float or np.array
+        Relative reset potential in V.
+    tau_m : float or 1d array
+        Membrane time constant in seconds.
+    tau_r : float or 1d array
+        Refractory time in seconds.
+    tau_s : float or 1d array
+        Synaptic time constant in seconds.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    method : str
+        Method used to calculate the target rates. Options: 'shift', 'taylor'.
+        Default is 'shift'.
+
+    Returns
+    -------
+    np.ndarray
+        External rates in Hz.
+    """
+    # target rates for set mean and standard deviation of input
+    if method == 'shift':
+        target_rates = _firing_rate_shift(V_0_rel, V_th_rel,
+                                          mu_set, sigma_set,
+                                          tau_m, tau_r, tau_s)
+    elif method == 'taylor':
+        target_rates = _firing_rate_taylor(V_0_rel, V_th_rel,
+                                           mu_set, sigma_set,
+                                           tau_m, tau_r, tau_s)
+    else:
+        raise ValueError('Chosen method not implemented')
+
+    # local only contributions
+    mu_loc = _mean_input(target_rates, J, K, tau_m,
+                         J_ext=0, K_ext=0, nu_ext=0)
+    sigma_loc = _std_input(target_rates, J, K, tau_m,
+                           J_ext=0, K_ext=0, nu_ext=0)
+    
+    # external working point that is to be achieved
+    mu_ext = mu_set - mu_loc
+    var_ext = sigma_set**2 - sigma_loc**2
+    
+    # the linear set of equations that needs to be solved
+    LHS = np.append(K_ext * J_ext, K_ext * J_ext**2, axis=0)
+    RHS = np.append(mu_ext / tau_m, var_ext / tau_m)
+    
+    # find a solution as good as possible using least square method
+    nu_ext = np.linalg.lstsq(LHS, RHS)[0]
+
+    return nu_ext

@@ -129,5 +129,11 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_propagator.h5')
+        elif module == 'external_rates':
+            create_and_save_fixtures(
+                lmt.lif.exp._external_rates_for_fixed_input,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_external_rates_for_fixed_input.h5')
         else:
             print('No such module')

@@ -587,3 +587,19 @@ class Test_power_spectra:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
+
+
+class Test_external_rates_for_fixed_input:
+
+    func = staticmethod(exp._external_rates_for_fixed_input)
+    fixtures = 'lif_exp_external_rates_for_fixed_input.h5'
+
+    def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_params,
+                                             pos_keys)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        print(output)
+        assert_allclose(self.func(**params), output)
