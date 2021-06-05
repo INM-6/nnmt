@@ -19,6 +19,9 @@ dependencies:
   - requests
   - setuptools
   - docopt
+  - sphinx
+  - numpydoc
+  - sphinx-autoapi
   - pip:
     - pint
     - h5py_wrapper
