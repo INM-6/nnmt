@@ -1,15 +1,15 @@
-name: lmt
+name: lmt_deprecated
 channels:
   - defaults
 dependencies:
-  - python
+  - python=3.9.4
   - pip
   - ipython
   - numpy
   - scipy
   - cython
   - matplotlib
-  - h5py
+  - h5py=2.10.*
   - pyyaml
   - pytest=5.4.*
   - pytest-cov=2.9.*
