@@ -202,6 +202,15 @@ nu_i_ext:
     - 0.0
   unit: Hz
 
+# PSC amplitude
+w_ext:
+  val: 87.8
+  unit: pA
+  
+tau_m_ext:
+  val: 10.0
+  unit: ms
+
 
 
 

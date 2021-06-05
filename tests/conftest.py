@@ -20,10 +20,12 @@ output_test_fixtures: parametrizes needed args and results for tested regimes.
 import pytest
 import numpy as np
 from inspect import signature
+import h5py_wrapper as h5
 
 import lif_meanfield_tools as lmt
 from lif_meanfield_tools.input_output import load_val_unit_dict_from_h5
 from lif_meanfield_tools import ureg
+from lif_meanfield_tools.utils import _strip_units
 
 
 # path to network configuration files and analysis parameters
@@ -52,6 +54,8 @@ all_pos_keys = ['C',
                 'tau_s',
                 'tau_r',
                 'nu_ext',
+                'K_ext',
+                'tau_m_ext'
                 ]
 
 # list of tested parameter regimes for correct output tests
@@ -107,11 +111,27 @@ def unit_fixture_path():
 @pytest.fixture
 def network():
     """Standard microcircuit network with testing analysis params."""
-    network = lmt.Network(
+    network = lmt.models.Microcircuit(
         network_params=(config_path + 'network_params_microcircuit.yaml'),
         analysis_params=(config_path + 'analysis_params_test.yaml')
         )
     return network
+
+
+@pytest.fixture
+def microcircuit():
+    """Standard microcircuit network with testing analysis params."""
+    microcircuit = lmt.models.Microcircuit(
+        network_params=(config_path + 'network_params_microcircuit.yaml'),
+        analysis_params=(config_path + 'analysis_params_test.yaml')
+        )
+    return microcircuit
+
+
+@pytest.fixture
+def empty_network():
+    """Network object with no parameters."""
+    return lmt.models.Network()
 
 
 @pytest.fixture
@@ -379,6 +399,19 @@ def std_params(request, all_std_params):
 
 
 @pytest.fixture
+def std_unitless_params(request, all_std_params):
+    """
+    Returns set of standard params needed by requesting tested function.
+    
+    For using this fixture, the function test class needs to have a class
+    attribute `func`, which is the tested function as a staticmethod.
+    """
+    params = get_required_params(request.cls.func, all_std_params)
+    _strip_units(params)
+    return params
+
+
+@pytest.fixture
 def std_params_single_population(request, all_std_params_single_population):
     """
     Returns set of standard params needed by requesting tested function.
@@ -506,3 +539,24 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                     in zip(output, params)]
         metafunc.parametrize("output_fixtures_mean_driven", fixtures,
                              ids=ids_all_regimes[1:])
+
+    elif "unit_fixtures" in metafunc.fixturenames:
+        file = metafunc.cls.fixtures
+        fixtures = h5.load(unit_fix_path + file)
+        ids = sorted(fixtures.keys())
+        fixture_list = [dict(output=fixtures[id]['output'],
+                        params=fixtures[id]['params'])
+                        for id in ids]
+        # import pdb; pdb.set_trace()
+        metafunc.parametrize("unit_fixtures", fixture_list, ids=ids)
+
+    elif "unit_fixtures_fully_vectorized" in metafunc.fixturenames:
+        file = metafunc.cls.fixtures
+        fixtures = h5.load(unit_fix_path + file)
+        ids = sorted(fixtures.keys())
+        fixture_list = [dict(output=fixtures[id]['output'],
+                        params=fixtures[id]['params'])
+                        for id in ids if id == 'fully_vectorized']
+        # import pdb; pdb.set_trace()
+        metafunc.parametrize("unit_fixtures_fully_vectorized", fixture_list,
+                             ids=['fully_vectorized'])

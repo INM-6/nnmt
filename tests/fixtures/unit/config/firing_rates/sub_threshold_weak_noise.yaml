@@ -1,0 +1,34 @@
+tau_m:
+  val: 10.0
+  unit: ms
+  
+tau_r:
+  val: 2.0
+  unit: ms
+  
+tau_s:
+  val: 1
+  unit: ms
+  
+V_th_rel:
+  val: 20.0
+  unit: mV
+  
+V_0_rel:
+  val: 0.0
+  unit: mV
+  
+mu:
+  val:
+    - 12.0
+    - 13.0
+    - 14.0
+    - 15.0
+  unit: mV
+sigma:
+  val:
+    - 2.0
+    - 2.4
+    - 2.3
+    - 2.9
+  unit: mV
