@@ -21,7 +21,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'lif_meanfield_tools'
+project = 'NNMT'
 copyright = '2021, Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Karolína Korvasová, Hannah Bos, Jannis Schuecker, Moritz Helias'
 author = 'Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Karolína Korvasová, Hannah Bos, Jannis Schuecker, Moritz Helias'
 
@@ -41,7 +41,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
-    'sphinx.ext.viewcode',
+    # 'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     # 'sphinx.ext.napoleon',
     'numpydoc',
@@ -95,4 +95,22 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
+
+# The name of the image file (relative to this directory) to place at the top
+# of the sidebar
+html_logo = 'images/logo.png'
+
+# html_copy_source = False
+
+# html_show_sourcelink = False
+
+html_theme_options = {
+    'description': 'An awesome toolbox for network model analysis.',
+    }
+
+# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+html_show_sphinx = False
+
+# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+html_show_copyright = True

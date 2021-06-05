@@ -1,36 +1,21 @@
-Welcome to lif_meanfield_tools's documentation!
-===============================================
-
-Test
-^^^^
-
-This is the package
-
-
-.. autosummary::
-  :toctree: _autosummary
-  :template: custom-module-template.rst
-  :recursive:
-
-  lif_meanfield_tools
-   
-Readme
-^^^^^^
-
-.. include:: readme.rst
-
-Table of Contents
-^^^^^^^^^^^^^^^^^
+This is NNMT!
+=============
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
    
    installation
    tutorial
-   functions_by_module
+   models
+   network_properties
+   lif
    license
    acknowledgments
    citing
+   
+.. README
+.. include:: readme.rst
 
 Indices and tables
 ==================
