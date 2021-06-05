@@ -3,11 +3,6 @@ Handles reading-in yaml files and converting the physical parameters, specified
 in yaml files, to theoretical parameters, needed for usage of given implemented
 functions (they rely on a redefinition of quantities). Handles output-writing
 and provides function for creating hashes to uniquely identify output files.
-
-Usage: io.py [options]
-
-Options:
-    -h, --help       show extensive usage information
 '''
 
 from __future__ import print_function

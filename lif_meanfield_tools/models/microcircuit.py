@@ -1,3 +1,8 @@
+"""
+Module that defines the microcircuit.
+
+"""
+
 import numpy as np
 
 from .network import Network
