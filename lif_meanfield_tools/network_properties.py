@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+'''
+Calculations of network properties like the delay distribution matrix.
+
+Functions
+*********
+
+.. autosummary::
+    :toctree: _toctree/network_properties/
+    
+    delay_dist_matrix
+    _delay_dist_matrix
+    
+    
+Important Information
+*********************
+
+This is so cool!
+'''
+
+
 import numpy as np
 from scipy.special import erf as _erf
 from .utils import _cache

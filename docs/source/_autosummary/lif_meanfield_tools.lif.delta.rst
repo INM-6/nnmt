@@ -1,4 +1,4 @@
-lif\_meanfield\_tools.lif.delta
+﻿lif\_meanfield\_tools.lif.delta
 ===============================
 
 .. automodule:: lif_meanfield_tools.lif.delta

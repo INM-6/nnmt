@@ -1,4 +1,4 @@
-lif\_meanfield\_tools.models.microcircuit
+﻿lif\_meanfield\_tools.models.microcircuit
 =========================================
 
 .. automodule:: lif_meanfield_tools.models.microcircuit

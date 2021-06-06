@@ -1,4 +1,4 @@
-lif\_meanfield\_tools.models.network
+﻿lif\_meanfield\_tools.models.network
 ====================================
 
 .. automodule:: lif_meanfield_tools.models.network

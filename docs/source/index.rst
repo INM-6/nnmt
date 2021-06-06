@@ -1,3 +1,4 @@
+=============
 This is NNMT!
 =============
 
@@ -7,8 +8,9 @@ This is NNMT!
    
    installation
    tutorial
-   models
+   input_output
    network_properties
+   models
    lif
    license
    acknowledgments
@@ -17,8 +19,9 @@ This is NNMT!
 .. README
 .. include:: readme.rst
 
+******************
 Indices and tables
-==================
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`

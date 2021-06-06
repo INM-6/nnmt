@@ -1,9 +1,44 @@
+# -*- coding: utf-8 -*-
 '''
 Handles reading-in yaml files and converting the physical parameters, specified
 in yaml files, to theoretical parameters, needed for usage of given implemented
 functions (they rely on a redefinition of quantities). Handles output-writing
 and provides function for creating hashes to uniquely identify output files.
+This is a test and I hope it works.
+
+Conversions
+***********
+
+.. autosummary::
+    :toctree: _toctree/input_output/
+    
+    val_unit_to_quantities
+    quantities_to_val_unit
+    
+Saving
+******
+
+.. autosummary::
+    :toctree: _toctree/input_output/
+    
+    save_quantity_dict_to_yaml
+    save_quantity_dict_to_h5
+    save_network
+    
+Loading
+*******
+
+.. autosummary::
+    :toctree: _toctree/input_output/
+    
+    load_val_unit_dict_from_yaml
+    load_val_unit_dict_from_h5
+    load_network
+    load_unit_yaml
+    
 '''
+
+
 
 from __future__ import print_function
 from collections.abc import Iterable
@@ -21,6 +56,7 @@ from . import ureg
 def convert_arrays_in_dict_to_lists(adict):
     """
     Recursively searches through a dict and replaces all numpy arrays by lists.
+    
     """
     converted = copy.deepcopy(adict)
     for key, value in converted.items():
@@ -42,16 +78,15 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     Quantities or names without units, are just stored the way they are.
 
-    Parameters:
-    -----------
-    dict_of_val_unit_dicts: dict
-        dictionary of format {'<quantity_key1>':{'val':<value1>,
-                                                 'unit':<unit1>},
-                              '<quantity_key2>':<value2>,
-                                                 ...}
+    Parameters
+    ----------
+    dict_of_val_unit_dicts : dict
+        dictionary of format
+        {'<quantity_key1>': {'val':<value1>, 'unit':<unit1>},
+        '<quantity_key2>':<value2>, ...}
 
-    Returns:
-    --------
+    Returns
+    -------
     dict
         Converted dictionary of format explained above.
     """
@@ -91,14 +126,14 @@ def quantities_to_val_unit(dict_of_quantities):
     Lists of quantities are handled seperately. Anything else but quantities,
     is stored just the way it is given.
 
-    Parameters:
-    -----------
-    dict_containing_quantities: dict
+    Parameters
+    ----------
+    dict_containing_quantities : dict
         dictionary containing only quantities (pint package) of format
         {'<quantity_key1>':<quantity1>, ...}
 
-    Returns:
-    --------
+    Returns
+    -------
     dict
         converted dictionary
     """
@@ -134,11 +169,11 @@ def save_quantity_dict_to_yaml(file, qdict):
     
     Converts dict of quantities to val unit dicts and saves them in yaml file.
     
-    Parameters:
-    -----------
-    file: str
+    Parameters
+    ----------
+    file : str
         Name of file.
-    qdict: dict
+    qdict : dict
         Dictionary containing quantities.
     """
     converted = quantities_to_val_unit(qdict)
@@ -154,8 +189,8 @@ def load_val_unit_dict_from_yaml(file):
     Load val unit dictionary from yaml file and convert it to dictionary of
     quantities.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     file : str
         string specifying path to yaml file containing parameters in format
         <parameter1>:
@@ -164,8 +199,8 @@ def load_val_unit_dict_from_yaml(file):
         <parameter2>: <value_without_unit>
         ...
 
-    Returns:
-    --------
+    Returns
+    -------
     dict
         dictionary containing all converted val unit dicts as quantities
     """
@@ -188,13 +223,13 @@ def save_quantity_dict_to_h5(file, qdict, overwrite=False):
     The quantity dictionary is first converted to a val unit dictionary and
     then saved to an h5 file.
 
-    Parameters:
-    -----------
-    file: str
+    Parameters
+    ----------
+    file : str
         String specifying output file name.
-    qdict: dict
+    qdict : dict
         Dictionary containing quantities.
-    overwrite: bool
+    overwrite : bool
         Whether h5 file should be overwritten, if already existing.
     """
     # convert data into format usable in h5 file

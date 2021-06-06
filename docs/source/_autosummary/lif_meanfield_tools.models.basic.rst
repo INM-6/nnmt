@@ -1,4 +1,4 @@
-lif\_meanfield\_tools.models.basic
+﻿lif\_meanfield\_tools.models.basic
 ==================================
 
 .. automodule:: lif_meanfield_tools.models.basic

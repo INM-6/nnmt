@@ -1,4 +1,4 @@
-lif\_meanfield\_tools.lif.exp
+﻿lif\_meanfield\_tools.lif.exp
 =============================
 
 .. automodule:: lif_meanfield_tools.lif.exp
@@ -15,6 +15,7 @@ lif\_meanfield\_tools.lif.exp
       :toctree:
    
       effective_connectivity
+      external_rates_for_fixed_input
       firing_rates
       mean_input
       power_spectra
