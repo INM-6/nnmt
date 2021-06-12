@@ -45,7 +45,7 @@ def delay_dist_matrix(network, freqs=None):
         
         And the following items in :code:`analysis_params`:
            
-            omegas : array_like
+            omegas : array_like, optional
                 The considered angular frequencies , if `freqs` is not passed
                 explicitely.
                 
@@ -82,7 +82,7 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
 
     See Also
     --------
-    delay_dist_matrix : Wrapper function.
+    delay_dist_matrix : Wrapper function with full documentation.
     '''
 
     omegas = np.array([np.ones(Delay.shape) * omega for omega in omegas])
