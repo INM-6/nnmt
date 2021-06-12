@@ -1188,6 +1188,8 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
         C = np.dot(Q, np.dot(A, np.transpose(np.conjugate(Q))))
         power[i] = np.absolute(np.diag(C))
     return power
+
+
 def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
     """
     Calculate external rates needed to get fixed mean and std input.

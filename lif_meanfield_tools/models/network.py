@@ -44,15 +44,15 @@ class Network():
         
     Methods
     -------
-    save :
+    save
         Save network to h5 file.
-    save_results :
+    save_results
         Saves results and parameters to h5 file.
-    load :
+    load
         Load network from h5 file.
-    show :
+    show
         Returns which results have already been calculated.
-    change_parameters :
+    change_parameters
         Change parameters and return network with specified parameters.
     """
     

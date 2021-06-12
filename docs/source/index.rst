@@ -12,6 +12,7 @@ This is NNMT!
    network_properties
    models
    lif
+   how_to_contribute
    license
    acknowledgments
    citing
