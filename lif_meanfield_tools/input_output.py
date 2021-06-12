@@ -36,8 +36,15 @@ Loading
     load_network
     load_unit_yaml
     
-'''
+Others
+******
 
+.. autosummary::
+    :toctree: _toctree/input_output/
+    
+    create_hash
+    
+'''
 
 
 from __future__ import print_function
@@ -57,6 +64,10 @@ def convert_arrays_in_dict_to_lists(adict):
     """
     Recursively searches through a dict and replaces all numpy arrays by lists.
     
+    Parameters
+    ----------
+    adict : dict
+        Dictionary to be converted.
     """
     converted = copy.deepcopy(adict)
     for key, value in converted.items():
@@ -72,7 +83,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     Recursively convert a dict of value-unit pairs to a dict of quantities.
 
     Combine value and unit of each quantity and save them in a dictionary
-    of the structure: {'<quantity_key1>':<quantity1>, ...}.
+    of the structure: :code:`{'<quantity_key1>':<quantity1>, ...}`.
 
     Lists are converted to numpy arrays and then converted to quantities.
 
@@ -80,10 +91,12 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     Parameters
     ----------
+    
     dict_of_val_unit_dicts : dict
-        dictionary of format
-        {'<quantity_key1>': {'val':<value1>, 'unit':<unit1>},
-        '<quantity_key2>':<value2>, ...}
+        Dictionary of the following format::
+           
+            {'<quantity_key1>':{'val':<value1>, 'unit':<unit1>},
+            '<quantity_key2>':<value2>, ...}
 
     Returns
     -------
@@ -128,9 +141,11 @@ def quantities_to_val_unit(dict_of_quantities):
 
     Parameters
     ----------
-    dict_containing_quantities : dict
-        dictionary containing only quantities (pint package) of format
-        {'<quantity_key1>':<quantity1>, ...}
+    dict_of_quantities : dict
+        Dictionary containing only quantities (pint package) of the following
+        format::
+        
+          {'<quantity_key1>':<quantity1>, ...}
 
     Returns
     -------
@@ -192,12 +207,16 @@ def load_val_unit_dict_from_yaml(file):
     Parameters
     ----------
     file : str
-        string specifying path to yaml file containing parameters in format
-        <parameter1>:
-            val: <value1>
-            unit: <unit1>
-        <parameter2>: <value_without_unit>
-        ...
+        String specifying path to yaml file containing parameters in the
+        following format
+        
+        .. code-block:: yaml
+        
+            <parameter1>:
+                val: <value1>
+                unit: <unit1>
+            <parameter2>: <value_without_unit>
+            ...
 
     Returns
     -------
@@ -249,9 +268,9 @@ def load_val_unit_dict_from_h5(file):
     The val unit dictionary is loaded from the h5 file and then converted to
     a dictionary containing quantities.
 
-    Parameters:
-    -----------
-    file: str
+    Parameters
+    ----------
+    file : str
         String specifying input file name.
     """
     try:
@@ -271,13 +290,13 @@ def save_network(file, network, overwrite=False):
     results_hash_dict) are stored. Quantities are converted to value-unit
     dictionaries.
     
-    Parameters:
-    -----------
-    file: str
+    Parameters
+    ----------
+    file : str
         Output file name.
-    network: Network object
+    network : Network object
         The network to be saved.
-    overwrite: bool
+    overwrite : bool
         Whether to overwrite an existing h5 file or not. If there already is
         one, h5py tries to update the h5 dictionary.
     """
@@ -292,20 +311,20 @@ def load_network(file):
     """
     Load network from h5 file.
     
-    Parameters:
-    -----------
-    file: str
+    Parameters
+    ----------
+    file : str
         Input file name.
     
-    Returns:
-    --------
-    network_params: dict
+    Returns
+    -------
+    network_params : dict
         Network parameters.
-    analysis_params: dict
+    analysis_params : dict
         Analysis parameters.
-    results: dict
+    results : dict
         Dictionary containing most recently calculated results.
-    results_hash_dict: dict
+    results_hash_dict : dict
         Dictionary where all calculated results are stored.
     """
     try:
@@ -326,15 +345,15 @@ def create_hash(params, param_keys):
     """
     Create unique hash from values of parameters specified in param_keys.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     params : dict
         Dictionary containing all network parameters.
     param_keys : list
         List specifying which parameters should be reflected in hash.
 
-    Returns:
-    --------
+    Returns
+    -------
     str
         Hash string.
     """
@@ -351,13 +370,13 @@ def load_unit_yaml(file):
     """
     Loads the standard unit yaml file.
     
-    Parameters:
-    -----------
-    file: str
+    Parameters
+    ----------
+    file : str
         The file to be loaded.
     
-    Returns:
-    --------
+    Returns
+    -------
     dict
     """
     # try to load yaml file

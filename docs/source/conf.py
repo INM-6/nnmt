@@ -92,6 +92,12 @@ autosummary_generate_overwrite = True
 #
 html_theme = 'alabaster'
 
+html_theme_options = {
+    'font_family': 'Arial',
+    'page_width': '1200px',  # default is 940
+    'sidebar_width': '400px',  # default is 220
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -114,3 +120,17 @@ html_show_sphinx = False
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 html_show_copyright = True
+
+# If true, SmartyPants will be used to convert quotes and dashes to
+# typographically correct entities.
+html_use_smartypants = True
+
+
+# Suppresses  wrong numpy doc warnings
+# see here https://github.com/phn/pytpm/issues/3#issuecomment-12133978
+numpydoc_show_class_members = False
+
+# A fix for Alabaster theme for no space between a citation reference
+# and citation text
+# https://github.com/sphinx-doc/sphinx/issues/6705#issuecomment-536197438
+html4_writer = True

@@ -11,11 +11,6 @@ Functions
     delay_dist_matrix
     _delay_dist_matrix
     
-    
-Important Information
-*********************
-
-This is so cool!
 '''
 
 
@@ -29,7 +24,40 @@ ureg = lmt.ureg
 
 
 def delay_dist_matrix(network, freqs=None):
-    """Wrapper for ``_delay_dist_matrix``."""
+    '''
+    Calcs matrix of delay distribution specific pre-factors at given freqs.
+
+    Assumes lower boundary for truncated Gaussian distributed delays to be zero
+    (exact would be dt, the minimal time step).
+
+    Parameters
+    ----------
+    network : Network object
+        The network for which to calcluate the delay distribution matrix. It
+        needs to have the following items in :code:`network_params`:
+        
+            Delay : array_like
+                Delay matrix in seconds
+            Delay_sd : array_like
+                Delay standard deviation matrix in seconds.
+            delay_dist : {'none', 'truncated_gaussian', 'gaussian'}
+                String specifying delay distribution.
+        
+        And the following items in :code:`analysis_params`:
+           
+            omegas : array_like
+                The considered angular frequencies , if `freqs` is not passed
+                explicitely.
+                
+    freqs : array_like, optional
+        The frequencies for which to calculate the delay distribution matrix in
+        Hz.
+            
+    Returns
+    -------
+    np.ndarray
+        Matrix of delay distribution specific pre-factors at frequency omegas.
+    '''
     params = {}
     try:
         params['Delay'] = network.network_params['Delay']
@@ -52,24 +80,9 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.
 
-    Assumes lower boundary for truncated Gaussian distributed delays to be zero
-    (exact would be dt, the minimal time step).
-
-    Parameters
-    ----------
-    Delay : Quantity(np.ndarray, 's')
-        Delay matrix.
-    Delay_sd : Quantity(np.ndarray, 's')
-        Delay standard deviation matrix.
-    delay_dist : str
-        String specifying delay distribution.
-    omegas : float
-        Frequency.
-
-    Returns
-    -------
-    Quantity(nd.array, 'dimensionless')
-        Matrix of delay distribution specific pre-factors at frequency omegas.
+    See Also
+    --------
+    delay_dist_matrix : Wrapper function.
     '''
 
     omegas = np.array([np.ones(Delay.shape) * omega for omega in omegas])
