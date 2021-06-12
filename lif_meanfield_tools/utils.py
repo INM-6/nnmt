@@ -1,5 +1,49 @@
 """
-This module contains helper functions.
+This module contains utility functions, mainly used for internal purposes.
+
+Cache
+*****
+
+.. autosummary::
+    :toctree: _toctree/utils/
+    
+    _cache
+    
+Checks
+******
+
+.. autosummary::
+    :toctree: _toctree/utils/
+    
+    check_if_positive
+    check_for_valid_k_in_fast_synaptic_regime
+    _check_positive_params
+    _check_k_in_fast_synaptic_regime
+    
+
+Unit and Pint Related Functions
+*******************************
+
+.. autosummary::
+    :toctree: _toctree/utils/
+    
+    pint_append
+    pint_array
+    pint_array_of_dimension_plus_one
+    _strip_units
+    _to_si_units
+    _convert_to_si_and_strip_units
+    _convert_from_si_to_prefixed
+    _convert_from_prefixed_to_si
+    
+Miscellaneous
+*************
+
+.. autosummary::
+    :toctree: _toctree/utils/
+    
+    build_full_arg_list
+    
 """
 
 import inspect
@@ -13,7 +57,7 @@ from . import ureg
 
 def _cache(network, func, params, result_keys, units=None):
     """
-    Cache resuls of func(**params) into network dictionaries using result_keys.
+    Cache resuls of `func(**params)` into network dicts using result_keys.
     
     This function serves as a wrapper for functions that calculate quantities
     which are to be stored in the network's result dicts. First it creates a
@@ -27,7 +71,7 @@ def _cache(network, func, params, result_keys, units=None):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.models.Network or child class instance.
+    network : Network object or child class instance.
         The network whose dicts are used for storing the results.
     func : function
         Function whose return value should be cached.
@@ -116,6 +160,7 @@ def check_if_positive(parameters, parameter_names):
 
 
 def _check_positive_params(func):
+    """Decorator that checks that a fixed list of params is positive."""
     all_pos_params = ['C',
                       'K',
                       'K_ext',
@@ -164,6 +209,9 @@ def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
         
         
 def _check_k_in_fast_synaptic_regime(func):
+    """
+    Decorator that checks whether func is operating in fast synaptic regime.
+    """
     @wraps(func)
     def decorator_check(*args, **kwargs):
         signature = inspect.signature(func)
@@ -184,17 +232,17 @@ def pint_append(array, quantity, axis=0):
     """
     Append quantity to np.array quantity. Handles units correctly.
     
-    Parameters:
-    -----------
-    array: pint Quantity with np.array magnitude or just np.array
+    Parameters
+    ----------
+    array : pint Quantity with np.array magnitude or just np.array
         Array to which quantity should be appended.
-    quantity: pint Quantity or just something unitless
+    quantity : pint Quantity or just something unitless
         Quantity which should be appended to array.
-    axis: num
+    axis : num
         Axis along which to append quantity to array.
         
-    Returns:
-    --------
+    Returns
+    -------
     pint Quantity with np.array magnitude
     """
     if isinstance(quantity, ureg.Quantity):
@@ -209,7 +257,9 @@ def pint_array(quantity_list):
     """
     Create quantity with magnitude np.array. Handles units correctly.
     
-    quantity_list: list
+    Parameters
+    ----------
+    quantity_list : list
         List of quantities.
     """
     try:
@@ -288,17 +338,17 @@ def build_full_arg_list(signature, args, kwargs):
     """
     Creates a full list of arguments including standard arguments.
     
-    Parameters:
-    -----------
-    signature: Signature object
+    Parameters
+    ----------
+    signature : Signature object
         The signature of a given function.
-    args: list
+    args : list
         List of passed positional arguments.
-    kwargs: dict
+    kwargs : dict
         Dict of passed keyword arguments.
     
-    Returns:
-    --------
+    Returns
+    -------
     list
         Full list of arguments.
     """
