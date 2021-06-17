@@ -12,7 +12,8 @@ firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='shift')
 
 print(f'Mean rates: {firing_rates}')
 
-simulated_rates = [0.751, 2.971, 4.29, 6.94, 6.816, 7.698, 1.126, 8.102]
+# simulated_rates = [0.751, 2.971, 4.29, 6.94, 6.816, 7.698, 1.126, 8.102]
+simulated_rates = np.array([0.943, 3.026, 4.368, 5.882, 7.733, 8.664, 1.096, 7.851])
 print(f'Mean simulated rates: {simulated_rates}')
 
 # one column figure, 85mm wide
@@ -32,4 +33,4 @@ ax.set_xticks([0.5, 2.5, 4.5, 6.5])
 ax.set_xticklabels(['L2/3', 'L4', 'L5', 'L6'])
 ax.set_yticks([1, 3, 5, 7])
 ax.set_ylabel(r'$\bar{r}\,(1/s)$')
-plt.show()
+plt.savefig('microcircuit_rates.png')
