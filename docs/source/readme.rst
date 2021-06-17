@@ -6,13 +6,16 @@ mean-field theory of neuronal networks. That is why this package is called
 The package provides implementations used in the same or a similar version in
 the following scientific publications:
 
-- `Fourcaud & Brunel (2002) <https://doi.org/10.1162/089976602320264015>`_
-- `Schuecker et al. (2014) <https://arxiv.org/abs/1410.8799>`_
-- `Schuecker et al. (2015) <https://doi.org/10.1103/PhysRevE.92.052119>`_
-- `Schuecker et al. (2017) <https://doi.org/10.1371/journal.pcbi.1005179>`_
-- `Bos et al. (2016) <https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132>`_
-- Senk et al. ("Conditions for wave trains in spiking neural networks", accepted for
-  publication in Physical Review Research).
+.. - `Fourcaud & Brunel (2002) <https://doi.org/10.1162/089976602320264015>`_
+.. - `Schuecker et al. (2014) <https://arxiv.org/abs/1410.8799>`_
+.. - `Schuecker et al. (2015) <https://doi.org/10.1103/PhysRevE.92.052119>`_
+.. - `Schuecker et al. (2017) <https://doi.org/10.1371/journal.pcbi.1005179>`_
+.. - `Bos et al. (2016) <https://dx.doi.org/10.1371%2Fjournal.pcbi.1005132>`_
+- :cite:t:`fourcaud2002`
+- :cite:t:`schuecker2014`
+- :cite:t:`schuecker2015`
+- :cite:t:`bos2016`
+- :cite:t:`senk2020`
 
 Using this package, you can easily calculate quantities like firing rates, power
 spectra, and many more, which give you a deeper and more intuitive understanding

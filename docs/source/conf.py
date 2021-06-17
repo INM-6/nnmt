@@ -44,6 +44,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     # 'sphinx.ext.napoleon',
+    'sphinxcontrib.bibtex',
     'numpydoc',
     'sphinx_tabs.tabs',
     ]
@@ -83,6 +84,14 @@ autosummary_generate = True
 
 # Set to False to not overwrite the custom _toctree/*.rst
 autosummary_generate_overwrite = True
+
+
+# path to bibfiles
+bibtex_bibfiles = ['bib/nnmt.bib']
+# bibtex style
+bibtex_default_style = 'plain'
+# inline reference style
+bibtex_reference_style = 'author_year'
 
 
 # -- Options for HTML output -------------------------------------------------

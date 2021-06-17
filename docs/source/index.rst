@@ -17,6 +17,7 @@ This is NNMT!
    license
    acknowledgments
    citing
+   references
    
 .. README
 .. include:: readme.rst
