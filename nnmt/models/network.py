@@ -14,21 +14,11 @@ from ..utils import (
 
 class Network():
     """
-    Basic Network class with given network and analysis parameters.
+    Basic Network parent class all other models inherit from.
     
-    This class serves as a container for the results calculated using the
-    toolbox. It has five dictionaries:
-    - `network_params` contains the network parameters.
-    - `analysis_params` contains the analysis parameters.
-    - `results_hash_dict` contains all calculated results stored using a hash
-    which allows a unique retrieval despite using different methods for
-    calculating the same quantity.
-    - `results` contains the latest calculated results. Note that only the
-    latest results for a given quantity are stored. So if you calculate the
-    same quantity using different methods, only the last one will be found in
-    `results`.
-    - `input_units` where the units of input parameters are stored for
-    conversions.
+    This class serves as a container for network parameters, analysis
+    parameters, and results calculated using the toolbox. It has convenient
+    saving and loading methods.
 
     Parameters
     ----------
@@ -41,6 +31,36 @@ class Network():
     file : str, optional
         File name of h5 file from which network can be loaded. Default is
         ``None``.
+        
+    Attributes
+    ----------
+    analysis_params : dict
+        Collection of parameters needed for analysing the network model. For
+        example the frequencies a quantity should be calculated for.
+    analysis_params_yaml : str
+        File name of yaml analysis parameter file that is read in and converted
+        to ``analysis_params``.
+    input_units : dict
+        Any read in quantities are converted to SI units and the original units
+        are stored in this this dictionary.
+    network_params : dict
+        Collection of network parameters like numbers of neurons, etc.
+    network_params_yaml : str
+        File name of yaml network parameter file that is read in and coverted
+        to ``network_params``.
+    results : dict
+        This dictionary stores the most recently calculated results. If an
+        already calculated quantity is calculated with another method, the
+        new version is stored here. Functions needing some previosly calculated
+        results search for them in this dictionary.
+    results_hash_dict : dict
+        This dictionary stores all calcluated results using a unique hash. When
+        a quantity that already has been calculated is to be calculated another
+        time, the result is retrieved from this dictionary.
+    result_units : dict
+        This is where the units of the results are stored. They are retrieved
+        when saving results.
+        
         
     Methods
     -------

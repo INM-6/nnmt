@@ -1,3 +1,7 @@
+"""
+Defines Basic network class. A plain network without any assumed structure.
+"""
+
 import numpy as np
 
 from .network import Network
@@ -5,6 +9,19 @@ from .. import ureg
 
 
 class Basic(Network):
+    """
+    Simple basic network that does not assume any network structure.
+    
+    This network only reads in the parameter yaml files and calculates the most
+    basic dependend parameters. It converts the weights from pA to mV,
+    calculates relative thresholds and converts the analysis frequencies to
+    angular frequencies.
+    
+    See Also
+    --------
+    nnmt.models.Network : Parent class
+    
+    """
     
     def __init__(self, network_params=None, analysis_params=None, file=None):
         
@@ -75,16 +92,5 @@ class Basic(Network):
             return np.arange(w_min, w_max, dw)
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
-
-        @ureg.wraps((1 / ureg.mm).units,
-                    ((1 / ureg.mm).units, (1 / ureg.mm).units,
-                     (1 / ureg.mm).units))
-        def calc_evaluated_wavenumbers(k_min, k_max, dk):
-            return np.arange(k_min, k_max, dk)
-
-        derived_params['k_wavenumbers'] = (
-            calc_evaluated_wavenumbers(self.analysis_params['k_min'],
-                                       self.analysis_params['k_max'],
-                                       self.analysis_params['dk']))
 
         return derived_params

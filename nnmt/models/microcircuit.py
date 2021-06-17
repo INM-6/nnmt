@@ -10,7 +10,17 @@ from .. import ureg
 
 
 class Microcircuit(Network):
+    """
+    The Potjans and Diesmann microcircuit model.
     
+    See :cite:t:`potjans2014` for details.
+    
+    See Also
+    --------
+    nnmt.models.Network : Parent class
+    
+    """
+
     def __init__(self, network_params=None, analysis_params=None, file=None):
         
         super().__init__(network_params, analysis_params, file)
