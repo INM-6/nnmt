@@ -1,14 +1,14 @@
 from setuptools import setup
 
-setup(name = 'lif_meanfield_tools',
-      version = '0.2',
-      description = 'Mean-field toolbox for networks of LIF neurons.',
+setup(name = 'nnmt',
+      version = '1.0',
+      description = 'Neuronal Network Meanfield Toolbox',
       long_description = open('README.md').read(),
-      url = 'https://github.com/INM-6/lif_meanfield_tools',
+      url = 'https://github.com/INM-6/nnmt',
       author = 'see authors.md',
       author_email = 'm.layer@fz-juelich.de',
       license = 'GNU GPLv3',
-      packages = ['lif_meanfield_tools'],
+      packages = ['nnmt'],
       install_requires = [
         'setuptools>=23.1.0',
         'numpy>=1.8',

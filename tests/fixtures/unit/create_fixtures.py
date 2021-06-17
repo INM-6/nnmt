@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding:utf8
 '''
-Creates fixtures for lif_meanfield_tools tests.
+Creates fixtures for nnmt tests.
 
 WARNING: Only use this script, if your code is trustworthy! The script runs
-         the lif_meanfield_tools code to produce the fixtures that are then
+         the nnmt code to produce the fixtures that are then
          stored in h5 format. If you run this script and your code is not
          working correctly, a lot of tests will pass despite your code giving
          wrong results.
@@ -23,11 +23,11 @@ import numpy as np
 import mpmath
 import sys
 
-import lif_meanfield_tools as lmt
-from lif_meanfield_tools.meanfield_calcs import (
+import nnmt
+from nnmt.meanfield_calcs import (
     effective_coupling_strength,
     )
-from lif_meanfield_tools.aux_calcs import (
+from nnmt.aux_calcs import (
     nu0_fb433,
     nu_0,
     nu0_fb,
@@ -42,7 +42,7 @@ from lif_meanfield_tools.aux_calcs import (
     p_hat_boxcar
     )
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 
 def fix_additional_rates_for_fixed_input(network, file):
@@ -441,7 +441,7 @@ if __name__ == '__main__':
 
             file_path = '{}{}_regime.h5'.format(fixture_path, regime)
 
-            network = lmt.Network(param_file, analysis_param_file)
+            network = nnmt.Network(param_file, analysis_param_file)
             network.network_params['regime'] = regime
 
             # fixtures that need a network, or network params to be calculated
@@ -462,5 +462,5 @@ if __name__ == '__main__':
             fix_d_nu_d_nu_in_fb(network, file_path)
             
             # test network for loading
-            network = lmt.Network(param_file, analysis_param_file)
+            network = nnmt.Network(param_file, analysis_param_file)
             fix_network_loading(network, f'{fixture_path}test_network.h5')

@@ -1,7 +1,7 @@
 This Python package provides useful tools for analyzing neuronal networks
 consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
 mean-field theory of neuronal networks. That is why this package is called
-**lif_meanfield_tools (LMT)**.
+**nnmt (NNMT)**.
 
 The package provides implementations used in the same or a similar version in
 the following scientific publications:
@@ -25,9 +25,9 @@ The package is alive. We are continuously trying to improve and simplify its
 usage.
 We are always happy about feedback. So please do not hesitate to contact us.
 If you encounter a problem or have a feature request, you can open an
-`Issue <https://github.com/INM-6/lif_meanfield_tools/issues>`_.
+`Issue <https://github.com/INM-6/nnmt/issues>`_.
 Contributions are always welcome via
-`Pull requests <https://github.com/INM-6/lif_meanfield_tools/pulls>`_.
+`Pull requests <https://github.com/INM-6/nnmt/pulls>`_.
 
 If you are using this toolbox, please cite us: for a specific release, we
 recommend to use the reference from `Zenodo <https://zenodo.org/>`_. Otherwise,

@@ -138,7 +138,7 @@ def _input_calc(network, prefix, input_func):
 
     Parameters:
     -----------
-    network: lif_meanfield_tools.create.Network object
+    network: nnmt.create.Network object
         The network for which the calculation should be done.
     prefix: str
         The prefix used in the to store the firing rates (e.g. 'lif.delta.').

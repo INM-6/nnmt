@@ -22,10 +22,10 @@ import numpy as np
 from inspect import signature
 import h5py_wrapper as h5
 
-import lif_meanfield_tools as lmt
-from lif_meanfield_tools.input_output import load_val_unit_dict_from_h5
-from lif_meanfield_tools import ureg
-from lif_meanfield_tools.utils import _strip_units
+import nnmt
+from nnmt.input_output import load_val_unit_dict_from_h5
+from nnmt import ureg
+from nnmt.utils import _strip_units
 
 
 # path to network configuration files and analysis parameters
@@ -110,7 +110,7 @@ def unit_fixture_path():
 @pytest.fixture
 def network():
     """Standard microcircuit network with testing analysis params."""
-    network = lmt.models.Microcircuit(
+    network = nnmt.models.Microcircuit(
         network_params=(config_path + 'network_params_microcircuit.yaml'),
         analysis_params=(config_path + 'analysis_params_test.yaml')
         )
@@ -120,7 +120,7 @@ def network():
 @pytest.fixture
 def microcircuit():
     """Standard microcircuit network with testing analysis params."""
-    microcircuit = lmt.models.Microcircuit(
+    microcircuit = nnmt.models.Microcircuit(
         network_params=(config_path + 'network_params_microcircuit.yaml'),
         analysis_params=(config_path + 'analysis_params_test.yaml')
         )
@@ -130,7 +130,7 @@ def microcircuit():
 @pytest.fixture
 def empty_network():
     """Network object with no parameters."""
-    return lmt.models.Network()
+    return nnmt.models.Network()
 
 
 @pytest.fixture

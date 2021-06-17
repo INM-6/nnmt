@@ -9,8 +9,8 @@ import h5py_wrapper as h5
 import warnings
 import yaml
 
-import lif_meanfield_tools as lmt
-import lif_meanfield_tools.input_output as io
+import nnmt
+import nnmt.input_output as io
 
 from ...checks import (check_file_in_tmpdir,
                       check_quantity_dicts_are_equal,
@@ -19,7 +19,7 @@ from ...checks import (check_file_in_tmpdir,
                       assert_array_equal,
                       assert_units_equal)
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 path_to_fixtures = 'tests/fixtures/unit/config/'
 
@@ -234,7 +234,7 @@ class Test_save_quantity_dict_to_yaml:
     def test_quantities_to_val_unit_called(self, mocker, tmpdir,
                                            network_dict_quantity):
         file = 'test.yaml'
-        mock = mocker.patch('lif_meanfield_tools.input_output.'
+        mock = mocker.patch('nnmt.input_output.'
                             'quantities_to_val_unit',
                             return_value=network_dict_quantity)
         tmp_test = tmpdir.mkdir('tmp_test')
@@ -259,7 +259,7 @@ class Test_save_quantity_dict_to_yaml:
 class Test_load_val_unit_dict_from_yaml:
 
     def test_val_unit_to_quantities_called(self, mocker):
-        mock = mocker.patch('lif_meanfield_tools.input_output.'
+        mock = mocker.patch('nnmt.input_output.'
                             'val_unit_to_quantities')
         io.load_val_unit_dict_from_yaml(f'{path_to_fixtures}test.yaml')
         mock.assert_called_once()
@@ -297,7 +297,7 @@ class Test_save_network:
             return x
     
         def test_function(network):
-            return lmt.utils._cache(network, _test_func, {'x': 1}, 'test')
+            return nnmt.utils._cache(network, _test_func, {'x': 1}, 'test')
     
         empty_network.network_params['a'] = 1
         empty_network.analysis_params['a'] = 1

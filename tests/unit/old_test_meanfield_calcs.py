@@ -8,7 +8,7 @@ from ..checks import (
     check_V_0_larger_V_th_raise_exception,
     )
 
-from lif_meanfield_tools.meanfield_calcs import (
+from nnmt.meanfield_calcs import (
     eigen_spectra,
     additional_rates_for_fixed_input,
     effective_coupling_strength,

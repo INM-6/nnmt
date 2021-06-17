@@ -29,7 +29,7 @@ rule create_unit_test_fixtures:
         script = join('unit', 'create_fixtures.py'),
         modified_yaml = join('envs', 'environment.yaml')
     conda:
-        # /lif_meanfield_tools/environment.yaml
+        # /nnmt/environment.yaml
         join('envs', 'environment.yaml')
     output:
         join(unit_fixture_path, 'test_network.h5')
@@ -44,7 +44,7 @@ rule create_integration_test_fixtures:
         script = join('integration', 'create_fixtures.py'),
         modified_yaml = join('envs', 'environment.yaml')
     conda:
-        # /lif_meanfield_tools/environment.yaml
+        # /nnmt/environment.yaml
         join('envs', 'environment.yaml')
     output:
         join(integration_fixture_path, 'std_results.h5')

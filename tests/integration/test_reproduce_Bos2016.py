@@ -18,8 +18,8 @@ from numpy.testing import (
     assert_array_almost_equal
     )
 
-import lif_meanfield_tools as lmt
-from lif_meanfield_tools import ureg
+import nnmt
+from nnmt import ureg
 
 import h5py_wrapper.wrapper as h5
 
@@ -52,15 +52,15 @@ def exemplary_frequency_idx(bos_code_result):
 @pytest.fixture(scope='class')
 def network(exemplary_frequency_idx):
     if use_saved_data:
-        network = lmt.models.Microcircuit(file=fix_path + 'network.h5')
+        network = nnmt.models.Microcircuit(file=fix_path + 'network.h5')
     else:
-        network = lmt.models.Microcircuit(
+        network = nnmt.models.Microcircuit(
             config_path + 'Bos2016_network_params.yaml',
             config_path + 'Bos2016_analysis_params.yaml')
-    lmt.lif.exp.working_point(network, method='taylor')
-    lmt.lif.exp.transfer_function(network, method='taylor')
-    lmt.network_properties.delay_dist_matrix(network)
-    lmt.lif.exp.effective_connectivity(network)
+    nnmt.lif.exp.working_point(network, method='taylor')
+    nnmt.lif.exp.transfer_function(network, method='taylor')
+    nnmt.network_properties.delay_dist_matrix(network)
+    nnmt.lif.exp.effective_connectivity(network)
         
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
@@ -93,7 +93,7 @@ def freqs(network):
 
 class Test_lif_meanfield_toolbox_vs_Bos_2016:
 
-    @pytest.mark.parametrize('lmt_key, bos_key', [['populations',
+    @pytest.mark.parametrize('nnmt_key, bos_key', [['populations',
                                                    'populations'],
                                                   ['N', 'N'],
                                                   ['C', 'C'],
@@ -116,10 +116,10 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
                                                   ['Delay_sd', 'Delay_sd'],
                                                   ])
     def test_network_parameters(self, network_params, bos_params,
-                                lmt_key, bos_key):
-        network_param = network_params[lmt_key]
+                                nnmt_key, bos_key):
+        network_param = network_params[nnmt_key]
         bos_param = bos_params[bos_key]
-        if lmt_key == 'w':
+        if nnmt_key == 'w':
             bos_param *= 2
         if isinstance(network_param, ureg.Quantity):
             network_param = network_param.magnitude
@@ -137,7 +137,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         test_data = freqs
         # check ground truth data vs data generated via old code
         assert_array_equal(bos_code_data, ground_truth_data)
-        # check ground truth data vs data generated via lmt
+        # check ground truth data vs data generated via nnmt
         assert_array_equal(test_data, ground_truth_data)
         # check that the exemplary frequency is correct
         assert (test_data[exemplary_frequency_idx]
@@ -147,10 +147,10 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         ground_truth_data = ground_truth_result[
             'fig_microcircuit']['rates_calc']
         bos_code_data = bos_code_result['firing_rates']
-        test_data = lmt.lif.exp.firing_rates(network, method='taylor')
+        test_data = nnmt.lif.exp.firing_rates(network, method='taylor')
         # check ground truth data vs data generated via old code
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
-        # check ground truth data vs data generated via lmt
+        # check ground truth data vs data generated via nnmt
         assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
         
     def test_delay_distribution_at_single_frequency(self, network,
@@ -160,11 +160,11 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # be fine
         bos_code_data = bos_code_result['delay_dist']
         omega = network.analysis_params['omega']
-        test_data = lmt.network_properties.delay_dist_matrix(
+        test_data = nnmt.network_properties.delay_dist_matrix(
             network, omega / 2 / np.pi)[0]
         assert_array_equal(test_data.shape, bos_code_data.shape)
         assert_array_equal(test_data, bos_code_data)
-        lmt.network_properties.delay_dist_matrix(network)
+        nnmt.network_properties.delay_dist_matrix(network)
         
     def test_effective_connectivity_at_single_frequency(self,
                                                         network,
@@ -175,11 +175,11 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         bos_code_data = bos_code_result['MH']
         omega = network.analysis_params['omega']
         freqs = np.array([omega / np.pi / 2])
-        lmt.lif.exp.transfer_function(network, freqs=freqs, method='taylor')
-        lmt.network_properties.delay_dist_matrix(network, omega / 2 / np.pi)
-        test_data = lmt.lif.exp.effective_connectivity(network)[0]
+        nnmt.lif.exp.transfer_function(network, freqs=freqs, method='taylor')
+        nnmt.network_properties.delay_dist_matrix(network, omega / 2 / np.pi)
+        test_data = nnmt.lif.exp.effective_connectivity(network)[0]
         assert_array_almost_equal(test_data, bos_code_data, decimal=4)
-        lmt.network_properties.delay_dist_matrix(network)
+        nnmt.network_properties.delay_dist_matrix(network)
 
     def test_transfer_function(self, network, bos_code_result):
         # ground truth data does not exist, but as regenerated bos_code_data
@@ -188,7 +188,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         bos_code_data = bos_code_result[
             'transfer_function_with_synaptic_filter']
         # transfer functions are stored transposed
-        test_data = lmt.lif.exp.transfer_function(network, method='taylor').T
+        test_data = nnmt.lif.exp.transfer_function(network, method='taylor').T
         assert_array_equal(test_data.shape, bos_code_data.shape)
         assert_array_almost_equal(test_data / 1000, bos_code_data, decimal=4)
         
@@ -202,15 +202,15 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=3)
         # Bos code used Taylor method and the fortran implementation of the
         # Kummer's function to approximate the parabolic cylinder functions
-        lmt.lif.exp.effective_connectivity(network)
-        test_data = lmt.lif.exp.power_spectra(network).T
+        nnmt.lif.exp.effective_connectivity(network)
+        test_data = nnmt.lif.exp.power_spectra(network).T
         assert_array_equal(test_data.shape, ground_truth_data.shape)
         assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
     
     def test_eigenvalue_trajectories(self, network, ground_truth_result,
                                      bos_code_result):
         eigenvalue_spectra = eigenvalue_spectra = np.linalg.eig(
-            lmt.lif.exp.effective_connectivity(network))[0].T
+            nnmt.lif.exp.effective_connectivity(network))[0].T
         ground_truth_data = ground_truth_result[
             'eigenvalue_trajectories']['eigs']
         bos_code_data = bos_code_result['eigenvalue_spectra']
@@ -227,9 +227,9 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
             ground_truth_data, decimal=4)
         
     def test_sensitivity_measure(self, network, ground_truth_result, freqs):
-        power_spectra = lmt.lif.exp.power_spectra(network).T
+        power_spectra = nnmt.lif.exp.power_spectra(network).T
         eigenvalue_spectra = np.linalg.eig(
-            lmt.lif.exp.effective_connectivity(network))[0].T
+            nnmt.lif.exp.effective_connectivity(network))[0].T
         ground_truth_data = ground_truth_result['sensitivity_measure']
         
         # check whether highest power is identified correctly
@@ -266,10 +266,10 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # test sensitivity measure
         omegas = np.array([fmax * 2 * np.pi])
         network.analysis_params['omegas'] = omegas
-        lmt.network_properties.delay_dist_matrix(network)
-        lmt.lif.exp.transfer_function(network, method='taylor')
-        lmt.lif.exp.effective_connectivity(network)
-        Z = lmt.lif.exp.sensitivity_measure(network)[0]
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.transfer_function(network, method='taylor')
+        nnmt.lif.exp.effective_connectivity(network)
+        Z = nnmt.lif.exp.sensitivity_measure(network)[0]
         assert_array_almost_equal(Z,
                                   ground_truth_data['high_gamma1']['Z'],
                                   decimal=4)

@@ -6,15 +6,15 @@ from ...checks import (assert_array_equal,
                        assert_quantity_array_equal,
                        check_quantity_dicts_are_equal)
 
-import lif_meanfield_tools as lmt
+import nnmt
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 
 class Test_initialization:
     
     def test_all_dicts_created(self):
-        network = lmt.models.Network()
+        network = nnmt.models.Network()
         assert hasattr(network, 'network_params')
         assert hasattr(network, 'analysis_params')
         assert hasattr(network, 'results')
@@ -35,7 +35,7 @@ class Test_initialization:
         assert network.analysis_params[key] == value
 
     def test_loading_of_existing_results(self, unit_fixture_path):
-        network = lmt.models.Network(
+        network = nnmt.models.Network(
             file=f'{unit_fixture_path}test_network.h5')
         assert len(network.network_params.items()) != 0
         assert len(network.analysis_params.items()) != 0
@@ -103,7 +103,7 @@ class Test_adding_units_again:
         mock = mocker.Mock(__name__='mocker', return_value=1 * ureg.mV)
         
         def test_function(network):
-            return lmt.utils._cache(network, mock, dict(a=1), 'test')
+            return nnmt.utils._cache(network, mock, dict(a=1), 'test')
         
         test_function(network)
         network._add_result_units()
@@ -119,7 +119,7 @@ class Test_saving_and_loading:
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             empty_network.save('test.h5')
-            output = lmt.input_output.load_val_unit_dict_from_h5('test.h5')
+            output = nnmt.input_output.load_val_unit_dict_from_h5('test.h5')
             assert 'test' in output['results'].keys()
 
     def test_save_overwriting_existing_file_raises_error(self, tmpdir,
@@ -141,7 +141,7 @@ class Test_saving_and_loading:
             empty_network.save(file=file)
             empty_network.results['test'] = 2
             empty_network.save(file=file, overwrite=True)
-            output = lmt.input_output.load_val_unit_dict_from_h5(file)
+            output = nnmt.input_output.load_val_unit_dict_from_h5(file)
             assert_array_equal(output['results']['test'], 2)
 
     def test_load_correctly_sets_network_dictionaries(self, tmpdir,

@@ -22,7 +22,7 @@ def firing_rates(network, **kwargs):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters listed in the following.
 
     Network parameters
@@ -47,7 +47,7 @@ def firing_rates(network, **kwargs):
         Firing rates of external populations in Hz.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
+        :func:`~nnmt.lif._static._firing_rate_integration`.
 
     Returns:
     --------
@@ -244,7 +244,7 @@ def mean_input(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -305,7 +305,7 @@ def std_input(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 

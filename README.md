@@ -4,7 +4,7 @@ LIF Meanfield Tools
 This Python package provides useful tools for analyzing neuronal networks
 consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
 mean-field theory of neuronal networks. That is why this package is called
-__lif_meanfield_tools (LMT)__.
+__nnmt (LMT)__.
 
 The package provides implementations used in the same or a similar version in
 the following scientific publications: [Fourcaud & Brunel (2002)](https://doi.org/10.1162/089976602320264015),
@@ -26,14 +26,14 @@ The package is alive. We are continuously trying to improve and simplify its
 usage.
 We are always happy about feedback. So please do not hesitate to contact us.
 If you encounter a problem or have a feature request, you can open an
-[Issue](https://github.com/INM-6/lif_meanfield_tools/issues).
+[Issue](https://github.com/INM-6/nnmt/issues).
 Contributions are always welcome via
-[Pull requests](https://github.com/INM-6/lif_meanfield_tools/pulls).
+[Pull requests](https://github.com/INM-6/nnmt/pulls).
 
 If you are using this toolbox, please cite us: for a specific release, we recommend to use the reference from [Zenodo](https://zenodo.org/). Otherwise, you can also provide a link to this repository with the hash of the respective commit.
 In addition, please also cite the publications that used the methods implemented here first. In [How to Use This Package](#how-to-use-this-package) you can find details on which function of this package refers to which publication.
 
-<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/readme_figures/power_spectra.png" width="400">    
+<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/power_spectra.png" width="400">    
 
 The figure shows power spectra calculated with this toolbox using the minimal
 example script `examples/power_spectra.py`.
@@ -41,9 +41,9 @@ example script `examples/power_spectra.py`.
 
 # Structure
 
-<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/readme_figures/structure_new.png" width="400">        
+<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/structure_new.png" width="400">        
 
-lif_meanfield_tools consists of four modules:
+nnmt consists of four modules:
 
 - The central module is __network.py__. It defines a class `Network` which is a
   container for network parameters, analysis parameters and calculated results.
@@ -78,7 +78,7 @@ pip install .
 
 An alternative is to install directly from GitHub:
 ```
-pip install git+https://github.com/INM-6/lif_meanfield_tools.git
+pip install git+https://github.com/INM-6/nnmt.git
 ```
 If you are using [conda](https://conda.io/), you can create an environment including LMT:
 ```
@@ -90,19 +90,19 @@ conda env create -f environment.yaml
 As the package is still maturing, we currently have some issues that you should
 be aware of:
 
-- [__Network model used__](https://github.com/INM-6/lif_meanfield_tools/issues/36):
+- [__Network model used__](https://github.com/INM-6/nnmt/issues/36):
   Currently, the toolbox is specialized on the microcircuit model (first
   published by [Potjans and Diesmann (2014)](https://doi.org/10.1093/cercor/bhs358))
   which is why the network parameter `label` should only be set to
   `microcircuit` at the moment. See the function
   `_calculate_dependent_network_parameters()` in `network.py`.
 
-- [__Firing rates can become negative__](https://github.com/INM-6/lif_meanfield_tools/issues/19):
+- [__Firing rates can become negative__](https://github.com/INM-6/nnmt/issues/19):
   It happened once to us that the firing rates we got were negative for a
   specific set of network parameters. Apparently, the algorithm is running into
   a non-realistic local minimum. This is an issue we will deal with soon.
 
-- [__Accuracy of transfer function at high frequencies__](https://github.com/INM-6/lif_meanfield_tools/issues/37):
+- [__Accuracy of transfer function at high frequencies__](https://github.com/INM-6/nnmt/issues/37):
   This actually is not a real issue, but you should be aware that the current
   implementation is only accurate for moderate frequencies. This is expected
   from the theory implemented. In the future we might add a support for high
@@ -110,7 +110,7 @@ be aware of:
   for further discussion).
 
 - [__Accuracy of transfer function depends on ratio of synaptic and membrane time
-  constant__](https://github.com/INM-6/lif_meanfield_tools/issues/37): This
+  constant__](https://github.com/INM-6/nnmt/issues/37): This
   is a part of the theory as well. It is only accurate for small values of
   <img src="https://render.githubusercontent.com/render/math?math=\sqrt{\tau_s/\tau_m}">
   which is used as a perturbation parameter in the analysis (see
@@ -257,7 +257,7 @@ environment specified in the provided `environment.yaml` file, and running
 ```
 pytest
 ```
-from the root directory (the one containing `tests` and `lif_meanfield_tools`).
+from the root directory (the one containing `tests` and `nnmt`).
 If you want to be more specific, you can run single tests as well
 ```
 pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_output

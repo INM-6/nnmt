@@ -6,9 +6,9 @@ from ...checks import (
     assert_units_equal,
     assert_allclose,
     )
-import lif_meanfield_tools as lmt
+import nnmt
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
     
 class Test_calculation_of_dependent_network_params:

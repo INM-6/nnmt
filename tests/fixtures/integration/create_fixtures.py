@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding:utf8
 '''
-Creates fixtures for lif_meanfield_tools integration tests.
+Creates fixtures for nnmt integration tests.
 
 WARNING: Only use this script, if your code is trustworthy! The script runs
-         the lif_meanfield_tools code to produce the fixtures that are then
+         the nnmt code to produce the fixtures that are then
          stored in h5 format. If you run this script and your code is not
          working correctly, a lot of tests will pass despite your code giving
          wrong results.
@@ -21,7 +21,7 @@ Options:
 import docopt
 import sys
 
-import lif_meanfield_tools as lmt
+import nnmt
 
 
 if __name__ == '__main__':
@@ -37,7 +37,7 @@ if __name__ == '__main__':
         fixture_path = 'integration/data/'
         config_path = 'integration/config/'
 
-        network = lmt.models.Microcircuit(
+        network = nnmt.models.Microcircuit(
             config_path + 'network_params.yaml',
             config_path + 'analysis_params.yaml')
         
@@ -45,21 +45,21 @@ if __name__ == '__main__':
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
         network.results[
-            'lif.exp.firing_rates_taylor'] = lmt.lif.exp.firing_rates(
+            'lif.exp.firing_rates_taylor'] = nnmt.lif.exp.firing_rates(
             network, method='taylor')
-        lmt.lif.exp.working_point(network, method='shift')
+        nnmt.lif.exp.working_point(network, method='shift')
         network.results[
-            'delay_dist_matrix'] = lmt.network_properties.delay_dist_matrix(
+            'delay_dist_matrix'] = nnmt.network_properties.delay_dist_matrix(
                 network)
-        network.results['lif.exp.tf_single'] = lmt.lif.exp.transfer_function(
+        network.results['lif.exp.tf_single'] = nnmt.lif.exp.transfer_function(
             network, omega)
-        network.results['lif.exp.tf_taylor'] = lmt.lif.exp.transfer_function(
+        network.results['lif.exp.tf_taylor'] = nnmt.lif.exp.transfer_function(
             network, method='taylor')
-        network.results['lif.exp.tf_shift'] = lmt.lif.exp.transfer_function(
+        network.results['lif.exp.tf_shift'] = nnmt.lif.exp.transfer_function(
             network, method='shift')
-        lmt.lif.exp.effective_connectivity(network)
-        lmt.lif.exp.sensitivity_measure(network)
-        lmt.lif.exp.power_spectra(network)
-        # lmt.lif.exp.additional_rates_for_fixed_input(
+        nnmt.lif.exp.effective_connectivity(network)
+        nnmt.lif.exp.sensitivity_measure(network)
+        nnmt.lif.exp.power_spectra(network)
+        # nnmt.lif.exp.additional_rates_for_fixed_input(
         #     network, mean_input_set, std_input_set)
         network.save(file=fixture_path + 'std_results.h5', overwrite=True)

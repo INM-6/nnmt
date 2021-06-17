@@ -8,8 +8,8 @@ from numpy.testing import (
     assert_array_equal,
     )
 
-import lif_meanfield_tools.lif._static as static
-from lif_meanfield_tools import ureg
+import nnmt.lif._static as static
+from nnmt import ureg
 
         
 class Test_mean_input:
@@ -42,7 +42,7 @@ class Test_input_function_wrapper:
     func = staticmethod(static._input_calc)
     
     def mock_mean_input(self, mocker):
-        mocker.patch('lif_meanfield_tools.lif._static._mean_input',
+        mocker.patch('nnmt.lif._static._mean_input',
                      return_value=1
                      )
     

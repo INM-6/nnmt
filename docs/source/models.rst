@@ -11,6 +11,6 @@ Available models
   :template: custom-module-template.rst
   :recursive:
 
-  lif_meanfield_tools.models.network
-  lif_meanfield_tools.models.basic
-  lif_meanfield_tools.models.microcircuit
+  nnmt.models.network
+  nnmt.models.basic
+  nnmt.models.microcircuit

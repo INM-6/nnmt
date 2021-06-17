@@ -1,4 +1,4 @@
-name: lmt_deprecated
+name: nnmt_deprecated
 channels:
   - defaults
 dependencies:

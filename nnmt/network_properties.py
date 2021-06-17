@@ -18,9 +18,9 @@ import numpy as np
 from scipy.special import erf as _erf
 from .utils import _cache
 
-import lif_meanfield_tools as lmt
+import nnmt
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 
 def delay_dist_matrix(network, freqs=None):
@@ -70,12 +70,12 @@ def delay_dist_matrix(network, freqs=None):
     except KeyError as param:
         raise RuntimeError(f'You are missing {param} for calculating the delay'
                            ' distribution matrix.')
-    lmt.utils._to_si_units(params)
-    lmt.utils._strip_units(params)
+    nnmt.utils._to_si_units(params)
+    nnmt.utils._strip_units(params)
     return _cache(network, _delay_dist_matrix, params, 'D')
 
 
-@lmt.utils._check_positive_params
+@nnmt.utils._check_positive_params
 def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.

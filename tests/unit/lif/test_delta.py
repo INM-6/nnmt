@@ -12,10 +12,10 @@ from ...checks import (check_pos_params_neg_raise_exception,
                        )
 
 
-import lif_meanfield_tools as lmt
-import lif_meanfield_tools.lif.delta as delta
+import nnmt
+import nnmt.lif.delta as delta
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 fixture_path = 'tests/fixtures/unit/data/'
 
@@ -46,7 +46,7 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
 @pytest.fixture
 def empty_network():
     """Network object with no parameters."""
-    return lmt.models.Network()
+    return nnmt.models.Network()
 
 
 class Test_firing_rates_wrapper:
@@ -55,7 +55,7 @@ class Test_firing_rates_wrapper:
     
     def mock_firing_rate_integration(self, mocker):
         mocker.patch(
-            'lif_meanfield_tools.lif._static._firing_rate_integration',
+            'nnmt.lif._static._firing_rate_integration',
             return_value=1
             )
     
@@ -138,6 +138,6 @@ class Test_derivative_of_firing_rates_wrt_mean_input:
 
     def test_correct_output(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
-        lmt.utils._strip_units(params)
+        nnmt.utils._strip_units(params)
         outputs = output_test_fixtures.pop('output')
         assert_allclose(self.func(**params), outputs)

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.gridspec as gridspec
 
-from lif_meanfield_tools.lif.delta import _firing_rates
+from nnmt.lif.delta import _firing_rates
 
 import matplotlib.pyplot as plt
 plt.style.use('frontiers.mplstyle')

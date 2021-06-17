@@ -1,4 +1,4 @@
-import lif_meanfield_tools as nnmt
+import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
 

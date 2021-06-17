@@ -1,7 +1,7 @@
 import pytest
 import h5py_wrapper.wrapper as h5
 
-import lif_meanfield_tools as lmt
+import nnmt
 from ..checks import assert_array_equal
 from numpy.testing import assert_array_equal
 
@@ -16,7 +16,7 @@ def network():
     Because of the pytest scope the same network will be used for all tests of
     a single test class.
     """
-    network = lmt.models.Microcircuit(
+    network = nnmt.models.Microcircuit(
         network_params=(config_path + 'network_params.yaml'),
         analysis_params=(config_path + 'analysis_params.yaml')
         )
@@ -27,7 +27,7 @@ def network():
 class Test_Network_instantiation_calculation_saving_routine:
     
     def test_calculate_something_and_list_results(self, network):
-        network.temp_results = lmt.lif.exp.firing_rates(network)
+        network.temp_results = nnmt.lif.exp.firing_rates(network)
         list_of_results = network.show()
         assert list_of_results == ['lif.exp.firing_rates']
     
@@ -55,13 +55,13 @@ class Test_instantiate_with_some_passed_quantities_calculate_save_routine:
         analysis_params = network.analysis_params
         omega = analysis_params['omega']
         analysis_params['omega'] *= 2
-        network = lmt.models.Microcircuit(
+        network = nnmt.models.Microcircuit(
             network_params, analysis_params)
         assert network.network_params['tau_m'] == 2 * tau_m
         assert network.analysis_params['omega'] == 2 * omega
         
     def test_calculate_something_and_list_results(self, network):
-        network.temp_results = lmt.lif.exp.firing_rates(network)
+        network.temp_results = nnmt.lif.exp.firing_rates(network)
         list_of_results = network.show()
         assert list_of_results == ['lif.exp.firing_rates']
         
@@ -89,7 +89,7 @@ class Test_instantiate_with_passed_dictionaries_calculate_save_routine:
         analysis_params = network.analysis_params
         omega = analysis_params['omega']
         analysis_params['omega'] *= 2
-        network = lmt.models.Microcircuit(
+        network = nnmt.models.Microcircuit(
             network_params=network_params,
             analysis_params=analysis_params)
         assert network.network_params['tau_m'] == 2 * tau_m
@@ -99,7 +99,7 @@ class Test_instantiate_with_passed_dictionaries_calculate_save_routine:
 class Test_instantiate_calculate_check_change_params_calculate_check:
 
     def test_calculate_something_and_list_results(self, network):
-        network.temp_results = lmt.lif.exp.firing_rates(network)
+        network.temp_results = nnmt.lif.exp.firing_rates(network)
         list_of_results = network.show()
         assert list_of_results == ['lif.exp.firing_rates']
 
@@ -114,7 +114,7 @@ class Test_instantiate_calculate_check_change_params_calculate_check:
         assert network.network_params['tau_m'] == 2 * tau_m
         
     def test_calculate_something_again_get_different_results(self, network):
-        firing_rates = lmt.lif.exp.firing_rates(network)
+        firing_rates = nnmt.lif.exp.firing_rates(network)
         with pytest.raises(AssertionError):
             assert_array_equal(firing_rates, network.temp_results)
 
@@ -136,8 +136,8 @@ class Test_instantiate_calculate_check_change_params_calculate_check:
 class Test_instantiate_calculate_several_things_show_and_check_save:
 
     def test_calculate_two_things_and_list_results(self, network):
-        network.temp_rates = lmt.lif.exp.firing_rates(network)
-        network.temp_mean = lmt.lif.exp.mean_input(network)
+        network.temp_rates = nnmt.lif.exp.firing_rates(network)
+        network.temp_mean = nnmt.lif.exp.mean_input(network)
         list_of_results = network.show()
         assert list_of_results == ['lif.exp.firing_rates',
                                    'lif.exp.mean_input']
@@ -152,7 +152,7 @@ class Test_instantiate_calculate_several_things_show_and_check_save:
 class Test_instantiate_calculate_save_load:
     
     def test_calculate_something_and_list_results(self, network, std_results):
-        network.temp_results = lmt.lif.exp.firing_rates(network)
+        network.temp_results = nnmt.lif.exp.firing_rates(network)
         list_of_results = network.show()
         assert list_of_results == ['lif.exp.firing_rates']
     

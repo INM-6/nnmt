@@ -35,7 +35,7 @@ def working_point(network, method='shift', **kwargs):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.models.Network or child class instance.
+    network : nnmt.models.Network or child class instance.
         Network with the network parameters listed in the following.
     method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
@@ -68,7 +68,7 @@ def working_point(network, method='shift', **kwargs):
         Default is 'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
+        :func:`~nnmt.lif._static._firing_rate_integration`.
 
     Returns
     -------
@@ -91,7 +91,7 @@ def firing_rates(network, method='shift', **kwargs):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.models.Network or child class instance.
+    network : nnmt.models.Network or child class instance.
         Network with the network parameters listed in the following.
     method : str
         Method used to integrate the adapted Siegert function. Options: 'shift'
@@ -124,7 +124,7 @@ def firing_rates(network, method='shift', **kwargs):
         Default is 'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`~lif_meanfield_tools.lif._static._firing_rate_integration`.
+        :func:`~nnmt.lif._static._firing_rate_integration`.
 
     Returns
     -------
@@ -362,7 +362,7 @@ def mean_input(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -423,7 +423,7 @@ def std_input(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -483,7 +483,7 @@ def transfer_function(network, freqs=None, method='shift',
 
     Parameters
     ----------
-    network : lif_meanfield_tools.create.Network or child class instance.
+    network : nnmt.create.Network or child class instance.
         Network with the network parameters listed in the following.
     freqs : np.ndarray
         Frequencies for which transfer function should be calculated. You can
@@ -876,7 +876,7 @@ def effective_connectivity(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -977,7 +977,7 @@ def propagator(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -1032,7 +1032,7 @@ def sensitivity_measure(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -1104,7 +1104,7 @@ def power_spectra(network):
 
     Parameters
     ----------
-    network: lif_meanfield_tools.models.Network or child class instance.
+    network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
 
@@ -1203,7 +1203,7 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
 
     Parameters
     ----------
-    network : lif_meanfield_tools.models.Network or child class instance.
+    network : nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
     mu_set : float or np.array

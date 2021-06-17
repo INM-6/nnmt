@@ -13,16 +13,16 @@ from ...checks import (check_pos_params_neg_raise_exception,
 
 from .test_delta import real_siegert
 
-import lif_meanfield_tools as lmt
-import lif_meanfield_tools.lif.exp as exp
+import nnmt
+import nnmt.lif.exp as exp
 
-from lif_meanfield_tools.utils import (
+from nnmt.utils import (
     _strip_units,
     _to_si_units,
     )
 
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 fixture_path = 'tests/fixtures/unit/data/'
 
@@ -74,7 +74,7 @@ class Test_firing_rates_wrapper:
     
     def mock_firing_rate_integration(self, mocker):
         mocker.patch(
-            'lif_meanfield_tools.lif._static._firing_rate_integration',
+            'nnmt.lif._static._firing_rate_integration',
             return_value=1
             )
     
@@ -229,7 +229,7 @@ class Test_mean_input_wrapper:
     
     def mock_mean_input(self, mocker):
         mocker.patch(
-            'lif_meanfield_tools.lif.exp._mean_input',
+            'nnmt.lif.exp._mean_input',
             return_value=1
             )
     
@@ -271,7 +271,7 @@ class Test_std_input_wrapper:
     
     def mock_std_input(self, mocker):
         mocker.patch(
-            'lif_meanfield_tools.lif.exp._std_input',
+            'nnmt.lif.exp._std_input',
             return_value=1
             )
     
@@ -500,7 +500,7 @@ class Test_Psi:
         xs = fixtures['xs']
         pcfus = fixtures['pcfus']
         outputs = fixtures['outputs']
-        mock = mocker.patch('lif_meanfield_tools.lif.exp.pcfu_vec')
+        mock = mocker.patch('nnmt.lif.exp.pcfu_vec')
         mock.side_effect = pcfus
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
@@ -517,7 +517,7 @@ class Test_d_Psi:
         xs = fixtures['xs']
         psis = fixtures['psis']
         outputs = fixtures['outputs']
-        mock = mocker.patch('lif_meanfield_tools.lif.exp._Psi')
+        mock = mocker.patch('nnmt.lif.exp._Psi')
         mock.side_effect = psis
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
@@ -534,7 +534,7 @@ class Test_d_2_Psi:
         xs = fixtures['xs']
         psis = fixtures['psis']
         outputs = fixtures['outputs']
-        mock = mocker.patch('lif_meanfield_tools.lif.exp._Psi')
+        mock = mocker.patch('nnmt.lif.exp._Psi')
         mock.side_effect = psis
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)

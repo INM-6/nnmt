@@ -6,10 +6,10 @@ input fixed by setting additional external Poisson input rates.
 
 Author: Johanna Senk
 """
-import lif_meanfield_tools as lmt
-ureg = lmt.ureg
+import nnmt
+ureg = nnmt.ureg
 
-default_nw = lmt.Network(network_params='network_params_microcircuit.yaml',
+default_nw = nnmt.Network(network_params='network_params_microcircuit.yaml',
                          analysis_params='analysis_params.yaml')
 
 working_point = default_nw.working_point()
@@ -37,7 +37,7 @@ print('new_nu_e_ext: {}'.format(new_nu_e_ext))
 print('new_nu_i_ext: {}'.format(new_nu_i_ext))
 print('')
 
-new_nw = lmt.Network(network_params='network_params_microcircuit.yaml',
+new_nw = nnmt.Network(network_params='network_params_microcircuit.yaml',
                      analysis_params='analysis_params.yaml',
                      new_network_params={'nu_e_ext': new_nu_e_ext,
                                          'nu_i_ext': new_nu_i_ext})

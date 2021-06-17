@@ -48,7 +48,7 @@ extensions = [
     'sphinx_tabs.tabs',
     ]
 #
-# autoapi_dirs = ['../../lif_meanfield_tools']
+# autoapi_dirs = ['../../nnmt']
 # autoapi_type = 'python'
 # autoapi_options  = [
 #     'members',

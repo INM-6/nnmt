@@ -16,8 +16,8 @@ from numpy.testing import assert_array_equal, assert_allclose
 
 import h5py_wrapper.wrapper as h5
 
-import lif_meanfield_tools as lmt
-ureg = lmt.ureg
+import nnmt
+ureg = nnmt.ureg
 
 
 config_path = 'tests/fixtures/integration/config/'
@@ -34,20 +34,20 @@ def ground_truth_result():
 
 @pytest.fixture(scope='class')
 def network_params():
-    params = lmt.input_output.load_val_unit_dict_from_yaml(
+    params = nnmt.input_output.load_val_unit_dict_from_yaml(
         config_path + 'Schuecker2015_parameters.yaml')
     params['dimension'] = 1
-    lmt.utils._strip_units(params)
+    nnmt.utils._strip_units(params)
     return params
 
 
 @pytest.fixture(scope='class')
 def si_network_params():
-    params = lmt.input_output.load_val_unit_dict_from_yaml(
+    params = nnmt.input_output.load_val_unit_dict_from_yaml(
         config_path + 'Schuecker2015_parameters.yaml')
     params['dimension'] = 1
-    lmt.utils._to_si_units(params)
-    lmt.utils._strip_units(params)
+    nnmt.utils._to_si_units(params)
+    nnmt.utils._strip_units(params)
     return params
 
 
@@ -68,7 +68,7 @@ def omegas(frequencies):
 
 @pytest.fixture(scope='class')
 def pre_results(si_network_params, omegas):
-    # calculate lif_meanfield_tools results for different mus and sigmas
+    # calculate nnmt results for different mus and sigmas
     absolute_values = []
     phases = []
     zero_freqs = []
@@ -77,7 +77,7 @@ def pre_results(si_network_params, omegas):
     nu0_fb433s = []
     for i, index in enumerate(indices):
         # Stationary firing rates for delta shaped PSCs.
-        nu_0 = lmt.lif.delta._firing_rates_for_given_input(
+        nu_0 = nnmt.lif.delta._firing_rates_for_given_input(
             si_network_params['V_reset'],
             si_network_params['theta'],
             si_network_params[f'mean_input_{index}'],
@@ -86,7 +86,7 @@ def pre_results(si_network_params, omegas):
             si_network_params['tau_r'])
 
         # Stationary firing rates for filtered synapses (via shift)
-        nu0_fb = lmt.lif.exp._firing_rate_shift(
+        nu0_fb = nnmt.lif.exp._firing_rate_shift(
             si_network_params['V_reset'],
             si_network_params['theta'],
             si_network_params[f'mean_input_{index}'],
@@ -96,7 +96,7 @@ def pre_results(si_network_params, omegas):
             si_network_params['tau_s'])
 
         # Stationary firing rates for exp PSCs. (via Taylor)
-        nu0_fb433 = lmt.lif.exp._firing_rate_taylor(
+        nu0_fb433 = nnmt.lif.exp._firing_rate_taylor(
             si_network_params['V_reset'],
             si_network_params['theta'],
             si_network_params[f'mean_input_{index}'],
@@ -107,7 +107,7 @@ def pre_results(si_network_params, omegas):
 
         # colored noise zero-frequency limit of transfer function
         transfer_function_zero_freq = (
-            lmt.lif.exp._derivative_of_firing_rates_wrt_mean_input(
+            nnmt.lif.exp._derivative_of_firing_rates_wrt_mean_input(
                 si_network_params['V_reset'],
                 si_network_params['theta'],
                 si_network_params[f'mean_input_{index}'],
@@ -116,7 +116,7 @@ def pre_results(si_network_params, omegas):
                 si_network_params['tau_r'],
                 si_network_params['tau_s'])) / 1000
         
-        transfer_function = lmt.lif.exp._transfer_function_shift(
+        transfer_function = nnmt.lif.exp._transfer_function_shift(
             si_network_params[f'mean_input_{index}'],
             si_network_params[f'sigma_{index}'],
             si_network_params['tau_m'],

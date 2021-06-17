@@ -11,5 +11,5 @@ Submodules
   :template: custom-module-template.rst
   :recursive:
 
-  lif_meanfield_tools.lif.delta
-  lif_meanfield_tools.lif.exp
+  nnmt.lif.delta
+  nnmt.lif.exp

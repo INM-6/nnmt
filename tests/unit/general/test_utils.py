@@ -8,14 +8,14 @@ from ...checks import (
     check_quantity_dicts_are_equal,
     )
 
-import lif_meanfield_tools as lmt
-ureg = lmt.ureg
+import nnmt
+ureg = nnmt.ureg
 
 
 def make_cache_test_func(output):
     def cache_test_func(network):
         params = dict(output=output)
-        return lmt.utils._cache(network, _test_func, params, 'test')
+        return nnmt.utils._cache(network, _test_func, params, 'test')
     return cache_test_func
         
         
@@ -88,7 +88,7 @@ class Test_cache:
         mock = mocker.Mock(__name__='mocker', return_value=1)
         
         def test_function(network):
-            return lmt.utils._cache(network, mock, dict(a=1), 'test')
+            return nnmt.utils._cache(network, mock, dict(a=1), 'test')
         
         test_function(network)
         test_function(network)
@@ -101,7 +101,7 @@ class Test_cache:
         
         def test_function(network, a):
             params = dict(a=a)
-            return lmt.utils._cache(network, mock, params, 'test')
+            return nnmt.utils._cache(network, mock, params, 'test')
         
         test_function(network, 1)
         test_function(network, 2)
@@ -113,7 +113,7 @@ class Test_cache:
         mock = mocker.Mock(__name__='mocker')
         
         def test_function(network, key):
-            return lmt.utils._cache(network, mock, dict(a=1), key)
+            return nnmt.utils._cache(network, mock, dict(a=1), key)
         
         test_function(network, 'test1')
         test_function(network, 'test2')
@@ -125,7 +125,7 @@ class Test_cache:
         mock = mocker.Mock(__name__='mocker', return_value=1)
         
         def test_function(network):
-            return lmt.utils._cache(network, mock, dict(a=1), 'test',
+            return nnmt.utils._cache(network, mock, dict(a=1), 'test',
                                     'millivolt')
         
         test_function(network)
@@ -138,7 +138,7 @@ class Test_cache:
         mock = mocker.Mock(__name__='mocker', return_value=(1, 2))
         
         def test_function(network):
-            return lmt.utils._cache(network, mock, dict(a=1),
+            return nnmt.utils._cache(network, mock, dict(a=1),
                                     ['test1', 'test2'],
                                     ['millivolt', 'millisecond'])
         
@@ -150,7 +150,7 @@ class Test_cache:
 
 class Test_convert_from_si_to_prefixed:
     
-    func = staticmethod(lmt.utils._convert_from_si_to_prefixed)
+    func = staticmethod(nnmt.utils._convert_from_si_to_prefixed)
     
     def test_to_milli(self):
         quantity = self.func(0.001, 'millivolt')
@@ -180,7 +180,7 @@ class Test_convert_from_si_to_prefixed:
 
 class Test_convert_from_prefixed_to_si:
     
-    func = staticmethod(lmt.utils._convert_from_prefixed_to_si)
+    func = staticmethod(nnmt.utils._convert_from_prefixed_to_si)
     
     def test_from_milli(self):
         quantity = self.func(1, 'millivolt')

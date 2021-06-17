@@ -1,13 +1,13 @@
 # Minimal working example for sensitivity measure
 
-import lif_meanfield_tools as lmt
-from lif_meanfield_tools.__init__ import ureg
+import nnmt
+from nnmt.__init__ import ureg
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 # instantiate network
-network = lmt.Network(network_params='network_params_microcircuit.yaml',
+network = nnmt.Network(network_params='network_params_microcircuit.yaml',
                       analysis_params='analysis_params.yaml')
 
 network.transfer_function()

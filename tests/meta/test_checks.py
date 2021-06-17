@@ -9,8 +9,8 @@ from ..checks import (pint_wrap,
                       check_dict_contains_no_quantity,
                       check_dict_contains_no_val_unit_dict)
 
-import lif_meanfield_tools as lmt
-ureg = lmt.ureg
+import nnmt
+ureg = nnmt.ureg
 
 
 class Test_pint_wrapper:

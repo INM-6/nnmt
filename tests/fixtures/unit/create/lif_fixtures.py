@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding:utf8
 '''
-Creates fixtures for lif_meanfield_tools tests.
+Creates fixtures for nnmt tests.
 
 WARNING: Only use this script, if your code is trustworthy! The script runs
-         the lif_meanfield_tools code to produce the fixtures that are then
+         the nnmt code to produce the fixtures that are then
          stored in h5 format. If you run this script and your code is not
          working correctly, a lot of tests will pass despite your code giving
          wrong results.
@@ -25,13 +25,13 @@ import sys
 import os
 import h5py_wrapper as h5
 
-from lif_meanfield_tools.input_output import load_val_unit_dict_from_yaml
-from lif_meanfield_tools.utils import (
+from nnmt.input_output import load_val_unit_dict_from_yaml
+from nnmt.utils import (
     _strip_units,
     _to_si_units,
     )
 
-import lif_meanfield_tools as lmt
+import nnmt
 
 
 def get_required_params(func, all_params):
@@ -85,53 +85,53 @@ if __name__ == '__main__':
             _strip_units(dict)
         
         if module == 'firing_rates':
-            create_and_save_fixtures(lmt.lif.delta._firing_rate,
+            create_and_save_fixtures(nnmt.lif.delta._firing_rate,
                                      regime_params, regimes,
                                      fixture_path + 'lif_delta_firing_rate.h5')
-            create_and_save_fixtures(lmt.lif.exp._firing_rate_taylor,
+            create_and_save_fixtures(nnmt.lif.exp._firing_rate_taylor,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_firing_rate_taylor.h5')
-            create_and_save_fixtures(lmt.lif.exp._firing_rate_shift,
+            create_and_save_fixtures(nnmt.lif.exp._firing_rate_shift,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_firing_rate_shift.h5')
         elif module == 'inputs':
-            create_and_save_fixtures(lmt.lif._static._mean_input,
+            create_and_save_fixtures(nnmt.lif._static._mean_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_mean_input.h5')
-            create_and_save_fixtures(lmt.lif._static._std_input,
+            create_and_save_fixtures(nnmt.lif._static._std_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_std_input.h5')
         elif module == 'transfer_functions':
-            create_and_save_fixtures(lmt.lif.exp._transfer_function_shift,
+            create_and_save_fixtures(nnmt.lif.exp._transfer_function_shift,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_transfer_function_shift.h5')
-            create_and_save_fixtures(lmt.lif.exp._transfer_function_taylor,
+            create_and_save_fixtures(nnmt.lif.exp._transfer_function_taylor,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_transfer_function_taylor.h5')
         elif module == 'sensitivity_measure':
-            create_and_save_fixtures(lmt.lif.exp._effective_connectivity,
+            create_and_save_fixtures(nnmt.lif.exp._effective_connectivity,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_effective_connectivity.h5')
-            create_and_save_fixtures(lmt.lif.exp._sensitivity_measure,
+            create_and_save_fixtures(nnmt.lif.exp._sensitivity_measure,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_sensitivity_measure.h5')
-            create_and_save_fixtures(lmt.lif.exp._power_spectra,
+            create_and_save_fixtures(nnmt.lif.exp._power_spectra,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_power_spectra.h5')
-            create_and_save_fixtures(lmt.lif.exp._propagator,
+            create_and_save_fixtures(nnmt.lif.exp._propagator,
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_propagator.h5')
         elif module == 'external_rates':
             create_and_save_fixtures(
-                lmt.lif.exp._external_rates_for_fixed_input,
+                nnmt.lif.exp._external_rates_for_fixed_input,
                 regime_params, regimes,
                 fixture_path
                 + 'lif_exp_external_rates_for_fixed_input.h5')

@@ -6,8 +6,8 @@ from numpy.testing import (assert_array_equal,
                            assert_array_almost_equal,
                            assert_allclose)
 
-import lif_meanfield_tools as lmt
-ureg = lmt.ureg
+import nnmt
+ureg = nnmt.ureg
 
 
 def pint_wrap(func):

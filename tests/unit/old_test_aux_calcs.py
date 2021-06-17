@@ -9,13 +9,13 @@ from ..checks import (
     check_exception_is_raised_if_k_is_too_large,
     )
 
-import lif_meanfield_tools as lmt
-from lif_meanfield_tools.aux_calcs import (
+import nnmt
+from nnmt.aux_calcs import (
     d_nu_d_nu_in_fb,
     p_hat_boxcar,
     )
 
-ureg = lmt.ureg
+ureg = nnmt.ureg
 
 fixture_path = 'tests/fixtures/unit/data/'
 

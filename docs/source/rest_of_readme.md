@@ -1,9 +1,9 @@
 
 # Structure
 
-<img src="https://github.com/INM-6/lif_meanfield_tools/blob/master/readme_figures/structure_new.png" width="400">
+<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/structure_new.png" width="400">
 
-lif_meanfield_tools consists of four modules:
+nnmt consists of four modules:
 
 - The central module is __network.py__. It defines a class `Network` which is a
   container for network parameters, analysis parameters and calculated results.
@@ -31,16 +31,16 @@ lif_meanfield_tools consists of four modules:
 
 # How to Get Started / Installation
 
-If you have a local copy of this repository, you can install LMT by running:
+If you have a local copy of this repository, you can install NNMT by running:
 ```
 pip install .
 ```
 
 An alternative is to install directly from GitHub:
 ```
-pip install git+https://github.com/INM-6/lif_meanfield_tools.git
+pip install git+https://github.com/INM-6/nnmt.git
 ```
-If you are using [conda](https://conda.io/), you can create an environment including LMT:
+If you are using [conda](https://conda.io/), you can create an environment including NNMT:
 ```
 conda env create -f environment.yaml
 ```
@@ -50,19 +50,19 @@ conda env create -f environment.yaml
 As the package is still maturing, we currently have some issues that you should
 be aware of:
 
-- [__Network model used__](https://github.com/INM-6/lif_meanfield_tools/issues/36):
+- [__Network model used__](https://github.com/INM-6/nnmt/issues/36):
   Currently, the toolbox is specialized on the microcircuit model (first
   published by [Potjans and Diesmann (2014)](https://doi.org/10.1093/cercor/bhs358))
   which is why the network parameter `label` should only be set to
   `microcircuit` at the moment. See the function
   `_calculate_dependent_network_parameters()` in `network.py`.
 
-- [__Firing rates can become negative__](https://github.com/INM-6/lif_meanfield_tools/issues/19):
+- [__Firing rates can become negative__](https://github.com/INM-6/nnmt/issues/19):
   It happened once to us that the firing rates we got were negative for a
   specific set of network parameters. Apparently, the algorithm is running into
   a non-realistic local minimum. This is an issue we will deal with soon.
 
-- [__Accuracy of transfer function at high frequencies__](https://github.com/INM-6/lif_meanfield_tools/issues/37):
+- [__Accuracy of transfer function at high frequencies__](https://github.com/INM-6/nnmt/issues/37):
   This actually is not a real issue, but you should be aware that the current
   implementation is only accurate for moderate frequencies. This is expected
   from the theory implemented. In the future we might add a support for high
@@ -70,7 +70,7 @@ be aware of:
   for further discussion).
 
 - [__Accuracy of transfer function depends on ratio of synaptic and membrane time
-  constant__](https://github.com/INM-6/lif_meanfield_tools/issues/37): This
+  constant__](https://github.com/INM-6/nnmt/issues/37): This
   is a part of the theory as well. It is only accurate for small values of
   <img src="https://render.githubusercontent.com/render/math?math=\sqrt{\tau_s/\tau_m}">
   which is used as a perturbation parameter in the analysis (see
@@ -85,7 +85,7 @@ First of all, you should have a look at this
 file. Actually, we hope that the usage might be self-explanatory, once you have
 seen an example. But, if you need a little more hints, just continue reading.
 
-For using LMT, you need to store all your network parameters and your analysis
+For using NNMT, you need to store all your network parameters and your analysis
 parameters in .yaml files, as we have done it for the example script. If you
 don't know how the .yaml file format works, you could either first read something
 about it, or use our example .yaml files as templates.
@@ -95,7 +95,7 @@ Additionally, you might want to define a variable to store the `pint` unit
 registry (ureg). This is needed for dealing with units and some of the
 functionality implemented needs the usage of pint units.
 
-Now, you can instantiate a network by calling the central LMT class `Network`
+Now, you can instantiate a network by calling the central NNMT class `Network`
 and passing the .yaml file names. A `Network` object represents your network. When
 it is instantiated, it first calculates all the parameters that are derived from
 the passed parameters. Then, it stores all the parameters associated with the
@@ -203,7 +203,7 @@ environment specified in the provided `environment.yaml` file, and running
 ```
 pytest
 ```
-from the root directory (the one containing `tests` and `lif_meanfield_tools`).
+from the root directory (the one containing `tests` and `nnmt`).
 If you want to be more specific, you can run single tests as well
 ```
 pytest tests/unit/test_meanfield_calcs.py::Test_firing_rates::test_correct_output
