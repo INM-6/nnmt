@@ -4,7 +4,7 @@ LIF Meanfield Tools
 This Python package provides useful tools for analyzing neuronal networks
 consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
 mean-field theory of neuronal networks. That is why this package is called
-__nnmt (LMT)__.
+__nnmt (NNMT)__.
 
 The package provides implementations used in the same or a similar version in
 the following scientific publications: [Fourcaud & Brunel (2002)](https://doi.org/10.1162/089976602320264015),
@@ -71,7 +71,7 @@ nnmt consists of four modules:
 
 # How to Get Started / Installation
 
-If you have a local copy of this repository, you can install LMT by running:
+If you have a local copy of this repository, you can install NNMT by running:
 ```
 pip install .
 ```
@@ -80,7 +80,7 @@ An alternative is to install directly from GitHub:
 ```
 pip install git+https://github.com/INM-6/nnmt.git
 ```
-If you are using [conda](https://conda.io/), you can create an environment including LMT:
+If you are using [conda](https://conda.io/), you can create an environment including NNMT:
 ```
 conda env create -f environment.yaml
 ```
@@ -125,7 +125,7 @@ First of all, you should have a look at this
 file. Actually, we hope that the usage might be self-explanatory, once you have
 seen an example. But, if you need a little more hints, just continue reading.
 
-For using LMT, you need to store all your network parameters and your analysis
+For using NNMT, you need to store all your network parameters and your analysis
 parameters in .yaml files, as we have done it for the example script. If you
 don't know how the .yaml file format works, you could either first read something
 about it, or use our example .yaml files as templates.
@@ -135,7 +135,7 @@ Additionally, you might want to define a variable to store the `pint` unit
 registry (ureg). This is needed for dealing with units and some of the
 functionality implemented needs the usage of pint units.
 
-Now, you can instantiate a network by calling the central LMT class `Network`
+Now, you can instantiate a network by calling the central NNMT class `Network`
 and passing the .yaml file names. A `Network` object represents your network. When
 it is instantiated, it first calculates all the parameters that are derived from
 the passed parameters. Then, it stores all the parameters associated with the
