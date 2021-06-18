@@ -1,4 +1,4 @@
-LIF Meanfield Tools
+Neuronal Network Meanfield Tools
 ====================
 
 This Python package provides useful tools for analyzing neuronal networks
