@@ -1,5 +1,5 @@
-Neuronal Network Meanfield Tools
-====================
+Neuronal Network Meanfield Toolbox
+==================================
 
 This Python package provides useful tools for analyzing neuronal networks
 consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
