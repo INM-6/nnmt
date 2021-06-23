@@ -1,3 +1,45 @@
+"""
+Functions for exponentially shaped post synaptic potentials.
+
+Network Functions
+*****************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+    
+    firing_rates
+    mean_input
+    std_input
+    working_point
+    transfer_function
+    effective_connectivity
+    propagator
+    sensitivity_measure
+    power_spectra
+    external_rates_for_fixed_input
+    
+Parameter Functions
+*******************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+    
+    _firing_rates
+    _firing_rate_shift
+    _firing_rate_taylor
+    _mean_input
+    _std_input
+    _working_point
+    _transfer_function
+    _derivative_of_firing_rates_wrt_mean_input
+    _effective_connectivity
+    _propagator
+    _sensitivity_measure
+    _power_spectra
+    _external_rates_for_fixed_input
+    
+"""
+
 import warnings
 import numpy as np
 import mpmath
@@ -1182,6 +1224,7 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
         Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
     """
     power = np.zeros(effective_connectivity.shape[0:2])
+    import pdb; pdb.set_trace()
     for i, W in enumerate(effective_connectivity):
         Q = np.linalg.inv(np.identity(len(N)) - W)
         A = np.diag(np.ones(len(N))) * nu / N

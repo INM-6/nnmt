@@ -8,8 +8,7 @@ Submodules
 
 .. autosummary::
   :toctree: _autosummary
-  :template: custom-module-template.rst
-  :recursive:
+  :template: custom-submodule-template.rst
 
   nnmt.lif.delta
   nnmt.lif.exp
