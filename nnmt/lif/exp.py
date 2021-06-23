@@ -29,8 +29,8 @@ Parameter Functions
     _firing_rate_taylor
     _mean_input
     _std_input
-    _working_point
-    _transfer_function
+    _transfer_function_shift
+    _transfer_function_taylor
     _derivative_of_firing_rates_wrt_mean_input
     _effective_connectivity
     _propagator
