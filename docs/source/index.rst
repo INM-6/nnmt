@@ -9,7 +9,6 @@ This is NNMT!
    installation
    quick_start
    tutorial
-   input_output
    models
    tools
    utils
