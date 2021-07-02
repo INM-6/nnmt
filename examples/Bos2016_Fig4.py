@@ -1,3 +1,4 @@
+# %%
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -94,16 +95,20 @@ def calculate_sensitivity_dict(network):
     # identify frequency which is closest to the point complex(1,0) per eigenvalue trajectory    
     sensitivity_dict = defaultdict(int)
     
+    print('Looping through eigenvalues...')
+    
     for eig_index, eig in enumerate(resorted_eigenvalue_spectra):
+        print(eig_index)
         critical_frequency = frequencies[np.argmin(abs(eig-1.0))]
         critical_frequency_index = np.argmin(abs(frequencies-critical_frequency))
         critical_eigenvalue = eig[critical_frequency_index]
 
         # calculate sensitivity measure at frequency
         omega = np.array([critical_frequency * 2 * np.pi])
-        network_at_single_critical_frequency = network.change_parameters({
-            'omegas': omega
-            })
+        network_at_single_critical_frequency = network.change_parameters(
+            changed_analysis_params={'omegas': omega})
+            
+        print(omega)
         
         nnmt.lif.exp.working_point(network_at_single_critical_frequency, method='taylor')
         nnmt.network_properties.delay_dist_matrix(network_at_single_critical_frequency)
@@ -157,6 +162,8 @@ microcircuit = nnmt.models.Microcircuit(
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 # %%
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
+full_indegree_matrix = microcircuit.network_params['K']
+
 # %%
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -171,7 +178,6 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 # This requires now, to redefine the analysis frequencies, which is suboptimal
 # as the other results for the former analysis frequencies will be overwritten.
 # %% 
-
 sensitivity_dict, resorted_eigenvalue_spectra = calculate_sensitivity_dict(microcircuit)
 # %%
 for i in range(8):
@@ -184,76 +190,81 @@ print(f'Eigenvalues to be plotted: {eigenvalues_to_be_plotted}')
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 
 
-# %%
-# Calculate the eigenvalue trajectories and sensitivity dict for isolated layer
-# by redefining the connectivity matrix
-microcircuit_isolated_layers = nnmt.models.Microcircuit(
-    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
-# %%
-full_indegree_matrix = microcircuit_isolated_layers.network_params['K']
-frequencies = microcircuit_isolated_layers.analysis_params['omegas']/(2.*np.pi)
-# %% 
-# test for one layer
-eigenvalue_spectra_isolated_layers = defaultdict(int)
-power_spectra_isolated_layers = defaultdict(int)
+# # %%
+# # Calculate the eigenvalue trajectories and sensitivity dict for isolated layer
+# # by redefining the connectivity matrix
+# microcircuit_isolated_layers = nnmt.models.Microcircuit(
+#     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+#     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+# # %%
+# full_indegree_matrix = microcircuit_isolated_layers.network_params['K']
+# frequencies = microcircuit_isolated_layers.analysis_params['omegas']/(2.*np.pi)
+# # %% 
+# # test for one layer
+# eigenvalue_spectra_isolated_layers = defaultdict(int)
+# power_spectra_isolated_layers = defaultdict(int)
 
-i=0
-reducing_matrix = np.zeros((8,8))
-reducing_matrix[2*i:2*i+2, 2*i:2*i+2] = np.ones([2,2])
-# for layer i, set indegree matrix such that it is isolated
-microcircuit_isolated_layers.network_params.update(
-    K = full_indegree_matrix*reducing_matrix)
+# i=0
+# reducing_matrix = np.zeros((8,8))
+# reducing_matrix[2*i:2*i+2, 2*i:2*i+2] = np.ones([2,2])
+# # for layer i, set indegree matrix such that it is isolated
+# microcircuit_isolated_layers.network_params.update(
+#     K = full_indegree_matrix*reducing_matrix)
 
-# calculate working point for exponentially shape post synaptic currents
-print(nnmt.lif.exp.working_point(microcircuit_isolated_layers, method='taylor'))
-# calculate the transfer function
-nnmt.lif.exp.transfer_function(microcircuit_isolated_layers, method='taylor')
-# calculate the delay distribution matrix
-nnmt.network_properties.delay_dist_matrix(microcircuit_isolated_layers)
-eigenvalue_spectra_layer = np.linalg.eig(
-        nnmt.lif.exp.effective_connectivity(microcircuit_isolated_layers))[0].T
+# # calculate working point for exponentially shape post synaptic currents
+# print(nnmt.lif.exp.working_point(microcircuit_isolated_layers, method='taylor'))
+# # calculate the transfer function
+# nnmt.lif.exp.transfer_function(microcircuit_isolated_layers, method='taylor')
+# # calculate the delay distribution matrix
+# nnmt.network_properties.delay_dist_matrix(microcircuit_isolated_layers)
+# eigenvalue_spectra_layer = np.linalg.eig(
+#         nnmt.lif.exp.effective_connectivity(microcircuit_isolated_layers))[0].T
 
-power_spectra_layer = nnmt.lif.exp.power_spectra(microcircuit_isolated_layers).T
+# power_spectra_layer = nnmt.lif.exp.power_spectra(microcircuit_isolated_layers).T
 
 
-resorted_eigenvalue_spectra_layer, new_indices_layer = resort_eigenvalues(
-        eigenvalue_spectra_layer)
+# resorted_eigenvalue_spectra_layer, new_indices_layer = resort_eigenvalues(
+#         eigenvalue_spectra_layer)
 
-eigenvalue_spectra_isolated_layers[i] = eigenvalue_spectra_layer   
-power_spectra_isolated_layers[i] = power_spectra_layer  
+# eigenvalue_spectra_isolated_layers[i] = eigenvalue_spectra_layer   
+# power_spectra_isolated_layers[i] = power_spectra_layer  
 
-# %%
-freqs = microcircuit_isolated_layers.analysis_params['omegas']/(2*np.pi)
-plt.semilogy(freqs, power_spectra_isolated_layers[i][0])
+# # %%
+# freqs = microcircuit_isolated_layers.analysis_params['omegas']/(2*np.pi)
+# plt.semilogy(freqs, power_spectra_isolated_layers[i][0])
 
-# %%
-for i in range(8):
-    plt.scatter(eigenvalue_spectra_isolated_layers[0].real,
-                eigenvalue_spectra_isolated_layers[0].imag)
-# %%
+# # %%
+# for i in range(8):
+#     plt.scatter(eigenvalue_spectra_isolated_layers[0].real,
+#                 eigenvalue_spectra_isolated_layers[0].imag)
+# # %%
 
-# restore the full indegree matrix again
-microcircuit_isolated_layers.network_params.update(
-    K = full_indegree_matrix)
+# # restore the full indegree matrix again
+# microcircuit_isolated_layers.network_params.update(
+#     K = full_indegree_matrix)
 
 # %% 
 # Alter the indegree matrix to consist just of the individual isolated layers
 isolated_layers_results = defaultdict(str)
 for i, layer in enumerate(['23', '4', '5', '6']):
+    print(layer)
     isolated_layers_results[layer] = defaultdict(str)
+    
+    microcircuit_isolated_layers = nnmt.models.Microcircuit(
+        network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+        analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+    isolated_layers_results[layer]['network'] = microcircuit_isolated_layers
+    
+    # calculate working point for exponentially shape post synaptic currents
+    nnmt.lif.exp.working_point(isolated_layers_results[layer]['network'], method='taylor')
 
     reducing_matrix = np.zeros((8,8))
     reducing_matrix[2*i:2*i+2, 2*i:2*i+2] = np.ones([2,2])
     # for layer i, set indegree matrix such that it is isolated
-    # microcircuit_isolated_layers.network_params.update(
-    #     K = full_indegree_matrix*reducing_matrix)
-    isolated_layers_results[layer]['network'] = microcircuit.change_parameters({
-        'K': full_indegree_matrix*reducing_matrix
-    })
+    isolated_layers_results[layer]['network'].network_params.update(
+        K = full_indegree_matrix*reducing_matrix)
     
-    # calculate working point for exponentially shape post synaptic currents
-    nnmt.lif.exp.working_point(isolated_layers_results[layer]['network'], method='taylor')
+    print('connectivity changed...')
     # calculate the transfer function
     nnmt.lif.exp.transfer_function(isolated_layers_results[layer]['network'], method='taylor')
     # calculate the delay distribution matrix
@@ -274,7 +285,7 @@ for i, layer in enumerate(['23', '4', '5', '6']):
     layer['sensitivity_dict'] = defaultdict(int)
         
     for eig_index, eig in enumerate(layer['eigenvalue_spectra']):
-        critical_frequency = freqs_isolated_layers[np.argmin(abs(eig-1.0))]
+        critical_frequency = frequencies[np.argmin(abs(eig-1.0))]
         critical_frequency_index = np.argmin(abs(frequencies-critical_frequency))
         critical_eigenvalue = eig[critical_frequency_index]
     
@@ -288,13 +299,6 @@ for i, layer in enumerate(['23', '4', '5', '6']):
         print(layer, j, isolated_layers_results[layer]['sensitivity_dict'][j])
 
 layer_eigenvalue_tuples_to_be_plotted = [('23', 1), ('4', 1), ('5', 1), ('6', 1), ('23', 0), ('5', 0)]
-
-# %%
-for layer in range(4):
-    for i in range(8):
-        plt.scatter(eigenvalue_spectra_isolated_layers[layer].real,
-                    eigenvalue_spectra_isolated_layers[layer].imag)
-# %%
 # %%
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
