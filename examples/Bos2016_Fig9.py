@@ -10,26 +10,16 @@ from collections import defaultdict
 
 
 plt.style.use('frontiers.mplstyle')
-# %%
 
+# load the publicated results
 fix_path = '../tests/fixtures/integration/data/'
 result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
-# %%
-result.keys()
-# %%
-result['oscillation_origin'].keys()
-result['oscillation_origin']['A'].keys()
-# %%
+
 # create network model microcircuit
 microcircuit = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
-#%%
-# new_microcircuit = microcircuit.change_parameters(changed_analysis_params={
-#     'f_max': 100.0,
-#     'df': 1
-# })
-# %%
+
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
 # calculate the transfer function
@@ -40,17 +30,20 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 nnmt.lif.exp.effective_connectivity(microcircuit)
 # calculate the power spectra
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
-# %%
 frequencies = microcircuit.analysis_params['omegas']/(2*np.pi)
 full_indegree_matrix = microcircuit.network_params['K']
-# %%
-# reduced circuit for 64 Hz oscillation
+
+
+# reduced circuit for 64 Hz oscillation, initialize full circuit to calculate
+# the working point, then reduce the connectivity
 low_gamma_subcircuit = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 
+# calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(low_gamma_subcircuit, method='taylor')
 
+# construct a matrix with the wanted connections
 reducing_matrix = np.zeros((8,8))
 reducing_matrix[0,0:4] = 1
 reducing_matrix[1,0:2] = 1
@@ -61,7 +54,6 @@ low_gamma_subcircuit.network_params.update({
     'K': full_indegree_matrix*reducing_matrix
 })
 
-# calculate working point for exponentially shape post synaptic currents
 # calculate the transfer function
 nnmt.lif.exp.transfer_function(low_gamma_subcircuit, method='taylor')
 # calculate the delay distribution matrix
@@ -72,23 +64,23 @@ nnmt.lif.exp.effective_connectivity(low_gamma_subcircuit)
 low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(low_gamma_subcircuit).T
 
 
-# %%
-# take out 23E -> 4I
+# take out connections from 23E to 4I, initialize full circuit to calculate
+# the working point, then reduce the connectivity
 without_23E_4I = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 
+# calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(without_23E_4I, method='taylor')
 
+# construct a matrix with the wanted connections
 reducing_matrix = np.ones((8,8))
 reducing_matrix[3,0] = 0
-
 
 without_23E_4I.network_params.update({
     'K': full_indegree_matrix*reducing_matrix
 })
 
-# calculate working point for exponentially shape post synaptic currents
 # calculate the transfer function
 nnmt.lif.exp.transfer_function(without_23E_4I, method='taylor')
 # calculate the delay distribution matrix
@@ -98,7 +90,7 @@ nnmt.lif.exp.effective_connectivity(without_23E_4I)
 # calculate the power spectra
 without_23E_4I_power_spectra = nnmt.lif.exp.power_spectra(without_23E_4I).T
 
-# %%
+# plot
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
                  constrained_layout=True)
@@ -182,5 +174,3 @@ for gs, pop_idx in zip(gsB, [0,2,3]):
     ax.set_ylim([1e-6, 1e0])
 
 plt.savefig('Bos2016_Fig9.png')
-
-# %%

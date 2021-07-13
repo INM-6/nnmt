@@ -13,7 +13,6 @@ microcircuit = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 
-# %%
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
 # calculate the transfer function
@@ -25,19 +24,16 @@ nnmt.lif.exp.effective_connectivity(microcircuit)
 # calculate the power spectra
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 
-# %%
+# read the simulated power spectra from the publicated data
 fix_path = '../tests/fixtures/integration/data/'
 result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
-# read the simulated power spectra from the publicated data
 simulated_power_spectra_1_window = result['fig_microcircuit']['1']
 simulated_power_spectra_20_window = result['fig_microcircuit']['20']
 
-# %%
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
                  constrained_layout=True)
 grid_specification = gridspec.GridSpec(2, 4, figure=fig)
-
 
 for layer in [0, 1, 2, 3]:
     for pop in [0, 1]:
@@ -76,5 +72,3 @@ for layer in [0, 1, 2, 3]:
             ax.set_ylabel(r'$|C(\omega)|$')
     
 plt.savefig('Bos2016_Fig1E.png')
-
-# %%
