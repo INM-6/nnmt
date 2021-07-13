@@ -124,7 +124,7 @@ for gs, pop_idx in zip(gsA, [0,2,3]):
             color='black', zorder=10)
     ax.set_yscale('log')
 
-    ax.set_title(labels[0])
+    ax.set_title(labels[pop_idx])
     ax.set_xlabel(r'frequency (1/$s$)')
 
     ax.set_xticks([20, 40, 60, 80])
@@ -157,7 +157,7 @@ for gs, pop_idx in zip(gsB, [0,2,3]):
             color='black', zorder=10)
     ax.set_yscale('log')
 
-    ax.set_title(labels[0])
+    ax.set_title(labels[pop_idx])
     ax.set_xlabel(r'frequency (1/$s$)')
 
     ax.set_xticks([20, 40, 60, 80])
