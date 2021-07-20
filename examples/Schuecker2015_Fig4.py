@@ -17,11 +17,10 @@ nnmt.utils._strip_units(params)
 network_params = params
 
 # converting to si
-params = raw_params_with_units.copy()
-nnmt.utils._to_si_units(params)
-nnmt.utils._strip_units(params)
-params['dimension'] = 1
-si_network_params =  params 
+si_network_params = raw_params_with_units.copy()
+nnmt.utils._to_si_units(si_network_params)
+nnmt.utils._strip_units(si_network_params)
+si_network_params['dimension'] = 1
 
 frequencies = np.logspace(
         si_network_params['f_start_exponent'],
@@ -35,20 +34,9 @@ indices = [1,2]
 # calculate nnmt results for different mus and sigmas
 absolute_values = []
 phases = []
-zero_freqs = []
-nu_0s = []
+transfer_function_zero_freqs = []
 nu0_fbs = []
-nu0_fb433s = []
 for i, index in enumerate(indices):
-    # Stationary firing rates for delta shaped PSCs.
-    nu_0 = nnmt.lif.delta._firing_rates_for_given_input(
-        si_network_params['V_reset'],
-        si_network_params['theta'],
-        si_network_params[f'mean_input_{index}'],
-        si_network_params[f'sigma_{index}'],
-        si_network_params['tau_m'],
-        si_network_params['tau_r'])
-
     # Stationary firing rates for filtered synapses (via shift)
     nu0_fb = nnmt.lif.exp._firing_rate_shift(
         si_network_params['V_reset'],
@@ -58,17 +46,7 @@ for i, index in enumerate(indices):
         si_network_params['tau_m'],
         si_network_params['tau_r'],
         si_network_params['tau_s'])
-
-    # Stationary firing rates for exp PSCs. (via Taylor)
-    nu0_fb433 = nnmt.lif.exp._firing_rate_taylor(
-        si_network_params['V_reset'],
-        si_network_params['theta'],
-        si_network_params[f'mean_input_{index}'],
-        si_network_params[f'sigma_{index}'],
-        si_network_params['tau_m'],
-        si_network_params['tau_r'],
-        si_network_params['tau_s'])
-
+    
     # colored noise zero-frequency limit of transfer function
     transfer_function_zero_freq = (
         nnmt.lif.exp._derivative_of_firing_rates_wrt_mean_input(
@@ -95,24 +73,19 @@ for i, index in enumerate(indices):
     absolute_value = np.abs(transfer_function)
     phase = (np.angle(transfer_function)
                 / 2 / np.pi * 360)
-    zero_freq = transfer_function_zero_freq
     
     # collect all results
     absolute_values.append(absolute_value)
     phases.append(phase)
-    zero_freqs.append(zero_freq)
-    nu_0s.append(nu_0)
+    transfer_function_zero_freqs.append(transfer_function_zero_freq)
     nu0_fbs.append(nu0_fb)
-    nu0_fb433s.append(nu0_fb433)
-
+    
 # prepare parsing into a dictionary
 pre_results = dict(
     absolute_values=absolute_values,
     phases=phases,
-    zero_freqs=zero_freqs,
-    nu_0s=nu_0s,
-    nu0_fbs=nu0_fbs,
-    nu0_fb433s=nu0_fb433s)
+    transfer_function_zero_freqs=transfer_function_zero_freqs,
+    nu0_fbs=nu0_fbs)
     
 # parse results into a dictionary
 test_results = defaultdict(str)
@@ -127,10 +100,9 @@ for i, index in enumerate(indices):
             'mu'][mu] = {
                 'absolute_value': pre_results['absolute_values'][i][:, j],
                 'phase': pre_results['phases'][i][:, j],
-                'zero_freq': pre_results['zero_freqs'][i][j],
-                'nu_0': pre_results['nu_0s'][i][j],
-                'nu0_fb': pre_results['nu0_fbs'][i][j],
-                'nu0_fb433': pre_results['nu0_fb433s'][i][j]}
+                'transfer_function_zero_freq': \
+                    pre_results['transfer_function_zero_freqs'][i][j],
+                'nu0_fb': pre_results['nu0_fbs'][i][j]}
     
 # plot
 fig = plt.figure(figsize=(3.34646, 3.34646/2),
@@ -169,7 +141,7 @@ for sigma in test_results['sigma'].keys():
                         linewidth=lw,
                         label=r'$\mu=$ ' + str(mu))
         axA.semilogx(zero_freq,
-                        test_results['sigma'][sigma]['mu'][mu]['zero_freq'],
+                        test_results['sigma'][sigma]['mu'][mu]['transfer_function_zero_freq'],
                         '+',
                         color=colors[i],
                         markersize=markersize_cross)
