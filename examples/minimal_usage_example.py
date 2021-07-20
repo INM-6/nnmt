@@ -1,4 +1,8 @@
-# Minimal working example
+"""
+Minimal working example
+=======================
+"""
+
 import nnmt
 ureg = nnmt.ureg
 
@@ -14,6 +18,8 @@ print('Working point:')
 print(f"mean input: {wp['mean_input']}")
 print(f"std input: {wp['std_input']}")
 print(f"firing rates: {wp['firing_rates']}")
+
+nnmt.lif.exp.power_spectra(network)
 
 # calculate transfer function
 tf = nnmt.lif.exp.transfer_function(network)

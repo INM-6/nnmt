@@ -1,5 +1,6 @@
 """
-fix_working_point.py
+Fix working point
+=================
 
 Example for creating a new network with the mean and standard deviation of the
 input fixed by setting additional external Poisson input rates.

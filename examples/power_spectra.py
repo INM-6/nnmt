@@ -1,4 +1,7 @@
-# Minimal working example to test power spectra
+"""
+Minimal working example to test power spectra
+=============================================
+"""
 
 import nnmt
 from nnmt.__init__ import ureg

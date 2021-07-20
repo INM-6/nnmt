@@ -1,4 +1,7 @@
-# Minimal working example for sensitivity measure
+"""
+Minimal working example for sensitivity measure
+===============================================
+"""
 
 import nnmt
 from nnmt.__init__ import ureg

@@ -1,3 +1,8 @@
+"""
+Sanzeni 2020
+============
+"""
+
 import numpy as np
 import matplotlib.gridspec as gridspec
 

@@ -8,7 +8,7 @@ This is NNMT!
    
    installation
    quick_start
-   tutorial
+   examples
    models
    tools
    utils

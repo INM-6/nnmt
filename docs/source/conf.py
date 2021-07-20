@@ -43,6 +43,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinx_gallery.gen_gallery',
     # 'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
     'numpydoc',
@@ -61,6 +62,11 @@ extensions = [
 # napoleon_use_admonition_for_notes = True
 # napoleon_use_param = False
 
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+     'plot_gallery': 'False'
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
