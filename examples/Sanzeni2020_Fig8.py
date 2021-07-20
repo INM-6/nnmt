@@ -131,7 +131,7 @@ fig = plt.figure(figsize=(3.34646, 3.34646),  # one column figure, 85mm wide
 gs = gridspec.GridSpec(3, 2, figure=fig)
 label_prms = dict(x=-0.3, y=1.4, fontsize=10, fontweight='bold',
                   va='top', ha='right')
-colors = ['#c44e52', '#4c72b0']
+colors = ['#4c72b0', '#c44e52']
 # Sketch
 ax = fig.add_subplot(gs[0, 0])
 ax.axis('off')
@@ -166,4 +166,5 @@ plot_rates(fig.add_subplot(gs[2, 1]),
            colors, '(F)', label_prms)
 # save and show
 # plt.savefig('Sanzeni2020_Fig8.pdf')
+# plt.savefig('Sanzeni2020_Fig8.svg')
 plt.show()
