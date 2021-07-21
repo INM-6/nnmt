@@ -2,4 +2,8 @@
 Utils
 =====
 
-.. automodule:: nnmt.utils
+.. toctree::
+   :maxdepth: 1
+   
+   input_output
+   internal_utils

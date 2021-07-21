@@ -1,22 +1,40 @@
+"""
+Microcircuit Firing Rates
+=========================
+
+Here we calculate the firing rates of the :cite:t:`potjans2014` microcircuit
+model.
+"""
+
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
 
+# use matplotlib style file
 plt.style.use('frontiers.mplstyle')
 
-# create network model microcircuit
+###############################################################################
+# First we create a network model of the microcircuit, passing the parameter
+# yaml file.
 microcircuit = nnmt.models.Microcircuit('network_params_microcircuit.yaml')
 
-# calculate firing rates for exponentially shape post synaptic currents
-firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='shift')
+###############################################################################
+# Then we simply calculate the firing rates for exponentially shape post
+# synaptic currents, by calling the respective function and passing the
+# microcircuit. Here we chose to use the 'taylor' method for calculating the
+# firing rates.
+firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='taylor')
 
 print(f'Mean rates: {firing_rates}')
 
-# simulated_rates = [0.751, 2.971, 4.29, 6.94, 6.816, 7.698, 1.126, 8.102]
-simulated_rates = np.array([0.943, 3.026, 4.368, 5.882, 7.733, 8.664, 1.096, 7.851])
+###############################################################################
+# Then we compare the rates to the publicated data from :cite:t:`bos2016`.
+simulated_rates = np.array([0.74460773, 2.69596288, 4.11150391, 5.62804937,
+                            6.63713466, 8.29040221, 1.1003033 , 7.66250752])
 print(f'Mean simulated rates: {simulated_rates}')
 
-# one column figure, 85mm wide
+###############################################################################
+# Finally, we plot the rates together in one plot.
 fig = plt.figure(figsize=(3.34646, 3.34646/2),
                  constrained_layout=True)
 

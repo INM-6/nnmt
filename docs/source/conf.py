@@ -43,6 +43,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinx_gallery.gen_gallery',
     # 'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
     'numpydoc',
@@ -61,6 +62,11 @@ extensions = [
 # napoleon_use_admonition_for_notes = True
 # napoleon_use_param = False
 
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+     'plot_gallery': 'False'
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -100,11 +106,13 @@ bibtex_reference_style = 'author_year'
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
-
+#
 html_theme_options = {
     'font_family': 'Arial',
-    'page_width': '1200px',  # default is 940
-    'sidebar_width': '400px',  # default is 220
+    'page_width': '1120px',  # default is 940
+    'description': 'Neuronal Network Meanfield Toolbox',
+    'body_max_width': '900px',
+    'sidebar_width': '220px',  # default is 220
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -119,10 +127,6 @@ html_logo = 'images/logo.png'
 # html_copy_source = False
 
 # html_show_sourcelink = False
-
-html_theme_options = {
-    'description': 'An awesome toolbox for network model analysis.',
-    }
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 html_show_sphinx = False
@@ -143,3 +147,7 @@ numpydoc_show_class_members = False
 # and citation text
 # https://github.com/sphinx-doc/sphinx/issues/6705#issuecomment-536197438
 html4_writer = True
+
+#
+# def setup(app):
+#     app.add_css_file('my_theme.css')

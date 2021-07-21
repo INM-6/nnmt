@@ -1,3 +1,30 @@
+"""
+Functions for delta shaped post synaptic potentials.
+
+Network Functions
+*****************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+    
+    firing_rates
+    mean_input
+    std_input
+    
+Parameter Functions
+*******************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+    
+    _firing_rates
+    _firing_rates_for_given_input
+    _mean_input
+    _std_input
+    _derivative_of_firing_rates_wrt_mean_input
+    
+"""
+
 import numpy as np
 from scipy.special import (
     erf as _erf,

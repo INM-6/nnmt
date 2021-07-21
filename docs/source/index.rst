@@ -4,14 +4,13 @@ This is NNMT!
 
 .. toctree::
    :hidden:
-   :maxdepth: 1
+   :maxdepth: 2
    
    installation
-   tutorial
-   input_output
-   network_properties
+   quick_start
+   examples
    models
-   lif
+   tools
    utils
    how_to_contribute
    license
