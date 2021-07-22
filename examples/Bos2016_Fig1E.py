@@ -1,3 +1,11 @@
+"""
+Power Spectra (Bos 2016)
+========================
+
+Here we calculate the power spectra of the :cite:t:`potjans2014` microcircuit
+model including modifications made in :cite:t:`bos2016`.
+"""
+
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,10 +16,14 @@ import h5py_wrapper.wrapper as h5
 
 plt.style.use('frontiers.mplstyle')
 
-# create network model microcircuit
+# %%
+# Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+
+# %%
+# Calculate all necessary quantities and finally the power spectra.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -24,11 +36,15 @@ nnmt.lif.exp.effective_connectivity(microcircuit)
 # calculate the power spectra
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 
-# read the simulated power spectra from the publicated data
+# %%
+# Read the simulated power spectra from the publicated data.
 fix_path = '../tests/fixtures/integration/data/'
 result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_power_spectra_1_window = result['fig_microcircuit']['1']
 simulated_power_spectra_20_window = result['fig_microcircuit']['20']
+
+# %%
+# Plotting
 
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),

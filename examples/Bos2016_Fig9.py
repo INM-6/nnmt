@@ -1,24 +1,35 @@
-# %%
-from nnmt.models import network
+"""
+Power Spectra of Sub-Circuits (Bos 2016)
+========================================
+
+Here we calculate the power spectra of subcircuits of the :cite:t:`potjans2014` 
+microcircuit model including modifications made in :cite:t:`bos2016`.
+"""
+
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker
 import h5py_wrapper.wrapper as h5
-from collections import defaultdict
-
 
 plt.style.use('frontiers.mplstyle')
 
-# load the publicated results
-fix_path = '../tests/fixtures/integration/data/'
-result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
-
-# create network model microcircuit
+# %%
+# Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+frequencies = microcircuit.analysis_params['omegas']/(2*np.pi)
+full_indegree_matrix = microcircuit.network_params['K']
+
+# %%
+# Read the simulated power spectra from the publicated data.
+fix_path = '../tests/fixtures/integration/data/'
+result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+
+# %%
+# Calculate all necessary quantities and finally the power spectra.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -30,12 +41,12 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 nnmt.lif.exp.effective_connectivity(microcircuit)
 # calculate the power spectra
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
-frequencies = microcircuit.analysis_params['omegas']/(2*np.pi)
-full_indegree_matrix = microcircuit.network_params['K']
 
+# %%
+# Initialize a new network instance for the reduced circuit explaining the 
+# 64 Hz oscillation. First calculate the working point with the full circuit, 
+# then reduce the connectivity.
 
-# reduced circuit for 64 Hz oscillation, initialize full circuit to calculate
-# the working point, then reduce the connectivity
 low_gamma_subcircuit = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
@@ -63,9 +74,11 @@ nnmt.lif.exp.effective_connectivity(low_gamma_subcircuit)
 # calculate the power spectra
 low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(low_gamma_subcircuit).T
 
+# %%
+# Initialize a new network instance to calculate results without connections
+# from 23E to 4I. First, calculate the working point with the full circuit, 
+# then reduce the connectivity.
 
-# take out connections from 23E to 4I, initialize full circuit to calculate
-# the working point, then reduce the connectivity
 without_23E_4I = nnmt.models.Microcircuit(
     network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
@@ -90,7 +103,9 @@ nnmt.lif.exp.effective_connectivity(without_23E_4I)
 # calculate the power spectra
 without_23E_4I_power_spectra = nnmt.lif.exp.power_spectra(without_23E_4I).T
 
-# plot
+# %%
+# Plotting
+
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
                  constrained_layout=True)

@@ -1,3 +1,10 @@
+"""
+Transfer Functions (Schuecker 2015)
+===================================
+
+Here we calculate the transfer functions as in :cite:t:`schuecker2015`.
+"""
+
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,6 +13,10 @@ from collections import defaultdict
 import matplotlib.ticker
 
 plt.style.use('frontiers.mplstyle')
+
+# %%
+# The parameters used for calculation of the transfer functions 
+# in :cite:t:`schuecker2015` were gathered in a .yaml-File and are loaded here. 
 
 raw_params_with_units = nnmt.input_output.load_val_unit_dict_from_yaml(
         '../tests/fixtures/integration/config/Schuecker2015_parameters.yaml')
@@ -31,7 +42,9 @@ omegas = 2 * np.pi * frequencies
 
 indices = [1,2]
 
-# calculate nnmt results for different mus and sigmas
+# %%
+# Calculate results for different input means and standard deviations.
+
 absolute_values = []
 phases = []
 transfer_function_zero_freqs = []
@@ -79,15 +92,15 @@ for i, index in enumerate(indices):
     phases.append(phase)
     transfer_function_zero_freqs.append(transfer_function_zero_freq)
     nu0_fbs.append(nu0_fb)
-    
-# prepare parsing into a dictionary
+
+# %% 
+# Prepare data for plotting by parsing into a dictionary.
 pre_results = dict(
     absolute_values=absolute_values,
     phases=phases,
     transfer_function_zero_freqs=transfer_function_zero_freqs,
     nu0_fbs=nu0_fbs)
     
-# parse results into a dictionary
 test_results = defaultdict(str)
 test_results['sigma'] = defaultdict(dict)
 for i, index in enumerate(indices):
@@ -95,16 +108,15 @@ for i, index in enumerate(indices):
     test_results['sigma'][sigma]['mu'] = (
         defaultdict(dict))
     for j, mu in enumerate(network_params[f'mean_input_{index}']):
-        test_results[
-            'sigma'][sigma][
-            'mu'][mu] = {
+        test_results['sigma'][sigma]['mu'][mu] = {
                 'absolute_value': pre_results['absolute_values'][i][:, j],
                 'phase': pre_results['phases'][i][:, j],
                 'transfer_function_zero_freq': \
                     pre_results['transfer_function_zero_freqs'][i][j],
                 'nu0_fb': pre_results['nu0_fbs'][i][j]}
-    
-# plot
+        
+# %%
+# Plotting
 fig = plt.figure(figsize=(3.34646, 3.34646/2),
                  constrained_layout=True)
 

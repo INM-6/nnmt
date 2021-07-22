@@ -1,3 +1,11 @@
+"""
+Microcircuit Firing Rates (Bos 2016)
+====================================
+
+Here we calculate the firing rates of the :cite:t:`potjans2014` microcircuit
+model including modifications made in :cite:t:`bos2016`.
+"""
+# %%
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,20 +14,25 @@ import h5py_wrapper.wrapper as h5
 
 plt.style.use('frontiers.mplstyle')
 
-# create network model microcircuit
+# %%
+# Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     '../tests/fixtures/integration/config/Bos2016_network_params.yaml')
 
-# calculate firing rates for exponentially shape post synaptic currents
+# %%
+# Calculate the firing rates for exponentially shaped post synaptic currents.
 firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='taylor')
 
 print(f'Mean rates: {firing_rates}')
-
+# %%
+# Load the simulated rates publicated in :cite:t:`bos2016` for comparison.
 fix_path = '../tests/fixtures/integration/data/'
 result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_rates = result['fig_microcircuit']['rates_sim']*1000
 
 print(f'Mean simulated rates: {simulated_rates}')
+# %%
+# Plotting 
 
 # one column figure, 85mm wide
 fig = plt.figure(figsize=(3.34646, 3.34646/2),

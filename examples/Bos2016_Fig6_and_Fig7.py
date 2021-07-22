@@ -1,13 +1,15 @@
-# %%
-from nnmt.models import network
+"""
+Sensitivity Measure (Bos 2016)
+==============================
+
+Here we calculate the sensitivity measure of the :cite:t:`potjans2014` 
+microcircuit model including modifications made in :cite:t:`bos2016`.
+"""
+
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import matplotlib.ticker
-import h5py_wrapper.wrapper as h5
-from collections import defaultdict
-
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -20,14 +22,16 @@ def colorbar(mappable):
 
 plt.style.use('frontiers.mplstyle')
 
-# create network model microcircuit
+# %% 
+# Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    network_params=\
-        '../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params=\
-        '../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
-
+    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
+
+# %%
+# Calculate all necessary quantities and finally the sensitivity 
+# measure dictionary.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -46,10 +50,13 @@ for i in range(8):
     print(sensitivity_dict[i]['k'])
     print(sensitivity_dict[i]['k_per'])    
     
+# identified these indices manually    
 eigenvalues_to_plot_high = [1, 0, 3, 2]
 eigenvalue_to_plot_low = 6
 
-# plot Fig. 6
+# %%
+# Plotting: Sensitivity Measure corresponding to high frequency peak (Fig. 6)
+
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
                  constrained_layout=True)
@@ -64,7 +71,7 @@ for ev, subpanel in zip(eigenvalues_to_plot_high, grid_specification):
                                            width_ratios=[1, 1], 
                                            subplot_spec=subpanel)
     
-    # senstivity_measure_amplitude
+    # sensitivity_measure_amplitude
     ax = fig.add_subplot(gs[0])
     
     frequency = sensitivity_dict[ev]['critical_frequency']
@@ -93,7 +100,7 @@ for ev, subpanel in zip(eigenvalues_to_plot_high, grid_specification):
     ax.set_xlabel('sources')
     ax.set_ylabel('targets')
     
-    # senstivity_measure_frequency
+    # sensitivity_measure_frequency
     ax = fig.add_subplot(gs[1])
     
     frequency = sensitivity_dict[ev]['critical_frequency']
@@ -127,7 +134,9 @@ fig.set_constrained_layout_pads(w_pad=2 / 72, h_pad=2 / 72, hspace=0.1,
     
 plt.savefig('Bos2016_Fig6.png', bbox_inches='tight')
 
-# plot Fig. 7
+# %%
+# Plotting: Sensitivity Measure corresponding to low frequencies (Fig. 7)
+
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(3.34646, 3.34646/2),
                  constrained_layout=True)
