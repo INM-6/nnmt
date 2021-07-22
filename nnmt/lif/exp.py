@@ -1139,24 +1139,6 @@ def _sensitivity_measure(effective_connectivity):
 
     return T
 
-
-def calculate_distance_in_complex_plane(a, b):
-    """
-    Calculates distance between two complex numbers.
-
-    Parameters
-    ----------
-    a, b: np.complex
-
-    Returns
-    -------
-    np.float
-        Distance between a and b in complex plane
-    """
-    distance = np.sqrt((b.real - a.real)**2 + (b.imag - a.imag)**2)
-    return distance
-
-
 def resort_eigenvalues(eigenvalues, margin=1e-5):
     """
     Resorts the eigenvalues of the effective connectivity matrix across 
@@ -1193,7 +1175,7 @@ def resort_eigenvalues(eigenvalues, margin=1e-5):
     for i in range(1, eig.shape[1]):
         # compare new to previous
         new = eig[:, i]
-        distances[:, i-1] = calculate_distance_in_complex_plane(previous, new)
+        distances[:, i-1] = abs(previous - new)
 
         # get all distances which are larger then margin
         if np.any(distances[:, i-1] > margin):
