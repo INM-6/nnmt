@@ -1084,8 +1084,8 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
     Parameters
     ----------
     eigenvalues : np.ndarray
-        Eigenvalues of the effective connectivity matrix of 
-        shape (num populations, num analysis freqs)
+        Eigenvalues of the effective connectivity matrix
+        Shape: (num populations, num analysis freqs)
     margin : np.float
         Maximal allowed distance between the eigenvalues of the effective 
         connectivity matrix at two subsequent frequencies.
@@ -1096,6 +1096,7 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
         Resorted eigenvalues.
     np.ndarray
         Mapping from old to new indices (e.g. for resorting the eigenmodes).
+        Shape : (num populations, num analysis freqs)
     """
     eig = eigenvalues.copy()
     
@@ -1105,7 +1106,7 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
     # initialize containers
     distances = np.zeros([eig.shape[0], eig.shape[1] - 1])
     multi_swaps = {}
-    new_indices = np.tile(np.arange(eig.shape[0]), (eig.shape[1], 1)).T
+    resorted_eigenvalues_mask = np.tile(np.arange(eig.shape[0]), (eig.shape[1], 1)).T
     
     # loop over all frequences > 0
     for i in range(1, eig.shape[1]):
@@ -1143,7 +1144,7 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
                 # resort this one eigenvalue until the next frequency index
                 # for which a multi-swap is necessary
                 eig[k, i+1:j+1] = original[indices_to_swap[index], i+1:j+1]
-                new_indices[k, i+1:j+1] = indices_to_swap[index]
+                resorted_eigenvalues_mask[k, i+1:j+1] = indices_to_swap[index]
                 
         # deal with the last swap
         original = eig.copy()
@@ -1153,9 +1154,9 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
             index = np.argmin(
                 np.abs(original[indices_to_swap, i+1] - original[k, i]))
             eig[k, i+1] = original[indices_to_swap[index], i+1]
-            new_indices[k, i+1] = indices_to_swap[index]
+            resorted_eigenvalues_mask[k, i+1] = indices_to_swap[index]
         
-    return eig, new_indices
+    return eig, resorted_eigenvalues_mask
 
 
 def sensitivity_measure(network, frequency, 
@@ -1164,15 +1165,34 @@ def sensitivity_measure(network, frequency,
     """
     Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
 
-    Note that the frequencies of the transfer function and the effective
-    connectivity need to be matching.
+    Evaluates the sensitivity measure at a given frequency. By default,
+    the effective connectivity is diagonalized and the eigenmode corresponding
+    to the eigenvalue that is closest to the complex(1, 0) is chosen.
+    
+    Another eigenmode can be specified by the parameter eigenvalue_index.
+    The order of the eigenvalues can be specified by the 
+    resorted_eigenvalues_mask.
 
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
+    network : nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-
+    frequency : np.float
+        Frequency at which the sensitivity is evaluated in Hz.
+    resorted_eigenvalues_mask : np.ndarray
+        Mapping from old to new indices (e.g. for resorting the eigenmodes) as
+        obtained from _resort_eigenvalues.
+        Shape : (num populations, num analysis freqs)
+    eigenvalue_index : int
+        Index specifying the eigenvalue and corresponding eigenmode for which
+        the sensitivity measure is evaluated.
+        
+    Analysis Parameters
+    -------------------
+    omegas : float or np.ndarray
+        Input frequencies to population in Hz.
+    
     Network results
     ---------------
     effective_connectivity : np.ndarray
@@ -1180,8 +1200,30 @@ def sensitivity_measure(network, frequency,
 
     Returns
     -------
-    np.ndarray
-        Sensitivity measure.
+    dict
+        Dictionary containing the results of the sensitivity analysis.
+        
+        critical_frequency : np.float
+            Frequency at which the sensitivity is evaluated in Hz.
+        critical_frequency_index : int
+            Index of critical_frequency in all analysis frequencies.
+        critical_eigenvalue : np.complex
+            Critical eigenvalue.
+        k : np.complex
+            Vector point from critical eigenvalue to complex(1,0).
+        k_per : np.complex
+            Vector perpendiculat to k.
+        sensitivity : np.ndarray
+            Sensitivity measure.
+            Shape : (num analysis freqs, num populations, num populations)
+        sensitivity_amp : np.ndarray
+            Projection of sensitivity measure that alters amplitude of 
+            peak in power spectrum.
+            Shape : (num analysis freqs, num populations, num populations)
+        sensitivity_freq : np.ndarray
+            Projection of Sensitivity measure that alters frequency of
+            peak power spectrum.
+            Shape : (num analysis freqs, num populations, num populations)
     """
     params = {}
     try:
@@ -1212,12 +1254,44 @@ def _sensitivity_measure(effective_connectivity, frequency,
     ----------
     effective_connectivity : np.ndarray
         Effective connectivity matrix.
+    frequency : np.float
+        Frequency at which the sensitivity is evaluated in Hz.
+    analysis_frequencies : np.ndarray
+        Analysis frequencies.
+    resorted_eigenvalues_mask : np.ndarray
+        Mapping from old to new indices (e.g. for resorting the eigenmodes) as
+        obtained from _resort_eigenvalues.
+        Shape : (num populations, num analysis freqs)
+    eigenvalue_index : int
+        Index specifying the eigenvalue and corresponding eigenmode for which
+        the sensitivity measure is evaluated.
 
     Returns
     -------
-    np.ndarray
-        Sensitivity measure of shape
-        (num analysis freqs, num populations, num populations)
+    dict
+        Dictionary containing the results of the sensitivity analysis.
+        
+        critical_frequency : np.float
+            Frequency at which the sensitivity is evaluated in Hz.
+        critical_frequency_index : int
+            Index of critical_frequency in all analysis frequencies.
+        critical_eigenvalue : np.complex
+            Critical eigenvalue.
+        k : np.complex
+            Vector point from critical eigenvalue to complex(1,0).
+        k_per : np.complex
+            Vector perpendiculat to k.
+        sensitivity : np.ndarray
+            Sensitivity measure.
+            Shape : (num analysis freqs, num populations, num populations)
+        sensitivity_amp : np.ndarray
+            Projection of sensitivity measure that alters amplitude of 
+            peak in power spectrum.
+            Shape : (num analysis freqs, num populations, num populations)
+        sensitivity_freq : np.ndarray
+            Projection of Sensitivity measure that alters frequency of
+            peak power spectrum.
+            Shape : (num analysis freqs, num populations, num populations)
     """
     frequency_index = np.argmin(
             abs(analysis_frequencies-frequency))
@@ -1281,8 +1355,6 @@ def _sensitivity_measure(effective_connectivity, frequency,
     return sensitivity_measure
 
 
-
-
 def sensitivity_measure_per_eigenmode(network):
     """
     Calculates sensitivity measure for each eigenmode.
@@ -1320,7 +1392,8 @@ def sensitivity_measure_per_eigenmode(network):
     try:
         params['effective_connectivity'] = (
             network.results['lif.exp.effective_connectivity'])
-        params['frequencies'] = network.analysis_params['omegas'] / 2 / np.pi
+        params['analysis_frequencies'] = \
+            network.analysis_params['omegas'] / 2 / np.pi
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
@@ -1328,36 +1401,42 @@ def sensitivity_measure_per_eigenmode(network):
                   _prefix + 'sensitivity_measure_per_eigenmode')
     
 
-def _sensitivity_measure_per_eigenmode(effective_connectivity, frequencies):
+def _sensitivity_measure_per_eigenmode(effective_connectivity,
+                                       analysis_frequencies):
     """
     Calculates sensitivity measure for each eigenmode.
 
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
+        Shape : ()
+    analysis_frequencies : np.ndarray
+        Analysis frequencies.
 
     Returns
     -------
     dict:
-        Sensitivity measure dictionary.
+        Dictionary of dictionaries containing the sensitivity measure results.
+        The dictionary keys are the eigenvalue indices.
     """
     eigenvalues = np.linalg.eig(effective_connectivity)[0].T
-    resorted_eigenvalues, new_indices = _resort_eigenvalues(eigenvalues)
+    resorted_eigenvalues, resorted_eigenvalues_mask = \
+        _resort_eigenvalues(eigenvalues)
     
     sensitivity_measure_dictionary = defaultdict(int)
     
     # identify frequency which is closest to the point complex(1, 0) 
     # per eigenvalue trajectory    
     for eig_index, eig in enumerate(resorted_eigenvalues):
-        critical_frequency = frequencies[np.argmin(abs(eig-1.0))]        
+        critical_frequency = analysis_frequencies[np.argmin(abs(eig-1.0))]        
 
         sensitivity_measure_dictionary[eig_index] = \
             _sensitivity_measure(effective_connectivity,
                              frequency=critical_frequency,
-                             analysis_frequencies=frequencies,
-                             resorted_eigenvalues_mask=new_indices,
+                             analysis_frequencies=analysis_frequencies,
+                             resorted_eigenvalues_mask=\
+                                 resorted_eigenvalues_mask,
                              eigenvalue_index=eig_index)
         
     return sensitivity_measure_dictionary
