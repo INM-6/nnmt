@@ -534,7 +534,7 @@ def transfer_function(network, freqs=None, method='shift',
         Frequencies for which transfer function should be calculated. You can
         use this if you do not want to use the networks analysis_params.
     method : str
-        Method used to calculate the tranfser function. Options: 'shift' or
+        Method used to calculate the transfer function. Options: 'shift' or
         'taylor'. Default is 'shift'.
     synaptic_filter : bool
         Whether an additional synaptic low pass filter is to be used or not.
@@ -569,7 +569,7 @@ def transfer_function(network, freqs=None, method='shift',
     -------
     ureg.Quantity(np.array, 'hertz/millivolt'):
         Transfer functions for each population with the following shape:
-        (number of freqencies, number of populations)
+        (number of frequencies, number of populations)
     """
 
     list_of_params = ['tau_m', 'tau_s', 'tau_r', 'V_th_rel', 'V_0_rel']
@@ -719,7 +719,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Relative threshold potential.
     V_0_rel : Quantity(float, 'millivolt')
         Relative reset potential.
-    omega : Quantity(flaot, 'hertz')
+    omega : Quantity(float, 'hertz')
         Input frequency to population.
     synaptic_filter : bool
         Whether an additional synaptic low pass filter is to be used or not.
@@ -931,7 +931,7 @@ def effective_connectivity(network):
         Transfer function for given frequencies in Hz/V.
 
     Network Parameters
-    ----------
+    ------------------
     D : np.ndarray
         Unitless delay distribution of shape
         (len(omegas), len(populations), len(populations)).
@@ -1455,7 +1455,7 @@ def power_spectra(network):
         Network with the network parameters and previously calculated results
         listed in the following.
 
-    Newtork results
+    Network results
     ---------------
     nu : Quantity(np.array, 'hertz')
         Firing rates of populations in Hz.
