@@ -1068,77 +1068,6 @@ def _propagator(effective_connectivity):
     return prop
 
 
-def sensitivity_measure(network):
-    """
-    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
-
-    Note that the frequencies of the transfer function and the effective
-    connectivity need to be matching.
-
-    Parameters
-    ----------
-    network: nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
-
-    Network results
-    ---------------
-    effective_connectivity : np.ndarray
-        Effective connectivity matrix.
-
-    Returns
-    -------
-    np.ndarray
-        Sensitivity measure.
-    """
-    params = {}
-    try:
-        params['effective_connectivity'] = (
-            network.results['lif.exp.effective_connectivity'])
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-
-    return _cache(network, _sensitivity_measure, params,
-                  _prefix + 'sensitivity_measure')
-
-
-@_check_positive_params
-def _sensitivity_measure(effective_connectivity):
-    """
-    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
-
-    Parameters
-    ----------
-    effective_connectivity : np.ndarray
-        Effective connectivity matrix.
-
-    Returns
-    -------
-    np.ndarray
-        Sensitivity measure of shape
-        (num analysis freqs, num populations, num populations)
-    """
-
-    # This ensures that it also works if transfer function has only been
-    # calculated for a single frequency. But it should be removed once we have
-    # made sure that the frequency dependend quantities always return an object
-    # with the frequencies indexed by the first axis.
-    if len(effective_connectivity.shape) == 2:
-        effective_connectivity = np.expand_dims(effective_connectivity, axis=0)
-
-    T = np.zeros(effective_connectivity.shape, dtype=complex)
-    for i, eff_conn_of_omega in enumerate(effective_connectivity):
-        e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
-        index = None
-        if index is None:
-            # find eigenvalue closest to one
-            index = np.argmin(np.abs(e - 1))
-        T[i] = np.outer(U_l[:, index].conj(), U_r[:, index])
-        T[i] /= np.dot(U_l[:, index].conj(), U_r[:, index])
-        T[i] *= eff_conn_of_omega
-
-    return T
-
 def _resort_eigenvalues(eigenvalues, margin=1e-5):
     """
     Resorts the eigenvalues of the effective connectivity matrix.
@@ -1221,137 +1150,215 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
         i = list(multi_swaps.keys())[-1]
         indices_to_swap = list(multi_swaps.values())[-1]
         for k in indices_to_swap:
-            index = np.argmin(np.abs(original[indices_to_swap, i+1] - original[k, i]))
+            index = np.argmin(
+                np.abs(original[indices_to_swap, i+1] - original[k, i]))
             eig[k, i+1] = original[indices_to_swap[index], i+1]
             new_indices[k, i+1] = indices_to_swap[index]
         
     return eig, new_indices
 
 
-def sensitivity_measure_dictionary(network):
+def sensitivity_measure(network, frequency, 
+                        resorted_eigenvalues_mask=None,
+                        eigenvalue_index=None):
     """
-    Identifies the frequency which is closest to complex(1,0) for each 
-    eigenvalue trajectories.
-    
-    Evaluates the sensitivity measure, as well as its projections on the 
-    direction that influences the amplitude and the direction that influences
-    the frequency are calculated.
+    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
+
+    Note that the frequencies of the transfer function and the effective
+    connectivity need to be matching.
 
     Parameters
     ----------
     network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-    method : str
-        Method used to calculate the target rates. Options: 'shift', 'taylor'.
-        Default is 'shift'.
+
+    Network results
+    ---------------
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
 
     Returns
     -------
-    dict:
+    np.ndarray
+        Sensitivity measure.
+    """
+    params = {}
+    try:
+        params['effective_connectivity'] = (
+            network.results['lif.exp.effective_connectivity'])
+        params['frequency'] = frequency
+        params['analysis_frequencies'] = \
+            network.analysis_params['omegas'] / 2 / np.pi
+        params['resorted_eigenvalues_mask'] = resorted_eigenvalues_mask
+        params['eigenvalue_index'] = eigenvalue_index
+        
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+
+    return _cache(network, _sensitivity_measure, params,
+                  _prefix + 'sensitivity_measure')
+
+
+@_check_positive_params
+def _sensitivity_measure(effective_connectivity, frequency, 
+                         analysis_frequencies, resorted_eigenvalues_mask,
+                         eigenvalue_index):
+    """
+    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
+
+    Parameters
+    ----------
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
+
+    Returns
+    -------
+    np.ndarray
+        Sensitivity measure of shape
+        (num analysis freqs, num populations, num populations)
+    """
+    frequency_index = np.argmin(
+            abs(analysis_frequencies-frequency))
+    
+    eff_conn_of_omega = effective_connectivity[frequency_index, :, :]
+    
+    # for brevity the sensitivity measure is called T in the following
+    T = np.zeros(eff_conn_of_omega.shape, dtype=complex)
+    e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
+    if resorted_eigenvalues_mask is not None:
+        # apply the resorting
+        e = e[resorted_eigenvalues_mask[:, frequency_index]]
+        U_l = U_l[:, resorted_eigenvalues_mask[:, frequency_index]]
+        U_r = U_r[:, resorted_eigenvalues_mask[:, frequency_index]]
+    
+    if eigenvalue_index is None:
+        # find eigenvalue closest to one
+        eigenvalue_index = np.argmin(np.abs(e - 1))
+        
+    T = np.outer(U_l[:, eigenvalue_index].conj(), U_r[:, eigenvalue_index])
+    T /= np.dot(U_l[:, eigenvalue_index].conj(), U_r[:, eigenvalue_index])
+    T *= eff_conn_of_omega
+    
+    critical_eigenvalue = e[eigenvalue_index]    
+    # vector pointing from critical eigenvalue at frequency to complex(1,0)
+    # perturbation shifting critical eigenvalue along k
+    # brings eigenvalue towards or away from one, 
+    # resulting in an increased or 
+    # decreased peak amplitude in the spectrum
+    k = np.asarray([1, 0])-np.asarray([critical_eigenvalue.real,
+                                       critical_eigenvalue.imag])
+    # normalize k
+    k /= np.sqrt(np.dot(k, k))
+
+    # vector perpendicular to k
+    # perturbation shifting critical eigenvalue along k_per
+    # alters the trajectory such that it passes closest 
+    # to one at a lower or
+    # higher frequency while conserving the height of the peak
+    k_per = np.asarray([-k[1], k[0]])
+    # normalize k_per
+    k_per /= np.sqrt(np.dot(k_per, k_per))
+
+    # projection of sensitivity measure in to direction 
+    # that alters amplitude
+    sensitivity_amp = T.real*k[0] + T.imag*k[1]
+    # projection of sensitivity measure in to direction 
+    # that alters frequency
+    sensitivity_freq = T.real*k_per[0] + T.imag*k_per[1]
+    
+    sensitivity_measure = {
+            'critical_frequency': frequency,
+            'critical_frequency_index': frequency_index,
+            'critical_eigenvalue': critical_eigenvalue,
+            'k': k,
+            'k_per': k_per,
+            'sensitivity': T,
+            'sensitivity_amp': sensitivity_amp,
+            'sensitivity_freq': sensitivity_freq}
+    
+    return sensitivity_measure
+
+
+
+
+def sensitivity_measure_per_eigenmode(network):
+    """
+    Calculates sensitivity measure for each eigenmode.
+    
+    Identifies the frequency which is closest to complex(1,0) for each 
+    eigenvalue trajectory and evaluates the sensitivity measure, as well as its
+    projections on the direction that influences the amplitude and the 
+    direction that influences the frequency are calculated.
+    
+    The results are stored in a dictionary with the eigenvalue index as key
+    and the calculated quantities as values.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in the following.
+
+    Analysis Parameters
+    -------------------
+    omegas : float or np.ndarray
+        Input frequencies to population in Hz.
+
+    Network results
+    ---------------
+    effective_connectivity : np.ndarray
+        Effective connectivity matrix.
+
+    Returns
+    -------
+    dict :
         Sensitivity measure dictionary.
     """
     params = {}
-    params['network'] = network
+    try:
+        params['effective_connectivity'] = (
+            network.results['lif.exp.effective_connectivity'])
+        params['frequencies'] = network.analysis_params['omegas'] / 2 / np.pi
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
 
-    return _cache(network, _sensitivity_measure_dictionary, params,
-                  _prefix + 'sensitivity_measure_dictionary')
+    return _cache(network, _sensitivity_measure_per_eigenmode, params,
+                  _prefix + 'sensitivity_measure_per_eigenmode')
     
 
-def _sensitivity_measure_dictionary(network):
+def _sensitivity_measure_per_eigenmode(effective_connectivity, frequencies):
     """
-    Identifies the frequency which is closest to complex(1,0) for each 
-    eigenvalue trajectories.
-    
-    Evaluates the sensitivity measure, as well as its projections on the 
-    direction that influences the amplitude and the direction that influences
-    the frequency are calculated.
+    Calculates sensitivity measure for each eigenmode.
 
     Parameters
     ----------
     network: nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-    method : str
-        Method used to calculate the target rates. Options: 'shift', 'taylor'.
-        Default is 'shift'.
 
     Returns
     -------
     dict:
         Sensitivity measure dictionary.
     """
-    frequencies = network.analysis_params['omegas']/(2.*np.pi)
-    eigenvalues = np.linalg.eig(effective_connectivity(network))[0].T
-    
+    eigenvalues = np.linalg.eig(effective_connectivity)[0].T
     resorted_eigenvalues, new_indices = _resort_eigenvalues(eigenvalues)
     
     sensitivity_measure_dictionary = defaultdict(int)
     
     # identify frequency which is closest to the point complex(1, 0) 
     # per eigenvalue trajectory    
-    # print('Looping through eigenvalues...')
     for eig_index, eig in enumerate(resorted_eigenvalues):
-        # print('Eigenvalue Index:', eig_index)
-        critical_frequency = frequencies[np.argmin(abs(eig-1.0))]
-        critical_frequency_index = np.argmin(
-            abs(frequencies-critical_frequency))
-        critical_eigenvalue = eig[critical_frequency_index]
-        
-        # TODO: avoid code duplication/improve sensitivity measure function
-        # to nicely handle a single frequency
-        eff_conn_of_omega = effective_connectivity(network)[critical_frequency_index, :, :]
-        T = np.zeros(eff_conn_of_omega.shape, dtype=complex)
-        e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
-        
-        # apply the resorting
-        U_l = U_l[:, new_indices[:, critical_frequency_index]]
-        U_r = U_r[:, new_indices[:, critical_frequency_index]]
+        critical_frequency = frequencies[np.argmin(abs(eig-1.0))]        
 
-
-        T = np.outer(U_l[:, eig_index].conj(), U_r[:, eig_index])
-        T /= np.dot(U_l[:, eig_index].conj(), U_r[:, eig_index])
-        T *= eff_conn_of_omega
-        
-        sensitivity = T
-        
-        # vector pointing from critical eigenvalue at frequency to complex(1,0)
-        # perturbation shifting critical eigenvalue along k
-        # brings eigenvalue towards or away from one, 
-        # resulting in an increased or 
-        # decreased peak amplitude in the spectrum
-        k = np.asarray([1, 0])-np.asarray([critical_eigenvalue.real,
-                                           critical_eigenvalue.imag])
-        # normalize k
-        k /= np.sqrt(np.dot(k, k))
-
-        # vector perpendicular to k
-        # perturbation shifting critical eigenvalue along k_per
-        # alters the trajectory such that it passes closest 
-        # to one at a lower or
-        # higher frequency while conserving the height of the peak
-        k_per = np.asarray([-k[1], k[0]])
-        # normalize k_per
-        k_per /= np.sqrt(np.dot(k_per, k_per))
-
-        # projection of sensitivity measure in to direction 
-        # that alters amplitude
-        sensitivity_amp = sensitivity.real*k[0] + \
-                                  sensitivity.imag*k[1]
-        # projection of sensitivity measure in to direction 
-        # that alters frequency
-        sensitivity_freq = sensitivity.real*k_per[0] + \
-                                   sensitivity.imag*k_per[1]
-
-        sensitivity_measure_dictionary[eig_index] = {
-            'critical_frequency': critical_frequency,
-            'critical_frequency_index': critical_frequency_index,
-            'critical_eigenvalue': critical_eigenvalue,
-            'k': k,
-            'k_per': k_per,
-            'sensitivity_measure': sensitivity,
-            'sensitivity_measure_amp': sensitivity_amp,
-            'sensitivity_measure_freq': sensitivity_freq}
+        sensitivity_measure_dictionary[eig_index] = \
+            _sensitivity_measure(effective_connectivity,
+                             frequency=critical_frequency,
+                             analysis_frequencies=frequencies,
+                             resorted_eigenvalues_mask=new_indices,
+                             eigenvalue_index=eig_index)
         
     return sensitivity_measure_dictionary
 
@@ -1443,7 +1450,6 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
         Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
     """
     power = np.zeros(effective_connectivity.shape[0:2])
-    import pdb; pdb.set_trace()
     for i, W in enumerate(effective_connectivity):
         Q = np.linalg.inv(np.identity(len(N)) - W)
         A = np.diag(np.ones(len(N))) * nu / N
