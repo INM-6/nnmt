@@ -1139,26 +1139,33 @@ def _sensitivity_measure(effective_connectivity):
 
     return T
 
-def resort_eigenvalues(eigenvalues, margin=1e-5):
+def _resort_eigenvalues(eigenvalues, margin=1e-5):
     """
-    Resorts the eigenvalues of the effective connectivity matrix across 
-    frequencies.
+    Resorts the eigenvalues of the effective connectivity matrix.
     
     The eigenvalues of the effective connectivity are calculated once
     per frequency. To link the eigenvalues/eigenmodes across frequencies this 
     utility function calculates the distance between subsequent (in frequency) 
     eigenvalues and matches them if the distance is smaller equal the margin.
-
+    
+    If just two eigenvalue have a larger distance than the margin, they can
+    be immediately swapped. If more eigenvalues have a larger distance, the
+    resorting is more complicated (multi-swaps).
+    
     Parameters
     ----------
-    eigenvalues: np.ndarray
-    margin: np.float
+    eigenvalues : np.ndarray
+        Eigenvalues of the effective connectivity matrix of 
+        shape (num populations, num analysis freqs)
+    margin : np.float
+        Maximal allowed distance between the eigenvalues of the effective 
+        connectivity matrix at two subsequent frequencies.
 
     Returns
     -------
-    np.ndarray:
+    np.ndarray
         Resorted eigenvalues.
-    np.ndarray:
+    np.ndarray
         Mapping from old to new indices (e.g. for resorting the eigenmodes).
     """
     eig = eigenvalues.copy()
@@ -1177,7 +1184,7 @@ def resort_eigenvalues(eigenvalues, margin=1e-5):
         new = eig[:, i]
         distances[:, i-1] = abs(previous - new)
 
-        # get all distances which are larger then margin
+        # get all distances which are larger than margin
         if np.any(distances[:, i-1] > margin):
             indices = np.argwhere(distances[:, i-1] > margin).reshape(-1)
             # postpone the resorting, if more than two eigenvalues need to be
@@ -1187,13 +1194,25 @@ def resort_eigenvalues(eigenvalues, margin=1e-5):
         previous = new
 
     if multi_swaps:
+        # loop over all frequencies with required multi_swaps
         for n, (i, j) in enumerate(zip(list(multi_swaps.keys())[:-1],
                                        list(multi_swaps.keys())[1:])):
+            # i is the frequency at index n
+            # j corresponds to frequency at index n+1
+            
+            # duplicate the eigenvalues again
             original = eig.copy()
+            
+            # loop over the eigenvalues indices that need swapping at
+            # the frequencies corresponding to index n
             indices_to_swap = list(multi_swaps.values())[n]
             for k in indices_to_swap:
+                # determine the minimal distance of this one eigenvalue
+                # to the eigenvalues at the next frequency step
                 index = np.argmin(
                     np.abs(original[indices_to_swap, i+1] - original[k, i]))
+                # resort this one eigenvalue until the next frequency index
+                # for which a multi-swap is necessary
                 eig[k, i+1:j+1] = original[indices_to_swap[index], i+1:j+1]
                 new_indices[k, i+1:j+1] = indices_to_swap[index]
                 
@@ -1265,7 +1284,7 @@ def _sensitivity_measure_dictionary(network):
     frequencies = network.analysis_params['omegas']/(2.*np.pi)
     eigenvalues = np.linalg.eig(effective_connectivity(network))[0].T
     
-    resorted_eigenvalues, new_indices = resort_eigenvalues(eigenvalues)
+    resorted_eigenvalues, new_indices = _resort_eigenvalues(eigenvalues)
     
     sensitivity_measure_dictionary = defaultdict(int)
     
