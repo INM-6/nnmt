@@ -74,6 +74,8 @@ class Network():
         Returns which results have already been calculated.
     change_parameters
         Change parameters and return network with specified parameters.
+    copy
+        Returns a deep copy of the network.
     """
     
     def __init__(self, network_params=None, analysis_params=None, file=None):
@@ -281,6 +283,19 @@ class Network():
             return self
         else:
             return Network(new_network_params, new_analysis_params)
+        
+    def copy(self):
+        """
+        Returns a deep copy of the network.
+        """
+        network = Network()
+        network.network_params = copy.deepcopy(self.network_params)
+        network.analysis_params = copy.deepcopy(self.analysis_params)
+        network.results = copy.deepcopy(self.results)
+        network.results_hash_dict = copy.deepcopy(self.results_hash_dict)
+        network.input_units = copy.deepcopy(self.input_units)
+        network.result_units = copy.deepcopy(self.result_units)
+        return network
 
     def clear_results(self, results=None):
         """
