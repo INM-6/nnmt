@@ -1081,6 +1081,11 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
     be immediately swapped. If more eigenvalues have a larger distance, the
     resorting is more complicated (multi-swaps).
     
+    The default value for the margin is chosen from experience. The smaller
+    the frequency step in in the analysis frequencies, the smaller the margin
+    needs to be chosen. It is recommended to cross-check the resorting by
+    plotting the eigenvalues across frequencies in the complex plane.
+    
     Parameters
     ----------
     eigenvalues : np.ndarray
