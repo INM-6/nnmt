@@ -20,9 +20,9 @@ output_test_fixtures: parametrizes needed args and results for tested regimes.
 import pytest
 import numpy as np
 from inspect import signature
-import h5py_wrapper as h5
 
 import nnmt
+import nnmt.input_output as io
 from nnmt.input_output import load_val_unit_dict_from_h5
 from nnmt import ureg
 from nnmt.utils import _strip_units
@@ -541,7 +541,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
 
     elif "unit_fixtures" in metafunc.fixturenames:
         file = metafunc.cls.fixtures
-        fixtures = h5.load(unit_fix_path + file)
+        fixtures = io.load_h5(unit_fix_path + file)
         ids = sorted(fixtures.keys())
         fixture_list = [dict(output=fixtures[id]['output'],
                         params=fixtures[id]['params'])
@@ -551,7 +551,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
 
     elif "unit_fixtures_fully_vectorized" in metafunc.fixturenames:
         file = metafunc.cls.fixtures
-        fixtures = h5.load(unit_fix_path + file)
+        fixtures = io.load_h5(unit_fix_path + file)
         ids = sorted(fixtures.keys())
         fixture_list = [dict(output=fixtures[id]['output'],
                         params=fixtures[id]['params'])

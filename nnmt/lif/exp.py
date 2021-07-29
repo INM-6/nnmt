@@ -1224,7 +1224,6 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
         Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
     """
     power = np.zeros(effective_connectivity.shape[0:2])
-    import pdb; pdb.set_trace()
     for i, W in enumerate(effective_connectivity):
         Q = np.linalg.inv(np.identity(len(N)) - W)
         A = np.diag(np.ones(len(N))) * nu / N

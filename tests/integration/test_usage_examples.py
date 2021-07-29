@@ -1,5 +1,5 @@
 import pytest
-import h5py_wrapper.wrapper as h5
+import nnmt.input_output as io
 
 import nnmt
 from ..checks import assert_array_equal
@@ -39,7 +39,7 @@ class Test_Network_instantiation_calculation_saving_routine:
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
             network.save(file='test.h5')
-            loaded = h5.load('test.h5')
+            loaded = io.load_h5('test.h5')
         firing_rates = loaded['results']['lif.exp.firing_rates']['val']
         assert_array_equal(firing_rates, network.temp_results)
         
@@ -73,7 +73,7 @@ class Test_instantiate_with_some_passed_quantities_calculate_save_routine:
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
             network.save(file='test.h5')
-            loaded = h5.load('test.h5')
+            loaded = io.load_h5('test.h5')
         firing_rates = loaded['results']['lif.exp.firing_rates']['val']
         assert_array_equal(firing_rates, network.temp_results)
         
@@ -127,7 +127,7 @@ class Test_instantiate_calculate_check_change_params_calculate_check:
         temp = tmpdir.mkdir('temp')
         with temp.as_cwd():
             network.save(file='test.h5')
-            loaded = h5.load('test.h5')
+            loaded = io.load_h5('test.h5')
         firing_rates = loaded['results']['lif.exp.firing_rates']['val']
         with pytest.raises(AssertionError):
             assert_array_equal(firing_rates, network.temp_results)

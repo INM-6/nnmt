@@ -3,7 +3,22 @@ unit_fixture_path: 'unit/data'
 integration_fixture_path: 'integration/data'
 
 unit_fixtures: [
-  'test_network.h5'
+  'lif_delta_firing_rate.h5',
+  'lif_exp_firing_rate_shift.h5',
+  'lif_exp_firing_rate_taylor.h5',
+  'lif_exp_effective_connectivity.h5',
+  'lif_exp_power_spectra.h5',
+  'lif_exp_propagator.h5',
+  'lif_exp_sensitivity_measure.h5',
+  'lif_exp_transfer_function_shift.h5',
+  'lif_exp_external_rates_for_fixed_input.h5',
+  'lif_exp_transfer_function_taylor.h5',
+  'lif_mean_input.h5',
+  'lif_std_input.h5',
+  ]
+  
+model_fixtures: [
+  'test_network.h5',
   ]
 
 integration_fixtures: [
