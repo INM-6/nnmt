@@ -3,7 +3,11 @@ Response Nonlinearities
 =======================
 
 Here, we reproduce the different types of response nonlinearities of an EI
-network that were uncovered in :cite:t:`sanzeni2020`.
+network that were uncovered in :cite:t:`sanzeni2020`. To this end, we need to
+determine the self-consistent rates of EI networks with specific indegrees
+and synaptic weights for changing external input. Most of this script handles
+all the necessary parameters, the crucial calculation is performed by the
+function `nnmt.lif.delta._firing_rates`.
 """
 
 import numpy as np
@@ -17,8 +21,8 @@ plt.style.use('frontiers.mplstyle')
 
 
 ###############################################################################
-# First, we define the common parameters for all plots, i.e. the time constants
-# and the reset and threshold voltages.
+# First, we define the common parameters for all networks: the time constants
+# and the reset and threshold voltage.
 params_all = dict(
     # time constants in s
     tau_m=20.*1e-3, tau_r=2.*1e-3,
@@ -28,8 +32,8 @@ params_all = dict(
 
 
 ###############################################################################
-# Next, we define the indegree and synaptic weights for each type of
-# nonlinearity.
+# Next, we define the indegree and the synaptic weights for each network,
+# corresponding to a certain type of nonlinearity.
 
 # Saturation-driven nonlinearity
 g_E, g_I, a_E, a_I = 8, 7, 4, 2
@@ -75,11 +79,14 @@ params_ndm = dict(
 
 ###############################################################################
 # We introduce a helper function to handle the parameters. The firing rates
-# are determined using the `_firing_rates` function.
+# are determined using the `nnmt.lif.delta._firing_rates` function.
 def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps, method):
+    # combine common and specific parameters
     params.update(params_all)
+    # create an array with all external rates and an array for the results
     nu_ext_arr = np.linspace(nu_ext_min, nu_ext_max, nu_ext_steps)
     nu_arr = np.zeros((nu_ext_steps, 2))
+    # iterate through the ext. rates and determine the self-consistent rates
     for i, nu_ext in enumerate(nu_ext_arr):
         try:
             nu_arr[i] = _firing_rates(nu_0=nu_0, nu_ext=nu_ext,
@@ -91,8 +98,8 @@ def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps, method):
 
 
 ###############################################################################
-# Now, we calculate the firing rate for each setting. By default, we use the
-# `ODE` method. If this does not converge, we use `LSTSQ`.
+# Now, we calculate the firing rate for each nonlinearity. By default, we use
+# the `ODE` method. If this does not converge, we use `LSTSQ`.
 print('Calculating self-consitent rates...')
 print('Saturation-driven nonlinearity...')
 nu_ext_sdn, nu_sdn = solve_theory(params_sdn, (0, 0), 1, 100, 50,
@@ -187,6 +194,4 @@ plot_rates(fig.add_subplot(gs[2, 1]),
            r'$\nu_X$ [spks/s]', '', 'NDM',
            colors, '(F)', label_prms)
 # save and show
-# plt.savefig('Sanzeni2020_Fig8.pdf')
-# plt.savefig('Sanzeni2020_Fig8.svg')
 plt.show()
