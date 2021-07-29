@@ -1,25 +1,36 @@
 """
-Sanzeni 2020
-============
+Response Nonlinearities
+=======================
+
+Here, we reproduce the different types of response nonlinearities of an EI
+network that were uncovered in :cite:t:`sanzeni2020`.
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from nnmt.lif.delta import _firing_rates
 
-import matplotlib.pyplot as plt
+# use matplotlib style file
 plt.style.use('frontiers.mplstyle')
 
 
-# ===== parameters =====
-# common parameters for all plots
+###############################################################################
+# First, we define the common parameters for all plots, i.e. the time constants
+# and the reset and threshold voltages.
 params_all = dict(
     # time constants in s
     tau_m=20.*1e-3, tau_r=2.*1e-3,
     # reset and threshold voltage relative to leak in mV
     V_0_rel=10., V_th_rel=20.,
 )
+
+
+###############################################################################
+# Next, we define the indegree and synaptic weights for each type of
+# nonlinearity.
+
 # Saturation-driven nonlinearity
 g_E, g_I, a_E, a_I = 8, 7, 4, 2
 params_sdn = dict(
@@ -62,9 +73,10 @@ params_ndm = dict(
 )
 
 
-# ===== self-consistent rates =====
-def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps,
-                 method='ODE', print_rates=False):
+###############################################################################
+# We introduce a helper function to handle the parameters. The firing rates
+# are determined using the `_firing_rates` function.
+def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps, method):
     params.update(params_all)
     nu_ext_arr = np.linspace(nu_ext_min, nu_ext_max, nu_ext_steps)
     nu_arr = np.zeros((nu_ext_steps, 2))
@@ -75,24 +87,30 @@ def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps,
         except RuntimeError:
             # set non-convergent solutions to nan
             nu_arr[i] = (np.nan, np.nan)
-        if print_rates:
-            print(nu_ext, nu_arr[i])
     return nu_ext_arr, nu_arr
 
 
+###############################################################################
+# Now, we calculate the firing rate for each setting. By default, we use the
+# `ODE` method. If this does not converge, we use `LSTSQ`.
 print('Calculating self-consitent rates...')
 print('Saturation-driven nonlinearity...')
-nu_ext_sdn, nu_sdn = solve_theory(params_sdn, (0, 0), 1, 100, 50)
+nu_ext_sdn, nu_sdn = solve_theory(params_sdn, (0, 0), 1, 100, 50,
+                                  method='ODE')
 print('Saturation-driven multisolution...')
-nu_ext_sdm_a, nu_sdm_a = solve_theory(params_sdm, (0, 0), 1, 9, 10)
-nu_ext_sdm_b, nu_sdm_b = solve_theory(params_sdm, (500, 500), 1, 100, 50)
+nu_ext_sdm_a, nu_sdm_a = solve_theory(params_sdm, (0, 0), 1, 9, 10,
+                                      method='ODE')
+nu_ext_sdm_b, nu_sdm_b = solve_theory(params_sdm, (500, 500), 1, 100, 50,
+                                      method='ODE')
 nu_ext_sdm_c, nu_sdm_c = solve_theory(params_sdm, (10, 10), 1, 20, 10,
                                       method='LSTSQ')
 nu_ext_sdm_d, nu_sdm_d = solve_theory(params_sdm, (100, 100), 1, 20, 10,
                                       method='LSTSQ')
 print('Response-onset supersaturation...')
-nu_ext_ros_a, nu_ros_a = solve_theory(params_ros, (0, 0), 0.5, 50, 50)
-nu_ext_ros_b, nu_ros_b = solve_theory(params_ros, (10, 10), 7.5, 12.5, 50)
+nu_ext_ros_a, nu_ros_a = solve_theory(params_ros, (0, 0), 0.5, 50, 50,
+                                      method='ODE')
+nu_ext_ros_b, nu_ros_b = solve_theory(params_ros, (10, 10), 7.5, 12.5, 50,
+                                      method='ODE')
 print('Mean-driven multisolution...')
 nu_ext_mdm_a, nu_mdm_a = solve_theory(params_mdm, (0, 0), 0.1, 5, 25,
                                       method='LSTSQ')
@@ -101,15 +119,19 @@ nu_ext_mdm_b, nu_mdm_b = solve_theory(params_mdm, (50, 50), 0.1, 10, 50,
 nu_ext_mdm_c, nu_mdm_c = solve_theory(params_mdm, (10, 0), 0.1, 5, 25,
                                       method='LSTSQ')
 print('Noise-driven multisolution...')
-nu_ext_ndm_a, nu_ndm_a = solve_theory(params_ndm, (0, 0), 0.05, 5, 50)
-nu_ext_ndm_b, nu_ndm_b = solve_theory(params_ndm, (10, 10), 0.05, 5, 50)
+nu_ext_ndm_a, nu_ndm_a = solve_theory(params_ndm, (0, 0), 0.05, 5, 50,
+                                      method='ODE')
+nu_ext_ndm_b, nu_ndm_b = solve_theory(params_ndm, (10, 10), 0.05, 5, 50,
+                                      method='ODE')
 nu_ext_ndm_c, nu_ndm_c = solve_theory(params_ndm, (5, 4), 0.05, 5, 50,
                                       method='LSTSQ')
 nu_ext_ndm_d, nu_ndm_d = solve_theory(params_ndm, (2, 0), 0.05, 5, 50,
                                       method='LSTSQ')
 
 
-# ===== figure =====
+###############################################################################
+# Finally, we plot the result. Again, we introduce a helper function to handle
+# the parameters.
 def plot_rates(ax, nu_ext_arr_lst, nu_arr_lst, xmax, ymax, xlabel, ylabel,
                title, colors, label, label_prms):
     ax.set_prop_cycle(color=colors)
