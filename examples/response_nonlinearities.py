@@ -2,19 +2,27 @@
 Response Nonlinearities
 =======================
 
-Here, we reproduce the different types of response nonlinearities of an EI
-network that were uncovered in :cite:t:`sanzeni2020`. To this end, we need to
-determine the self-consistent rates of EI networks with specific indegrees
-and synaptic weights for changing external input. Most of this script handles
-all the necessary parameters, the crucial calculation is performed by the
-function `nnmt.lif.delta._firing_rates`.
-"""
+In this example, we reproduce the different types of response nonlinearities of
+an EI network that were uncovered in :cite:t:`sanzeni2020`. To this end, we
+need to determine the self-consistent rates of EI networks with specific
+indegrees and synaptic weights for changing external input.
 
+Most of this script handles all the necessary parameters, the relevant
+calculation is performed by the function `nnmt.lif.delta._firing_rates`.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from nnmt.lif.delta import _firing_rates
+
+# try loading svgutils to add the network sketch
+try:
+    import os
+    import svgutils.transform as sg
+    insert_sketch = True
+except ImportError:
+    insert_sketch = False
 
 # use matplotlib style file
 plt.style.use('frontiers.mplstyle')
@@ -32,8 +40,8 @@ params_all = dict(
 
 
 ###############################################################################
-# Next, we define the indegree and the synaptic weights for each network,
-# corresponding to a certain type of nonlinearity.
+# Next, we define the indegrees and the synaptic weights corresponding to the
+# different nonlinearities.
 
 # Saturation-driven nonlinearity
 g_E, g_I, a_E, a_I = 8, 7, 4, 2
@@ -92,7 +100,7 @@ def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps, method):
             nu_arr[i] = _firing_rates(nu_0=nu_0, nu_ext=nu_ext,
                                       fixpoint_method=method, **params)
         except RuntimeError:
-            # set non-convergent solutions to nan
+            # set non-convergent solutions to nan for convenience
             nu_arr[i] = (np.nan, np.nan)
     return nu_ext_arr, nu_arr
 
@@ -138,7 +146,8 @@ nu_ext_ndm_d, nu_ndm_d = solve_theory(params_ndm, (2, 0), 0.05, 5, 50,
 
 ###############################################################################
 # Finally, we plot the result. Again, we introduce a helper function to handle
-# the parameters.
+# the parameters. Panel (A) contains a sketch of the network that can only be
+# added in the pdf output but is not shown in `plt.show()`.
 def plot_rates(ax, nu_ext_arr_lst, nu_arr_lst, xmax, ymax, xlabel, ylabel,
                title, colors, label, label_prms):
     ax.set_prop_cycle(color=colors)
@@ -162,10 +171,10 @@ label_prms = dict(x=-0.3, y=1.4, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 colors = ['#4c72b0', '#c44e52']
 # Sketch
-ax = fig.add_subplot(gs[0, 0])
-ax.axis('off')
-ax.set_title('Network')
-ax.text(s='(A)', transform=ax.transAxes, **label_prms)
+ax_sketch = fig.add_subplot(gs[0, 0])
+ax_sketch.axis('off')
+ax_sketch.set_title('Network')
+ax_sketch.text(s='(A)', transform=ax_sketch.transAxes, **label_prms)
 # Saturation-driven nonlinearity
 plot_rates(fig.add_subplot(gs[0, 1]), [nu_ext_sdn], [nu_sdn], 100, 500,
            '', r'$\nu$ [spks/s]', 'SDN',
@@ -193,5 +202,24 @@ plot_rates(fig.add_subplot(gs[2, 1]),
            [nu_ndm_a, nu_ndm_b, nu_ndm_c, nu_ndm_d], 5, 10,
            r'$\nu_X$ [spks/s]', '', 'NDM',
            colors, '(F)', label_prms)
-# save and show
+
+# insert sketch using svgutil, try saving as pdf using inkscape
+if insert_sketch:
+    sketch_fn = 'brunel_sketch.svg'
+    plot_fn = 'response_nonlinearities'
+    svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
+    w_svg, h_svg = svg_mpl.get_size()
+    svg_mpl.set_size((w_svg+'pt', h_svg+'pt'))
+    svg_sketch = sg.fromfile(sketch_fn).getroot()
+    svg_sketch.moveto(x=5, y=20, scale_x=0.75)
+    svg_mpl.append(svg_sketch)
+    svg_mpl.save(f'{plot_fn}.svg')
+    os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
+    if os_return == 0:
+        os.remove(f'{plot_fn}.svg')
+    else:
+        print('Conversion to pdf using inkscape failed, keeping svg...')
+
+# show figure (without sketch)
+ax_sketch.annotate('(sketch)', xy=(0., 0.5))
 plt.show()
