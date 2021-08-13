@@ -12,6 +12,7 @@ Network Functions
     std_input
     working_point
     transfer_function
+    fit_transfer_function
     effective_connectivity
     propagator
     sensitivity_measure
@@ -31,6 +32,7 @@ Parameter Functions
     _std_input
     _transfer_function_shift
     _transfer_function_taylor
+    _fit_transfer_function
     _derivative_of_firing_rates_wrt_mean_input
     _effective_connectivity
     _propagator
@@ -685,7 +687,6 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         result *= _synaptic_filter(omegas, tau_s)
     return result
 
-
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
 def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
@@ -772,6 +773,86 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     if synaptic_filter:
         result *= _synaptic_filter(omegas, tau_s)
     return result
+
+
+def fit_transfer_function(network):
+    """
+    Fits transfer function (low-pass filter).
+
+    Parameters
+    ----------
+    network : nnmt.create.Network or child class instance.
+        Network with the network parameters listed in the following.
+
+    Network parameters
+    ------------------
+    tau_m : float
+        Membrane time constant in s.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+
+    Analysis parameters
+    -------------------
+    omegas : float or np.ndarray
+        Input frequencies to population in Hz
+
+    Network results
+    ---------------
+    transfer_function : np.array
+        Transfer functions for each population with the following shape:
+        (number of freqencies, number of populations)
+
+    Returns
+    -------
+    transfer_function_fit : ureg.Quantity(np.array, 'hertz/volt')
+        Fit of transfer functions for each population with the following shape:
+        (number of freqencies, number of populations)
+    tau_rate: ureg.Quantity(np.array, 's')
+        Fitted time constant for each population.
+    W_rate : np.array
+        Matrix of fitted weights (unitless).
+    fit_error: float
+        Combined fit error.
+    """
+    list_of_params = ['tau_m', 'J', 'K']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+        params['omegas'] = network.analysis_params['omegas']
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for fitting the transfer function!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    try:
+        params['transfer_function'] = (
+            network.results['lif.exp.transfer_function'])
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+    return _cache(network, _fit_transfer_function, params,
+                [_prefix + 'transfer_function_fit',
+                 _prefix + 'tau_rate',
+                 _prefix + 'W_rate',
+                 _prefix + 'fit_error'],
+                ['hertz / volt',
+                 'seconds',
+                  None,
+                  None])
+
+
+@_check_positive_params
+def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
+    """ Fits transfer function. Parameter scaling for LIF exp. """
+    transfer_function_fit, tau_rate, h0, fit_error = \
+        _static._fit_transfer_function(transfer_function, omegas)
+
+    # weight matrix of rate model
+    W_rate = h0 * tau_m * J * K
+
+    return transfer_function_fit, tau_rate, W_rate, fit_error
 
 
 def _synaptic_filter(omegas, tau_s):

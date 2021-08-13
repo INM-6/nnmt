@@ -180,3 +180,45 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     var = var0 + var_ext
     # standard deviation is square root of variance
     return np.sqrt(var)
+
+
+def _fit_transfer_function(transfunc, omegas):
+    """ Fits transfer function (low-pass filter) for the given frequencies. """
+    def func(omega, tau, h0):
+        return h0 / (1. + 1j * omega * tau)
+
+    # absolute value for fitting
+    def func_abs(omega, tau, h0):
+        return np.abs(func(omega, tau, h0))
+
+    transfunc_fit = np.zeros(np.shape(transfunc), dtype=np.complex_)
+    dim = np.shape(transfunc)[1]
+    tau_rate = np.zeros(dim)
+    h0 = np.zeros(dim)
+    fit_error = np.zeros(dim)
+
+    for i in np.arange(dim):
+        fitParams, fitCovariances = sopt.curve_fit(
+            func_abs, omegas, np.abs(transfunc[:, i]))
+
+        tau_rate[i] = fitParams[0]
+        h0[i] = fitParams[1]
+        transfunc_fit[:, i] = func(omegas, tau_rate[i], h0[i])
+
+        # adjust sign of imaginary part (just check sign of last value)
+        sign_imag = 1 if (transfunc[-1, i].imag > 0) else -1
+        sign_imag_fit = 1 if (transfunc_fit[-1, i].imag > 0) else -1
+        if sign_imag != sign_imag_fit:
+            transfunc_fit[:,i].imag *= -1
+            tau_rate[i] *= -1
+
+        # standard deviation
+        fit_errs = np.sqrt(np.diag(fitCovariances))
+        # relative error
+        err_tau = fit_errs[0] / tau_rate[i]
+        err_h0 = fit_errs[1] / h0[i]
+
+        # combined error
+        fit_error[i] = np.sqrt(err_tau**2 + err_h0**2)
+
+    return transfunc_fit, tau_rate, h0, fit_error

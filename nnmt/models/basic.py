@@ -11,22 +11,22 @@ from .. import ureg
 class Basic(Network):
     """
     Simple basic network that does not assume any network structure.
-    
+
     This network only reads in the parameter yaml files and calculates the most
     basic dependend parameters. It converts the weights from pA to mV,
     calculates relative thresholds and converts the analysis frequencies to
     angular frequencies.
-    
+
     See Also
     --------
     nnmt.models.Network : Parent class
-    
+
     """
-    
+
     def __init__(self, network_params=None, analysis_params=None, file=None):
-        
+
         super().__init__(network_params, analysis_params, file)
-        
+
         derived_network_params = (
             self._calculate_dependent_network_parameters())
         self.network_params.update(derived_network_params)
@@ -35,9 +35,9 @@ class Basic(Network):
         derived_analysis_params = (
             self._calculate_dependent_analysis_parameters())
         self.analysis_params.update(derived_analysis_params)
-        
+
         self._convert_param_dicts_to_base_units_and_strip_units()
-        
+
     def _calculate_dependent_network_parameters(self):
         """
         Calculate all network parameters derived from parameters in yaml file
@@ -61,9 +61,9 @@ class Basic(Network):
 
         # convert weights in pA (current) to weights in mV (voltage)
         tau_s_div_C = self.network_params['tau_s'] / self.network_params['C']
-        derived_params['J'] = (tau_s_div_C
-                               * self.network_params['W']).to(ureg.mV)
-        
+        derived_params['J'] = (
+            tau_s_div_C * self.network_params['W']).to(ureg.mV)
+
         derived_params['J_ext'] = (
             tau_s_div_C * self.network_params['W_ext']).to(ureg.mV)
 
@@ -89,8 +89,26 @@ class Basic(Network):
         @ureg.wraps(ureg.Hz, (ureg.Hz, ureg.Hz, ureg.Hz))
         def calc_evaluated_omegas(w_min, w_max, dw):
             """ Calculates omegas at which functions are to be evaluated """
-            return np.arange(w_min, w_max, dw)
+            return np.arange(w_min, w_max + dw, dw)
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
 
+        # wavenumbers (obtional)
+        if all(
+            key in self.analysis_params for key in [
+                'k_min',
+                'k_max',
+                'dk']):
+            k_min, k_max, dk = (self.analysis_params['k_min'],
+                                self.analysis_params['k_max'],
+                                self.analysis_params['dk'])
+
+            @ureg.wraps(ureg.meters**(-1), (ureg.meters**(-1),
+                                            ureg.meters**(-1), ureg.meters**(-1)))
+            def calc_wavenumbers(k_min, k_max, dk):
+                """ Gets range of wavenumbers """
+                return np.arange(k_min, k_max + dk, dk)
+
+            derived_params['k_wavenumbers'] = calc_wavenumbers(
+                k_min, k_max, dk)
         return derived_params
