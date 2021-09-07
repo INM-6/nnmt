@@ -1,6 +1,8 @@
 """
 Minimal working example to test power spectra
 =============================================
+
+OUTDATED!!!
 """
 
 import nnmt

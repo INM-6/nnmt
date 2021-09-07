@@ -1,6 +1,8 @@
 """
 Minimal working example for sensitivity measure
 ===============================================
+
+OUTDATED!!!
 """
 
 import nnmt
