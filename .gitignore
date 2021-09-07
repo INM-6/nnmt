@@ -120,3 +120,7 @@ tests/fixtures/envs/environment.yaml
 tests/fixtures/integration/convert_Bos2016_data/results.h5
 tests/fixtures/integration/data/network.h5
 tests/fixtures/integration/make_Bos2016_data/meanfield/kummers_function.pyf
+
+# output of example scripts
+examples/figures/response_nonlinearities.pdf
+docs/source/auto_examples
