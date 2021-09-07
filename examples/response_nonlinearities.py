@@ -204,9 +204,9 @@ plot_rates(fig.add_subplot(gs[2, 1]),
            colors, '(F)', label_prms)
 
 # insert sketch using svgutil, try saving as pdf using inkscape
+plot_fn = 'figures/response_nonlinearities'
 if insert_sketch:
-    sketch_fn = 'figures/brunel_sketch.svg'
-    plot_fn = 'figures/response_nonlinearities'
+    sketch_fn = 'sketches/brunel_sketch.svg'
     svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
     w_svg, h_svg = svg_mpl.get_size()
     svg_mpl.set_size((w_svg+'pt', h_svg+'pt'))
@@ -219,7 +219,8 @@ if insert_sketch:
         os.remove(f'{plot_fn}.svg')
     else:
         print('Conversion to pdf using inkscape failed, keeping svg...')
-
-# show figure (without sketch)
-ax_sketch.annotate('(sketch)', xy=(0., 0.5))
+else:
+    # show figure (without sketch)
+    ax_sketch.annotate('(sketch)', xy=(0., 0.5))
+    plt.savefig(f'{plot_fn}.pdf')
 plt.show()

@@ -1,0 +1,1 @@
+Temporary data files produced by the examples files are stored in this directory.

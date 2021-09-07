@@ -1,13 +1,8 @@
 """
-Senk2020
+Senk et al. 2020
+================
 
-Example demonstrating the methods used in Figures 5 and 6 of:
-
-Conditions for wave trains in spiking neural networks
-Johanna Senk, Karolína Korvasová, Jannis Schuecker, Espen Hagen, Tom Tetzlaff,
-Markus Diesmann, and Moritz Helias
-Phys. Rev. Research 2, 023174 – Published 14 May 2020
-https://doi.org/10.1103/PhysRevResearch.2.023174
+Example demonstrating the methods used in Figures 5 and 6 of :cite:t:`senk2020`.
 
 Author: Johanna Senk
 """
@@ -25,7 +20,7 @@ import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Patch
-plt.style.use('../frontiers.mplstyle')
+plt.style.use('frontiers.mplstyle')
 mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
                      'axes.titlepad': 0.0,
                      })
@@ -40,11 +35,11 @@ params = {
     'figwidth_2cols': 180. / 25.4,
 
     # file name of final figure
-    'figure_fname': 'Senk2020.eps',
+    'figure_fname': 'figures/Senk2020.pdf',
 
     # file names for intermediate results
-    'fname_tf_scan_results': 'Senk2020_scan_fit_transfer_function.npy',
-    'fname_stability_results': 'Senk2020_stability.npy',
+    'fname_tf_scan_results': 'temp/Senk2020_scan_fit_transfer_function.npy',
+    'fname_stability_results': 'temp/Senk2020_stability.npy',
 
     # labels and corresponding scaling parameters for plotted quantities
     'quantities': {
@@ -148,8 +143,9 @@ def scan_fit_transfer_function():
     """
     print('Iterating over working points and fitting the LIF transfer function.')
 
-    network = BasicNetwork(network_params='Senk2020_network_params.yaml',
-                           analysis_params='Senk2020_analysis_params.yaml')
+    network = BasicNetwork(
+        network_params='parameters/Senk2020_network_params.yaml',
+        analysis_params='parameters/Senk2020_analysis_params.yaml')
 
     dims = (len(params['mean_inputs_scan']), len(params['std_inputs_scan']))
     tf_scan_results = {}
@@ -223,10 +219,12 @@ def linear_stability_analysis():
     - integrating the derivative of the eigenvalue with respect to the
       interpolation parameter.
     """
-    print('Performing linear stability analysis for the rate and spiking models.')
+    print('Performing linear stability analysis'
+          'for the rate and spiking models.')
 
-    network = BasicNetwork(network_params='Senk2020_network_params.yaml',
-                           analysis_params='Senk2020_analysis_params.yaml')
+    network = BasicNetwork(
+        network_params='parameters/Senk2020_network_params.yaml',
+        analysis_params='parameters/Senk2020_analysis_params.yaml')
 
     # fix working point via external rates
     nu_ext = mft.external_rates_for_fixed_input(
@@ -789,8 +787,9 @@ def _plot_spatial_profile(gs_glob):
     blue = params['colors']['dark_blue']
     red = params['colors']['dark_red']
 
-    network = BasicNetwork(network_params='Senk2020_network_params.yaml',
-                           analysis_params='Senk2020_analysis_params.yaml')
+    network = BasicNetwork(
+        network_params='parameters/Senk2020_network_params.yaml',
+        analysis_params='parameters/Senk2020_analysis_params.yaml')
     ewidth = network.network_params['width'][0] * \
         params['quantities']['displacement']['scale']
     iwidth = network.network_params['width'][1] * \
@@ -1176,3 +1175,5 @@ if __name__ == '__main__':
     linear_stability_analysis()
 
     figure_Senk2020()
+
+    plt.show()

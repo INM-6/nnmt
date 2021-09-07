@@ -1,0 +1,1 @@
+The figures produced by the example scripts are saved to this directory.

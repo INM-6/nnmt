@@ -10,3 +10,4 @@ Examples
    auto_examples/fix_working_point
    auto_examples/sensitivity_measure
    auto_examples/power_spectra
+   auto_examples/Senk2020
