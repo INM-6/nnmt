@@ -8,7 +8,7 @@ need to determine the self-consistent rates of EI networks with specific
 indegrees and synaptic weights for changing external input.
 
 Most of this script handles all the necessary parameters, the relevant
-calculation is performed by the function `nnmt.lif.delta._firing_rates`.
+calculation is performed by the function :meth:`nnmt.lif.delta._firing_rates`.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -87,7 +87,7 @@ params_ndm = dict(
 
 ###############################################################################
 # We introduce a helper function to handle the parameters. The firing rates
-# are determined using the `nnmt.lif.delta._firing_rates` function.
+# are determined using the :meth:`nnmt.lif.delta._firing_rates` function.
 def solve_theory(params, nu_0, nu_ext_min, nu_ext_max, nu_ext_steps, method):
     # combine common and specific parameters
     params.update(params_all)

@@ -123,3 +123,4 @@ tests/fixtures/integration/make_Bos2016_data/meanfield/kummers_function.pyf
 
 # output of example scripts
 examples/figures/response_nonlinearities.pdf
+docs/source/auto_examples
