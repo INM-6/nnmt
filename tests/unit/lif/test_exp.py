@@ -69,15 +69,15 @@ class Test_firing_rates_old:
 
 
 class Test_firing_rates_wrapper:
-    
+
     func = staticmethod(exp.firing_rates)
-    
+
     def mock_firing_rate_integration(self, mocker):
         mocker.patch(
             'nnmt.lif._static._firing_rate_integration',
             return_value=1
             )
-    
+
     def test_raise_exception_if_not_all_parameters_available(self, mocker,
                                                              empty_network):
         self.mock_firing_rate_integration(mocker)
@@ -86,11 +86,11 @@ class Test_firing_rates_wrapper:
 
 
 class Test_firing_rate_shift:
-    
+
     func = staticmethod(exp._firing_rate_shift)
     fixtures = 'lif_exp_firing_rate_shift.h5'
     rtol = 1e-7
-    
+
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_unitless_params,
@@ -98,7 +98,7 @@ class Test_firing_rate_shift:
 
     def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
-        
+
     def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
         check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
 
@@ -114,7 +114,7 @@ class Test_firing_rate_shift:
         output = unit_fixtures.pop('output')
         print(output)
         assert_allclose(self.func(**params), output)
-    
+
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
         params = unit_fixtures_fully_vectorized.pop('params')
         vectorized_output = self.func(**params)
@@ -136,10 +136,10 @@ class Test_firing_rate_shift:
                                           V_th_rel=V_th_rel,
                                           V_0_rel=V_0_rel)
         assert_allclose(vectorized_output, single_outputs)
-    
+
 
 class Test_firing_rate_taylor:
-    
+
     func = staticmethod(exp._firing_rate_taylor)
     fixtures = 'lif_exp_firing_rate_taylor.h5'
     # Lower rtol than for nu0_fb because it is compared to real_shifted_siegert
@@ -153,7 +153,7 @@ class Test_firing_rate_taylor:
 
     def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
-        
+
     def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
         check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
 
@@ -175,7 +175,7 @@ class Test_firing_rate_taylor:
         output = unit_fixtures.pop('output')
         print(output)
         assert_allclose(self.func(**params), output)
-        
+
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
         params = unit_fixtures_fully_vectorized.pop('params')
         vectorized_output = self.func(**params)
@@ -197,8 +197,8 @@ class Test_firing_rate_taylor:
                                           V_th_rel=V_th_rel,
                                           V_0_rel=V_0_rel)
         assert_allclose(vectorized_output, single_outputs)
-    
-        
+
+
 class Test_Phi:
 
     func = staticmethod(exp._Phi)
@@ -210,12 +210,17 @@ class Test_Phi:
         for s, output in zip(s_values, outputs):
             result = self.func(s)
             assert result == output
-            
+
 
 class Test_mean_input:
 
     func = staticmethod(exp._mean_input)
     fixtures = 'lif_mean_input.h5'
+
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
 
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
@@ -224,25 +229,25 @@ class Test_mean_input:
 
 
 class Test_mean_input_wrapper:
-    
+
     func = staticmethod(exp.mean_input)
-    
+
     def mock_mean_input(self, mocker):
         mocker.patch(
             'nnmt.lif.exp._mean_input',
             return_value=1
             )
-    
+
     def test_raise_exception_if_not_all_parameters_available(self, mocker,
                                                              empty_network):
         self.mock_mean_input(mocker)
         empty_network.results['lif.exp.firing_rates'] = np.array([1]) * ureg.Hz
         with pytest.raises(RuntimeError):
             self.func(empty_network)
-            
+
     def test_raise_exception_if_rates_not_available(self, mocker,
                                                     empty_network):
-        
+
         self.mock_mean_input(mocker)
         empty_network.network_params['tau_m'] = 1
         empty_network.network_params['K'] = 1
@@ -252,39 +257,44 @@ class Test_mean_input_wrapper:
         empty_network.network_params['nu_ext'] = 1
         with pytest.raises(RuntimeError):
             self.func(empty_network)
-        
-        
+
+
 class Test_std_input:
 
     func = staticmethod(exp._std_input)
     fixtures = 'lif_std_input.h5'
 
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
-        
-        
+
+
 class Test_std_input_wrapper:
-    
+
     func = staticmethod(exp.std_input)
-    
+
     def mock_std_input(self, mocker):
         mocker.patch(
             'nnmt.lif.exp._std_input',
             return_value=1
             )
-    
+
     def test_raise_exception_if_not_all_parameters_available(self, mocker,
                                                              empty_network):
         self.mock_std_input(mocker)
         empty_network.results['lif.exp.firing_rates'] = np.array([1]) * ureg.Hz
         with pytest.raises(RuntimeError):
             self.func(empty_network)
-            
+
     def test_raise_exception_if_rates_not_available(self, mocker,
                                                     empty_network):
-        
+
         self.mock_std_input(mocker)
         empty_network.network_params['tau_m'] = 1
         empty_network.network_params['K'] = 1
@@ -294,8 +304,8 @@ class Test_std_input_wrapper:
         empty_network.network_params['nu_ext'] = 1
         with pytest.raises(RuntimeError):
             self.func(empty_network)
-        
-        
+
+
 @pytest.mark.old
 class Test_transfer_function_shift_old():
 
@@ -316,8 +326,8 @@ class Test_transfer_function_shift_old():
         _to_si_units(params)
         _strip_units(params)
         assert_allclose(self.func(**params), output)
-        
-        
+
+
 @pytest.mark.old
 class Test_transfer_function_taylor_old():
 
@@ -364,14 +374,14 @@ class Test_Phi_prime_mu:
         s = 1
         with pytest.raises(ZeroDivisionError):
             self.func(s, sigma)
-            
+
 
 class Test_transfer_function_shift:
-    
+
     func = staticmethod(exp._transfer_function_shift)
     fixtures = 'lif_exp_transfer_function_shift.h5'
     rtol = 1e-7
-    
+
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_unitless_params,
@@ -379,7 +389,7 @@ class Test_transfer_function_shift:
 
     def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
-        
+
     def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
         check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
 
@@ -387,7 +397,7 @@ class Test_transfer_function_shift:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
-        
+
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
         params = unit_fixtures_fully_vectorized.pop('params')
         vectorized_output = self.func(**params)
@@ -410,14 +420,14 @@ class Test_transfer_function_shift:
                                                  V_th_rel=V_th_rel,
                                                  V_0_rel=V_0_rel)
         assert_allclose(vectorized_output, single_outputs)
-        
+
 
 class Test_transfer_function_taylor:
-    
+
     func = staticmethod(exp._transfer_function_taylor)
     fixtures = 'lif_exp_transfer_function_taylor.h5'
     rtol = 1e-7
-    
+
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_unitless_params,
@@ -425,7 +435,7 @@ class Test_transfer_function_taylor:
 
     def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
         check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
-        
+
     def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
         check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
 
@@ -433,7 +443,7 @@ class Test_transfer_function_taylor:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
-        
+
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
         params = unit_fixtures_fully_vectorized.pop('params')
         vectorized_output = self.func(**params)
@@ -456,13 +466,13 @@ class Test_transfer_function_taylor:
                                                  V_th_rel=V_th_rel,
                                                  V_0_rel=V_0_rel)
         assert_allclose(vectorized_output, single_outputs)
-        
+
 
 class Test_derivative_of_firing_rates_wrt_mean_input:
 
     func = staticmethod(exp._derivative_of_firing_rates_wrt_mean_input)
     output_key = 'd_nu_d_mu_fb433'
-    
+
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_unitless_params,
@@ -539,10 +549,10 @@ class Test_d_2_Psi:
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
             assert result == output
-            
+
 
 class Test_effective_connectivity:
-    
+
     func = staticmethod(exp._effective_connectivity)
     fixtures = 'lif_exp_effective_connectivity.h5'
 
@@ -553,7 +563,7 @@ class Test_effective_connectivity:
 
 
 class Test_propagator:
-    
+
     func = staticmethod(exp._propagator)
     fixtures = 'lif_exp_propagator.h5'
 
@@ -561,10 +571,10 @@ class Test_propagator:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
-        
+
 
 class Test_sensitivity_measure:
-    
+
     func = staticmethod(exp._sensitivity_measure)
     fixtures = 'lif_exp_sensitivity_measure.h5'
 
@@ -597,6 +607,16 @@ class Test_external_rates_for_fixed_input:
     def test_pos_params_neg_raise_exception(self, std_params, pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_params,
                                              pos_keys)
+
+    def test_negative_rates_raise_exception(self, unit_fixtures, mocker):
+        params = unit_fixtures.pop('params')
+        mocker.patch(
+            'nnmt.lif.exp.np.linalg.lstsq',
+            return_value=np.array([[10, 20, -1],
+                                   [10, 20, -1],
+                                   [10, 20, -1]]))
+        with pytest.raises(RuntimeError):
+            self.func(**params)
 
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
