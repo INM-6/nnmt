@@ -9,7 +9,8 @@ from numpy.testing import (
 from ...checks import (check_pos_params_neg_raise_exception,
                        check_V_0_larger_V_th_raise_exception,
                        check_warning_is_given_if_k_is_critical,
-                       check_correct_output)
+                       check_correct_output,
+                       check_correct_output_for_several_mus_and_sigmas)
 
 from .test_delta import real_siegert
 
@@ -19,6 +20,7 @@ import nnmt.lif.exp as exp
 from nnmt.utils import (
     _strip_units,
     _to_si_units,
+    _convert_to_si_and_strip_units
     )
 
 
@@ -472,6 +474,7 @@ class Test_derivative_of_firing_rates_wrt_mean_input:
 
     func = staticmethod(exp._derivative_of_firing_rates_wrt_mean_input)
     output_key = 'd_nu_d_mu_fb433'
+    fixtures = 'lif_exp_derivative_of_firing_rates_wrt_mean_input.h5'
 
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
@@ -489,15 +492,19 @@ class Test_derivative_of_firing_rates_wrt_mean_input:
         with pytest.raises(ZeroDivisionError):
             self.func(**std_params)
 
-    def test_correct_output(self, output_test_fixtures):
+    def test_correct_output_old(self, output_test_fixtures):
         params = output_test_fixtures.pop('params')
         outputs = output_test_fixtures.pop('output')
         _to_si_units(params)
         _strip_units(params)
         outputs = outputs.magnitude * 1000
-        from ...checks import check_correct_output_for_several_mus_and_sigmas
         check_correct_output_for_several_mus_and_sigmas(self.func, params,
                                                         outputs)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
 
 
 class Test_Psi:
@@ -549,6 +556,44 @@ class Test_d_2_Psi:
         for z, x, output in zip(zs, xs, outputs):
             result = self.func(z, x)
             assert result == output
+
+
+class Test_derivative_of_firing_rates_wrt_input_rate:
+
+    func = staticmethod(exp._derivative_of_firing_rates_wrt_input_rate)
+    output_keys = ['d_nu_d_nu_in_fb_all']
+    fixtures = 'lif_exp_derivative_of_firing_rates_wrt_input_rate.h5'
+
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
+    def test_V_0_larger_V_th_raise_exception(self, std_unitless_params):
+        check_V_0_larger_V_th_raise_exception(self.func, std_unitless_params)
+
+    def test_warning_is_given_if_k_is_critical(self, std_unitless_params):
+        check_warning_is_given_if_k_is_critical(self.func, std_unitless_params)
+
+    def test_zero_sigma_raises_error(self, std_params):
+        std_params['sigma'] = 0
+        with pytest.raises(ZeroDivisionError):
+            self.func(**std_params)
+
+    def test_correct_output_old(self, output_test_fixtures):
+        params = output_test_fixtures['params']
+        _convert_to_si_and_strip_units(params)
+        result = self.func(**params)
+        # I suppose there was a mistake in the original function multiplying
+        # tau_m in ms with nu0 in Hz, thereby adding another factor 1000000
+        # because they appear squared.
+        output = output_test_fixtures['output'][0] / 1000000
+        assert_allclose(result, output)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
 
 
 class Test_effective_connectivity:

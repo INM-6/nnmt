@@ -32,6 +32,7 @@ Parameter Functions
     _transfer_function_shift
     _transfer_function_taylor
     _derivative_of_firing_rates_wrt_mean_input
+    _derivative_of_firing_rates_wrt_input_rate
     _effective_connectivity
     _propagator
     _sensitivity_measure
@@ -909,6 +910,71 @@ def _Phi_prime_mu(s, sigma):
     return -np.sqrt(np.pi) / sigma * (s * np.exp(s**2 / 2.)
                                       * (1 + _erf(s / np.sqrt(2)))
                                       + np.sqrt(2) / np.sqrt(np.pi))
+
+
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
+def _derivative_of_firing_rates_wrt_input_rate(
+        mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j):
+    """
+    Derivative of the stationary firing rates with synaptic filtering
+    with respect to input rate.
+
+    Parameters
+    ----------
+    mu : float
+        Mean neuron activity.
+    sigma :
+        Standard deviation of neuron activity.
+    tau_m : float
+        Membrane time constant.
+    tau_s : float
+        Synaptic time constant.
+    tau_r : float
+        Refractory time.
+    V_th_rel : float
+        Relative threshold potential.
+    V_0_rel : float
+        Relative reset potential.
+    j : float
+        Effective connectivity weight.
+
+    Returns
+    -------
+    float
+        Unitless derivative.
+    """
+
+    try:
+        if any(sigma == 0 for sigma in sigma):
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    except TypeError:
+        if sigma == 0:
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+
+    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    nu0 = _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
+
+    # linear contribution
+    lin = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
+           * (np.exp(y_th_fb**2) * (1 + _erf(y_th_fb))
+              - np.exp(y_r_fb**2)
+              * (1 + _erf(y_r_fb))))
+
+    # quadratic contribution
+    sqr = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
+           * (np.exp(y_th_fb**2) * (1 + _erf(y_th_fb))
+              * 0.5 * y_th * j / sigma - np.exp(y_r_fb**2)
+              * (1 + _erf(y_r_fb)) * 0.5 * y_r * j / sigma))
+
+    return lin + sqr
 
 
 def effective_connectivity(network):

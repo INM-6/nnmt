@@ -53,13 +53,11 @@ def create_and_save_fixtures(func, regime_params, regimes, file):
     regime_params = extract_required_params(func,
                                             regime_params)
     for regime, params in zip(regimes, regime_params):
-        print(regime)
         output = func(**params)
         results[regime] = {
             'params': params,
             'output': output
             }
-        import pdb; pdb.set_trace()
     io.save_h5(file, results, overwrite_dataset=True)
 
 
@@ -91,9 +89,10 @@ if __name__ == '__main__':
         if (module == 'firing_rates') or (module == 'all'):
             config_path = 'unit/config/firing_rates/'
             regime_params, regimes = load_params_and_regimes(config_path)
-            create_and_save_fixtures(nnmt.lif.delta._firing_rates_for_given_input,
-                                     regime_params, regimes,
-                                     fixture_path + 'lif_delta_firing_rate.h5')
+            create_and_save_fixtures(
+                nnmt.lif.delta._firing_rates_for_given_input,
+                regime_params, regimes,
+                fixture_path + 'lif_delta_firing_rate.h5')
             create_and_save_fixtures(nnmt.lif.exp._firing_rate_taylor,
                                      regime_params, regimes,
                                      fixture_path
@@ -102,7 +101,7 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_firing_rate_shift.h5')
-        if (module == 'inputs') or (module == 'all'):
+        elif (module == 'inputs') or (module == 'all'):
             config_path = 'unit/config/inputs/'
             regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(nnmt.lif._static._mean_input,
@@ -111,7 +110,7 @@ if __name__ == '__main__':
             create_and_save_fixtures(nnmt.lif._static._std_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_std_input.h5')
-        if (module == 'transfer_functions') or (module == 'all'):
+        elif (module == 'transfer_functions') or (module == 'all'):
             config_path = 'unit/config/transfer_functions/'
             regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(nnmt.lif.exp._transfer_function_shift,
@@ -122,7 +121,17 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_transfer_function_taylor.h5')
-        if (module == 'sensitivity_measure') or (module == 'all'):
+            create_and_save_fixtures(
+                nnmt.lif.exp._derivative_of_firing_rates_wrt_input_rate,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_derivative_of_firing_rates_wrt_input_rate.h5')
+            create_and_save_fixtures(
+                nnmt.lif.exp._derivative_of_firing_rates_wrt_mean_input,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_derivative_of_firing_rates_wrt_mean_input.h5')
+        elif (module == 'sensitivity_measure') or (module == 'all'):
             config_path = 'unit/config/sensitivity_measure/'
             regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(nnmt.lif.exp._effective_connectivity,
@@ -141,7 +150,7 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_propagator.h5')
-        if (module == 'external_rates') or (module == 'all'):
+        elif (module == 'external_rates') or (module == 'all'):
             config_path = 'unit/config/external_rates/'
             regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(
