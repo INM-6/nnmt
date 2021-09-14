@@ -224,13 +224,13 @@ def fix_eigenspectra(network, file):
         network.eigenvalue_spectra('prop'))
     network.results['eigenvalue_spectra_prop_inv'] = (
         network.eigenvalue_spectra('prop_inv'))
-        
+
     network.results['r_eigenvec_spectra_MH'] = network.r_eigenvec_spectra('MH')
     network.results['r_eigenvec_spectra_prop'] = (
         network.r_eigenvec_spectra('prop'))
     network.results['r_eigenvec_spectra_prop_inv'] = (
         network.r_eigenvec_spectra('prop_inv'))
-        
+
     network.results['l_eigenvec_spectra_MH'] = network.l_eigenvec_spectra('MH')
     network.results['l_eigenvec_spectra_prop'] = (
         network.l_eigenvec_spectra('prop'))
@@ -346,7 +346,7 @@ def fix_sensitivity_measure(network, file):
     network.sensitivity_measure(omega)
     network.transfer_function(omega)
     network.save(file=file, overwrite=True)
-    
+
 
 def fix_nu0_fb433(network, file):
     """Calc nu0_fb433 and save as h5 using network.save()."""
@@ -361,7 +361,7 @@ def fix_nu0_fb433(network, file):
                   sigma)
         for mu, sigma in zip(network.mean_input(), network.std_input())]
     network.save(file, overwrite=True)
-    
+
 
 def fix_nu0_fb(network, file):
     """Calc nu0_fb and save as h5 using network.save()."""
@@ -403,7 +403,7 @@ def fix_working_point(network, file):
     """Calculate working_point and save results as h5 using network.save()."""
     network.working_point()
     network.save(file=file, overwrite=True)
-    
+
 
 def fix_network_loading(network, file):
     """Calculate firing_rates and save network to h5 file."""
@@ -460,7 +460,7 @@ if __name__ == '__main__':
             fix_d_nu_d_mu(network, file_path)
             fix_d_nu_d_mu_fb433(network, file_path)
             fix_d_nu_d_nu_in_fb(network, file_path)
-            
+
             # test network for loading
             network = nnmt.Network(param_file, analysis_param_file)
             fix_network_loading(network, f'{fixture_path}test_network.h5')

@@ -6,23 +6,23 @@ Network Functions
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     firing_rates
     mean_input
     std_input
-    
+
 Parameter Functions
 *******************
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     _firing_rates
     _firing_rates_for_given_input
     _mean_input
     _std_input
     _derivative_of_firing_rates_wrt_mean_input
-    
+
 """
 
 import numpy as np
@@ -37,7 +37,6 @@ from scipy.integrate import quad as _quad
 from . import _static
 from ..utils import (_cache,
                      _check_positive_params)
-from .. import ureg
 
 
 _prefix = 'lif.delta.'
@@ -96,7 +95,7 @@ def firing_rates(network, **kwargs):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-        
+
     params.update(kwargs)
 
     return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
@@ -314,6 +313,7 @@ def mean_input(network):
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
+@_check_positive_params
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of mean neuronal input.
@@ -375,6 +375,7 @@ def std_input(network):
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
+@_check_positive_params
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of standard deviation of neuronal input.

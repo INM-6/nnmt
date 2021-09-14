@@ -46,20 +46,22 @@ def extract_required_params(func, regime_params):
     extracted = [get_required_params(func, params)
                  for params in regime_params]
     return extracted
-    
+
 
 def create_and_save_fixtures(func, regime_params, regimes, file):
     results = {}
     regime_params = extract_required_params(func,
                                             regime_params)
     for regime, params in zip(regimes, regime_params):
+        print(regime)
         output = func(**params)
         results[regime] = {
             'params': params,
             'output': output
             }
+        import pdb; pdb.set_trace()
     io.save_h5(file, results, overwrite_dataset=True)
-    
+
 
 def load_params_and_regimes(config_path):
     param_files = os.listdir(config_path)
@@ -70,7 +72,7 @@ def load_params_and_regimes(config_path):
         _to_si_units(dict)
         _strip_units(dict)
     return regime_params, regimes
-    
+
 
 if __name__ == '__main__':
     # always show help message if not invoked with -f option
@@ -81,11 +83,11 @@ if __name__ == '__main__':
 
     # only run code if users are sure they want to do it
     if '--force' in args.keys():
-        
+
         fixture_path = 'unit/data/'
-        
+
         module = args['<module>']
-        
+
         if (module == 'firing_rates') or (module == 'all'):
             config_path = 'unit/config/firing_rates/'
             regime_params, regimes = load_params_and_regimes(config_path)
