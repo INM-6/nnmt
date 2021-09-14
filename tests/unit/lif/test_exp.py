@@ -217,6 +217,11 @@ class Test_mean_input:
     func = staticmethod(exp._mean_input)
     fixtures = 'lif_mean_input.h5'
 
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
+
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
@@ -258,6 +263,11 @@ class Test_std_input:
 
     func = staticmethod(exp._std_input)
     fixtures = 'lif_std_input.h5'
+
+    def test_pos_params_neg_raise_exception(self, std_unitless_params,
+                                            pos_keys):
+        check_pos_params_neg_raise_exception(self.func, std_unitless_params,
+                                             pos_keys)
 
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
