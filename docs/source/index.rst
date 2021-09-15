@@ -12,14 +12,14 @@ This is NNMT!
    tools
    models
    utils
-   how_to_contribute
+   contributor_guide
+   tests
    license
    acknowledgments
    citing
    references
 
-.. README
-.. include:: readme.rst
+.. include:: welcome.rst
 
 ******************
 Indices and tables
