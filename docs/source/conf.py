@@ -22,8 +22,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'NNMT'
-copyright = '2021, Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Karolína Korvasová, Hannah Bos, Jannis Schuecker, Moritz Helias'
-author = 'Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Karolína Korvasová, Hannah Bos, Jannis Schuecker, Moritz Helias'
+copyright = '2021, Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Moritz Helias'
+author = 'Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Moritz Helias'
 
 # The full version, including alpha/beta/rc tags
 release = '1.0'
