@@ -5,19 +5,19 @@ This is NNMT!
 .. toctree::
    :hidden:
    :maxdepth: 2
-   
+
    installation
    quick_start
    examples
-   models
    tools
+   models
    utils
    how_to_contribute
    license
    acknowledgments
    citing
    references
-   
+
 .. README
 .. include:: readme.rst
 
