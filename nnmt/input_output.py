@@ -11,48 +11,48 @@ HDF5 Wrapper
 
 .. autosummary::
     :toctree: _toctree/input_output/
-    
+
     save_h5
     load_h5
-    
+
 Conversions
 ***********
 
 .. autosummary::
     :toctree: _toctree/input_output/
-    
+
     val_unit_to_quantities
     quantities_to_val_unit
-    
+
 Saving
 ******
 
 .. autosummary::
     :toctree: _toctree/input_output/
-    
+
     save_quantity_dict_to_yaml
     save_quantity_dict_to_h5
     save_network
-    
+
 Loading
 *******
 
 .. autosummary::
     :toctree: _toctree/input_output/
-    
+
     load_val_unit_dict_from_yaml
     load_val_unit_dict_from_h5
     load_network
     load_unit_yaml
-    
+
 Others
 ******
 
 .. autosummary::
     :toctree: _toctree/input_output/
-    
+
     create_hash
-    
+
 '''
 
 
@@ -73,7 +73,7 @@ from . import ureg
 def save_h5(file, d, *args, **kwargs):
     """
     Saves dictionary to h5 file.
-    
+
     Parameters
     ----------
     file : str
@@ -86,12 +86,12 @@ def save_h5(file, d, *args, **kwargs):
         _store_dict(f, d)
     finally:
         f.close()
-    
+
 
 def _store_dict(f, d):
     """
     Recursively stores dictionary in HDF5 file object.
-    
+
     Parameters
     ----------
     f : HDF5 file object
@@ -122,7 +122,7 @@ def _store_dict(f, d):
                     dtype = dtypes[0]
             else:
                 dtype = type(value)
-            
+
             if isinstance(value, str):
                 dset = f.create_dataset(key, (1,), dtype=h5py.string_dtype())
                 dset[0] = value
@@ -135,17 +135,17 @@ def _store_dict(f, d):
                 dset = f.create_dataset(key, data=value)
             if numerical_key:
                 dset.attrs['numerical_key'] = True
-            
+
 
 def load_h5(file, *args, **kwargs):
     """
     Loads dictionary from h5 file.
-    
+
     Parameters
     ----------
     file : str
         File to be loaded.
-        
+
     Returns
     -------
     dict
@@ -162,12 +162,12 @@ def load_h5(file, *args, **kwargs):
 def _retrieve_dict(f):
     """
     Recursively retrieves a dictionary from an HDF5 file object.
-    
+
     Parameters
     ----------
     f : HDF5 file object
         Object dictionary is stored in.
-    
+
     Returns
     -------
     dict
@@ -207,7 +207,7 @@ def _retrieve_dict(f):
 def convert_arrays_in_dict_to_lists(adict):
     """
     Recursively searches through a dict and replaces all numpy arrays by lists.
-    
+
     Parameters
     ----------
     adict : dict
@@ -235,10 +235,10 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     Parameters
     ----------
-    
+
     dict_of_val_unit_dicts : dict
         Dictionary of the following format::
-           
+
             {'<quantity_key1>':{'val':<value1>, 'unit':<unit1>},
             '<quantity_key2>':<value2>, ...}
 
@@ -288,7 +288,7 @@ def quantities_to_val_unit(dict_of_quantities):
     dict_of_quantities : dict
         Dictionary containing only quantities (pint package) of the following
         format::
-        
+
           {'<quantity_key1>':<quantity1>, ...}
 
     Returns
@@ -325,9 +325,9 @@ def quantities_to_val_unit(dict_of_quantities):
 def save_quantity_dict_to_yaml(file, qdict):
     """
     Convert and save dictionary of quantities to yaml file.
-    
+
     Converts dict of quantities to val unit dicts and saves them in yaml file.
-    
+
     Parameters
     ----------
     file : str
@@ -339,7 +339,7 @@ def save_quantity_dict_to_yaml(file, qdict):
     converted = convert_arrays_in_dict_to_lists(converted)
     with open(file, 'w') as f:
         yaml.dump(converted, f)
-    
+
 
 def load_val_unit_dict_from_yaml(file):
     """
@@ -353,9 +353,9 @@ def load_val_unit_dict_from_yaml(file):
     file : str
         String specifying path to yaml file containing parameters in the
         following format
-        
+
         .. code-block:: yaml
-        
+
             <parameter1>:
                 val: <value1>
                 unit: <unit1>
@@ -382,7 +382,7 @@ def load_val_unit_dict_from_yaml(file):
 def save_quantity_dict_to_h5(file, qdict, overwrite=False):
     """
     Convert and save dict of quantities to h5 file.
-    
+
     The quantity dictionary is first converted to a val unit dictionary and
     then saved to an h5 file.
 
@@ -408,7 +408,7 @@ def save_quantity_dict_to_h5(file, qdict, overwrite=False):
 def load_val_unit_dict_from_h5(file):
     """
     Load and convert val unit dict from h5 file to dict of quantities.
-    
+
     The val unit dictionary is loaded from the h5 file and then converted to
     a dictionary containing quantities.
 
@@ -424,16 +424,16 @@ def load_val_unit_dict_from_h5(file):
 
     converted = val_unit_to_quantities(loaded)
     return converted
-    
-    
+
+
 def save_network(file, network, overwrite=False):
     """
     Save network to h5 file.
-    
+
     The networks' dictionaires (network_params, analysis_params, results,
     results_hash_dict) are stored. Quantities are converted to value-unit
     dictionaries.
-    
+
     Parameters
     ----------
     file : str
@@ -449,17 +449,17 @@ def save_network(file, network, overwrite=False):
               'results': network.results,
               'results_hash_dict': network.results_hash_dict}
     save_quantity_dict_to_h5(file, output, overwrite)
-    
-    
+
+
 def load_network(file):
     """
     Load network from h5 file.
-    
+
     Parameters
     ----------
     file : str
         Input file name.
-    
+
     Returns
     -------
     network_params : dict
@@ -478,7 +478,7 @@ def load_network(file):
         message = f'File {file} not found!'
         warnings.warn(message)
         return {}, {}, {}, {}
-    
+
     return (input['network_params'],
             input['analysis_params'],
             input['results'],
@@ -513,12 +513,12 @@ def create_hash(params, param_keys):
 def load_unit_yaml(file):
     """
     Loads the standard unit yaml file.
-    
+
     Parameters
     ----------
     file : str
         The file to be loaded.
-    
+
     Returns
     -------
     dict
