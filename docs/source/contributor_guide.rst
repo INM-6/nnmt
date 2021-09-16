@@ -39,40 +39,70 @@ Structure of toolbox and design principles
 Structure
 =========
 
+NNMT is divided into tools and methods and has a flexible, modular structure.
+The best description of the ideas behind this can be found in our paper:
+`NNMT: A mean-field toolbox for spiking neuronal network model analysis <add missing link>`_.
 
 Design principles
 =================
 
-- all calculations are in SI units, without quantities (bare numbers), because
-  one circumvents problems of quantitiy packages (like pint) in combination
-  with special functions (erf, zetac, etc)
-- the idea is to resuse as much code as possible. so if two functions in
-  different submodules (like lif.exp and lif.delta) need the same function, it
-  should be put into a higher order module (here _static (rename?)). If two
-  submodules that need a similar function are not both part of the same
-  submodule, it might be sensible to combine them in a new submodule
-- think of the module's structure in a very flexible, non-dogmatic way. If the
-  canonical split into neuron type, synapse type doesn't fit, feel free to
-  adjust the submodule structure accordingly. An inspiration to us was the
-  submodule structure of scipy, which (at least it seemed so to me) is rather
-  free and fitted to the needs at hand.
+These are some thoughts that we had when we wrote the core package. They should
+be followed when writing new code for the toolbox:
+
+- **All calculations are to be done in SI units.** We do not use Python
+  quantity packages like ``pint`` or ``quantitites`` inside the actual
+  calculations because this often causes problems in combination with special
+  functions (e.g. ``erf`` or ``zetac`` from SciPy). Although we do use
+  ``pint`` for converting parameters including units from yaml files to
+  dictionaries. For more detail see the :ref:`models section <subsec models>`.
+- **Resuse as much code as possible.** If two functions in
+  different submodules (e.g. in ``lif.exp`` and ``lif.delta``) use the same
+  function, the function should be put into a higher module at a higher level.
+  In the ``lif`` module we introduced the ``_static`` module which serves this
+  purpose. Keep in mind that if two modules that need a similar function are
+  not both part of the same submodule, it might be sensible to combine them in
+  a new submodule.
+- **The package's structure is supposed to be adapted in a flexible,
+  non-dogmatic way.** If the canonical split into neuron type, synapse type
+  doesn't fit, feel free to adjust the submodule structure accordingly. An
+  inspiration to us was the submodule structure of SciPy, which (at least
+  it seemed so to us) is rather free and fitted to the needs at hand.
 
 Tools
 =====
 
-- the tools are ordered according to neuron and synapse type, because that
-  seemed like the most sensible structure, starting off with LIF neurons
+Tools are **Python functions** and constitute the core of NNMT. They actually
+perform the calculations.
+
+We decided to **sort them into different submodules**. Originally, starting off
+with tools for LIF neurons, we thought the most sensible split is according to
+neuron type (e.g. LIF, binary, etc.) and then, if required, another split
+according to synapse type (e.g. delta, exponential). But analytical theories of
+neuronal network models are very versatile. Therefore other ways of sorting the
+tools might be more appropriate for different tools.
+
+It is vital that all tools have **meaningful names** and
+**comprehensive docstrings** (see :ref:`documentation section <subsec docs>`
+for more details).
+
+_Tools
+******
+
 - the function doing the job is the underscored function; it gets all
   parameters as arguments directly
+- should be using parameter checks (decorators in utils)
+- should raise warnings if valid parameter regime is left
+- should raise errors if return values are meaningless (negative rates)
+
+Wrappers
+********
+
 - to make a tool usable with the convenience layer (aka models), it gets a
   wrapper function (without the underscore)
 - the wrapper function checks all parameters and results available
 - the wrapper function invoces the _cache function
-- should be using parameter checks (decorators in utils)
-- should raise warnings if valid parameter regime is left
-- should raise errors if return values are meaningless (negative rates)
-- should have meaningful names
-- need to have good docstring
+
+.. _subsec models:
 
 Models
 ======
@@ -98,6 +128,9 @@ Tests
 *****
 
 - explained in detail in :ref:`test section <mytests>`
+
+
+.. _subsec docs:
 
 *************
 Documentation
