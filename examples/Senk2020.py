@@ -348,11 +348,11 @@ def figure_Senk2020_network_structure():
     svg_sketch.moveto(x=50, y=0, scale_x=1.5)
     svg_mpl.append(svg_sketch)
     svg_mpl.save(f'{plot_fn}.svg')
-    os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
+    os_return = os.system(f'inkscape --export-eps={plot_fn}.eps {plot_fn}.svg')
     if os_return == 0:
         os.remove(f'{plot_fn}.svg')
     else:
-        print('Conversion to pdf using inkscape failed, keeping svg...')
+        print('Conversion to eps using inkscape failed, keeping svg...')
     return
 
 
@@ -382,7 +382,7 @@ def figure_Senk2020_input_scan():
     ax = _plot_transfer_functions(gs[0, 7:], tf_scan_results)
     _add_label(ax, 'C', xshift=-0.4, yshift=0.02)
 
-    plt.savefig(params['figure_fname'] + '_input_scan.pdf')
+    plt.savefig(params['figure_fname'] + '_input_scan.eps')
     return
 
 
@@ -413,7 +413,7 @@ def figure_Senk2020_eigenvalues():
     ax = _plot_eigenvalues_alpha(gs[0, 1], stability_results)
     _add_label(ax, 'B', xshift=xshift - 0.05, yshift=yshift)
 
-    plt.savefig(params['figure_fname'] + '_eigenvalues.pdf')
+    plt.savefig(params['figure_fname'] + '_eigenvalues.eps')
     return
 
 
@@ -1140,9 +1140,9 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 if __name__ == '__main__':
 
-    # scan_fit_transfer_function()
+    scan_fit_transfer_function()
 
-    # linear_stability_analysis()
+    linear_stability_analysis()
 
     figure_Senk2020_network_structure()
 
@@ -1150,4 +1150,4 @@ if __name__ == '__main__':
 
     figure_Senk2020_eigenvalues()
 
-    # plt.show()
+    plt.show()
