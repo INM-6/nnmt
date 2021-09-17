@@ -7,6 +7,8 @@ Example demonstrating the methods used in Figures 5 and 6 of :cite:t:`senk2020`.
 Author: Johanna Senk
 """
 
+import os
+import sys
 import nnmt.spatial as spatial
 import nnmt.linear_stability as linstab
 import nnmt.lif.exp as mft  # main set of meanfield tools
@@ -15,7 +17,6 @@ import numpy as np
 import scipy.optimize as sopt
 import scipy.integrate as sint
 import scipy.misc as smisc
-import networkx as nx  # version >=2.6 needed
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -24,6 +25,10 @@ plt.style.use('frontiers.mplstyle')
 mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
                      'axes.titlepad': 0.0,
                      })
+try:
+    import svgutils.transform as sg
+except BaseException:
+    pass
 
 
 ##########################################################################
@@ -32,10 +37,11 @@ mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
 
 params = {
     # figure width in inch
+    'figwidth_1col': 85. / 25.4,
     'figwidth_2cols': 180. / 25.4,
 
     # file name of final figure
-    'figure_fname': 'figures/Senk2020.pdf',
+    'figure_fname': 'figures/Senk2020',
 
     # file names for intermediate results
     'fname_tf_scan_results': 'temp/Senk2020_scan_fit_transfer_function.npy',
@@ -78,6 +84,8 @@ params = {
 
     # generic set of colors
     'colors': {
+        'ex_blue': '#4C72B0',
+        'inh_red': '#C44E52',
         'light_yellow': '#EECC66',
         'dark_yellow': '#997700',
         'light_red': '#EE99AA',
@@ -304,43 +312,108 @@ def linear_stability_analysis():
     return
 
 
-def figure_Senk2020():
+def figure_Senk2020_network_structure():
     """
-    Loads precomputed results and creates the final figure with
-    - network illustrations,
-    - results from scanning working points and fitting the transfer function, and
-    - linear stability analysis with rate and spiking models.
-    """
-    print('Plotting network sketches and analysis results.')
+    Illustrates network structure.
 
+    (A) Populations and external input.
+    (B) Ring network illustration.
+    (C) Spatial profile (boxcar connectivity kernel).
+    """
+    assert 'svgutils' in sys.modules, (
+        'This figure requires: "import svgutils.transform as sg"')
+
+    plot_fn = params['figure_fname'] + '_network_structure'
+    sketch_fn = 'sketches/Senk2020_sketch.svg'
+
+    fig = plt.figure(
+        figsize=(
+            params['figwidth_1col'],
+            params['figwidth_1col']))
+    gs = gridspec.GridSpec(2, 2, figure=fig, wspace=0, hspace=0)
+
+    _add_label(plt.subplot(gs[0, :]), 'A')
+    plt.gca().set_axis_off()
+
+    ax = _plot_network_sketch_sun(gs[1, 0])
+    _add_label(ax, 'B', xshift=-0.085)
+
+    ax = _plot_spatial_profile(gs[1, 1])
+    _add_label(ax, 'C')
+
+    svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
+    w_svg, h_svg = svg_mpl.get_size()
+    svg_mpl.set_size((w_svg + 'pt', h_svg + 'pt'))
+    svg_sketch = sg.fromfile(sketch_fn).getroot()
+    svg_sketch.moveto(x=50, y=0, scale_x=1.5)
+    svg_mpl.append(svg_sketch)
+    svg_mpl.save(f'{plot_fn}.svg')
+    os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
+    if os_return == 0:
+        os.remove(f'{plot_fn}.svg')
+    else:
+        print('Conversion to pdf using inkscape failed, keeping svg...')
+    return
+
+
+def figure_Senk2020_input_scan():
+    """
+    Loads and plots precomputed results from scanning working points and fitting
+    the transfer function.
+
+    (A) Input scan: set external rates and predicted rates.
+    (B) Input scan: fit results.
+    (C) Transfer function (original and fit).
+    """
     tf_scan_results = np.load(params['fname_tf_scan_results'],
                               allow_pickle=True).item()
+
+    fig = plt.figure(figsize=(params['figwidth_2cols'],
+                              params['figwidth_2cols'] / 2))
+    gs = gridspec.GridSpec(1, 10, figure=fig)
+
+    axes = _plot_mean_std_images(
+        gs[0, :6], tf_scan_results)
+    xshift = -0.6
+    yshift = 0.22
+    _add_label(axes[0], 'A', xshift=xshift, yshift=yshift)
+    _add_label(axes[3], 'B', xshift=xshift, yshift=yshift)
+
+    ax = _plot_transfer_functions(gs[0, 7:], tf_scan_results)
+    _add_label(ax, 'C', xshift=-0.4, yshift=0.02)
+
+    plt.savefig(params['figure_fname'] + '_input_scan.pdf')
+    return
+
+
+def figure_Senk2020_eigenvalues():
+    """
+    Loads and plots precomputed results from linear stability analysis with
+    rate and spiking model.
+
+    (A) Eigenvalues vs. wavenumbers.
+    (B) Eigenvalues vs. interpolation parameter.
+    """
     stability_results = np.load(params['fname_stability_results'],
                                 allow_pickle=True).item()
 
-    fig = plt.figure(figsize=(params['figwidth_2cols'], 8))
-    gs = gridspec.GridSpec(4, 3, figure=fig, hspace=10)
+    fig = plt.figure(
+        figsize=(
+            params['figwidth_1col'],
+            params['figwidth_1col']))
+    gs = gridspec.GridSpec(1, 2, figure=fig)
+    plt.subplots_adjust(
+        bottom=0.19, top=0.95, left=0.15, right=0.93, wspace=1.2)
 
-    ax = _plot_network_sketch(gs[0, 0])
-    _add_label(ax, 'A', xshift=-0.07)
+    ax = _plot_eigenvalues_wavenumber(gs[0, 0], stability_results)
+    xshift = -0.6
+    yshift = 0.02
+    _add_label(ax, 'A', xshift=xshift, yshift=yshift)
 
-    _plot_network_sketch_sun(gs[0, 1])
+    ax = _plot_eigenvalues_alpha(gs[0, 1], stability_results)
+    _add_label(ax, 'B', xshift=xshift - 0.05, yshift=yshift)
 
-    _plot_spatial_profile(gs[0, 2])
-
-    ax = _plot_mean_std_images(
-        gs[1, :], tf_scan_results, 'B')  # label in subplot
-
-    ax = _plot_transfer_functions(gs[2:, 0], tf_scan_results)
-    _add_label(ax, 'C', xshift=-0.17, yshift=0.02)
-
-    ax = _plot_eigenvalues_wavenumber(gs[2:, 1], stability_results)
-    _add_label(ax, 'D', xshift=-0.17, yshift=0.01)
-
-    ax = _plot_eigenvalues_alpha(gs[2:, 2], stability_results)
-    _add_label(ax, 'E', xshift=-0.17, yshift=0.01)
-
-    plt.savefig(params['figure_fname'])
+    plt.savefig(params['figure_fname'] + '_eigenvalues.pdf')
     return
 
 
@@ -600,116 +673,6 @@ def _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate):
 ##########################################################################
 
 
-def _plot_network_sketch(gs_glob):
-    """
-    Creates a network diagram showing neuron populations, external input, and
-    connections (without space).
-
-    Parameters
-    ----------
-    gs_glob: GridSpec cell
-        Global GridSpec cell to plot into.
-    """
-    def custom_arrowhead(
-            ax, ap, marker='o', scale_markersize=1.5, offset=[0, 0]):
-        stop = ap.get_path().vertices[2]
-        x = stop[0] + offset[0]
-        y = stop[1] + offset[1]
-        place_marker(
-            ax, x, y, marker=marker, scale_markersize=scale_markersize)
-        return
-
-    def place_marker(ax, x, y, marker, scale_markersize=1.5):
-        ax.plot(x, y, marker=marker, color='k',
-                markersize=mpl.rcParams['lines.markersize'] * scale_markersize)
-        return
-
-    ax = plt.subplot(gs_glob)
-
-    node_size = 1000  # default: 300
-
-    G = nx.MultiDiGraph()
-
-    # nodes
-    pos = {
-        'E': (-1, 0),
-        'I': (1, 0),
-        'E_ext': (0, -1.25),
-        'I_ext': (0, -0.55)}
-    labels = {
-        'E': 'E',
-        'I': 'I',
-        'E_ext': r'$E_\mathrm{ext}$',
-        'I_ext': r'$I_\mathrm{ext}$'}
-    G.add_nodes_from(pos.keys())
-    nx.draw_networkx_nodes(G, pos=pos, nodelist=['E'],
-                           node_size=node_size, node_color='w', node_shape='^',
-                           edgecolors=params['colors']['dark_blue'])
-    nx.draw_networkx_nodes(G, pos=pos, nodelist=['I'],
-                           node_size=node_size, node_color='w', node_shape='o',
-                           edgecolors=params['colors']['dark_red'])
-    nx.draw_networkx_nodes(G, pos=pos, nodelist=['E_ext', 'I_ext'],
-                           node_size=node_size, node_color='w', node_shape='H',
-                           edgecolors=params['colors']['dark_grey'])
-    nx.draw_networkx_labels(G, pos, labels)
-
-    # E_ext to E and I
-    nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('E_ext', 'E')],
-        connectionstyle='angle3,angleA=180,angleB=90',
-        node_size=node_size)
-    nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('E_ext', 'I')],
-        connectionstyle='angle3,angleA=0,angleB=90',
-        node_size=node_size)
-
-    # I_ext to E and I
-    a = nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('I_ext', 'E')],
-        arrowstyle='-',
-        connectionstyle='angle3,angleA=180,angleB=120',
-        node_size=node_size)
-    custom_arrowhead(ax, a[0], offset=[0.14, -0.03])
-    a = nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('I_ext', 'I')],
-        arrowstyle='-',
-        connectionstyle='angle3,angleA=0, angleB=60',
-        node_size=node_size)
-    custom_arrowhead(ax, a[0], offset=[-0.03, 0.05])
-
-    # E to I and I to E
-    nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('E', 'I')],
-        style='dashed',
-        connectionstyle='angle3,angleA=20,angleB=160',
-        node_size=node_size)
-    a = nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('I', 'E')],
-        style='dashed',
-        arrowstyle='-',
-        connectionstyle='angle3,angleA=200,angleB=340',
-        node_size=node_size)
-    custom_arrowhead(ax, a[0], offset=[0.05, 1.455])
-
-    # E to E and I to I
-    nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('E', 'E')],
-        style='dashed',
-        arrowstyle='-',
-        node_size=node_size)
-    nx.draw_networkx_edges(
-        G, pos=pos, edgelist=[('I', 'I')],
-        style='dashed',
-        arrowstyle='-',
-        node_size=node_size)
-    place_marker(ax, 1.18, 0.36, marker='o')
-    place_marker(ax, -1.16, 0.12, marker=(3, 0, -30))  # triangle
-
-    ax.set_ylim(-1.6, 0.6)
-    plt.axis('off')
-    return ax
-
-
 def _plot_network_sketch_sun(gs_glob):
     """
     Illustrates ring-like network structure.
@@ -724,8 +687,8 @@ def _plot_network_sketch_sun(gs_glob):
     circ = Circle(xy=(0, 0), radius=1, color='k', fill=False)
     ax.add_artist(circ)
 
-    blue = params['colors']['dark_blue']
-    red = params['colors']['dark_red']
+    blue = params['colors']['ex_blue']
+    red = params['colors']['inh_red']
 
     n_in = 10
     ex2in = 4
@@ -761,8 +724,7 @@ def _plot_network_sketch_sun(gs_glob):
     ax.set_aspect('equal')
 
     plt.axis('off')
-
-    return
+    return ax
 
 
 def _plot_spatial_profile(gs_glob):
@@ -784,8 +746,8 @@ def _plot_spatial_profile(gs_glob):
 
     ax = plt.subplot(gs_glob)
 
-    blue = params['colors']['dark_blue']
-    red = params['colors']['dark_red']
+    blue = params['colors']['ex_blue']
+    red = params['colors']['inh_red']
 
     network = BasicNetwork(
         network_params='parameters/Senk2020_network_params.yaml',
@@ -794,10 +756,6 @@ def _plot_spatial_profile(gs_glob):
         params['quantities']['displacement']['scale']
     iwidth = network.network_params['width'][1] * \
         params['quantities']['displacement']['scale']
-
-    # thin lines at 0
-    ax.axhline(y=0, linewidth=0.5, color='k')
-    ax.axvline(x=0, linewidth=0.5, color='k')
 
     max_x = np.max([ewidth, iwidth])
     rs = np.arange(-1.5 * max_x, 1.5 * max_x, 1e-5)  # in mm
@@ -820,11 +778,14 @@ def _plot_spatial_profile(gs_glob):
 
     ax.set_xlim(rs[0], rs[-1])
     ax.set_xlabel(params['quantities']['displacement']['label'])
-    ax.set_ylabel('connection probability $p$')
-    return
+    ax.set_ylim((0, 1.2 * np.max(ip)))
+    ax.get_yaxis().set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.set_title('connection\n probability $p$', y=0.9)
+    return ax
 
 
-def _plot_mean_std_images(gs_glob, tf_scan_results, label):
+def _plot_mean_std_images(gs_glob, tf_scan_results):
     """
     Creates image plots for results from scan_fit_transfer_function().
 
@@ -834,19 +795,20 @@ def _plot_mean_std_images(gs_glob, tf_scan_results, label):
         Global GridSpec cell to plot into.
     tf_scan_results: dict
        Loaded results from scan_fit_transfer_function().
-    label: str
-        Letter.
     """
-    gs = gridspec.GridSpecFromSubplotSpec(1, 6, subplot_spec=gs_glob)
+    gs = gridspec.GridSpecFromSubplotSpec(
+        2, 3, subplot_spec=gs_glob, hspace=0.3, wspace=0)
 
     mus = params['mean_inputs_scan']  # first index
     sigmas = params['std_inputs_scan']  # second index
     mu_star = params['mean_std_inputs_stability'][0]
     sigma_star = params['mean_std_inputs_stability'][1]
 
+    axes = []
     for k, key in enumerate(['nu_ext_exc', 'nu_ext_inh', 'firing_rates',
                              'tau_rate', 'W_rate', 'fit_error']):
         ax = plt.subplot(gs[k])
+        axes.append(ax)
         img = ax.imshow(
             np.transpose(
                 tf_scan_results[key] * params['quantities'][key]['scale']),
@@ -861,17 +823,16 @@ def _plot_mean_std_images(gs_glob, tf_scan_results, label):
         ax.set_yticklabels(
             (sigmas * params['quantities']['std_input']['scale']).astype(int))
 
-        if k == 0:
+        if k == 1 or k == 4:
             ax.set_xlabel(params['quantities']['mean_input']['label'])
+
+        if k == 0 or k == 3:
             ax.set_ylabel(params['quantities']['std_input']['label'])
         else:
             ax.set_yticklabels([])
 
-        cb = plt.colorbar(img, location='top')
-        cblabel = params['quantities'][key]['label']
-        if k == 0:
-            cblabel = r"$\bf{(" + label + ")}$ " + cblabel
-        cb.ax.set_xlabel(cblabel)
+        cb = plt.colorbar(img, shrink=0.77)
+        cb.ax.tick_params(pad=0)
         # star for mu and sigma used in this circuit
         xmu = np.max(ax.get_xticks()) * (mu_star - np.min(mus)) \
             / (np.max(mus) - np.min(mus))
@@ -885,9 +846,9 @@ def _plot_mean_std_images(gs_glob, tf_scan_results, label):
                 marker='*', markerfacecolor='k', markeredgecolor='none',
                 markersize=mpl.rcParams['lines.markersize'] * 2.)
 
-        if k == 0:
-            ax_return = ax
-    return ax_return
+        ax.set_title(params['quantities'][key]['label'])
+
+    return axes
 
 
 def _plot_transfer_functions(gs_glob, tf_scan_results):
@@ -902,8 +863,7 @@ def _plot_transfer_functions(gs_glob, tf_scan_results):
     tf_scan_results: dict
        Loaded results from scan_fit_transfer_function().
     """
-
-    gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_glob)
+    gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_glob, hspace=0)
     ax_amplitude = plt.subplot(gs[0])
     ax_phase = plt.subplot(gs[1])
 
@@ -1004,7 +964,8 @@ def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
     stability_results: dict
         Loaded results from linear_stability_analysis().
     """
-    gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_glob)
+    gs = gridspec.GridSpecFromSubplotSpec(
+        2, 1, subplot_spec=gs_glob, hspace=0.1)
 
     ax_real = plt.subplot(gs[0])
     ax_imag = plt.subplot(gs[1])
@@ -1022,15 +983,18 @@ def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
         ax_real.plot(ks, np.real(eigenvalues)[i] * scale_ev,
                      color=params['colors'][params['colors_br'][branch_nr]],
                      label=branch_nr)
-        ax_real.set_ylabel(params['quantities']['eigenvalues_real']['label'])
+        ax_real.set_ylabel(params['quantities']['eigenvalues_real']['label'],
+                           labelpad=5.5)
 
         ax_imag.plot(ks, np.imag(eigenvalues)[i] * scale_ev,
                      color=params['colors'][params['colors_br'][branch_nr]])
-        ax_imag.set_ylabel(params['quantities']['eigenvalues_imag']['label'])
+        ax_imag.set_ylabel(params['quantities']['eigenvalues_imag']['label'],
+                           labelpad=0)
 
     ax_real.set_title(params['quantities']['eigenvalues']['label'])
     ax_real.set_xticklabels([])
-    ax_imag.set_xlabel(params['quantities']['k_wavenumbers']['label'])
+    # add whitespace via new lines to match axes of alpha plot
+    ax_imag.set_xlabel(params['quantities']['k_wavenumbers']['label'] + '\n\n')
 
     # legend
     labels = ['0', '-1', '1', '-2', '2', '-3']  # ordered
@@ -1040,14 +1004,16 @@ def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
         for i, lo in enumerate(labels_old):
             if l == lo:
                 handles.append(handles_old[i])
-    ax_real.legend(handles, labels, title='branch number', ncol=3)
+    ax_real.legend(handles, labels, title='branch number', ncol=3,
+                   columnspacing=0.1, loc='center', bbox_to_anchor=(0.55, 0.2))
 
     # find index where imag. of principle branch becomes 0 for xlims
     lambdas_imag = np.imag(eigenvalues)
     idx_b0 = np.where(np.array(branches) == 0)[0][0]
     # first index where imag. goes to 0
     idx_0 = np.where(np.array(lambdas_imag[idx_b0]) == 0)[0][0]
-    klim = ks[idx_0]
+    offset = 5  # manual offset
+    klim = ks[idx_0 - offset]
 
     for ax in [ax_real, ax_imag]:
         ax.axhline(0, linestyle='-', color='k',
@@ -1077,7 +1043,8 @@ def _plot_eigenvalues_alpha(gs_glob, stability_results):
     stability_results: dict
         Loaded results from linear_stability_analysis().
     """
-    gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_glob)
+    gs = gridspec.GridSpecFromSubplotSpec(
+        2, 1, subplot_spec=gs_glob, hspace=0.1)
 
     ax_real = plt.subplot(gs[0])
     ax_imag = plt.subplot(gs[1])
@@ -1107,7 +1074,8 @@ def _plot_eigenvalues_alpha(gs_glob, stability_results):
                     linestyle='-',
                     color=params['colors'][params['colors_br'][branch_nr]],
                     markeredgecolor='none')
-            ax.set_ylabel(params['quantities']['eigenvalues_' + lab]['label'])
+            ax.set_ylabel(params['quantities']['eigenvalues_' + lab]['label'],
+                          labelpad=0)
 
             # lambda = 0
             ax.plot(xlim, [0, 0], 'k-',
@@ -1123,10 +1091,12 @@ def _plot_eigenvalues_alpha(gs_glob, stability_results):
                         markeredgecolor='none',
                         markersize=mpl.rcParams['lines.markersize'] * 2.)
 
+    xticks = [0, 0.5, 1]
     ax_real.set_title(params['quantities']['eigenvalues']['label'])
+    ax_real.set_xticks(xticks)
     ax_real.set_xticklabels([])
     ax_imag.set_xlabel(r'interpolation parameter $\alpha$')
-    ax_imag.set_xticks([0, 0.5, 1])
+    ax_imag.set_xticks(xticks)
     ax_imag.set_xticklabels(['0.0\nrate\nmodel', '0.5', '1.0\nspiking\nmodel'])
 
     # legend for symbols
@@ -1135,7 +1105,7 @@ def _plot_eigenvalues_alpha(gs_glob, stability_results):
     chareq = mpl.lines.Line2D([], [], color='k',
                               marker=None, linestyle='-', label='char. eq.')
     ax_real.legend(
-        handles=[integral, chareq], bbox_to_anchor=(0.8, 0.7), loc='center')
+        handles=[integral, chareq], bbox_to_anchor=(0.6, 0.7), loc='center')
     return ax_real
 
 
@@ -1170,10 +1140,14 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 if __name__ == '__main__':
 
-    scan_fit_transfer_function()
+    # scan_fit_transfer_function()
 
-    linear_stability_analysis()
+    # linear_stability_analysis()
 
-    figure_Senk2020()
+    figure_Senk2020_network_structure()
 
-    plt.show()
+    figure_Senk2020_input_scan()
+
+    figure_Senk2020_eigenvalues()
+
+    # plt.show()
