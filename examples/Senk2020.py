@@ -809,15 +809,13 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
                              'tau_rate', 'W_rate', 'fit_error']):
         ax = plt.subplot(gs[k])
         axes.append(ax)
-        img = ax.imshow(
+        img = ax.pcolormesh(
             np.transpose(
-                tf_scan_results[key] * params['quantities'][key]['scale']),
-            cmap='viridis',
-            origin='lower',
-            aspect=len(mus) / len(sigmas))
+                tf_scan_results[key] * params['quantities'][key]['scale']))
 
-        ax.set_xticks(np.arange(len(mus)))
-        ax.set_yticks(np.arange(len(sigmas)))
+        # pcolormesh places ticks by default to lower bound, therefore add 0.5
+        ax.set_xticks(np.arange(len(mus)) + 0.5)
+        ax.set_yticks(np.arange(len(sigmas)) + 0.5)
         ax.set_xticklabels(
             (mus * params['quantities']['mean_input']['scale']).astype(int))
         ax.set_yticklabels(
@@ -831,13 +829,14 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
         else:
             ax.set_yticklabels([])
 
-        cb = plt.colorbar(img, shrink=0.77)
+        cb = plt.colorbar(img)
         cb.ax.tick_params(pad=0)
-        # star for mu and sigma used in this circuit
-        xmu = np.max(ax.get_xticks()) * (mu_star - np.min(mus)) \
-            / (np.max(mus) - np.min(mus))
-        ysigma = np.max(ax.get_yticks()) * (sigma_star - np.min(sigmas)) \
-            / (np.max(sigmas) - np.min(sigmas))
+        # star for mu and sigma used in this circuit (0.5 offset for
+        # pcolormesh)
+        xmu = np.max(ax.get_xticks() - 0.5) * (mu_star - np.min(mus)) \
+            / (np.max(mus) - np.min(mus)) + 0.5
+        ysigma = np.max(ax.get_yticks() - 0.5) * (sigma_star - np.min(sigmas)) \
+            / (np.max(sigmas) - np.min(sigmas)) + 0.5
 
         ax.plot(xmu, ysigma,
                 marker='*', markerfacecolor='white', markeredgecolor='none',
@@ -1149,5 +1148,3 @@ if __name__ == '__main__':
     figure_Senk2020_input_scan()
 
     figure_Senk2020_eigenvalues()
-
-    plt.show()
