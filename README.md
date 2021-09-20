@@ -41,7 +41,7 @@ example script `examples/power_spectra.py`.
 
 # Structure
 
-<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/structure_new.png" width="400">        
+<img src="https://github.com/INM-6/nnmt/blob/master/docs/source/images/package_structure.png" width="400">        
 
 nnmt consists of four modules:
 
@@ -80,9 +80,29 @@ An alternative is to install directly from GitHub:
 ```
 pip install git+https://github.com/INM-6/nnmt.git
 ```
-If you are using [conda](https://conda.io/), you can create an environment including NNMT:
+If you are using [conda](https://conda.io/), you can create and activate an
+environment including NNMT:
 ```
 conda env create -f environment.yaml
+conda activate nnmt
+```
+
+# Official Documentation
+
+Once you have installed and activated the conda environment, you can compile
+the documentation. Therefore you change your working directory to `nnmt/docs`
+and run the following commands
+
+```
+make clean
+make html
+```
+
+When the compilation was sucsessful, you can access the documentation using
+a webbrowser, e.g. firefox, and open the access html `build/html/index.html`:
+
+```
+firefox build/html/index.html
 ```
 
 # Current Issues
