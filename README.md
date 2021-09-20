@@ -33,7 +33,7 @@ Contributions are always welcome via
 If you are using this toolbox, please cite us: for a specific release, we recommend to use the reference from [Zenodo](https://zenodo.org/). Otherwise, you can also provide a link to this repository with the hash of the respective commit.
 In addition, please also cite the publications that used the methods implemented here first. In [How to Use This Package](#how-to-use-this-package) you can find details on which function of this package refers to which publication.
 
-<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/power_spectra.png" width="400">    
+<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/power_spectra.png" width="400">
 
 The figure shows power spectra calculated with this toolbox using the minimal
 example script `examples/power_spectra.py`.
@@ -41,7 +41,7 @@ example script `examples/power_spectra.py`.
 
 # Structure
 
-<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/structure_new.png" width="400">        
+<img src="https://github.com/INM-6/nnmt/blob/master/readme_figures/structure_new.png" width="400">
 
 nnmt consists of four modules:
 
@@ -64,7 +64,7 @@ nnmt consists of four modules:
   non-specific building blocks. However, it is difficult to draw a line between
   the calculations that belong to `meanfield_calcs.py` and the ones that belong to
   `aux_calcs.py`.
-  
+
 - __utils.py__ is a module which contains utility functions. It contains functions
   that simplify working with pint quantities and decorators for checking that
   passed parameters are in valid regimes.
@@ -80,9 +80,29 @@ An alternative is to install directly from GitHub:
 ```
 pip install git+https://github.com/INM-6/nnmt.git
 ```
-If you are using [conda](https://conda.io/), you can create an environment including NNMT:
+If you are using [conda](https://conda.io/), you can create and activate an
+environment including NNMT:
 ```
 conda env create -f environment.yaml
+conda activate nnmt
+```
+
+# Official Documentation
+
+Once you have installed and activated the conda environment, you can compile
+the documentation. Therefore you change your working directory to `nnmt/docs`
+and run the following commands
+
+```
+make clean
+make html
+```
+
+When the compilation was sucsessful, you can access the documentation using
+a webbrowser, e.g. firefox, and open the access html `build/html/index.html`:
+
+```
+firefox build/html/index.html
 ```
 
 # Current Issues
@@ -237,7 +257,7 @@ publication in Physical Review Research):
   (see Fig. 5(b) and (c)).
 - __scan_fit_transfer_function_mean_std_input__: Iterate different combinations
   of mean and standard deviation of input using `fit_transfer_function()`
-  (see Fig. 5).  
+  (see Fig. 5).
 - __effective_coupling_strength__: Compute the effective coupling strength
   according to Eq. (E1).
 - __linear_interpolation_alpha__: Linear interpolation between LIF transfer
@@ -248,7 +268,7 @@ publication in Physical Review Research):
 - __xi_of_k__: Effective spatial profile (see Fig. 3(b) and (d)).
 - __solve_chareq_rate_boxcar__: Analytical solution of the characteristic
   equation for a neural-field model with boxcar-shaped connectivity kernels.
-  
+
 # Testing
 
 We have an extensive test suite using the `pytest` framework. If you want to
@@ -324,7 +344,7 @@ Many test classes define the tested function as `staticmethod`, because the
 function itself is not tightly related to class, but we still want to attach it
 to the class for later reference. This allows us to call the function as an 'unbound function', without passing the instance to the function:
  `self.func()` = `func()` != `func(self)`.
- 
+
 There are two special fixtures that are definded in `conftest.py`:
 
 If a test requires the `pos_keys` fixture, it will be parametrized such that
