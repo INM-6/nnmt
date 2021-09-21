@@ -9,7 +9,7 @@ First you create a network model by using one of the predefined models in
 
     network = nnmt.models.Microcircuit('network_params.yaml',
                                        'analysis_params.yaml')
-                                       
+
 or by defining one yourself, using the standard template
 ``nnmt.models.Network``:
 
@@ -20,12 +20,12 @@ or by defining one yourself, using the standard template
     # synaptic weight in mV
     w = 1.2e-3
     # weight matrix
-    network['J'] = np.array([[1, -4],
-                             [1, -4]]) * w
+    network.network_params['J'] = np.array([[1, -4],
+                             [               1, -4]]) * w
     # inputs matrix
-    network['K'] = np.array([[3000, 1000],
-                             [3000, 1000]])
-                             
+    network.network_params['K'] = np.array([[3000, 1000],
+                                            [3000, 1000]])
+
 Here we have defined some parameters using `yaml` files. Those contain the
 paramters listed in the following format:
 
@@ -34,13 +34,13 @@ paramters listed in the following format:
     tau_m:
       val: 10
       unit: ms
-      
+
     V_th:
       val:
         - -50
         - -60
       unit: mV
-    
+
 A model in NNMT basically is a container for network parameters,
 analysis parameters, and calculated results. You can use a model`s methods
 to save and load results.
@@ -53,7 +53,7 @@ tool and apply it to the model:
 .. code:: python
 
     firing_rates = nnmt.lif.exp.firing_rates(network)
-    
+
 If you are missing some parameters for applying the tool you would like to use,
 you will receive an error message telling you, which parameters you need to
 define:
@@ -62,17 +62,18 @@ define:
 
     RuntimeError: You are missing 'tau_m' for calculating the firing rate!
     Have a look into the documentation for more details on 'lif' parameters.
-    
+
 Sometimes, before you can calculate a quantity, you first have to calculate
 something else. In that case, you will receive an error message as well. Here
 
 .. code:: python
+
     power_spectra = nnmt.lif.exp.power_spectra(network)
-    
+
 will lead to the error
 
 .. code:: console
-    
+
     RuntimeError: You first need to calculate the 'lif.exp.effective_connectivity'.
 
 because calculating the power spectra requires calculating the effective

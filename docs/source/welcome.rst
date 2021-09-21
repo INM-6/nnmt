@@ -1,7 +1,7 @@
 This Python package provides useful tools for analyzing neuronal networks
 consisting of leaky integrate-and-fire (LIF) neurons. These tools are based on
 mean-field theory of neuronal networks. That is why this package is called
-**nnmt (NNMT)**.
+nnmt (NNMT).
 
 The package provides implementations used in the same or a similar version in
 the following scientific publications:
