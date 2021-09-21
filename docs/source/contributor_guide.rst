@@ -85,22 +85,38 @@ It is vital that all tools have **meaningful names** and
 **comprehensive docstrings** (see :ref:`documentation section <subsec docs>`
 for more details).
 
+If you make any well-thought-out decisions in the implementation of a tool, for
+example for optimization purposes, you need to **write comments** that clearly
+state the reasons for you to do so. Otherwise, someone else might come across
+your lines of code a few years later and change it, because it looked
+unnecessarily cumbersome at first sight, thereby destroying all your precious
+efforts.
+
 _Tools
 ******
 
-- the function doing the job is the underscored function; it gets all
-  parameters as arguments directly
-- should be using parameter checks (decorators in utils)
-- should raise warnings if valid parameter regime is left
-- should raise errors if return values are meaningless (negative rates)
+Tools with an underscore are where the job is done. Underscored tools should:
+
+- **get** all **parameters** needed for a calculation **directly as**
+  **arguments**.
+- **perform the calculations**.
+- **assert** that all arguments have **valid values**. For example, they need
+- to check whether parameters that only should be positive are negative.
+- **raise warnings if valid parameter regime is left**. For example if the
+  assumptions made in the underlying theory are not fulfilled by the
+  parameters.
+- **raise errors if return values are meaningless**. For example if negative
+  rates would be returned.
 
 Wrappers
 ********
 
-- to make a tool usable with the convenience layer (aka models), it gets a
-  wrapper function (without the underscore)
-- the wrapper function checks all parameters and results available
-- the wrapper function invoces the _cache function
+To make an underscored tool compatible with the convience layer, a.k.a. models,
+it gets a wrapper withouth an underscore. The non underscored wrappers should:
+
+- **expect an ``nnmt.model`` as argument**.
+- **check** that all **parameters and results needed are stored in the model**.
+- invoces the _cache function to **store the results**.
 
 .. _subsec models:
 

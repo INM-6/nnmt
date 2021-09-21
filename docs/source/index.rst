@@ -1,6 +1,6 @@
-=============
-This is NNMT!
-=============
+=========================================
+NNMT - Neuronal Network Meanfield Toolbox
+=========================================
 
 .. toctree::
    :hidden:

@@ -122,7 +122,7 @@ html_theme_options = {
 
 # The name of the image file (relative to this directory) to place at the top
 # of the sidebar
-html_logo = 'images/logo.png'
+# html_logo = 'images/logo.png'
 
 # html_copy_source = False
 
