@@ -265,6 +265,12 @@ extensions are used, and details about the html output.
 
 ``nnmt/docs/source/index.rst`` configures the access page to the documentation.
 
+rst files
+=========
+
+Everything you see in this documentation that is not part of a docstring is
+written in the ``rst`` files in ``nnmt/docs/source/``.
+
 Docstrings
 ==========
 
