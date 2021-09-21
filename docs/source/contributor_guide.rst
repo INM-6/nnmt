@@ -1,8 +1,8 @@
-=================
-Contributor guide
-=================
+==================
+Contributors guide
+==================
 
-Welcome! You are now entering the contributor guide. This place is for people
+Welcome! You are now entering the contributors guide. This place is for people
 interested in the details needed to contribute to NNMT. We want this toolbox to
 be a place for the Neuroscientific community to collect analytical methods for
 neuronal network model analysis. So we are glad that you made your way here and
