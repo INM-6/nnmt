@@ -41,6 +41,7 @@ Structure
 
 NNMT is divided into tools and methods and has a flexible, modular structure.
 The best description of the ideas behind this can be found in our paper:
+
 `NNMT: A mean-field toolbox for spiking neuronal network model analysis <add missing link>`_.
 
 Design principles
@@ -68,8 +69,9 @@ be followed when writing new code for the toolbox:
   inspiration to us was the submodule structure of SciPy, which (at least
   it seemed so to us) is rather free and fitted to the needs at hand.
 
+*****
 Tools
-=====
+*****
 
 Tools are **Python functions** and constitute the core of NNMT. They actually
 perform the calculations.
@@ -93,7 +95,7 @@ unnecessarily cumbersome at first sight, thereby destroying all your precious
 efforts.
 
 _Tools
-******
+======
 
 Tools with an underscore are where the job is done. Underscored tools should
 
@@ -101,27 +103,36 @@ Tools with an underscore are where the job is done. Underscored tools should
   **arguments**.
 - **perform the calculations**.
 - **assert** that all arguments have **valid values**. For example, they need
-- to check whether parameters that only should be positive are negative.
+  to check whether parameters that only should be positive are negative. You
+  could use the check decorators defined in :mod:`nnmt.utils` for this.
 - **raise warnings if valid parameter regime is left**. For example if the
   assumptions made in the underlying theory are not fulfilled by the
   parameters.
-- **raise errors if return values are meaningless**. For example if negative
+- **raise errors if return values are meaningless**, for example if negative
   rates would be returned.
 
+Have a look at the source code of :func:`nnmt.lif.exp._firing_rate_shift` if
+you would like to see an example.
+
 Wrappers
-********
+========
 
 To make an underscored tool compatible with the convience layer, a.k.a. models,
 it gets a wrapper withouth an underscore. The non underscored wrappers should
 
 - **expect an** ``nnmt.model`` **as argument**.
 - **check** that all **parameters and results needed are stored in the model**.
-- invoces the _cache function to **store the results**.
+- invoces the :func:`nnmt.utils._cache` function to **store the results** in
+  the model instance.
+
+Have a look at the source code of :func:`nnmt.lif.exp.firing_rates` if you
+would like to see an example.
 
 .. _subsec models:
 
+******
 Models
-======
+******
 
 Models are Python classes that serve as containers for network parameters,
 analysis parameters, and results. They come with some convenience methods for
@@ -136,9 +147,9 @@ setting.
 
 A model should
 
-- **be a subclass of** the generic :meth:`nnmt.models.Network` class and invoke
-  the parent ``__init__()`` method. The model's ``__init__()`` method should
-  start with
+- **be a subclass of** the generic :class:`nnmt.models.Network` class and
+  invoke the parent ``__init__()`` method. The model's ``__init__()`` method
+  should start with
 
   .. code::
 
@@ -156,27 +167,62 @@ A model should
   called and a new instance of the model is created.
 - **calculate dependent parameters** when instantiated. For that purpose, you
   can add methods to your subclass and call them in the ``__init__()`` method.
+  **Note that** if you use ``yaml`` files to store parameters including units,
+  the **loaded parameters are**
+  `Pint <https://pint.readthedocs.io/en/stable/>`_
+  ``Quantity`` objects at this point. You might run into problems if imported
+  functions from different packages are not compatible with ``Quantity``
+  objects.
 - **call** ``self._convert_param_dicts_to_base_units_and_strip_units()`` at the
   end of the ``__init__()`` method. This will convert all calculated parameters
   to SI units, strip the respective units off, and store them in the dictionary
   ``input_units``.
 
-The microcircuit model :meth:`nnmt.models.Microcircuit` is a good example of
+The microcircuit model :class:`nnmt.models.Microcircuit` is a good example of
 how a model class looks like.
 
-Utils
-=====
+**************************
+Input and output functions
+**************************
 
-- most important: cache and how it works
-- h5py wrapper
+The submodule :mod:`nnmt.input_output` contains all functions which called for
+all input output related actions, like saving and loading results, or loading
+parameter files.
+
+We have written a very basic wrapper which allows storing and loading Python
+dictionaries in ``HDF5`` files.
+
+Similarly, we have written wrappers which allow loading dictionaries of Pint
+``Quantity`` objects as ``yaml`` files and vice versa.
+
+*****************
+Utility functions
+*****************
+
+The submodule :mod:`nnmt.utils` is a collection of convenient functions used
+frequently throughout NNMT.
+
+There you find the :func:`nnmt.utils._cache` function, which is called by the
+wrappers of the underscored tools. It stores the results returned by a
+underscored tool in the result related dictionaries of the model that was
+passed to the wrapper. If you are looking for an example of how to apply the
+``_cache`` function have a look at the source code of
+:func:`nnmt.lif.exp.firing_rates`.
+
+The module contains some decorators used to check that parameters passed to a
+_tool have valid values. E.g. :func:`nnmt.utils._check_positive_params` or
+:func:`nnmt.utils._check_k_in_fast_synaptic_regime`.
+
+Finally, it contains some utility functions for handling Pint ``Quantity``
+objects.
 
 *****
 Tests
 *****
 
 All tools, models, and utilities should be tested using our ``pytest`` test
-suite. Details can be found in the :ref:`tests section <mytests>`.
-
+suite. We have collected all the details in the section about
+:ref:`Tests <mytests>`.
 
 .. _subsec docs:
 
