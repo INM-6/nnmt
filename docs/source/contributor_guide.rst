@@ -230,14 +230,82 @@ suite. We have collected all the details in the section about
 Documentation
 *************
 
-- mostly automatic using sphinx and rst files
-- source vs build
-- conf.py
-- index.rst
-- make clean, make html
-- link to sphinx documentation
-- Need to list functions in module docstring
-- follow numpy standard (link)
-- in wrapper or underscored function?
-- if in wrapper, you need to list the network params, analysis params and
-  results needed
+We automatically create this documentation using
+`Sphinx <https://sublime-and-sphinx-guide.readthedocs.io/en/latest/index.html>`_.
+Sphinx collects all the docstrings and the ``rst`` files in
+``nnmt/docs/source/`` and creates these beautiful documentation ``html`` files.
+
+Compiling the docs
+==================
+
+In order to compile the documentation, you have to change your working
+directory to ``nnmt/`` and install and activate the provided conda environment
+
+.. code:: bash
+
+  conda env create -f environment.yaml
+  conda activate nnmt
+
+Change you working directory to ``nnmt/docs/`` and run the following commands
+
+.. code:: bash
+
+  make clean
+  make html
+
+This will compile the documentation and create the folder ``build/``.
+Now you can access the documentation using your preferred browser by opening
+the file ``build/html/index.html``.
+
+Special files
+=============
+
+``nnmt/docs/source/conf.py`` defines all the Sphinx configurations, which
+extensions are used, and details about the html output.
+
+``nnmt/docs/source/index.rst`` configures the access page to the documentation.
+
+Docstrings
+==========
+
+We try to follow the
+`PEP 8 standard <https://www.python.org/dev/peps/pep-0008/>`_ and the
+`NumPy docstring conventions <https://numpydoc.readthedocs.io/en/latest/format.html>`_
+as close as possible.
+
+Dosctrings should be written using
+`rst syntax <https://docutils.sourceforge.io/rst.html>`_, which allows
+cross-references and citations.
+
+Modules
+*******
+
+Each module needs to start with its own docstring, beginning with a short
+description of its content, followed by a list of the functions which are to be
+shown in the documentation. The functions can be divided by different headings,
+followed by an Sphinx autosummary directive. A generic example of such a
+docstring would be
+
+.. code::
+
+    '''
+    This module contains functions for doing awesome things.
+
+    My Favorites
+    ************
+
+    .. autosummary::
+        :toctree: _toctree/my_module/
+
+        function1
+        function2
+
+    '''
+
+Functions
+*********
+
+Wrappers of _tools should reference the respective _tools.
+
+The docstrings of _tools should give a detailed explanation of all their
+arguments.
