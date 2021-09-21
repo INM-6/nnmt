@@ -95,7 +95,7 @@ efforts.
 _Tools
 ******
 
-Tools with an underscore are where the job is done. Underscored tools should:
+Tools with an underscore are where the job is done. Underscored tools should
 
 - **get** all **parameters** needed for a calculation **directly as**
   **arguments**.
@@ -112,9 +112,9 @@ Wrappers
 ********
 
 To make an underscored tool compatible with the convience layer, a.k.a. models,
-it gets a wrapper withouth an underscore. The non underscored wrappers should:
+it gets a wrapper withouth an underscore. The non underscored wrappers should
 
-- **expect an ``nnmt.model`` as argument**.
+- **expect an** ``nnmt.model`` **as argument**.
 - **check** that all **parameters and results needed are stored in the model**.
 - invoces the _cache function to **store the results**.
 
@@ -123,27 +123,59 @@ it gets a wrapper withouth an underscore. The non underscored wrappers should:
 Models
 ======
 
-- models derive from the network class
-- each model is supposed to calculate necessary parameters when instantiated
-- therefore you can add methods and invoke them in the __init__ method.
-- they might read in yaml files, specifying the model parameters including
-  units.
-- when instantiated the parameters are loaded, converted to SI units and then
-  stripped off units saved in input_units dict
-- result units stored in results_units
-- most important: results hash dict vs results dict
+Models are Python classes that serve as containers for network parameters,
+analysis parameters, and results. They come with some convenience methods for
+changing parameters, saving, and loading results.
 
+Typically, one wants to define parameters in some sort of parameter file (we
+usually use ``yaml`` files for this), load them, and then calculate further,
+dependent parameters from these. The details of how these dependent parameters
+are calculated depend on the model that one is planning to investigate.
+Defining a custom model class allows users to do this in a very organized
+setting.
+
+A model should
+
+- **be a subclass of** the generic :meth:`nnmt.models.Network` class and invoke
+  the parent ``__init__()`` method. The model's ``__init__()`` method should
+  start with
+
+  .. code::
+
+      def __init__(self, network_params=None, analysis_params=None, file=None):
+          super().__init__(network_params, analysis_params, file)
+
+- **implement the** ``_instantiate()`` **method**:
+
+  .. code:: python
+
+      def _instantiate(self, new_network_params, new_analysis_params):
+          return <MyModel>(new_network_params, new_analysis_params)
+
+  ``_instantiate()`` is invoked when ``<MyModel>.change_parameters()`` is
+  called and a new instance of the model is created.
+- **calculate dependent parameters** when instantiated. For that purpose, you
+  can add methods to your subclass and call them in the ``__init__()`` method.
+- **call** ``self._convert_param_dicts_to_base_units_and_strip_units()`` at the
+  end of the ``__init__()`` method. This will convert all calculated parameters
+  to SI units, strip the respective units off, and store them in the dictionary
+  ``input_units``.
+
+The microcircuit model :meth:`nnmt.models.Microcircuit` is a good example of
+how a model class looks like.
 
 Utils
 =====
 
 - most important: cache and how it works
+- h5py wrapper
 
 *****
 Tests
 *****
 
-- explained in detail in :ref:`test section <mytests>`
+All tools, models, and utilities should be tested using our ``pytest`` test
+suite. Details can be found in the :ref:`tests section <mytests>`.
 
 
 .. _subsec docs:
