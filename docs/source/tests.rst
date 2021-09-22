@@ -1,4 +1,5 @@
 .. _mytests:
+
 =====
 Tests
 =====
@@ -32,6 +33,9 @@ Note that ``pytest`` distinguishes between failures and errors:
 - A failure occurs if a test did not run successfully.
 - An error occurs if an exception happened outside of the test function, for
   example inside a fixture.
+
+Additionally, tests can be skipped, and they can be marked as expected to fail
+(xfail), which registers a fail if the respective test runs successfully.
 
 Tests directory structure
 =========================
