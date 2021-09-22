@@ -181,6 +181,14 @@ A model should
 The microcircuit model :class:`nnmt.models.Microcircuit` is a good example of
 how a model class looks like.
 
+If you would like to add your model to ``nnmt.models``, do not forget to add
+
+.. code::
+
+    from .<my_model_module> import *
+
+to ``nnmt.models.__init__.py``.
+
 **************************
 Input and output functions
 **************************
