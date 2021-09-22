@@ -23,14 +23,15 @@ microcircuit = nnmt.models.Microcircuit('network_params_microcircuit.yaml')
 # synaptic currents, by calling the respective function and passing the
 # microcircuit. Here we chose to use the 'taylor' method for calculating the
 # firing rates.
-firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='taylor')
+firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='shift')
 
 print(f'Mean rates: {firing_rates}')
 
 ###############################################################################
 # Then we compare the rates to the publicated data from :cite:t:`bos2016`.
-simulated_rates = np.array([0.74460773, 2.69596288, 4.11150391, 5.62804937,
-                            6.63713466, 8.29040221, 1.1003033 , 7.66250752])
+# simulated_rates = np.array([0.74460773, 2.69596288, 4.11150391, 5.62804937,
+                                # 6.63713466, 8.29040221, 1.1003033 , 7.66250752])
+simulated_rates = np.array([0.943, 3.026, 4.368, 5.882, 7.733, 8.664, 1.096, 7.851])
 print(f'Mean simulated rates: {simulated_rates}')
 
 ###############################################################################
@@ -51,4 +52,4 @@ ax.set_xticks([0.5, 2.5, 4.5, 6.5])
 ax.set_xticklabels(['L2/3', 'L4', 'L5', 'L6'])
 ax.set_yticks([1, 3, 5, 7])
 ax.set_ylabel(r'$\bar{r}\,(1/s)$')
-plt.savefig('microcircuit_rates.png')
+plt.savefig('microcircuit_rates.pdf')
