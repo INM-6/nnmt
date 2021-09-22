@@ -167,7 +167,7 @@ def firing_rates(network, method='shift', **kwargs):
         Default is 'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`~nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._static._firing_rate_integration`.
 
     Returns
     -------

@@ -7,10 +7,10 @@ Functions
 
 .. autosummary::
     :toctree: _toctree/network_properties/
-    
+
     delay_dist_matrix
     _delay_dist_matrix
-    
+
 '''
 
 
@@ -35,24 +35,24 @@ def delay_dist_matrix(network, freqs=None):
     network : Network object
         The network for which to calcluate the delay distribution matrix. It
         needs to have the following items in :code:`network_params`:
-        
+
             Delay : array_like
                 Delay matrix in seconds
             Delay_sd : array_like
                 Delay standard deviation matrix in seconds.
             delay_dist : {'none', 'truncated_gaussian', 'gaussian'}
                 String specifying delay distribution.
-        
+
         And the following items in :code:`analysis_params`:
-           
+
             omegas : array_like, optional
                 The considered angular frequencies , if `freqs` is not passed
                 explicitely.
-                
+
     freqs : array_like, optional
         The frequencies for which to calculate the delay distribution matrix in
         Hz.
-            
+
     Returns
     -------
     np.ndarray
@@ -86,7 +86,7 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     '''
 
     omegas = np.array([np.ones(Delay.shape) * omega for omega in omegas])
-    
+
     if delay_dist == 'none':
         return np.exp(- 1j * omegas * Delay)
 
