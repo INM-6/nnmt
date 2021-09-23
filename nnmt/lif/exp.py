@@ -610,37 +610,28 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     """
     Calcs value of transfer func for one population at given frequency omega.
 
-    Calculates transfer function according to $\tilde{n}$ in Schuecker et al.
-    (2015). The expression is to first order equivalent to
+    Calculates transfer function according to $\tilde{n}$ in
+    :cite:t:`schuecker2015`. The expression is to first order equivalent to
     `transfer_function_1p_taylor`. Since the underlying theory is correct to
     first order, the two expressions are exchangeable.
 
     The difference here is that the linear response of the system is considered
     with respect to a perturbation of the input to the current I, leading to an
-    additional low pass filtering 1/(1+i w tau_s).
-    Compare with the second equation of Eq. 18 and the text below Eq. 29.
+    additional low pass filtering 1/(1+i w tau_s). Compare with the second
+    equation of Eq. 18 and the text below Eq. 29.
 
     Parameters:
     -----------
-    mu: Quantity(float, 'millivolt')
-        Mean neuron activity of one population in mV.
-    sigma: Quantity(float, 'millivolt')
-        Standard deviation of neuron activity of one population in mV.
-    tau_m: Quantity(float, 'millisecond')
-        Membrane time constant.
-    tau_s: Quantity(float, 'millisecond')
-        Synaptic time constant.
-    tau_r: Quantity(float, 'millisecond')
-        Refractory time.
-    V_th_rel: Quantity(float, 'millivolt')
-        Relative threshold potential.
-    V_0_rel: Quantity(float, 'millivolt')
-        Relative reset potential.
-    omegas: Quantity(float, 'hertz')
-        Input frequency to population.
-    synaptic_filter : bool
-        Whether an additional synaptic low pass filter is to be used or not.
-        Default is True.
+    mu: Quantity(float, 'millivolt') Mean neuron activity of one population in
+        mV. sigma: Quantity(float, 'millivolt') Standard deviation of neuron
+        activity of one population in mV. tau_m: Quantity(float, 'millisecond')
+        Membrane time constant. tau_s: Quantity(float, 'millisecond') Synaptic
+        time constant. tau_r: Quantity(float, 'millisecond') Refractory time.
+        V_th_rel: Quantity(float, 'millivolt') Relative threshold potential.
+        V_0_rel: Quantity(float, 'millivolt') Relative reset potential. omegas:
+        Quantity(float, 'hertz') Input frequency to population. synaptic_filter
+        : bool Whether an additional synaptic low pass filter is to be used or
+        not. Default is True.
 
     Returns:
     --------
@@ -1308,8 +1299,8 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
     such that the mean and standard deviation of the input to the neuronal
     populations is as close as possible to ``mu_set`` and ``sigma_set``.
 
-    Generalization of equation E1 of Helias et al. 2013 and the corrected
-    version in appendix F of Senk et al. 2020.
+    Generalization of equation E1 of :cite:t:`helias2013` and the corrected
+    version in appendix F of :cite:t:`senk2020`.
 
     Parameters
     ----------
@@ -1382,10 +1373,8 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     Calculate additional external excitatory and inhibitory Poisson input
     rates such that the input fixed by the mean and standard deviation
     is attained.
-    Correction of equation E1 of:
-    Helias M, Tetzlaff T, Diesmann M. Echoes in correlated neural systems.
-    New J Phys. 2013;15(2):023002. doi:10.1088/1367-2630/15/2/023002.
-    See appendix F of Senk et al. 2020.
+    Correction of equation E1 of :cite:t:`helias2013`. See appendix F of
+    :cite:t:`senk2020`.
 
     Parameters
     ----------
