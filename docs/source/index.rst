@@ -12,10 +12,12 @@ NNMT - Neuronal Network Meanfield Toolbox
    tools
    models
    utils
-   contributor_guide
    tests
-   license
+   contributor_guide
+   release_notes
    acknowledgments
+   authors_and_contributors
+   license
    citing
    references
 
@@ -24,12 +26,13 @@ NNMT is an open-source, community centered Python package for collecting
 reusable implementations of analytical methods for neuronal network model
 analysis based on mean-field theory.
 
-Currently, the toolbox is focussing on tools for networks of leaky
-integrate-and-fire neurons. With the tools collected in NNMT you can calculate
-analytical estimates of dynamical properties like mean firing rates or power
-spectra from the parameters of a given network model. It contains tools that
-might help you get a better intuitive understanding of your network model and
-tools that allow mapping a spiking network model onto a simpler rate model.
+Currently, the toolbox mainly contains tools for networks of leaky
+integrate-and-fire neurons. But we have started adding methods for other models
+as well. With the tools collected in NNMT you can calculate analytical
+estimates of dynamical properties like mean firing rates or power spectra from
+the parameters of a given network model. It contains tools that might help you
+get a better intuitive understanding of your network model and tools that allow
+mapping a spiking network model onto a simpler rate model.
 
 NNMT is an emerging toolbox. Contributions to our `GitHub repository
 <https://github.com/INM-6/nnmt>`_ can be made via the GitHub fork and pull
