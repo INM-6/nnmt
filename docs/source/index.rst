@@ -15,8 +15,8 @@ NNMT - Neuronal Network Meanfield Toolbox
    tests
    contributor_guide
    release_notes
-   acknowledgments
    authors_and_contributors
+   acknowledgments
    license
    citing
    references
