@@ -8,12 +8,13 @@ NNMT - Neuronal Network Meanfield Toolbox
 
    installation
    quick_start
-   examples
+   overview
    tools
    models
    utils
-   tests
+   examples
    contributor_guide
+   tests
    release_notes
    authors_and_contributors
    acknowledgments
