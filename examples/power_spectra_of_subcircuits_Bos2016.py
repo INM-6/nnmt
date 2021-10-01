@@ -48,14 +48,12 @@ power_spectra = nnmt.lif.exp.power_spectra(microcircuit)
 # 64 Hz oscillation. First calculate the working point with the full circuit, 
 # then reduce the connectivity.
 
-low_gamma_subcircuit = nnmt.models.Microcircuit(
-    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
-
-# calculate working point for exponentially shape post synaptic currents
-nnmt.lif.exp.working_point(low_gamma_subcircuit, method='taylor')
+low_gamma_subcircuit = microcircuit.copy()
 
 # construct a matrix with the wanted connections
+# "The circuit iscomposed of the connections corresponding to the five largest 
+# matrix elements of Z amp (64 Hz) and the eight largest elements 
+# of Z freq (64 Hz)"
 reducing_matrix = np.zeros((8,8))
 reducing_matrix[0,0:4] = 1
 reducing_matrix[1,0:2] = 1
@@ -65,6 +63,12 @@ reducing_matrix[3,0] = 1
 low_gamma_subcircuit.network_params.update({
     'K': full_indegree_matrix*reducing_matrix
 })
+
+# low_gamma_subcircuit.change_parameters(changed_network_params={
+#     'K': full_indegree_matrix*reducing_matrix})
+# there is no way of retaining the results with changed_network_params:
+# would need the previously obtained working point!
+
 
 # calculate the transfer function
 nnmt.lif.exp.transfer_function(low_gamma_subcircuit, method='taylor')
@@ -80,12 +84,7 @@ low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(low_gamma_subcir
 # from 23E to 4I. First, calculate the working point with the full circuit, 
 # then reduce the connectivity.
 
-without_23E_4I = nnmt.models.Microcircuit(
-    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
-
-# calculate working point for exponentially shape post synaptic currents
-nnmt.lif.exp.working_point(without_23E_4I, method='taylor')
+without_23E_4I = microcircuit.copy()
 
 # construct a matrix with the wanted connections
 reducing_matrix = np.ones((8,8))
