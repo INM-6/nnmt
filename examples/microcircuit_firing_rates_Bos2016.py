@@ -4,6 +4,8 @@ Microcircuit Firing Rates (Bos 2016)
 
 Here we calculate the firing rates of the :cite:t:`potjans2014` microcircuit
 model including modifications made in :cite:t:`bos2016`.
+
+This example reproduces Fig. 1D in :cite:t:`bos2016`.
 """
 # %%
 import nnmt
@@ -49,4 +51,5 @@ ax.set_xticks([0.5, 2.5, 4.5, 6.5])
 ax.set_xticklabels(['L2/3', 'L4', 'L5', 'L6'])
 ax.set_yticks([1, 3, 5, 7])
 ax.set_ylabel(r'$\bar{r}\,(1/s)$')
-plt.savefig('Bos2016_Fig1D.png')
+
+plt.savefig('figures/microcircuit_firing_rates_Bos2016.pdf')

@@ -123,4 +123,11 @@ tests/fixtures/integration/make_Bos2016_data/meanfield/kummers_function.pyf
 
 # output of example scripts
 examples/figures/response_nonlinearities.pdf
+examples/figures/microcircuit_firing_rates_Bos2016.pdf
+examples/figures/power_spectra_Bos2016.pdf
+examples/figures/eigenvalue_trajectories_Bos2016.pdf
+examples/figures/sensitivity_measure_low_gamma_Bos2016.pdf
+examples/figures/sensitivity_measure_high_gamma_Bos2016.pdf
+examples/figures/power_spectra_of_subcircuits_Bos2016.pdf
+examples/figures/transfer_functions_Schuecker2015.pdf
 docs/source/auto_examples

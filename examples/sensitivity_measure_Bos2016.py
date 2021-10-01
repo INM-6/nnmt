@@ -4,6 +4,8 @@ Sensitivity Measure (Bos 2016)
 
 Here we calculate the sensitivity measure of the :cite:t:`potjans2014` 
 microcircuit model including modifications made in :cite:t:`bos2016`.
+
+This example reproduces Fig. 6 and 7 in :cite:t:`bos2016`.
 """
 
 import nnmt
@@ -132,7 +134,7 @@ for ev, subpanel in zip(eigenvalues_to_plot_high, grid_specification):
 fig.set_constrained_layout_pads(w_pad=2 / 72, h_pad=2 / 72, hspace=0.1,
                                 wspace=0.1)    
     
-plt.savefig('Bos2016_Fig6.png', bbox_inches='tight')
+plt.savefig('figures/sensitivity_measure_high_gamma_Bos2016.pdf', bbox_inches='tight')
 
 # %%
 # Plotting: Sensitivity Measure corresponding to low frequencies (Fig. 7)
@@ -175,4 +177,4 @@ if labels is not None:
 ax.set_xlabel('sources')
 ax.set_ylabel('targets')
 
-plt.savefig('Bos2016_Fig7.png', bbox_inches='tight')
+plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.pdf', bbox_inches='tight')

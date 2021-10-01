@@ -4,6 +4,8 @@ Power Spectra (Bos 2016)
 
 Here we calculate the power spectra of the :cite:t:`potjans2014` microcircuit
 model including modifications made in :cite:t:`bos2016`.
+
+This example reproduces Fig. 1E in :cite:t:`bos2016`.
 """
 
 import nnmt
@@ -85,4 +87,4 @@ for layer in [0, 1, 2, 3]:
             ax.set_yticks([1e-5,1e-3,1e-1])
             ax.set_ylabel(r'$|C(\omega)|$')
     
-plt.savefig('Bos2016_Fig1E.png')
+plt.savefig('figures/power_spectra_Bos2016.pdf')

@@ -155,6 +155,12 @@ axA.set_yticks([0, 6, 12])
 axB.set_xticks([1e-1, 1e0, 1e1, 1e2])
 axB.set_yticks([-60, -30, 0])
 
+label_prms = dict(x=-0.3, y=1.2, fontsize=10, fontweight='bold',
+                  va='top', ha='right')
+axA.text(s='(A)', transform=axA.transAxes, **label_prms)
+axB.text(s='(B)', transform=axB.transAxes, **label_prms)
+
+
 x_minor = matplotlib.ticker.LogLocator(
     base = 10.0, 
     subs = np.arange(1.0, 10.0) * 0.1, 
@@ -167,5 +173,5 @@ axB.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 axB.legend(title='$\mu [mV] | \sigma [mV]$', title_fontsize='xx-small',
            handlelength=2, labelspacing=0.0)
 
-plt.savefig('Schuecker_Fig4.png')
+plt.savefig('figures/transfer_functions_Schuecker2015.pdf')
 

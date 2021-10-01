@@ -4,6 +4,8 @@ Power Spectra of Sub-Circuits (Bos 2016)
 
 Here we calculate the power spectra of subcircuits of the :cite:t:`potjans2014` 
 microcircuit model including modifications made in :cite:t:`bos2016`.
+
+This example reproduces Fig. 9 in :cite:t:`bos2016`.
 """
 
 import nnmt
@@ -187,4 +189,4 @@ for gs, pop_idx in zip(gsB, [0,2,3]):
     ax.set_xlim([0.0, 100.0])
     ax.set_ylim([1e-6, 1e0])
 
-plt.savefig('Bos2016_Fig9.png')
+plt.savefig('figures/power_spectra_of_subcircuits_Bos2016.pdf')
