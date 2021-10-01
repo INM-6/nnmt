@@ -11,7 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker
-import h5py_wrapper.wrapper as h5
 
 plt.style.use('frontiers.mplstyle')
 
@@ -26,7 +25,7 @@ full_indegree_matrix = microcircuit.network_params['K']
 # %%
 # Read the simulated power spectra from the publicated data.
 fix_path = '../tests/fixtures/integration/data/'
-result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 
 # %%
 # Calculate all necessary quantities and finally the power spectra.

@@ -11,8 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker
-import h5py_wrapper.wrapper as h5
-
 
 plt.style.use('frontiers.mplstyle')
 
@@ -39,7 +37,7 @@ power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 # %%
 # Read the simulated power spectra from the publicated data.
 fix_path = '../tests/fixtures/integration/data/'
-result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_power_spectra_1_window = result['fig_microcircuit']['1']
 simulated_power_spectra_20_window = result['fig_microcircuit']['20']
 

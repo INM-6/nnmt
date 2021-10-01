@@ -9,8 +9,6 @@ model including modifications made in :cite:t:`bos2016`.
 import nnmt
 import numpy as np
 import matplotlib.pyplot as plt
-import h5py_wrapper.wrapper as h5
-
 
 plt.style.use('frontiers.mplstyle')
 
@@ -27,7 +25,7 @@ print(f'Mean rates: {firing_rates}')
 # %%
 # Load the simulated rates publicated in :cite:t:`bos2016` for comparison.
 fix_path = '../tests/fixtures/integration/data/'
-result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_rates = result['fig_microcircuit']['rates_sim']*1000
 
 print(f'Mean simulated rates: {simulated_rates}')
