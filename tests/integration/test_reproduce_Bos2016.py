@@ -241,53 +241,66 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
 
         # identify frequency which is closest to the point complex(1,0) per
         # eigenvalue trajectory
-        sensitivity_dict = defaultdict(int)
-        for eig_index, eig in enumerate(eigenvalue_spectra):
-            critical_frequency = freqs[np.argmin(abs(eig - 1.0))]
-            critical_frequency_index = np.argmin(
-                abs(freqs - critical_frequency))
-            critical_eigenvalue = eig[critical_frequency_index]
+        sensitivity_measure_at_fmax = nnmt.lif.exp.sensitivity_measure(
+            network,
+            frequency=fmax)
+        
+        # sensitivity_dict = nnmt.lif.exp.sensitivity_measure_per_eigenmode(network)
+        
+        
+        # sensitivity_dict = defaultdict(int)
+        # for eig_index, eig in enumerate(eigenvalue_spectra):
+        #     critical_frequency = freqs[np.argmin(abs(eig - 1.0))]
+        #     critical_frequency_index = np.argmin(
+        #         abs(freqs - critical_frequency))
+        #     critical_eigenvalue = eig[critical_frequency_index]
 
-            sensitivity_dict[eig_index] = {
-                'critical_frequency': critical_frequency,
-                'critical_frequency_index': critical_frequency_index,
-                'critical_eigenvalue': critical_eigenvalue}
+        #     sensitivity_dict[eig_index] = {
+        #         'critical_frequency': critical_frequency,
+        #         'critical_frequency_index': critical_frequency_index,
+        #         'critical_eigenvalue': critical_eigenvalue}
         
         # identify which eigenvalue contributes most to this peak
-        for eig_index, eig_results in sensitivity_dict.items():
-            if eig_results['critical_frequency'] == fmax:
-                eigenvalue_index = eig_index
-                print(f"eigenvalue that contributes most to identified peak "
-                      f"at {fmax}: {eigenvalue_index}")
+        # for eig_index, eig_results in sensitivity_dict.items():
+        #     if eig_results['critical_frequency'] == fmax:
+        #         eigenvalue_index = eig_index
+        #         print(f"eigenvalue that contributes most to identified peak "
+        #               f"at {fmax}: {eigenvalue_index}")
 
+        eigenvalue_index = sensitivity_measure_at_fmax['eigenvalue_index']
         # see lines 224 ff in make_Bos2016_data/sensitivity_measure.py
         assert eigenvalue_index == 1
 
         # test sensitivity measure
-        omegas = np.array([fmax * 2 * np.pi])
-        network.analysis_params['omegas'] = omegas
-        nnmt.network_properties.delay_dist_matrix(network)
-        nnmt.lif.exp.transfer_function(network, method='taylor')
-        nnmt.lif.exp.effective_connectivity(network)
-        Z = nnmt.lif.exp.sensitivity_measure(network)[0]
+        # omegas = np.array([fmax * 2 * np.pi])
+        # network.analysis_params['omegas'] = omegas
+        # nnmt.network_properties.delay_dist_matrix(network)
+        # nnmt.lif.exp.transfer_function(network, method='taylor')
+        # nnmt.lif.exp.effective_connectivity(network)
+        # Z = nnmt.lif.exp.sensitivity_measure(network)[0]
+        
+        Z = sensitivity_measure_at_fmax['sensitivity']
         assert_array_almost_equal(Z,
                                   ground_truth_data['high_gamma1']['Z'],
                                   decimal=4)
 
-        # test critical eigenvalue
-        eigc = sensitivity_dict[eigenvalue_index]['critical_eigenvalue']
-        fmax = sensitivity_dict[eigenvalue_index]['critical_frequency']
+        # # test critical eigenvalue
+        eigc = sensitivity_measure_at_fmax['critical_eigenvalue']
         assert_array_almost_equal(eigc,
                                   ground_truth_data['high_gamma1']['eigc'],
                                   decimal=5)
 
-        # test vector (k) between critical eigenvalue and complex(1,0)
-        # and repective perpendicular (k_per)
-        k = np.asarray([1, 0]) - np.asarray([eigc.real,
-                                             eigc.imag])
-        k /= np.sqrt(np.dot(k, k))
-        k_per = np.asarray([-k[1], k[0]])
-        k_per /= np.sqrt(np.dot(k_per, k_per))
+        # # test vector (k) between critical eigenvalue and complex(1,0)
+        # # and repective perpendicular (k_per)
+        # k = np.asarray([1, 0]) - np.asarray([eigc.real,
+        #                                      eigc.imag])
+        # k /= np.sqrt(np.dot(k, k))
+        # k_per = np.asarray([-k[1], k[0]])
+        # k_per /= np.sqrt(np.dot(k_per, k_per))
+        
+        k = sensitivity_measure_at_fmax['k']
+        k_per = sensitivity_measure_at_fmax['k_per']
+        
         assert_array_almost_equal(k,
                                   ground_truth_data['high_gamma1']['k'],
                                   decimal=4)
@@ -295,9 +308,13 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
                                   ground_truth_data['high_gamma1']['k_per'],
                                   decimal=4)
 
-        # test projections of sensitivty measure onto k and k_per
-        Z_amp = Z.real * k[0] + Z.imag * k[1]
-        Z_freq = Z.real * k_per[0] + Z.imag * k_per[1]
+        # # test projections of sensitivty measure onto k and k_per
+        # Z_amp = Z.real * k[0] + Z.imag * k[1]
+        # Z_freq = Z.real * k_per[0] + Z.imag * k_per[1]
+        
+        Z_amp = sensitivity_measure_at_fmax['sensitivity_amp']
+        Z_freq = sensitivity_measure_at_fmax['sensitivity_freq']        
+        
         assert_array_almost_equal(Z_amp,
                                   ground_truth_data['high_gamma1']['Z_amp'],
                                   decimal=4)
