@@ -35,7 +35,7 @@ nnmt.lif.exp.working_point(microcircuit, method='taylor')
 nnmt.lif.exp.transfer_function(microcircuit, method='taylor')
 # calculate the delay distribution matrix
 nnmt.network_properties.delay_dist_matrix(microcircuit)
-eigenvalues = np.linalg.eig(nnmt.lif.exp.effective_connectivity(microcircuit))[0].T
+eigenvalues = np.linalg.eig(nnmt.lif.exp.effective_connectivity(microcircuit))[0]
 resorted_eigenvalues, new_indices = nnmt.lif.exp._resort_eigenvalues(eigenvalues)
 sensitivity_dict = nnmt.lif.exp.sensitivity_measure_per_eigenmode(network=microcircuit)
 # calculate the power spectra
@@ -125,11 +125,11 @@ gsC = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=grid_specification[2])
 ### Panel A
 # top
 ax = fig.add_subplot(gsA[0])
-N = resorted_eigenvalues.shape[1]
+N = resorted_eigenvalues.shape[0]
 dc = 1/float(N)
 for i in range(0, N, 3):
-    ax.plot(resorted_eigenvalues.T[i].real, 
-            resorted_eigenvalues.T[i].imag, '.',
+    ax.plot(resorted_eigenvalues[i].real, 
+            resorted_eigenvalues[i].imag, '.',
                 color=(0.9-0.9*i*dc, 0.9-0.9*i*dc, 0.9-0.9*i*dc),
                 markersize=1.0, zorder=1)
 ax.scatter(1,0, s=15, color='r')
@@ -142,8 +142,8 @@ ax.set_ylabel('Im($\lambda(\omega)$)')
 # bottom
 ax = fig.add_subplot(gsA[1])
 for i in range(0, N, 3):
-    ax.plot(resorted_eigenvalues.T[i].real, 
-            resorted_eigenvalues.T[i].imag, '.',
+    ax.plot(resorted_eigenvalues[i].real, 
+            resorted_eigenvalues[i].imag, '.',
                 color=(0.9-0.9*i*dc, 0.9-0.9*i*dc, 0.9-0.9*i*dc),
                 markersize=1.0, zorder=1)
 # frequencies where eigenvalue trajectory is closest to one
@@ -187,7 +187,7 @@ def get_color(i, layer):
 
 # top
 ax = fig.add_subplot(gsB[0])
-N = resorted_eigenvalues.shape[1]
+N = resorted_eigenvalues.shape[0]
 dc = 1/float(N)
 for i, layer in enumerate(['23', '4', '5', '6']):
     # [:, 2*layer:2*layer+2] in the original code serves to plot only the non-zero eigenspectra 

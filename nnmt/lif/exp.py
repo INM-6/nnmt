@@ -1159,7 +1159,7 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
     ----------
     eigenvalues : np.ndarray
         Eigenvalues of the effective connectivity matrix
-        Shape: (num populations, num analysis freqs)
+        Shape: (num analysis freqs, num populations)
     margin : np.float
         Maximal allowed distance between the eigenvalues of the effective 
         connectivity matrix at two subsequent frequencies.
@@ -1170,27 +1170,27 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
         Resorted eigenvalues.
     np.ndarray
         Mapping from old to new indices (e.g. for resorting the eigenmodes).
-        Shape : (num populations, num analysis freqs)
+        Shape: (num analysis freqs, num populations)
     """
     eig = eigenvalues.copy()
     
-    # define vector of eigenvalue at frequency 0
-    previous = eig[:, 0]
+    # define vector of eigenvalues at frequency 0
+    previous = eig[0, :]
     
     # initialize containers
-    distances = np.zeros([eig.shape[0], eig.shape[1] - 1])
+    distances = np.zeros([eig.shape[0] - 1, eig.shape[1]])
     multi_swaps = {}
-    resorted_eigenvalues_mask = np.tile(np.arange(eig.shape[0]), (eig.shape[1], 1)).T
+    resorted_eigenvalues_mask = np.tile(np.arange(eig.shape[1]), (eig.shape[0], 1))
     
-    # loop over all frequences > 0
-    for i in range(1, eig.shape[1]):
+    # loop over all frequencies > 0
+    for i in range(1, eig.shape[0]):
         # compare new to previous
-        new = eig[:, i]
-        distances[:, i-1] = abs(previous - new)
+        new = eig[i, :]
+        distances[i-1, :] = abs(previous - new)
 
         # get all distances which are larger than margin
-        if np.any(distances[:, i-1] > margin):
-            indices = np.argwhere(distances[:, i-1] > margin).reshape(-1)
+        if np.any(distances[i-1, :] > margin):
+            indices = np.argwhere(distances[i-1, :] > margin).reshape(-1)
             # postpone the resorting, if more than two eigenvalues need to be
             # swapped (multi_swap)
             if len(indices) >= 2:
@@ -1214,11 +1214,11 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
                 # determine the minimal distance of this one eigenvalue
                 # to the eigenvalues at the next frequency step
                 index = np.argmin(
-                    np.abs(original[indices_to_swap, i+1] - original[k, i]))
+                    np.abs(original[i+1, indices_to_swap] - original[i, k]))
                 # resort this one eigenvalue until the next frequency index
                 # for which a multi-swap is necessary
-                eig[k, i+1:j+1] = original[indices_to_swap[index], i+1:j+1]
-                resorted_eigenvalues_mask[k, i+1:j+1] = indices_to_swap[index]
+                eig[i+1:j+1, k] = original[i+1:j+1, indices_to_swap[index]]
+                resorted_eigenvalues_mask[i+1:j+1, k] = indices_to_swap[index]
                 
         # deal with the last swap
         original = eig.copy()
@@ -1226,9 +1226,9 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
         indices_to_swap = list(multi_swaps.values())[-1]
         for k in indices_to_swap:
             index = np.argmin(
-                np.abs(original[indices_to_swap, i+1] - original[k, i]))
-            eig[k, i+1] = original[indices_to_swap[index], i+1]
-            resorted_eigenvalues_mask[k, i+1] = indices_to_swap[index]
+                np.abs(original[i+1, indices_to_swap] - original[i, k]))
+            eig[i+1, k] = original[i+1, indices_to_swap[index]]
+            resorted_eigenvalues_mask[i+1, k] = indices_to_swap[index]
         
     return eig, resorted_eigenvalues_mask
 
@@ -1335,7 +1335,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
     resorted_eigenvalues_mask : np.ndarray
         Mapping from old to new indices (e.g. for resorting the eigenmodes) as
         obtained from _resort_eigenvalues.
-        Shape : (num populations, num analysis freqs)
+        Shape : (num analysis freqs, num populations)
     eigenvalue_index : int
         Index specifying the eigenvalue and corresponding eigenmode for which
         the sensitivity measure is evaluated.
@@ -1377,9 +1377,9 @@ def _sensitivity_measure(effective_connectivity, frequency,
     e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
     if resorted_eigenvalues_mask is not None:
         # apply the resorting
-        e = e[resorted_eigenvalues_mask[:, frequency_index]]
-        U_l = U_l[:, resorted_eigenvalues_mask[:, frequency_index]]
-        U_r = U_r[:, resorted_eigenvalues_mask[:, frequency_index]]
+        e = e[resorted_eigenvalues_mask[frequency_index, :]]
+        U_l = U_l[:, resorted_eigenvalues_mask[frequency_index, :]]
+        U_r = U_r[:, resorted_eigenvalues_mask[frequency_index, :]]
     
     if eigenvalue_index is None:
         # find eigenvalue closest to one
@@ -1494,7 +1494,7 @@ def _sensitivity_measure_per_eigenmode(effective_connectivity,
         Dictionary of dictionaries containing the sensitivity measure results.
         The dictionary keys are the eigenvalue indices.
     """
-    eigenvalues = np.linalg.eig(effective_connectivity)[0].T
+    eigenvalues = np.linalg.eig(effective_connectivity)[0]
     resorted_eigenvalues, resorted_eigenvalues_mask = \
         _resort_eigenvalues(eigenvalues)
     
@@ -1502,7 +1502,7 @@ def _sensitivity_measure_per_eigenmode(effective_connectivity,
     
     # identify frequency which is closest to the point complex(1, 0) 
     # per eigenvalue trajectory    
-    for eig_index, eig in enumerate(resorted_eigenvalues):
+    for eig_index, eig in enumerate(resorted_eigenvalues.T):
         critical_frequency = analysis_frequencies[np.argmin(abs(eig-1.0))]        
 
         sensitivity_measure_dictionary[eig_index] = \

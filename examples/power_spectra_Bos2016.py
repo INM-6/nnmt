@@ -34,7 +34,7 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(microcircuit)
 # calculate the power spectra
-power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
+power_spectra = nnmt.lif.exp.power_spectra(microcircuit)
 
 # %%
 # Read the simulated power spectra from the publicated data.
@@ -62,7 +62,7 @@ for layer in [0, 1, 2, 3]:
         ax.plot(simulated_power_spectra_20_window['freq_sim'],
                    simulated_power_spectra_20_window[f'power{j}'], color=(0.5, 0.5, 0.5))
         ax.plot(microcircuit.analysis_params['omegas']/(2*np.pi),
-                   power_spectra[j],
+                   power_spectra[:, j],
                    color='black', zorder=2)
         
         ax.set_xlim([10.0, 400.0])

@@ -41,7 +41,7 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(microcircuit)
 # calculate the power spectra
-power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
+power_spectra = nnmt.lif.exp.power_spectra(microcircuit)
 
 # %%
 # Initialize a new network instance for the reduced circuit explaining the 
@@ -73,7 +73,7 @@ nnmt.network_properties.delay_dist_matrix(low_gamma_subcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(low_gamma_subcircuit)
 # calculate the power spectra
-low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(low_gamma_subcircuit).T
+low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(low_gamma_subcircuit)
 
 # %%
 # Initialize a new network instance to calculate results without connections
@@ -102,7 +102,7 @@ nnmt.network_properties.delay_dist_matrix(without_23E_4I)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(without_23E_4I)
 # calculate the power spectra
-without_23E_4I_power_spectra = nnmt.lif.exp.power_spectra(without_23E_4I).T
+without_23E_4I_power_spectra = nnmt.lif.exp.power_spectra(without_23E_4I)
 
 # %%
 # Plotting
@@ -134,9 +134,9 @@ for gs, pop_idx in zip(gsA, [0,2,3]):
     ax.plot(result['oscillation_origin']['A']['freq_sim_av'],
                 result['oscillation_origin']['A'][f'power{pop_idx}_sim_av'], 
                 color=(0.5, 0.5, 0.5))
-    ax.plot(frequencies, power_spectra[pop_idx],
+    ax.plot(frequencies, power_spectra[:, pop_idx],
             color='black', linestyle='dashed', zorder=2)
-    ax.plot(frequencies, low_gamma_subcircuit_power_spectra[pop_idx],
+    ax.plot(frequencies, low_gamma_subcircuit_power_spectra[:, pop_idx],
             color='black', zorder=10)
     ax.set_yscale('log')
 
@@ -167,9 +167,9 @@ for gs, pop_idx in zip(gsB, [0,2,3]):
     ax.plot(result['oscillation_origin']['B']['freq_sim_av'],
                 result['oscillation_origin']['B'][f'power{pop_idx}_sim_av'], 
                 color=(0.5, 0.5, 0.5))
-    ax.plot(frequencies, power_spectra[pop_idx],
+    ax.plot(frequencies, power_spectra[:, pop_idx],
             color='black', linestyle='dashed', zorder=2)
-    ax.plot(frequencies, without_23E_4I_power_spectra[pop_idx],
+    ax.plot(frequencies, without_23E_4I_power_spectra[:, pop_idx],
             color='black', zorder=10)
     ax.set_yscale('log')
 

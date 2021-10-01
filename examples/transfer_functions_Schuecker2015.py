@@ -174,4 +174,3 @@ axB.legend(title='$\mu [mV] | \sigma [mV]$', title_fontsize='xx-small',
            handlelength=2, labelspacing=0.0)
 
 plt.savefig('figures/transfer_functions_Schuecker2015.pdf')
-

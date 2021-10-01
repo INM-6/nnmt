@@ -41,8 +41,10 @@ nnmt.lif.exp.working_point(microcircuit, method='taylor')
 nnmt.lif.exp.transfer_function(microcircuit, method='taylor')
 # calculate the delay distribution matrix
 nnmt.network_properties.delay_dist_matrix(microcircuit)
+# calculate the effective connectivity matrix
+nnmt.lif.exp.effective_connectivity(microcircuit)
 
-sensitivity_dict = nnmt.lif.exp.sensitivity_measure_dictionary(microcircuit)
+sensitivity_dict = nnmt.lif.exp.sensitivity_measure_per_eigenmode(microcircuit)
 
 # print necessary entries of the sensitivity measure dictionary to see
 # which eigenvalues are needed to reproduce Fig.6 and Fig.7 of Bos 2016
@@ -78,7 +80,7 @@ for ev, subpanel in zip(eigenvalues_to_plot_high, grid_specification):
     
     frequency = sensitivity_dict[ev]['critical_frequency']
     projection_of_sensitivity_measure = sensitivity_dict[ev][
-        'sensitivity_measure_amp']
+        'sensitivity_amp']
     
     # obtain maximal absolute value
     z = np.max(abs(projection_of_sensitivity_measure))
@@ -107,7 +109,7 @@ for ev, subpanel in zip(eigenvalues_to_plot_high, grid_specification):
     
     frequency = sensitivity_dict[ev]['critical_frequency']
     projection_of_sensitivity_measure = sensitivity_dict[ev][
-        'sensitivity_measure_freq']
+        'sensitivity_freq']
     
     # obtain maximal absolute value
     z = np.max(abs(projection_of_sensitivity_measure))
@@ -153,7 +155,7 @@ ev = eigenvalue_to_plot_low
 
 frequency = sensitivity_dict[ev]['critical_frequency']
 projection_of_sensitivity_measure = sensitivity_dict[ev][
-    'sensitivity_measure_amp']
+    'sensitivity_amp']
 
 # obtain maximal absolute value
 z = np.max(abs(projection_of_sensitivity_measure))
