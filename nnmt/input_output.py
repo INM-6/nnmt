@@ -6,6 +6,15 @@ functions (they rely on a redefinition of quantities). Handles output-writing
 and provides function for creating hashes to uniquely identify output files.
 This is a test and I hope it works.
 
+HDF5 Wrapper
+************
+
+.. autosummary::
+    :toctree: _toctree/input_output/
+    
+    save_h5
+    load_h5
+    
 Conversions
 ***********
 
@@ -49,15 +58,150 @@ Others
 
 from __future__ import print_function
 from collections.abc import Iterable
+from numbers import Number
 import warnings
 import copy
 
 import numpy as np
 import yaml
 import hashlib as hl
-import h5py_wrapper.wrapper as h5
+import h5py
 
 from . import ureg
+
+
+def save_h5(file, d, *args, **kwargs):
+    """
+    Saves dictionary to h5 file.
+    
+    Parameters
+    ----------
+    file : str
+        Output filename.
+    d : dict
+        Dictionary to be stored.
+    """
+    f = h5py.File(file, "w")
+    try:
+        _store_dict(f, d)
+    finally:
+        f.close()
+    
+
+def _store_dict(f, d):
+    """
+    Recursively stores dictionary in HDF5 file object.
+    
+    Parameters
+    ----------
+    f : HDF5 file object
+        Object dictionary is to be stored in.
+    d : dict
+        Dictionary to be stored.
+    """
+    for key, value in d.items():
+        if isinstance(value, dict):
+            grp = f.create_group(key)
+            _store_dict(grp, value)
+        else:
+            if isinstance(key, Number):
+                numerical_key = True
+                key = str(key)
+            else:
+                numerical_key = False
+            if isinstance(value, np.ndarray):
+                dtype = value.dtype.name
+            elif isinstance(value, list):
+                dtypes = [type(e) for e in value]
+                if len(set(dtypes)) > 1:
+                    raise ValueError('List to be stored must only contain '
+                                     'same datatypes.')
+                elif len(value) == 0:
+                    pass
+                else:
+                    dtype = dtypes[0]
+            else:
+                dtype = type(value)
+            
+            if isinstance(value, str):
+                dset = f.create_dataset(key, (1,), dtype=h5py.string_dtype())
+                dset[0] = value
+            elif (dtype == str) or (dtype == 'str96'):
+                dset = f.create_dataset(key, (len(value),),
+                                        dtype=h5py.string_dtype())
+                dset[:] = value
+            else:
+                value = np.array(value)
+                dset = f.create_dataset(key, data=value)
+            if numerical_key:
+                dset.attrs['numerical_key'] = True
+            
+
+def load_h5(file, *args, **kwargs):
+    """
+    Loads dictionary from h5 file.
+    
+    Parameters
+    ----------
+    file : str
+        File to be loaded.
+        
+    Returns
+    -------
+    dict
+        Stored dictionary.
+    """
+    f = h5py.File(file, 'r')
+    try:
+        d = _retrieve_dict(f)
+    finally:
+        f.close()
+    return d
+
+
+def _retrieve_dict(f):
+    """
+    Recursively retrieves a dictionary from an HDF5 file object.
+    
+    Parameters
+    ----------
+    f : HDF5 file object
+        Object dictionary is stored in.
+    
+    Returns
+    -------
+    dict
+        Stored dictionary.
+    """
+    d = {}
+    for key, group in f.items():
+        # if key originally was a numerical key, convert it to number
+        if group.attrs.get('numerical_key'):
+            try:
+                key = int(key)
+            except ValueError:
+                key = float(key)
+        # if group is Group, retrieve recursively
+        if isinstance(group, h5py._hl.group.Group):
+            d[key] = _retrieve_dict(group)
+        # decode bytes to strings
+        elif isinstance(group[()], bytes):
+            d[key] = group[()].decode('utf8')
+        # convert h5py strings to python strings if necessary
+        elif (group[()].dtype == h5py.string_dtype()) and (len(group[()]) == 1):
+            try:
+                d[key] = group.asstr()[()][0]
+            except AttributeError:
+                d[key] = str(group[()][0])
+        # convert h5py string arrays so lists of strings
+        elif (group[()].dtype == h5py.string_dtype()) and (len(group[()]) > 1):
+            d[key] = group.asstr()[()].tolist()
+        # decode arrays of bytes to strings
+        elif (isinstance(group[()], Iterable)) and (isinstance(group[0], bytes)):
+            d[key] = np.char.decode(group[()], 'utf8')
+        else:
+            d[key] = group[()]
+    return d
 
 
 def convert_arrays_in_dict_to_lists(adict):
@@ -255,7 +399,7 @@ def save_quantity_dict_to_h5(file, qdict, overwrite=False):
     output = quantities_to_val_unit(qdict)
     # save output
     try:
-        h5.save(file, output, overwrite_dataset=overwrite)
+        save_h5(file, output, overwrite_dataset=overwrite)
     except KeyError:
         raise IOError(f'{file} already exists! Use `overwrite=True` if you '
                       'want to overwrite it.')
@@ -274,7 +418,7 @@ def load_val_unit_dict_from_h5(file):
         String specifying input file name.
     """
     try:
-        loaded = h5.load(file)
+        loaded = load_h5(file)
     except OSError:
         raise IOError(f'{file} does not exist!')
 

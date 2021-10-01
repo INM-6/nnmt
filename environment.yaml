@@ -1,15 +1,16 @@
-name: nnmt_deprecated
+name: nnmt
 channels:
   - defaults
+  - conda-forge
 dependencies:
-  - python=3.9.4
+  - python>3
   - pip
   - ipython
   - numpy
   - scipy
   - cython
   - matplotlib
-  - h5py=2.10.*
+  - h5py
   - pyyaml
   - pytest=5.4.*
   - pytest-cov=2.9.*
@@ -22,7 +23,9 @@ dependencies:
   - sphinx
   - numpydoc
   - sphinx-autoapi
+  - sphinxcontrib-bibtex
+  - sphinx-tabs
+  - sphinx-gallery
   - pip:
     - pint
-    - h5py_wrapper
     - -e .

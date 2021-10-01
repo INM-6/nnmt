@@ -9,6 +9,7 @@ integration_fixture_path = config['integration_fixture_path']
 unit_fixtures = config['unit_fixtures']
 integration_fixtures = config['integration_fixtures']
 
+model_fixtures = config['model_fixtures']
 
 rule all:
     input:
@@ -16,6 +17,11 @@ rule all:
         expand(
             join(unit_fixture_path, '{unit_fixture}'),
             unit_fixture=unit_fixtures
+        ),
+        # model test fixtures
+        expand(
+            join(unit_fixture_path, '{model_fixture}'),
+            model_fixture=model_fixtures
         ),
         # integration test fixtures
         expand(
@@ -26,13 +32,31 @@ rule all:
 
 rule create_unit_test_fixtures:
     input:
-        script = join('unit', 'create_fixtures.py'),
+        script = join('unit', 'create', 'lif_fixtures.py'),
         modified_yaml = join('envs', 'environment.yaml')
     conda:
         # /nnmt/environment.yaml
         join('envs', 'environment.yaml')
     output:
-        join(unit_fixture_path, 'test_network.h5')
+        expand(
+            join(unit_fixture_path, '{unit_fixture}'),
+            unit_fixture=unit_fixtures)
+    shell:
+        """
+        python {input.script} -f all
+        """
+
+rule create_model_test_fixtures:
+    input:
+        script = join('unit', 'create', 'model_fixtures.py'),
+        modified_yaml = join('envs', 'environment.yaml')
+    conda:
+        # /nnmt/environment.yaml
+        join('envs', 'environment.yaml')
+    output:
+        expand(
+            join(unit_fixture_path, '{model_fixture}'),
+            model_fixture=model_fixtures)
     shell:
         """
         python {input.script} -f

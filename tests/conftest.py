@@ -20,9 +20,9 @@ output_test_fixtures: parametrizes needed args and results for tested regimes.
 import pytest
 import numpy as np
 from inspect import signature
-import h5py_wrapper as h5
 
 import nnmt
+import nnmt.input_output as io
 from nnmt.input_output import load_val_unit_dict_from_h5
 from nnmt import ureg
 from nnmt.utils import _strip_units
@@ -137,7 +137,7 @@ def empty_network():
 def network_dict_val_unit():
     """
     Simple example of all network dictionaries in val unit format in a dict.
-    
+
     Returns:
     --------
     dict
@@ -156,13 +156,13 @@ def network_dict_val_unit():
             'analysis_params': analysis_params,
             'results': results,
             'results_hash_dict': results_hash_dict}
-    
-    
+
+
 @pytest.fixture
 def network_dict_quantity():
     """
     Simple example of all network dictionaries in quantity format in a dict.
-    
+
     Returns:
     --------
     dict
@@ -181,7 +181,7 @@ def network_dict_quantity():
             'analysis_params': analysis_params,
             'results': results,
             'results_hash_dict': results_hash_dict}
-    
+
 
 @pytest.fixture
 def std_results():
@@ -390,7 +390,7 @@ def all_std_params_single_population_unitless():
 def std_params(request, all_std_params):
     """
     Returns set of standard params needed by requesting tested function.
-    
+
     For using this fixture, the function test class needs to have a class
     attribute `func`, which is the tested function as a staticmethod.
     """
@@ -401,7 +401,7 @@ def std_params(request, all_std_params):
 def std_unitless_params(request, all_std_params):
     """
     Returns set of standard params needed by requesting tested function.
-    
+
     For using this fixture, the function test class needs to have a class
     attribute `func`, which is the tested function as a staticmethod.
     """
@@ -414,7 +414,7 @@ def std_unitless_params(request, all_std_params):
 def std_params_single_population(request, all_std_params_single_population):
     """
     Returns set of standard params needed by requesting tested function.
-    
+
     For using this fixture, the function test class needs to have a class
     attribute `func`, which is the tested function as a staticmethod.
     """
@@ -427,7 +427,7 @@ def std_params_single_population_unitless(
         request, all_std_params_single_population):
     """
     Returns set of standard params needed by requesting tested function.
-    
+
     For using this fixture, the function test class needs to have a class
     attribute `func`, which is the tested function as a staticmethod.
     """
@@ -460,7 +460,7 @@ def std_params_eval_spectra(request, all_std_params):
 def get_output_for_keys_of_metafunc(metafunc, results, params):
     """
     Returns output fixtures for output keys of the requesting test class.
-    
+
     If a test class has `output_key` or `output_keys` as class attribute,
     this function returns a list of the outputs for the given keys.
     """
@@ -479,13 +479,13 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                           ids_all_regimes=ids_all_regimes):
     """
     Special pytest function defining parametrizations for certain fixtures.
-    
+
     `pos_keys`:
     If a test requires all positive keys contained in the list of arguments of
     the tested function, the corresponding function test class needs to have a
     class attribute `func`, which is the tested function as a staticmethod.
     The pos keys are tested one after each other as a parametrization.
-    
+
     `output_test_fixtures`:
     If a test requires input arguments and outputs in different regimes for
     comparison with the return values of the tested function, the corresponding
@@ -500,7 +500,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
     # if it does not, just return and don't parametrize
     else:
         return None
-    
+
     if "pos_keys" in metafunc.fixturenames:
         pos_keys = get_required_keys(func, all_pos_keys)
         # define parametrization
@@ -516,7 +516,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                     in zip(output, params)]
         metafunc.parametrize("output_test_fixtures", fixtures,
                              ids=ids_all_regimes)
-        
+
     elif "output_fixtures_noise_driven" in metafunc.fixturenames:
         # list of input arguments for the tested function for each regime
         params = [get_required_params(func, dict(results[0], **all_params[0]))]
@@ -527,7 +527,7 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
                     in zip(output, params)]
         metafunc.parametrize("output_fixtures_noise_driven", fixtures,
                              ids=ids_all_regimes[0:1])
-        
+
     elif "output_fixtures_mean_driven" in metafunc.fixturenames:
         # list of input arguments for the tested function for each regime
         params = [get_required_params(func, dict(results[1], **all_params[1]))]
@@ -541,17 +541,16 @@ def pytest_generate_tests(metafunc, all_params=all_params, results=results,
 
     elif "unit_fixtures" in metafunc.fixturenames:
         file = metafunc.cls.fixtures
-        fixtures = h5.load(unit_fix_path + file)
+        fixtures = io.load_h5(unit_fix_path + file)
         ids = sorted(fixtures.keys())
         fixture_list = [dict(output=fixtures[id]['output'],
                         params=fixtures[id]['params'])
                         for id in ids]
-        # import pdb; pdb.set_trace()
         metafunc.parametrize("unit_fixtures", fixture_list, ids=ids)
 
     elif "unit_fixtures_fully_vectorized" in metafunc.fixturenames:
         file = metafunc.cls.fixtures
-        fixtures = h5.load(unit_fix_path + file)
+        fixtures = io.load_h5(unit_fix_path + file)
         ids = sorted(fixtures.keys())
         fixture_list = [dict(output=fixtures[id]['output'],
                         params=fixtures[id]['params'])

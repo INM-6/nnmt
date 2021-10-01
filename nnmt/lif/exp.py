@@ -6,7 +6,7 @@ Network Functions
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     firing_rates
     mean_input
     std_input
@@ -17,13 +17,13 @@ Network Functions
     sensitivity_measure
     power_spectra
     external_rates_for_fixed_input
-    
+
 Parameter Functions
 *******************
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     _firing_rates
     _firing_rate_shift
     _firing_rate_taylor
@@ -32,12 +32,13 @@ Parameter Functions
     _transfer_function_shift
     _transfer_function_taylor
     _derivative_of_firing_rates_wrt_mean_input
+    _derivative_of_firing_rates_wrt_input_rate
     _effective_connectivity
     _propagator
     _sensitivity_measure
     _power_spectra
     _external_rates_for_fixed_input
-    
+
 """
 
 import warnings
@@ -191,10 +192,10 @@ def firing_rates(network, method='shift', **kwargs):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-    
+
     params['method'] = method
     params.update(kwargs)
-    
+
     return _cache(network,
                   _firing_rates, params, _prefix + 'firing_rates', 'hertz')
 
@@ -221,7 +222,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
         }
-    
+
     if method == 'shift':
         return _static._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,
@@ -450,6 +451,7 @@ def mean_input(network):
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
+@_check_positive_params
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of mean neuronal input.
@@ -511,6 +513,7 @@ def std_input(network):
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
+@_check_positive_params
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of standard deviation of neuronal input.
@@ -912,6 +915,71 @@ def _Phi_prime_mu(s, sigma):
                                       + np.sqrt(2) / np.sqrt(np.pi))
 
 
+@_check_positive_params
+@_check_k_in_fast_synaptic_regime
+def _derivative_of_firing_rates_wrt_input_rate(
+        mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j):
+    """
+    Derivative of the stationary firing rates with synaptic filtering
+    with respect to input rate.
+
+    Parameters
+    ----------
+    mu : float
+        Mean neuron activity.
+    sigma :
+        Standard deviation of neuron activity.
+    tau_m : float
+        Membrane time constant.
+    tau_s : float
+        Synaptic time constant.
+    tau_r : float
+        Refractory time.
+    V_th_rel : float
+        Relative threshold potential.
+    V_0_rel : float
+        Relative reset potential.
+    j : float
+        Effective connectivity weight.
+
+    Returns
+    -------
+    float
+        Unitless derivative.
+    """
+
+    try:
+        if any(sigma == 0 for sigma in sigma):
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+    except TypeError:
+        if sigma == 0:
+            raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
+
+    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    nu0 = _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
+
+    # linear contribution
+    lin = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
+           * (np.exp(y_th_fb**2) * (1 + _erf(y_th_fb))
+              - np.exp(y_r_fb**2)
+              * (1 + _erf(y_r_fb))))
+
+    # quadratic contribution
+    sqr = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
+           * (np.exp(y_th_fb**2) * (1 + _erf(y_th_fb))
+              * 0.5 * y_th * j / sigma - np.exp(y_r_fb**2)
+              * (1 + _erf(y_r_fb)) * 0.5 * y_r * j / sigma))
+
+    return lin + sqr
+
+
 def effective_connectivity(network):
     """
     Effective connectivity for different frequencies.
@@ -969,6 +1037,7 @@ def effective_connectivity(network):
                   _prefix + 'effective_connectivity')
 
 
+@_check_positive_params
 def _effective_connectivity(transfer_function, D, J, K, tau_m):
     """
     Effective connectivity for different frequencies.
@@ -1545,11 +1614,11 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
 def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
     """
     Calculate external rates needed to get fixed mean and std input.
-    
+
     Uses least square method to find best fitting solution for external rates
     such that the mean and standard deviation of the input to the neuronal
     populations is as close as possible to ``mu_set`` and ``sigma_set``.
-    
+
     Generalization of equation E1 of Helias et al. 2013 and the corrected
     version in appendix F of Senk et al. 2020.
 
@@ -1605,7 +1674,7 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
             "connectivity!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-    
+
     params['mu_set'] = mu_set
     params['sigma_set'] = sigma_set
     params['method'] = method
@@ -1679,16 +1748,20 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
                          J_ext=0, K_ext=0, nu_ext=0)
     sigma_loc = _std_input(target_rates, J, K, tau_m,
                            J_ext=0, K_ext=0, nu_ext=0)
-    
+
     # external working point that is to be achieved
     mu_ext = mu_set - mu_loc
     var_ext = sigma_set**2 - sigma_loc**2
-    
+
     # the linear set of equations that needs to be solved
     LHS = np.append(K_ext * J_ext, K_ext * J_ext**2, axis=0)
     RHS = np.append(mu_ext / tau_m, var_ext / tau_m)
-    
+
     # find a solution as good as possible using least square method
     nu_ext = np.linalg.lstsq(LHS, RHS)[0]
+    print(nu_ext)
+
+    if np.any(nu_ext < 0):
+        raise RuntimeError(f'Negative rate detected: {nu_ext}')
 
     return nu_ext

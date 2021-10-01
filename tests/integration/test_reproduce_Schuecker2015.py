@@ -14,7 +14,7 @@ from collections import defaultdict
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 
-import h5py_wrapper.wrapper as h5
+import nnmt.input_output as io
 
 import nnmt
 ureg = nnmt.ureg
@@ -28,7 +28,7 @@ indices = [1, 2]
 
 @pytest.fixture(scope='class')
 def ground_truth_result():
-    results = h5.load(fix_path + 'Schuecker2015_data.h5')
+    results = io.load_h5(fix_path + 'Schuecker2015_data.h5')
     return results
 
 
@@ -159,12 +159,12 @@ def test_result(pre_results, network_params):
     test_results['sigma'] = defaultdict(dict)
     for i, index in enumerate(indices):
         sigma = network_params[f'sigma_{index}']
-        test_results['sigma'][sigma]['mu'] = (
+        test_results['sigma'][str(sigma)]['mu'] = (
             defaultdict(dict))
         for j, mu in enumerate(network_params[f'mean_input_{index}']):
             test_results[
-                'sigma'][sigma][
-                'mu'][mu] = {
+                'sigma'][str(sigma)][
+                'mu'][str(mu)] = {
                     'absolute_value': pre_results['absolute_values'][i][:, j],
                     'phase': pre_results['phases'][i][:, j],
                     'zero_freq': pre_results['zero_freqs'][i][j],
@@ -183,7 +183,7 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
                                                        ground_truth_result):
         sigma = network_params['sigma_{}'.format(index)]
         mu = network_params['mean_input_{}'.format(index)][0]
-        ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]
+        ground_truth_data = ground_truth_result['sigma'][str(sigma)]['mu'][str(mu)]
         assert_array_equal(frequencies,
                            ground_truth_data['frequencies'])
 
@@ -198,7 +198,7 @@ class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
                               ground_truth_result, test_result):
         sigma = network_params['sigma_{}'.format(index)]
         for mu in network_params['mean_input_{}'.format(index)]:
-            ground_truth_data = ground_truth_result['sigma'][sigma]['mu'][mu]
-            test_data = test_result['sigma'][sigma]['mu'][mu]
+            ground_truth_data = ground_truth_result['sigma'][str(sigma)]['mu'][str(mu)]
+            test_data = test_result['sigma'][str(sigma)]['mu'][str(mu)]
             assert_allclose(test_data[key],
                             ground_truth_data[key], atol=1e-14)

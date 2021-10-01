@@ -1,0 +1,8 @@
+# number of neurons
+N: 1000
+
+# connection probability
+p: 0.1
+
+# spectral radius
+r: 0.9

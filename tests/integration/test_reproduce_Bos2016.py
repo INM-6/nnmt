@@ -21,7 +21,7 @@ from numpy.testing import (
 import nnmt
 from nnmt import ureg
 
-import h5py_wrapper.wrapper as h5
+import nnmt.input_output as io
 
 
 config_path = 'tests/fixtures/integration/config/'
@@ -34,13 +34,13 @@ use_saved_data = False
 
 @pytest.fixture(scope='class')
 def ground_truth_result():
-    result = h5.load(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+    result = io.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
     return result
 
 
 @pytest.fixture(scope='class')
 def bos_code_result():
-    data = h5.load(fix_path + 'Bos2016_data.h5')
+    data = io.load_h5(fix_path + 'Bos2016_data.h5')
     return data
 
 
@@ -65,7 +65,7 @@ def network(exemplary_frequency_idx):
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
     
-    yield network
+    yield network.copy()
     
     if save_data:
         network.save(file=fix_path + 'network.h5', overwrite=True)

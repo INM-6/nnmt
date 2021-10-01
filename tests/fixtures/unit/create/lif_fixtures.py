@@ -23,7 +23,7 @@ import docopt
 import inspect
 import sys
 import os
-import h5py_wrapper as h5
+import nnmt.input_output as io
 
 from nnmt.input_output import load_val_unit_dict_from_yaml
 from nnmt.utils import (
@@ -46,7 +46,7 @@ def extract_required_params(func, regime_params):
     extracted = [get_required_params(func, params)
                  for params in regime_params]
     return extracted
-    
+
 
 def create_and_save_fixtures(func, regime_params, regimes, file):
     results = {}
@@ -58,8 +58,19 @@ def create_and_save_fixtures(func, regime_params, regimes, file):
             'params': params,
             'output': output
             }
-    h5.save(file, results, overwrite_dataset=True)
-    
+    io.save_h5(file, results, overwrite_dataset=True)
+
+
+def load_params_and_regimes(config_path):
+    param_files = os.listdir(config_path)
+    regimes = [file.replace('.yaml', '') for file in param_files]
+    regime_params = [load_val_unit_dict_from_yaml(config_path + file)
+                     for file in param_files]
+    for dict in regime_params:
+        _to_si_units(dict)
+        _strip_units(dict)
+    return regime_params, regimes
+
 
 if __name__ == '__main__':
     # always show help message if not invoked with -f option
@@ -70,24 +81,18 @@ if __name__ == '__main__':
 
     # only run code if users are sure they want to do it
     if '--force' in args.keys():
-        
+
         fixture_path = 'unit/data/'
-        
+
         module = args['<module>']
-        config_path = 'unit/config/' + module + '/'
-        
-        param_files = os.listdir(config_path)
-        regimes = [file.replace('.yaml', '') for file in param_files]
-        regime_params = [load_val_unit_dict_from_yaml(config_path + file)
-                         for file in param_files]
-        for dict in regime_params:
-            _to_si_units(dict)
-            _strip_units(dict)
-        
-        if module == 'firing_rates':
-            create_and_save_fixtures(nnmt.lif.delta._firing_rate,
-                                     regime_params, regimes,
-                                     fixture_path + 'lif_delta_firing_rate.h5')
+
+        if (module == 'firing_rates') or (module == 'all'):
+            config_path = 'unit/config/firing_rates/'
+            regime_params, regimes = load_params_and_regimes(config_path)
+            create_and_save_fixtures(
+                nnmt.lif.delta._firing_rates_for_given_input,
+                regime_params, regimes,
+                fixture_path + 'lif_delta_firing_rate.h5')
             create_and_save_fixtures(nnmt.lif.exp._firing_rate_taylor,
                                      regime_params, regimes,
                                      fixture_path
@@ -96,14 +101,18 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_firing_rate_shift.h5')
-        elif module == 'inputs':
+        elif (module == 'inputs') or (module == 'all'):
+            config_path = 'unit/config/inputs/'
+            regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(nnmt.lif._static._mean_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_mean_input.h5')
             create_and_save_fixtures(nnmt.lif._static._std_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_std_input.h5')
-        elif module == 'transfer_functions':
+        elif (module == 'transfer_functions') or (module == 'all'):
+            config_path = 'unit/config/transfer_functions/'
+            regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(nnmt.lif.exp._transfer_function_shift,
                                      regime_params, regimes,
                                      fixture_path
@@ -112,7 +121,19 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_transfer_function_taylor.h5')
-        elif module == 'sensitivity_measure':
+            create_and_save_fixtures(
+                nnmt.lif.exp._derivative_of_firing_rates_wrt_input_rate,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_derivative_of_firing_rates_wrt_input_rate.h5')
+            create_and_save_fixtures(
+                nnmt.lif.exp._derivative_of_firing_rates_wrt_mean_input,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_derivative_of_firing_rates_wrt_mean_input.h5')
+        elif (module == 'sensitivity_measure') or (module == 'all'):
+            config_path = 'unit/config/sensitivity_measure/'
+            regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(nnmt.lif.exp._effective_connectivity,
                                      regime_params, regimes,
                                      fixture_path
@@ -129,7 +150,9 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_propagator.h5')
-        elif module == 'external_rates':
+        elif (module == 'external_rates') or (module == 'all'):
+            config_path = 'unit/config/external_rates/'
+            regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(
                 nnmt.lif.exp._external_rates_for_fixed_input,
                 regime_params, regimes,
