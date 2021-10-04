@@ -6,9 +6,9 @@ analysis based on mean-field theory.
 
 #### Documentation
 
-Plase visit our [official documentation](<link to official doc>).
+Please visit our [official documentation](<link to official doc>).
 
-#### Citing
+#### Citation
 
 If you use NNMT for your project, please don't forget to
 [cite NNMT](docs/source/citing.rst).
