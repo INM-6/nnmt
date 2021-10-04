@@ -2,4 +2,4 @@
 NNMT - Neuronal Network Meanfield Toolbox
 =========================================
 
-.. include:: welcome.rst
+.. include:: source/docs/welcome.rst
