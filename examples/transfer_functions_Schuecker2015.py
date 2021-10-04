@@ -66,7 +66,11 @@ for i, index in enumerate(indices):
         si_network_params['theta'],
         si_network_params['V_reset'],
         omegas,
-        synaptic_filter=False) / 1000
+        synaptic_filter=False)
+    
+    # the result is returned in SI-units (1/(s*V))
+    # the original figure in the paper is in (1/(s*mV))
+    transfer_function /= 1000
     
     # calculate properties plotted in Schuecker 2015
     absolute_value = np.abs(transfer_function)
