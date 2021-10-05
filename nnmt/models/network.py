@@ -7,9 +7,7 @@ import numpy as np
 
 from .. import ureg
 from .. import input_output as io
-from ..utils import (
-    _convert_from_si_to_prefixed,
-    )
+from .. import utils
 
 
 class Network():
@@ -159,7 +157,8 @@ class Network():
         for key in dict.keys():
             try:
                 input_unit = self.input_units[key]
-                dict[key] = _convert_from_si_to_prefixed(dict[key], input_unit)
+                dict[key] = utils._convert_from_si_to_prefixed(dict[key],
+                                                               input_unit)
             except KeyError:
                 pass
         return dict
