@@ -1,15 +1,15 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-setup(name = 'nnmt',
-      version = '1.0',
-      description = 'Neuronal Network Meanfield Toolbox',
-      long_description = open('README.md').read(),
-      url = 'https://github.com/INM-6/nnmt',
-      author = 'see authors.md',
-      author_email = 'm.layer@fz-juelich.de',
-      license = 'GNU GPLv3',
-      packages = ['nnmt'],
-      install_requires = [
+setup(name='nnmt',
+      version='1.0',
+      description='Neuronal Network Meanfield Toolbox',
+      long_description=open('README.md').read(),
+      url='https://github.com/INM-6/nnmt',
+      author='see authors.md',
+      author_email='m.layer@fz-juelich.de',
+      license='GNU GPLv3',
+      packages=find_packages(include=['nnmt', 'nnmt.*']),
+      install_requires=[
         'setuptools>=23.1.0',
         'numpy>=1.8',
         'scipy>=0.14',
@@ -21,4 +21,4 @@ setup(name = 'nnmt',
         'requests',
         'mpmath',
         'decorator'],
-     python_requires='>=3')
+      python_requires='>=3')
