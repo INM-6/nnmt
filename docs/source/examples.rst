@@ -1,3 +1,6 @@
+.. _sec_examples:
+
+========
 Examples
 ========
 

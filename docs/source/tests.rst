@@ -1,4 +1,4 @@
-.. _mytests:
+.. _sec_tests:
 
 =====
 Tests

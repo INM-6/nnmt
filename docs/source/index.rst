@@ -7,12 +7,11 @@ NNMT - Neuronal Network Meanfield Toolbox
    :maxdepth: 2
 
    installation
-   quick_start
    overview
+   examples
    tools
    models
    utils
-   examples
    contributor_guide
    tests
    release_notes

@@ -1,8 +1,12 @@
+.. _sec_lif:
+
+===
 LIF
 ===
 
+**********
 Submodules
-^^^^^^^^^^
+**********
 
 The submodules correspond to the synapse type of the model used (see theory
 section below).
@@ -14,8 +18,9 @@ section below).
   nnmt.lif.delta
   nnmt.lif.exp
 
+******
 Theory
-^^^^^^
+******
 
 This is all about the leaky integrate and fire (LIF) neuron. The differential
 equation describing the membrane potential :math:`V` in this model is given by
@@ -34,7 +39,7 @@ reaches a threshold :math:`V_\Theta`, it is reset to the reset potential
 See :cite:t:`fourcaud2002` for more details.
 
 Instantaneous synapses
-""""""""""""""""""""""
+======================
 
 For instantaneous or delta synapses the synaptic current is given by
 
@@ -50,7 +55,7 @@ which spike :math:`k` arrives at synapse :math:`i`. :math:`J_i` is the synaptic
 efficacy or weight of synapse :math:`i`.
 
 Synapses with instantaneous jump and exponential decay
-""""""""""""""""""""""""""""""""""""""""""""""""""""""
+======================================================
 
 For synapses with instantaneous jump and exponential decay or just exponential
 synapses the synaptic current is given by

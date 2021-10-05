@@ -1,8 +1,10 @@
-==================
-Contributors guide
-==================
+.. _sec_contributors_guide:
 
-Welcome! You are now entering the contributors guide. This place is for people
+===================
+Contributors' guide
+===================
+
+Welcome! You are now entering the contributors' guide. This place is for people
 interested in the details needed to contribute to NNMT. We want this toolbox to
 be a place for the Neuroscientific community to collect analytical methods for
 neuronal network model analysis. So we are glad that you made your way here and
@@ -230,7 +232,7 @@ Tests
 
 All tools, models, and utilities should be tested using our ``pytest`` test
 suite. We have collected all the details in the section about
-:ref:`Tests <mytests>`.
+:ref:`Tests <sec_tests>`.
 
 .. _subsec docs:
 

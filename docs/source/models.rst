@@ -1,3 +1,6 @@
+.. _sec_models:
+
+======
 Models
 ======
 
@@ -21,8 +24,9 @@ quantities rely on previous results. When you calculate a quantity using a
 network, the results are always stored, so other functions can grab those
 results easily.
 
+*************
 Network Class
-^^^^^^^^^^^^^
+*************
 
 This is the parent class, all other network models inherit from. It defines the
 attributes NNMT functions assume to find and defines saving and loading
@@ -34,10 +38,10 @@ methods, as well as some convenience methods.
   :recursive:
 
   nnmt.models.Network
-  
 
+**************************
 Implemented Network Models
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+**************************
 
 These are network models derived from the generic ``Network`` object. They
 define how parameter files are read in and how network parameters and analysis
