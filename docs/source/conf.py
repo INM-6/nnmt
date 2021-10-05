@@ -63,7 +63,7 @@ extensions = [
 # napoleon_use_param = False
 
 sphinx_gallery_conf = {
-     'examples_dirs': '../../examples',   # path to your example scripts
+     'examples_dirs': '../../examples',  # path to your example scripts
      'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
      'plot_gallery': 'False'
 }

@@ -1,0 +1,217 @@
+---
+# Label, that is used to trigger calculation of network-specific derived
+# parameters. Changing this label currently disables the calculation of
+# microcircuit specific derived parameters!
+label: microcircuit
+
+populations:
+  - 23E
+  - 23I
+  - 4E
+  - 4I
+  - 5E
+  - 5I
+  - 6E
+  - 6I
+
+# number of neurons in populations
+N:
+  - 20683
+  - 5834
+  - 21915
+  - 5479
+  - 4850
+  - 1065
+  - 14395
+  - 2948
+
+
+### neurons
+# membrane capacitance
+C:
+  val: 250.0
+  unit: pF
+
+# membrane time constant
+tau_m:
+  val: 10.0
+  unit: ms
+
+# refractory time
+tau_r:
+  val: 2.0
+  unit: ms
+
+# absolute reset potential
+V_0_abs:
+  val: -65.0
+  unit: mV
+
+# absolute threshold of membrane potential
+V_th_abs:
+  val: -50.0
+  unit: mV
+
+
+### synapses
+# synaptic time constant
+tau_s:
+  val: 0.5
+  unit: ms
+
+# delay of excitatory connections
+d_e:
+  val: 1.5
+  unit: ms
+
+# delay of inhibitory connections
+d_i:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of excitatory connections
+d_e_sd:
+  val: 0.75
+  unit: ms
+
+# standard deviation of delay of inhibitory connections
+d_i_sd:
+  val: 0.375
+  unit: ms
+
+# delay distribution, options: none, gaussian (standard deviation is defined
+# above), truncated_gaussian (standard deviation is defined above, truncation
+# at zero)
+delay_dist: none
+
+# PSC amplitude
+w:
+  val: 87.8
+  unit: pA
+
+# indegrees
+K:
+  - - 2199.86486
+    - 1079.32007
+    - 979.241261
+    - 467.578108
+    - 159.240826
+    - 0.0
+    - 109.819852
+    - 0.0
+  - - 2990.00583
+    - 860.261056
+    - 703.691807
+    - 289.693864
+    - 380.735859
+    - 0.0
+    - 60.5863901
+    - 0.0
+  - - 159.875428
+    - 34.5225188
+    - 1117.17312
+    - 794.596213
+    - 32.6043349
+    - 0.319552818
+    - 667.325211
+    - 0.0
+  - - 1480.97354
+    - 16.9432378
+    - 1813.02026
+    - 953.325789
+    - 16.0313926
+    - 0.0
+    - 1608.12283
+    - 0.0
+  - - 2188.36598
+    - 374.651134
+    - 1135.62969
+    - 31.3195876
+    - 420.770722
+    - 496.471959
+    - 296.694639
+    - 0.0
+  - - 1165.66761
+    - 159.083568
+    - 570.579343
+    - 12.0666667
+    - 300.095775
+    - 404.17277
+    - 124.332394
+    - 0.0
+  - - 325.197985
+    - 38.632025
+    - 467.354637
+    - 91.7147621
+    - 285.670372
+    - 21.1899271
+    - 581.635915
+    - 752.183189
+  - - 766.90502
+    - 5.83683853
+    - 74.6380597
+    - 2.74016282
+    - 136.240841
+    - 8.55427408
+    - 979.791723
+    - 459.402985
+
+# ratio of inhibitory to excitatory weights
+g: 4.0
+
+### external input
+# firing rate of external input
+nu_ext:
+  val: 8.0
+  unit: Hz
+
+# number of external neurons
+K_ext:
+  - 1600
+  - 1500
+  - 2100
+  - 1900
+  - 2000
+  - 1900
+  - 2900
+  - 2100
+
+
+# rates of additional external excitatory and inhibitory Poisson input
+nu_e_ext:
+  val:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  unit: Hz
+
+nu_i_ext:
+  val:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  unit: Hz
+
+# PSC amplitude
+w_ext:
+  val: 87.8
+  unit: pA
+  
+tau_m_ext:
+  val: 10.0
+  unit: ms
+
+
+
+
+...
