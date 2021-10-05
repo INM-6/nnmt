@@ -1,3 +1,5 @@
+.. _sec_overview:
+
 ========
 Overview
 ========
@@ -44,10 +46,16 @@ one can instantiate a :ref:`Model <sec_models>` and pass it to the
 corresponding **non-underscored wrapper** or **tool**.
 
 Models basically are containers for network parameters, analysis parameters,
-and results. They allow storing all parameters in dictionaries or ``yaml``
-files and calculate further depenend parameters from those. They convert all
-parameters to SI units, and they come with convenient routines for changing
-parameters, saving, and loading results.
+and results, with convenient methods for changing parameters, saving, and
+loading results. On instantiation they read in network and analysis parameters
+from dictionaries or ``yaml`` files, calculate further depenend parameters from
+those, and convert all parameters to SI units. *Network parameters* are all
+parameters that describe properties of the network itself, like for example the
+number of neurons in each population or the membrane time constants. *Analysis*
+*parameters* are all parameters that do not describe properties of the network
+but need to be defined in order to calculate quantities of interest. For
+example, one needs to define the frequencies for which to calculate a frequency
+dependent quantity.
 
 When you call a tool, it tries to extract the parameters needed by the wrapped
 _tool. If you are missing some parameters for applying the tool you would like
@@ -60,7 +68,8 @@ still need to define:
     Have a look into the documentation for more details on 'lif' parameters.
 
 Sometimes, before you can calculate a quantity, you first have to calculate
-something else. In that case, you will receive an error message as well:
+something else. If you did not perform the relevant computation previously, you
+will also receive an error message:
 
 .. code:: console
 
