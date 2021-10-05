@@ -1,12 +1,10 @@
 import pint as _pint
 ureg = _pint.UnitRegistry()
 
-from . import (
-    utils,
-    input_output,
-    network_properties,
-    models,
-    lif,
-    )
+from . import utils
+from . import input_output
+from . import network_properties
+from . import models
+from . import lif
 
-__version__ = '0.2'
+__version__ = '1.0'
