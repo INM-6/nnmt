@@ -1,5 +1,5 @@
 """
-Microcircuit Firing Rates
+Microcircuit firing rates
 =========================
 
 Here we calculate the firing rates of the :cite:t:`potjans2014` microcircuit

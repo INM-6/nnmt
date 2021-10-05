@@ -25,7 +25,7 @@ network, the results are always stored, so other functions can grab those
 results easily.
 
 *************
-Network Class
+Network class
 *************
 
 This is the parent class, all other network models inherit from. It defines the
@@ -40,7 +40,7 @@ methods, as well as some convenience methods.
   nnmt.models.Network
 
 **************************
-Implemented Network Models
+Implemented network models
 **************************
 
 These are network models derived from the generic ``Network`` object. They

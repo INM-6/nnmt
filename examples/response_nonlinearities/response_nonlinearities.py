@@ -1,5 +1,5 @@
 """
-Response Nonlinearities
+Response nonlinearities
 =======================
 
 In this example, we reproduce the different types of response nonlinearities of

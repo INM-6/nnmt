@@ -145,7 +145,7 @@ Meta tests
 ``meta/`` contains tests for custom assert functions.
 
 
-Test Design
+Test design
 ===========
 
 Many test classes define the tested function as ``staticmethod``, because the
@@ -168,7 +168,7 @@ can be created from the sources (see Fixture Creation Workflow). This allows us
 to parametrize the tests such that the function is tested in different
 parameter regimes (e.g. mean-driven regime vs. fluctuation-driven regime).
 
-Fixture Creation Workflow
+Fixture creation workflow
 =========================
 
 Fixture creation is a sensible part of the testing framework as it supplies a

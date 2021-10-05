@@ -1,6 +1,6 @@
 """
-Minimal working example
-=======================
+Minimal usage example
+=====================
 """
 
 import nnmt

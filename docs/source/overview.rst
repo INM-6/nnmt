@@ -10,7 +10,7 @@ workflow.
   :alt: Sketch of workflows
 
 **************
-Basic Workflow
+Basic workflow
 **************
 
 The core of NNMT are the various implemented analytical methods for neuronal
@@ -36,7 +36,7 @@ unfamiliar with the underlying theory, we developed the more convenient model
 workflow.
 
 **************
-Model Workflow
+Model workflow
 **************
 
 Instead of passing the required arguments directly to the respective _tools,
@@ -107,7 +107,7 @@ format:
     ...
 
 *****************
-Package Structure
+Package structure
 *****************
 
 .. image:: images/directory_structure.png
