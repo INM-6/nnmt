@@ -1,5 +1,5 @@
-==========================
-Input and output utilities
-==========================
+============
+input_output
+============
 
 .. automodule:: nnmt.input_output

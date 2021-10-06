@@ -11,7 +11,7 @@ NNMT - Neuronal Network Meanfield Toolbox
    examples
    tools
    models
-   utils
+   utilities
    contributor_guide
    tests
    release_notes
