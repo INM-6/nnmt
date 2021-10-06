@@ -1,3 +1,5 @@
+.. _sec_authors_and_contributors:
+
 ========================
 Authors and contributors
 ========================

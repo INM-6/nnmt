@@ -4,53 +4,94 @@
 Contributors' guide
 ===================
 
-Welcome! You are now entering the contributors' guide. This place is for people
-interested in the details needed to contribute to NNMT. We want this toolbox to
-be a place for the Neuroscientific community to collect analytical methods for
-neuronal network model analysis. So we are glad that you made your way here and
-hope that you will find what you are looking for. Good luck and have a lot of
-fun!
+Welcome! You are now entering the contributors' guide. This page is for people
+interested in the details needed to contribute to NNMT. We want this Python
+toolbox to be a place for the Neuroscientific community to collect analytical
+methods for neuronal network model analysis. So we are glad that you made your
+way here and hope that you will find what you are looking for. Good luck and
+have a lot of fun!
+
+**********
+Contact us
+**********
 
 Contributions to our `GitHub repository <https://github.com/INM-6/nnmt>`_ can
 be made via the GitHub fork and pull request workflow.
 
-Any suggestions or problems should be reported as
+Any concrete suggestions or problems should be reported as
 `issues on GitHub <https://github.com/INM-6/nnmt/issues>`_.
 
-***********************************
-What belongs here and what does not
-***********************************
+**********************************
+Setting up a developer environment
+**********************************
 
-Here we should give a detailed explanation of what we think should be part of
-NNMT and what should not. But, as the toolbox is still in its infancy, this is
-rather difficult to define. We do not know yet, how the toolbox might - or
-should - develop in the future. At the moment we only can state the general
-purpose of this package:
+Fork NNMT on `GitHub <https://github.com/INM-6/nnmt>`_ and download the source
+code to your local machine:
 
-NNMT is a Python toolbox for collecting analytical methods for neuronal network
-model analysis.
+.. code:: bash
 
-******************************************
-Structure of toolbox and design principles
-******************************************
+  git clone git@github.com:<your-github-profile>/nnmt.git
+  cd nnmt
 
-.. image:: images/package_structure.png
-  :width: 600
-  :alt: Sketch of structure of python package
+Then you need to install the package and all requirements. We recommend using
+`conda <https://docs.conda.io/en/latest/>`_ and the provided
+``environment.yaml``:
 
-Structure
-=========
+.. code:: bash
 
-NNMT is divided into tools and methods and has a flexible, modular structure.
-The best description of the ideas behind this can be found in our paper:
+  conda env create -f environment.yaml
+  conda activate nnmt
+
+Alternatively, you might install NNMT and its requirements in editable mode
+using ``pip``:
+
+.. code:: bash
+
+  pip install -e .
+
+After the installation, we recommend running the tests, which will take a few
+minutes (see :ref:`sec_tests` for more details):
+
+.. code:: bash
+
+  pytest
+
+If all tests pass (except for skipped tests), you should be ready to go.
+
+***********************
+Structure of repository
+***********************
+
+.. image:: images/directory_structure.png
+  :width: 250
+  :alt: Sketch of structure of NNMT repository
+
+- ``nnmt`` is the Python package itself.
+
+  - The submodule ``nnmt.models`` contains all the :ref:`models <sec_models>`.
+  - The submodule ``nnmt.input_output`` contains
+    :ref:`utility routines for input and output related tasks <sec_input_output>`.
+  - The submodule ``nnmt.utils`` contains :ref:`helper functions <sec_utils>`
+    used throughout the toolbox, like unit conversion functions, the cache
+    function, or parameter checks.
+  - All other submodules contain the :ref:`tools <sec_tools>`.
+
+- ``docs`` contains the :ref:`documentation <subsec_docs>` files.
+- ``examples`` contains all :ref:`example scripts <sec_examples>`.
+- ``tests`` contains our :ref:`test suite <sec_tests>`.
+
+
+*****************
+Design principles
+*****************
+
+The best description of the ideas behind the design of the toolbox can be found
+in our paper:
 
 `NNMT: A mean-field toolbox for spiking neuronal network model analysis <add missing link>`_.
 
-Design principles
-=================
-
-These are some thoughts that we had when we wrote the core package. They should
-be followed when writing new code for the toolbox:
+Here we collect some principles that should be followed when writing new code
+for the toolbox:
 
 - **All calculations are to be done in SI units.** We do not use Python
   quantity packages like ``pint`` or ``quantitites`` inside the actual
@@ -71,9 +112,8 @@ be followed when writing new code for the toolbox:
   inspiration to us was the submodule structure of SciPy, which (at least
   it seemed so to us) is rather free and fitted to the needs at hand.
 
-*****
 Tools
-*****
+=====
 
 Tools are **Python functions** and constitute the core of NNMT. They actually
 perform the calculations.
@@ -86,7 +126,7 @@ neuronal network models are very versatile. Therefore other ways of sorting the
 tools might be more appropriate for different tools.
 
 It is vital that all tools have **meaningful names** and
-**comprehensive docstrings** (see :ref:`documentation section <subsec docs>`
+**comprehensive docstrings** (see :ref:`documentation section <subsec_docs>`
 for more details).
 
 If you make any well-thought-out decisions in the implementation of a tool, for
@@ -97,7 +137,7 @@ unnecessarily cumbersome at first sight, thereby destroying all your precious
 efforts.
 
 _Tools
-======
+******
 
 Tools with an underscore are where the job is done. Underscored tools should
 
@@ -117,7 +157,7 @@ Have a look at the source code of :func:`nnmt.lif.exp._firing_rate_shift` if
 you would like to see an example.
 
 Wrappers
-========
+********
 
 To make an underscored tool compatible with the convience layer, a.k.a. models,
 it gets a wrapper withouth an underscore. The non underscored wrappers should
@@ -132,9 +172,8 @@ would like to see an example.
 
 .. _subsec models:
 
-******
 Models
-******
+======
 
 Models are Python classes that serve as containers for network parameters,
 analysis parameters, and results. They come with some convenience methods for
@@ -191,9 +230,8 @@ If you would like to add your model to ``nnmt.models``, do not forget to add
 
 to ``nnmt.models.__init__.py``.
 
-**************************
 Input and output functions
-**************************
+==========================
 
 The submodule :mod:`nnmt.input_output` contains all functions which called for
 all input output related actions, like saving and loading results, or loading
@@ -205,9 +243,8 @@ dictionaries in ``HDF5`` files.
 Similarly, we have written wrappers which allow loading dictionaries of Pint
 ``Quantity`` objects as ``yaml`` files and vice versa.
 
-*****************
 Utility functions
-*****************
+=================
 
 The submodule :mod:`nnmt.utils` is a collection of convenient functions used
 frequently throughout NNMT.
@@ -234,7 +271,7 @@ All tools, models, and utilities should be tested using our ``pytest`` test
 suite. We have collected all the details in the section about
 :ref:`Tests <sec_tests>`.
 
-.. _subsec docs:
+.. _subsec_docs:
 
 *************
 Documentation
@@ -325,3 +362,28 @@ Wrappers of _tools should reference the respective _tools.
 
 The docstrings of _tools should give a detailed explanation of all their
 arguments.
+
+**********
+Versioning
+**********
+
+We follow `Semantic Versioning <https://semver.org/>`_. To cite the linked
+page:
+
+Given a version number MAJOR.MINOR.PATCH, increment the:
+
+1. MAJOR version when you make incompatible API changes,
+2. MINOR version when you add functionality in a backwards compatible manner,
+   and
+3. PATCH version when you make backwards compatible bug fixes.
+
+Before releasing a new version, the version number should be updated in
+
+- ``setup.py``,
+- ``nnmt/__init__.py``, and
+- ``nnmt/docs/source/conf.py``,
+
+a :ref:`release note <sec_release_notes>` should be added, and the list of
+:ref:`authors and contributors <sec_authors_and_contributors>`, as well as the
+:ref:`acknowledgements <sec_acknowledgements>` should be updated if required.
+
