@@ -355,6 +355,8 @@ docstring would be
 
     '''
 
+Example: :mod:`nnmt.input_output`
+
 Functions
 *********
 
@@ -362,6 +364,13 @@ Wrappers of _tools should reference the respective _tools.
 
 The docstrings of _tools should give a detailed explanation of all their
 arguments.
+
+Examples: :func:`nnmt.lif.exp._firing_rates`, :func:`nnmt.lif.exp.firing_rates`
+
+Models
+******
+
+Example: :class:`nnmt.models.Microcircuit`
 
 **********
 Versioning
