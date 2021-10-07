@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
-Handles reading-in yaml files and converting the physical parameters, specified
-in yaml files, to theoretical parameters, needed for usage of given implemented
-functions (they rely on a redefinition of quantities). Handles output-writing
-and provides function for creating hashes to uniquely identify output files.
+Collection of routines for input and output related tasks.
+
+Contains functions needed for reading in parameters from yaml files and
+functions for saving and loading dictionaries or whole models to h5 files.
 
 HDF5 Wrapper
 ************
@@ -22,6 +22,7 @@ Conversions
 
     val_unit_to_quantities
     quantities_to_val_unit
+    convert_arrays_in_dict_to_lists
 
 Saving
 ******
@@ -226,7 +227,7 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
     Recursively convert a dict of value-unit pairs to a dict of quantities.
 
     Combine value and unit of each quantity and save them in a dictionary
-    of the structure: :code:`{'<quantity_key1>':<quantity1>, ...}`.
+    of the structure: ``{'<quantity_key1>':<quantity1>, ...}``.
 
     Lists are converted to numpy arrays and then converted to quantities.
 
@@ -234,7 +235,6 @@ def val_unit_to_quantities(dict_of_val_unit_dicts):
 
     Parameters
     ----------
-
     dict_of_val_unit_dicts : dict
         Dictionary of the following format::
 
@@ -277,7 +277,7 @@ def quantities_to_val_unit(dict_of_quantities):
     Recursively convert a dict of quantities to a dict of val-unit pairs.
 
     Split up value and unit of each quantiy and save them in a dictionary
-    of the structure: {'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}
+    of the structure: ``{'<parameter1>:{'val':<value>, 'unit':<unit>}, ...}``
 
     Lists of quantities are handled seperately. Anything else but quantities,
     is stored just the way it is given.
@@ -293,7 +293,7 @@ def quantities_to_val_unit(dict_of_quantities):
     Returns
     -------
     dict
-        converted dictionary
+        Converted dictionary
     """
     converted_dict = {}
     for quantity_key, quantity in dict_of_quantities.items():
@@ -429,9 +429,9 @@ def save_network(file, network, overwrite=False):
     """
     Save network to h5 file.
 
-    The networks' dictionaires (network_params, analysis_params, results,
-    results_hash_dict) are stored. Quantities are converted to value-unit
-    dictionaries.
+    The networks' dictionaires (``network_params``, ``analysis_params``,
+    ``results``, ``results_hash_dict``) are stored. Quantities are converted to
+    value-unit dictionaries.
 
     Parameters
     ----------
