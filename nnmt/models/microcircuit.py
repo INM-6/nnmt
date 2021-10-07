@@ -1,6 +1,5 @@
 """
-Module that defines the microcircuit.
-
+Defines the microcircuit model, a multilayer model of a cortical column.
 """
 
 import numpy as np
@@ -13,11 +12,74 @@ class Microcircuit(Network):
     """
     The Potjans and Diesmann microcircuit model.
 
-    See :cite:t:`potjans2014` for details.
+    See :cite:t:`potjans2014` for details regarding the model. In short, it is
+    a four-layer (2/3, 4, 5, 6) network model with a population of excitatory
+    (E) and inhibitory (I) neurons of leaky integrate-and-fire neurons with
+    exponential synapses in each layer. The inhibitory synaptic weights are `g`
+    times as strong as the excitatory synaptic weights. The weights between all
+    populations are equally strong, except for layer 4E to layer 2/3E, where
+    the excitatory weights are twice as strong.
+
+    Given the parameter yaml files, the network model calculates the dependend
+    parameters. It converts the weights from pA to mV, calculates the weight
+    matrix, calculates relative thresholds, and the analysis frequencies.
+
+    The NNMT repository contains an :ref:`example <sec_examples>` providing the
+    yaml parameter files with all the parameters that need to be defined to use
+    this model.
+
+    Parameters
+    ----------
+    network_params : [str | dict]
+        Network parameters dictionary or yaml file name including:
+
+        - `C` : float
+            Membrane capacitance in pF.
+        - `K_ext` : np.array
+            Number of external in-degrees.
+        - `V_th_abs` : [float | np.array]
+            Absolute threshold potential in mV.
+        - `V_0_abs` : [float | np.array]
+            Absolute reset potential in mV.
+        - `d_e` : float
+            Mean delay of excitatory connections in ms.
+        - `d_e_sd` : float
+            Standard deviation of delay of excitatory connections in ms.
+        - `d_i` :  float
+            Mean delay of inhibitory connections in ms.
+        - `d_i_sd`
+            Standard deviation of delay of inhibitory connections in ms.
+        - `g` : float
+            Ratio of inhibitory to excitatory synaptic weights.
+        - `populations` : list of strings
+            Names of different populations.
+        - `tau_s` : float
+            Synaptic time constant in ms.
+        - `w` : float
+            Amplitude of excitatory post synaptic current in pA.
+        - `w_ext`: float
+            Amplitude of external excitatory post synaptic current in pA.
+
+    analysis_params : [str | dict]
+        Analysis parameters dictionary or yaml file name including:
+
+        - `df` : float
+            Step size between two analysis frequencies.
+        - `f_min` : float
+            Minimal analysis frequency.
+        - `f_max` : float
+            Maximal analysis frequency.
+        - `dk` : float
+            Step size between two analysis wavenumber.
+        - `k_min` : float
+            Minimum analysis wavenumber.
+        - `k_max`
+            Maximum analysis wavenumber.
 
     See Also
     --------
-    nnmt.models.Network : Parent class
+    nnmt.models.Network : Parent class definings all arguments, attributes, and
+                          methods.
 
     """
 
@@ -48,7 +110,7 @@ class Microcircuit(Network):
         Returns:
         --------
         dict
-            dictionary containing all derived network parameters
+            Dictionary containing all derived network parameters.
         """
         derived_params = {}
 
@@ -83,7 +145,7 @@ class Microcircuit(Network):
         except AttributeError:
             pass
 
-        # delay matrix
+        # mean delay matrix
         D = np.ones((dim, dim)) * self.network_params['d_e']
         D[1:dim:2] = np.ones(dim) * self.network_params['d_i']
         D = np.transpose(D)
