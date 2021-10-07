@@ -215,7 +215,6 @@ if insert_sketch:
     svg_mpl.append(svg_sketch)
     svg_mpl.save(f'{plot_fn}.svg')
     os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
-    os_return = os.system(f'inkscape --export-eps={plot_fn}.eps {plot_fn}.svg')
     if os_return == 0:
         os.remove(f'{plot_fn}.svg')
     else:
