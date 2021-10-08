@@ -26,7 +26,7 @@ plt.style.use('frontiers.mplstyle')
 # First we create a network model of the microcircuit, passing the parameter
 # yaml file.
 microcircuit = nnmt.models.Microcircuit(
-    '../tests/fixtures/integration/config/Bos2016_network_params.yaml')
+    '../../tests/fixtures/integration/config/Bos2016_network_params.yaml')
 
 ###############################################################################
 # Then we simply calculate the firing rates for exponentially shape post
@@ -42,7 +42,7 @@ print(f'Mean rates: {firing_rates}')
 # load the simulated rates using the data stored as integration test fixtures.
 # Note that the original data use rates in 1/ms, which we need to convert to
 # Hz.
-fix_path = '../tests/fixtures/integration/data/'
+fix_path = '../../tests/fixtures/integration/data/'
 result = nnmt.input_output.load_h5(
     fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_rates = result['fig_microcircuit']['rates_sim'] * 1000
@@ -93,8 +93,8 @@ plt.legend([bars[0], nnmt_handle, bars[1]],
 
 # insert sketch using svgutil, try saving as pdf using inkscape
 if insert_sketch:
-    sketch_fn = 'figures/microcircuit_sketch.svg'
-    plot_fn = 'figures/microcircuit_rates'
+    sketch_fn = 'microcircuit_sketch.svg'
+    plot_fn = 'microcircuit_rates'
     svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
     w_svg, h_svg = svg_mpl.get_size()
     svg_mpl.set_size((w_svg+'pt', h_svg+'pt'))
