@@ -188,7 +188,8 @@ def _retrieve_dict(f):
         elif isinstance(group[()], bytes):
             d[key] = group[()].decode('utf8')
         # convert h5py strings to python strings if necessary
-        elif (group[()].dtype == h5py.string_dtype()) and (len(group[()]) == 1):
+        elif ((group[()].dtype == h5py.string_dtype())
+              and (len(group[()]) == 1)):
             try:
                 d[key] = group.asstr()[()][0]
             except AttributeError:
@@ -197,7 +198,8 @@ def _retrieve_dict(f):
         elif (group[()].dtype == h5py.string_dtype()) and (len(group[()]) > 1):
             d[key] = group.asstr()[()].tolist()
         # decode arrays of bytes to strings
-        elif (isinstance(group[()], Iterable)) and (isinstance(group[0], bytes)):
+        elif ((isinstance(group[()], Iterable))
+              and (isinstance(group[0], bytes))):
             d[key] = np.char.decode(group[()], 'utf8')
         else:
             d[key] = group[()]

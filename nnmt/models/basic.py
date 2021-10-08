@@ -10,7 +10,7 @@ from .. import ureg
 
 class Basic(Network):
     """
-    Simple basic model that does not assume any network structure.
+    Model similar to Microcircuit, without assuming any network structure.
 
     This model only reads in the parameter yaml files and calculates the most
     basic dependend parameters. It converts the weights from pA to mV,

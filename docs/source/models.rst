@@ -42,5 +42,6 @@ and analysis parameters are calculated from the parameter files.
   :template: custom-class-template.rst
   :recursive:
 
+  nnmt.models.Plain
   nnmt.models.Basic
   nnmt.models.Microcircuit
