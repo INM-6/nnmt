@@ -1,5 +1,5 @@
 """
-Functions for exponentially shaped post synaptic potentials.
+Collection of functions for LIF neurons with exponential synapses.
 
 Network Functions
 *****************
@@ -79,39 +79,14 @@ def working_point(network, method='shift', **kwargs):
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
-        Network with the network parameters listed in the following.
-    method : str
-        Method used to integrate the adapted Siegert function. Options: 'shift'
-        or 'taylor'. Default is 'shift'.
-
-    Network Parameters
-    ------------------
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
-    V_0_rel : float or 1d array
-        Relative reset potential in V.
-    V_th_rel : float or 1d array
-        Relative threshold potential in V.
-    tau_m : float or 1d array
-        Membrane time constant in s.
-    tau_r : float or 1d array
-        Refractory time in s.
-    tau_s : float or 1d array
-        Synaptic time constant in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
-    method : str
-        Method used to calculate the firing rates. Options: 'shift', 'taylor'.
-        Default is 'shift'.
+        Network with the network parameters listed in
+        :func:`nnmt.lif.exp._firing_rates`.
+    method : str, optional
+        Method used to integrate the adapted Siegert function. Options: `shift`
+        or `taylor`. Default is `shift`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`~nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._static._firing_rate_integration`.
 
     Returns
     -------
@@ -127,51 +102,23 @@ def firing_rates(network, method='shift', **kwargs):
     """
     Calculates stationary firing rates for exp PSCs.
 
-    Calculates the stationary firing rate of a neuron with synaptic filter of
-    time constant tau_s driven by Gaussian noise with mean mu and standard
-    deviation sigma, using Eq. 4.33 in Fourcaud & Brunel (2002) with Taylor
-    expansion around k = sqrt(tau_s/tau_m).
+    See :func:`nnmt.lif.exp._firing_rates` for full documentation.
 
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
-        Network with the network parameters listed in the following.
-    method : str
-        Method used to integrate the adapted Siegert function. Options: 'shift'
-        or 'taylor'. Default is 'shift'.
-
-    Network Parameters
-    ------------------
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
-    V_0_rel : float or 1d array
-        Relative reset potential in V.
-    V_th_rel : float or 1d array
-        Relative threshold potential in V.
-    tau_m : float or 1d array
-        Membrane time constant in s.
-    tau_r : float or 1d array
-        Refractory time in s.
-    tau_s : float or 1d array
-        Synaptic time constant in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
-    method: str
-        Method used to calculate the firing rates. Options: 'shift', 'taylor'.
-        Default is 'shift'.
+        Network with the network parameters listed in
+        :func:`nnmt.lif.exp._firing_rates`.
+    method : str, optional
+        Method used to integrate the adapted Siegert function. Options: `shift`
+        or `taylor`. Default is `shift`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
         :func:`nnmt.lif._static._firing_rate_integration`.
 
     Returns
     -------
-    Quantity(np.array, 'hertz')
+    np.array
         Array of firing rates of each population in Hz.
     """
     list_of_params = [
@@ -200,9 +147,46 @@ def firing_rates(network, method='shift', **kwargs):
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
                   nu_ext, method='shift', **kwargs):
     """
-    Plain calculation of firing rates for exp PSCs.
+    Calculates stationary firing rates for exp PSCs.
 
-    See :code:`lif.exp.firing_rates` for full documentation.
+    Calculates the stationary firing rate of a neuron with synaptic filter of
+    time constant tau_s driven by Gaussian noise with mean mu and standard
+    deviation sigma, using Eq. 4.33 in :cite:t:`fourcaud2002` with Taylor
+    expansion around k = sqrt(tau_s/tau_m).
+
+    Parameters
+    ----------
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    V_0_rel : float or 1d array
+        Relative reset potential in V.
+    V_th_rel : float or 1d array
+        Relative threshold potential in V.
+    tau_m : float or 1d array
+        Membrane time constant in s.
+    tau_r : float or 1d array
+        Refractory time in s.
+    tau_s : float or 1d array
+        Synaptic time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    method : str
+        Method used to calculate the firing rates. Options: 'shift', 'taylor'.
+        Default is 'shift'.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`nnmt.lif._static._firing_rate_integration`.
+
+    Returns
+    -------
+    np.array
+        Array of firing rates of each population in Hz.
     """
     firing_rate_params = {
         'V_0_rel': V_0_rel,
