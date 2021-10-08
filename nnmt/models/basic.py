@@ -82,8 +82,8 @@ class Basic(Network):
         Calculates the number of populations, the relative potentials, and
         converts the weights from pA to mV.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary containing all derived network parameters.
         """
@@ -115,8 +115,8 @@ class Basic(Network):
 
         Calculates the angular analysis frequencies.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary containing derived parameters.
         """

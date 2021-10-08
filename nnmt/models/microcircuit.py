@@ -111,8 +111,8 @@ class Microcircuit(Network):
         the weights from pA to mV, constructs the weight matrix, and the delay
         matrix.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary containing all derived network parameters.
         """
@@ -182,8 +182,8 @@ class Microcircuit(Network):
         Calculates the angular analysis frequencies, and optionally the
         wavenumbers for a spatial analysis.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             dictionary containing derived parameters
         """
