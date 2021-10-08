@@ -20,7 +20,8 @@ class Basic(Network):
     Parameters
     ----------
     network_params : [str | dict]
-        Network parameters dictionary or yaml file name including:
+        Network parameters yaml file name or dictionary including:
+
 
         - `C` : float
             Membrane capacitance in pF.
@@ -41,7 +42,7 @@ class Basic(Network):
             matrix.
 
     analysis_params : [str | dict]
-        Analysis parameters dictionary or yaml file name including:
+        Analysis parameters yaml file name or dictionary including:
 
         - `df` : float
             Step size between two analysis frequencies.

@@ -31,7 +31,7 @@ class Microcircuit(Network):
     Parameters
     ----------
     network_params : [str | dict]
-        Network parameters dictionary or yaml file name including:
+        Network parameters yaml file name or dictionary including:
 
         - `C` : float
             Membrane capacitance in pF.
@@ -61,7 +61,7 @@ class Microcircuit(Network):
             Amplitude of external excitatory post synaptic current in pA.
 
     analysis_params : [str | dict]
-        Analysis parameters dictionary or yaml file name including:
+        Analysis parameters yaml file name or dictionary including:
 
         - `df` : float
             Step size between two analysis frequencies.
@@ -211,18 +211,20 @@ class Microcircuit(Network):
         def calc_evaluated_wavenumbers(k_min, k_max, dk):
             return np.arange(k_min, k_max, dk)
 
-        k_min = self.analysis_params['k_min']
-        k_max = self.analysis_params['k_max']
-        dk = self.analysis_params['dk']
-
         try:
-            k_min = k_min.to_base_units().magnitude
-            k_max = k_max.to_base_units().magnitude
-            dk = dk.to_base_units().magnitude
-        except AttributeError:
-            pass
+            k_min = self.analysis_params['k_min']
+            k_max = self.analysis_params['k_max']
+            dk = self.analysis_params['dk']
+            try:
+                k_min = k_min.to_base_units().magnitude
+                k_max = k_max.to_base_units().magnitude
+                dk = dk.to_base_units().magnitude
+            except AttributeError:
+                pass
 
-        derived_params['k_wavenumbers'] = (
-            calc_evaluated_wavenumbers(k_min, k_max, dk))
+            derived_params['k_wavenumbers'] = (
+                calc_evaluated_wavenumbers(k_min, k_max, dk))
+        except KeyError:
+            pass
 
         return derived_params

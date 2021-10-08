@@ -10,7 +10,7 @@ import nnmt
 
 ureg = nnmt.ureg
 
-    
+
 class Test_calculation_of_dependent_network_params:
     """
     Depends strongly on network_params_microcircuit.yaml in
@@ -33,7 +33,7 @@ class Test_calculation_of_dependent_network_params:
         W = np.array([[87.8, -351.2, 87.8, -351.2, 87.8, -351.2, 87.8, -351.2]
                       for i in range(microcircuit.network_params['dimension'])]
                      ) * 1e-12
-             
+
         W[0][2] *= 2
         assert_array_equal(microcircuit.network_params['W'], W)
         assert_units_equal(microcircuit.network_params['W'], W)
@@ -89,3 +89,15 @@ class Test_calculation_of_dependent_analysis_params:
                            k_wavenumbers)
         assert_units_equal(microcircuit.analysis_params['k_wavenumbers'],
                            k_wavenumbers)
+
+    def test_k_not_available_runs_through_initialization(self):
+        run_through = True
+        try:
+            nnmt.models.Microcircuit(
+                network_params=('tests/fixtures/unit/config/'
+                                'network_params_microcircuit.yaml'),
+                analysis_params={'df': 0.1, 'f_min': 0, 'f_max': 10}
+            )
+        except:
+            run_through = False
+        assert run_through
