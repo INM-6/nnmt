@@ -1,3 +1,21 @@
+"""
+Collection of functions used by both `lif.delta` and `lif.exp`.
+
+Static Quantities
+*****************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+
+    _firing_rate_integration
+    _input_calc
+    mean_input
+    _mean_input
+    std_input
+    _std_input
+
+"""
+
 from functools import partial
 import numpy as np
 import scipy.integrate as sint
@@ -111,20 +129,55 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
 
 def mean_input(network, prefix):
     '''
-    Calc mean inputs to populations as function of firing rates of populations.
+    Calcs mean input for `network` and stores results using `prefix`.
 
-    See :func:`nnmt.delta.mean_input` or :func:`nnmt.exp.mean_input` for full
-    documentation.
+    See :func:`nnmt.lif._static._mean_input` for full documentation.
+
+    Parameters
+    ----------
+    network : Network object
+        The network model for which the mean input is to be calculated. Needs
+        to contain the parameters defined in
+        :func:`nnmt.lif._static._mean_input`.
+    prefix : str
+        The prefix used to store the result (e.g. 'lif.delta.').
+
+    Returns
+    -------
+    np.array
+        Array of mean inputs to each population in V.
+
+    See Also
+    --------
+    nnmt.lif._static._mean_input : For full documentation of network
+                                   parameters.
     '''
     return _input_calc(network, prefix, _mean_input)
 
 
 def std_input(network, prefix):
     '''
-    Calc std of inputs to populations as function of firing rates.
+    Calcs std of input for `network` and stores results using `prefix`.
 
-    See :func:`nnmt.delta.mean_input` or :func:`nnmt.exp.mean_input` for full
-    documentation.
+    See :func:`nnmt.lif._static._std_input` for full documentation.
+
+    Parameters
+    ----------
+    network : Network object
+        The network model for which the mean input is to be calculated. Needs
+        to contain the parameters defined in
+        :func:`nnmt.lif._static._std_input`.
+    prefix : str
+        The prefix used to store the result (e.g. 'lif.delta.').
+
+    Returns
+    -------
+    np.array
+        Array of standard deviation of inputs to each population in V.
+
+    See Also
+    --------
+    nnmt.lif._static._std_input : For full documentation of network parameters.
     '''
     return _input_calc(network, prefix, _std_input)
 
@@ -141,9 +194,10 @@ def _input_calc(network, prefix, input_func):
     network : nnmt.create.Network object
         The network for which the calculation should be done.
     prefix : str
-        The prefix used in the to store the firing rates (e.g. 'lif.delta.').
+        The prefix used to store the results (e.g. 'lif.delta.').
     input_func : function
-        The function that should be calculated (either mean or std).
+        The function that should be calculated (either `_mean_input` or
+        `_std_input`).
     '''
     try:
         rates = (
@@ -160,7 +214,31 @@ def _input_calc(network, prefix, input_func):
 
 
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
-    """ Compute mean input without quantities. """
+    """
+    Calc mean input for lif neurons in fixed in-degree connectivity network.
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        In-degree matrix.
+    tau_m : [float | 1d array]
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+
+    Returns
+    -------
+    np.array
+        Array of mean inputs to each population in V.
+    """
     # contribution from within the network
     m0 = np.dot(K * J, tau_m * nu)
     # contribution from external sources
@@ -171,7 +249,31 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
 
 
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
-    """ Compute standard deviation of input without quantities. """
+    """
+    Calc std of input for lif neurons in fixed in-degree connectivity network.
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        In-degree matrix.
+    tau_m : [float | 1d array]
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+
+    Returns
+    -------
+    np.array
+        Array of standard deviation of inputs to each population in V.
+    """
     # contribution from within the network to variance
     var0 = np.dot(K * J**2, tau_m * nu)
     # contribution from external sources to variance
