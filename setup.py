@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='nnmt',
-      version='1.0',
+      version='1.0.0',
       description='Neuronal Network Meanfield Toolbox',
       long_description=open('README.md').read(),
       url='https://github.com/INM-6/nnmt',

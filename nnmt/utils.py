@@ -57,17 +57,18 @@ from . import ureg
 
 def _cache(network, func, params, result_keys, units=None):
     """
-    Cache resuls of `func(**params)` into network dicts using result_keys.
+    Save result of ``func(**params)`` into network dicts using `result_keys`.
 
     This function serves as a wrapper for functions that calculate quantities
     which are to be stored in the network's result dicts. First it creates a
     hash using the function name, the passed parameters, and the result keys,
-    and checks whether this hash is a key of the network's results_hash_dict.
-    If this is the case, the old result is returned.
+    and checks whether this hash is a key of the network's
+    ``results_hash_dict``. If this is the case, the old result is returned.
 
-    If not, the new result is calculated and stored in the results_hash_dict
-    and the results dict. The unit of the returned result is stored in the
-    network's result_units dict. Then the new result is returned.
+    If not, the new result is calculated and stored in the
+    ``results_hash_dict`` and the ``results`` dict. The unit of the returned
+    result is stored in the network's ``result_units dict``. Then the new
+    result is returned.
 
     Parameters
     ----------
@@ -76,15 +77,15 @@ def _cache(network, func, params, result_keys, units=None):
     func : function
         Function whose return value should be cached.
     params : dict
-        Parameters passed on to func.
+        Parameters passed on to `func`.
     result_keys : str or list of str
         Specifies under which keys the result should be stored.
     units : str or list of str
-        Units of results. Default is ``None``.
+        Units of results. Default is None.
 
     Returns
     -------
-    func(**params)
+    ``func(**params)``
     """
     # make sure result keys are array
     # here we convert them to a list, because otherwise you might run into a
@@ -160,7 +161,7 @@ def check_if_positive(parameters, parameter_names):
 
 
 def _check_positive_params(func):
-    """Decorator that checks that a fixed list of params is positive."""
+    """Decorator that checks that a fixed list of parameters is positive."""
     all_pos_params = ['C',
                       'K',
                       'K_ext',
@@ -197,7 +198,7 @@ def _check_positive_params(func):
 
 
 def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
-    """ Check whether we are in fast synaptic regime."""
+    """ Check whether `tau_m` and `tau_s` imply fast synaptic regime."""
     k = np.atleast_1d(np.sqrt(tau_s / tau_m))
     if np.any((np.sqrt(0.1) < k)):
         k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
@@ -208,7 +209,7 @@ def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
 
 def _check_k_in_fast_synaptic_regime(func):
     """
-    Decorator that checks whether func is operating in fast synaptic regime.
+    Decorator checking whether `func` is operating in fast synaptic regime.
     """
     @wraps(func)
     def decorator_check(*args, **kwargs):
@@ -271,8 +272,9 @@ def pint_array(quantity_list):
 
 def pint_array_of_dimension_plus_one(quantity):
     """
-    Create quantity with magnitude np.array with one more dimension.
-    than quantity. Handles units correctly.
+    Create quantity with magnitude np.array with one more dimension
+
+    Handles units correctly.
     """
     if isinstance(quantity, ureg.Quantity):
         return np.array([quantity.magnitude]) * quantity.units

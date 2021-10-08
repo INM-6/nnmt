@@ -1,5 +1,5 @@
 """
-Defines Basic network class. A plain network without any assumed structure.
+Defines Basic network model. A plain network without any assumed structure.
 """
 
 import numpy as np
@@ -10,17 +10,50 @@ from .. import ureg
 
 class Basic(Network):
     """
-    Simple basic network that does not assume any network structure.
+    Simple basic model that does not assume any network structure.
 
-    This network only reads in the parameter yaml files and calculates the most
+    This model only reads in the parameter yaml files and calculates the most
     basic dependend parameters. It converts the weights from pA to mV,
     calculates relative thresholds and converts the analysis frequencies to
     angular frequencies.
 
+    Parameters
+    ----------
+    network_params : [str | dict]
+        Network parameters dictionary or yaml file name including:
+
+        - `C` : float
+            Membrane capacitance in pF.
+        - `V_th_abs` : [float | np.array]
+            Absolute threshold potential in mV.
+        - `V_0_abs` : [float | np.array]
+            Absolute reset potential in mV.
+        - `populations` : list of strings
+            Names of different populations.
+        - `tau_s` : float
+            Synaptic time constant in ms.
+        - `W` : np.array
+            Matrix of amplitudes of post synaptic current in pA. It needs to
+            be a `len(populations) x len(populations)` matrix.
+        - `W_ext`: np.array
+            Matrix of amplitudes of external post synaptic current in pA. It
+            needs to be a `len(populations) x len(external_populations)`
+            matrix.
+
+    analysis_params : [str | dict]
+        Analysis parameters dictionary or yaml file name including:
+
+        - `df` : float
+            Step size between two analysis frequencies.
+        - `f_min` : float
+            Minimal analysis frequency.
+        - `f_max` : float
+            Maximal analysis frequency.
+
     See Also
     --------
-    nnmt.models.Network : Parent class
-
+    nnmt.models.Network : Parent class definings all arguments, attributes, and
+                          methods.
     """
 
     def __init__(self, network_params=None, analysis_params=None, file=None):
