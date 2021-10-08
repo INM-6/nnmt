@@ -20,7 +20,7 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         Parameters passed to firing_rates_func
     input_params : dict
         Parameters passed to functions calculating mean and std of input.
-    nu_0 : None or np.ndarray
+    nu_0 : [None | np.ndarray]
         Initial guess for fixed point integration. If `None` the initial guess
         is 0 for all populations. Default is `None`.
     fixpoint_method : str
@@ -30,7 +30,7 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         the fixed point. LSQTSQ also finds unstable fixed points but needs a
         good initial guess. Default is `ODE`.
 
-        ODE:
+        ODE :
             Solves the initial value problem
               dnu / ds = - nu + firing_rate_func(nu)
             with initial value `nu_0` on the interval [0, t_max_ODE].
@@ -113,7 +113,7 @@ def mean_input(network, prefix):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
 
-    See `delta.static.mean_input` or `exp.static.mean_input` for full
+    See :func:`nnmt.delta.mean_input` or :func:`nnmt.exp.mean_input` for full
     documentation.
     '''
     return _input_calc(network, prefix, _mean_input)
@@ -123,7 +123,7 @@ def std_input(network, prefix):
     '''
     Calc std of inputs to populations as function of firing rates.
 
-    See `delta.static.std_input` or `exp.static.std_input` for full
+    See :func:`nnmt.delta.mean_input` or :func:`nnmt.exp.mean_input` for full
     documentation.
     '''
     return _input_calc(network, prefix, _std_input)
@@ -136,13 +136,13 @@ def _input_calc(network, prefix, input_func):
     Checks the requirements for calculating input related quantities and calls
     the respective input function.
 
-    Parameters:
-    -----------
-    network: nnmt.create.Network object
+    Parameters
+    ----------
+    network : nnmt.create.Network object
         The network for which the calculation should be done.
-    prefix: str
+    prefix : str
         The prefix used in the to store the firing rates (e.g. 'lif.delta.').
-    input_func: function
+    input_func : function
         The function that should be calculated (either mean or std).
     '''
     try:
