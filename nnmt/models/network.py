@@ -181,7 +181,7 @@ class Network():
                 self.results[key] = value.magnitude
                 self.result_units[key] = str(value.units)
 
-    def save(self, file, overwrite=False):
+    def save(self, file):
         """
         Save network to h5 file.
 
@@ -193,13 +193,10 @@ class Network():
         ----------
         file : str
             Output file name.
-        overwrite : bool
-            Whether to overwrite an existing h5 file or not. If there already
-            is one, h5py tries to update the h5 dictionary.
         """
         self._add_units_to_param_dicts_and_convert_to_input_units()
         self._add_result_units()
-        io.save_network(file, self, overwrite)
+        io.save_network(file, self)
         self._convert_param_dicts_to_base_units_and_strip_units()
         self._strip_result_units()
 

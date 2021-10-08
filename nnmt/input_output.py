@@ -378,7 +378,7 @@ def load_val_unit_dict_from_yaml(file):
     return quantity_dict
 
 
-def save_quantity_dict_to_h5(file, qdict, overwrite=False):
+def save_quantity_dict_to_h5(file, qdict):
     """
     Convert and save dict of quantities to h5 file.
 
@@ -391,17 +391,14 @@ def save_quantity_dict_to_h5(file, qdict, overwrite=False):
         String specifying output file name.
     qdict : dict
         Dictionary containing quantities.
-    overwrite : bool
-        Whether h5 file should be overwritten, if already existing.
     """
     # convert data into format usable in h5 file
     output = quantities_to_val_unit(qdict)
     # save output
     try:
-        save_h5(file, output, overwrite_dataset=overwrite)
+        save_h5(file, output)
     except KeyError:
-        raise IOError(f'{file} already exists! Use `overwrite=True` if you '
-                      'want to overwrite it.')
+        raise IOError(f'{file} already exists!')
 
 
 def load_val_unit_dict_from_h5(file):
@@ -425,7 +422,7 @@ def load_val_unit_dict_from_h5(file):
     return converted
 
 
-def save_network(file, network, overwrite=False):
+def save_network(file, network):
     """
     Save network to h5 file.
 
@@ -439,15 +436,12 @@ def save_network(file, network, overwrite=False):
         Output file name.
     network : Network object
         The network to be saved.
-    overwrite : bool
-        Whether to overwrite an existing h5 file or not. If there already is
-        one, h5py tries to update the h5 dictionary.
     """
     output = {'network_params': network.network_params,
               'analysis_params': network.analysis_params,
               'results': network.results,
               'results_hash_dict': network.results_hash_dict}
-    save_quantity_dict_to_h5(file, output, overwrite)
+    save_quantity_dict_to_h5(file, output)
 
 
 def load_network(file):

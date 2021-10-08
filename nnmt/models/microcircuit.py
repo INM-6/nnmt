@@ -78,7 +78,7 @@ class Microcircuit(Network):
 
     See Also
     --------
-    nnmt.models.Network : Parent class definings all arguments, attributes, and
+    nnmt.models.Network : Parent class defining all arguments, attributes, and
                           methods.
 
     """
@@ -105,7 +105,11 @@ class Microcircuit(Network):
 
     def _calculate_dependent_network_parameters(self):
         """
-        Calculate all network parameters derived from parameters in yaml file
+        Calculate all network parameters derived from parameters in yaml file.
+
+        Calculates the number of populations, the relative potentials, converts
+        the weights from pA to mV, constructs the weight matrix, and the delay
+        matrix.
 
         Returns:
         --------
@@ -174,6 +178,9 @@ class Microcircuit(Network):
     def _calculate_dependent_analysis_parameters(self):
         """
         Calculate all analysis parameters derived from parameters in yaml file
+
+        Calculates the angular analysis frequencies, and optionally the
+        wavenumbers for a spatial analysis.
 
         Returns:
         --------

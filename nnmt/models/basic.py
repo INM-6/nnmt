@@ -53,7 +53,7 @@ class Basic(Network):
 
     See Also
     --------
-    nnmt.models.Network : Parent class definings all arguments, attributes, and
+    nnmt.models.Network : Parent class defining all arguments, attributes, and
                           methods.
     """
 
@@ -77,12 +77,15 @@ class Basic(Network):
 
     def _calculate_dependent_network_parameters(self):
         """
-        Calculate all network parameters derived from parameters in yaml file
+        Calculate all network parameters derived from parameters in yaml file.
+
+        Calculates the number of populations, the relative potentials, and
+        converts the weights from pA to mV.
 
         Returns:
         --------
         dict
-            dictionary containing all derived network parameters
+            Dictionary containing all derived network parameters.
         """
         derived_params = {}
 
@@ -108,12 +111,14 @@ class Basic(Network):
 
     def _calculate_dependent_analysis_parameters(self):
         """
-        Calculate all analysis parameters derived from parameters in yaml file
+        Calculate all analysis parameters derived from parameters in yaml file.
+
+        Calculates the angular analysis frequencies.
 
         Returns:
         --------
         dict
-            dictionary containing derived parameters
+            Dictionary containing derived parameters.
         """
         derived_params = {}
 
