@@ -84,7 +84,7 @@ nnmt_handle = ax1.scatter(np.arange(8), firing_rates, marker='X',
 ax1.set_xticks(np.arange(8))
 ax1.set_xticklabels(['2/3E', '2/3I', '4E', '4I', '5E', '5I', '6E', '6I'])
 ax1.set_yticks([1, 3, 5, 7])
-ax1.set_ylabel(r'$\nu\,(1/s)$')
+ax1.set_ylabel(r'rate $\nu\,(1/s)$')
 
 plt.legend([bars[0], nnmt_handle, bars[1]],
            [None, 'theory', 'simulation'],
