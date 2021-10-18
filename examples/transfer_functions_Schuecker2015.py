@@ -14,10 +14,6 @@ from collections import defaultdict
 import matplotlib.ticker
 
 plt.style.use('frontiers.mplstyle')
-mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
-                     'axes.titlepad': 0.0,
-                     })
-
 
 # %%
 # The parameters used for calculation of the transfer functions 
@@ -109,7 +105,7 @@ for i, index in enumerate(indices):
 # %%
 # Plotting
 width = 3.34646 * 2
-height = 3.34646 / 2
+height = 3.34646 / 2 + 0.4
 fig = plt.figure(figsize=(width, height),
                  constrained_layout=True)
 
