@@ -58,22 +58,35 @@ for layer in [0, 1, 2, 3]:
         ax = fig.add_subplot(grid_specification[pop, layer])
         
         ax.plot(simulated_power_spectra_1_window['freq_sim'],
-                   simulated_power_spectra_1_window[f'power{j}'], color=(0.8, 0.8, 0.8))
+                   simulated_power_spectra_1_window[f'power{j}'],
+                   color=(0.8, 0.8, 0.8),
+                   label='simulation')
         ax.plot(simulated_power_spectra_20_window['freq_sim'],
-                   simulated_power_spectra_20_window[f'power{j}'], color=(0.5, 0.5, 0.5))
+                   simulated_power_spectra_20_window[f'power{j}'], 
+                   color=(0.5, 0.5, 0.5),
+                   label='simulation avg.')
         ax.plot(microcircuit.analysis_params['omegas']/(2*np.pi),
                    power_spectra[:, j],
-                   color='black', zorder=2)
+                   color='black', zorder=2,
+                   label='prediction')
         
         ax.set_xlim([10.0, 400.0])
         ax.set_ylim([1e-6, 1e0])
         ax.set_yscale('log')
         
-        ax.set_title(microcircuit.network_params['populations'][j])
-        if pop == 0:
-            ax.set_xticklabels([])
+        population_name = microcircuit.network_params['populations'][j] 
+        if population_name == '23E':
+            ax.set_title('2/3E')
+        elif population_name == '23I':
+            ax.set_title('2/3I')
         else:
-            ax.set_xlabel(r'frequency (1/$s$)')
+            ax.set_title(population_name)
+            
+            
+        if pop == 1 and layer == 0:
+            ax.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
+        else:
+            ax.set_xticklabels([])
         
         ax.set_xticks([100, 200, 300])
         y_minor = matplotlib.ticker.LogLocator(
@@ -85,6 +98,9 @@ for layer in [0, 1, 2, 3]:
         ax.set_yticks([])
         if j == 0 or j== 1:
             ax.set_yticks([1e-5,1e-3,1e-1])
-            ax.set_ylabel(r'$|C(\omega)|$')
+            
+        if j == 0:
+            ax.set_ylabel(r'power spectrum $|C(\omega)|\quad(1/\mathrm{s}^2)$')
+            ax.legend()
     
-plt.savefig('figures/power_spectra_Bos2016.pdf')
+plt.savefig('figures/power_spectra_Bos2016.eps')
