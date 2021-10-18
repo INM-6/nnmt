@@ -7,12 +7,17 @@ Here we calculate the transfer functions as in :cite:t:`schuecker2015`.
 
 import nnmt
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from collections import defaultdict
 import matplotlib.ticker
 
 plt.style.use('frontiers.mplstyle')
+mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
+                     'axes.titlepad': 0.0,
+                     })
+
 
 # %%
 # The parameters used for calculation of the transfer functions 
@@ -103,7 +108,9 @@ for i, index in enumerate(indices):
         
 # %%
 # Plotting
-fig = plt.figure(figsize=(3.34646, 3.34646/2),
+width = 3.34646 * 2
+height = 3.34646 / 2
+fig = plt.figure(figsize=(width, height),
                  constrained_layout=True)
 
 grid_specification = gridspec.GridSpec(1, 2, figure=fig)
@@ -139,19 +146,21 @@ for sigma in test_results['sigma'].keys():
                         color=colors[i],
                         linestyle=ls,
                         linewidth=lw,
-                        label=f'{mu} | {sigma}')
+                        label=f'({np.round(mu, 1)}, {sigma})')
         # just zero frequency
-        axA.semilogx(zero_freq,
-                        test_results['sigma'][sigma]['mu'][mu]['absolute_value'][0],
-                        '+',
-                        color=colors[i],
-                        markersize=markersize_cross)
+        # axA.semilogx(zero_freq,
+        #                 test_results['sigma'][sigma]['mu'][mu]['absolute_value'][0],
+        #                 '+',
+        #                 color=colors[i],
+        #                 markersize=markersize_cross)
 
 axA.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-axA.set_ylabel(r'$|\frac{n(\omega)\nu}{\epsilon\mu}|\quad(\mathrm{s}\,\mathrm{mV})^{-1}$',labelpad = 0)
+axA.set_ylabel(r'amplitude $|n(\omega)|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'
+               ,labelpad = 0)
 
 axB.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-axB.set_ylabel(r'$-\angle n(\omega)\quad(^{\circ})$',labelpad = 2)
+axB.set_ylabel(r'phase $\angle n(\omega)\quad(^{\circ})$'
+               ,labelpad = 2)
 
 axA.set_xticks([1e-1, 1e0, 1e1, 1e2])
 axA.set_yticks([0, 6, 12])
@@ -174,7 +183,7 @@ axA.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 axB.xaxis.set_minor_locator(x_minor)
 axB.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 
-axB.legend(title='$\mu [mV] | \sigma [mV]$', title_fontsize='xx-small',
-           handlelength=2, labelspacing=0.0)
+axB.legend(title='$(\mu, \sigma)$ in mV', title_fontsize=None,
+          handlelength=2, labelspacing=0.0)
 
-plt.savefig('figures/transfer_functions_Schuecker2015.pdf')
+plt.savefig('figures/transfer_functions_Schuecker2015.eps')
