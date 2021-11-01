@@ -777,7 +777,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
 def fit_transfer_function(network):
     """
-    Fits transfer function (low-pass filter).
+    Fits transfer function (low-pass filter) with least-squares fit.
 
     Parameters
     ----------
@@ -845,7 +845,11 @@ def fit_transfer_function(network):
 
 @_check_positive_params
 def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
-    """ Fits transfer function. Parameter scaling for LIF exp. """
+    """
+    Fits transfer function. Parameter scaling for LIF exp.
+
+    See :code:`lif.exp.fit_transfer_function` for full documentation.    
+    """
     transfer_function_fit, tau_rate, h0, fit_error = \
         _static._fit_transfer_function(transfer_function, omegas)
 
@@ -1460,6 +1464,6 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     RHS = np.append(mu_ext / tau_m, var_ext / tau_m)
     
     # find a solution as good as possible using least square method
-    nu_ext = np.linalg.lstsq(LHS, RHS)[0]
+    nu_ext = np.linalg.lstsq(LHS, RHS, rcond=None)[0]
 
     return nu_ext

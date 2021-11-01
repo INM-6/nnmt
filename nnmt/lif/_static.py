@@ -183,7 +183,14 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
 
 
 def _fit_transfer_function(transfunc, omegas):
-    """ Fits transfer function (low-pass filter) for the given frequencies. """
+    """
+    Fits transfer function (low-pass filter) for the given frequencies.
+
+    A least-squares fit is used.
+
+    For details refer to
+    :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
+    """
     def func(omega, tau, h0):
         return h0 / (1. + 1j * omega * tau)
 
@@ -198,6 +205,8 @@ def _fit_transfer_function(transfunc, omegas):
     fit_error = np.zeros(dim)
 
     for i in np.arange(dim):
+        # fit low-pass filter transfer function (func) to LIF transfer function
+        # (transfunc) to obtain parameters of rate model with fit errors
         fitParams, fitCovariances = sopt.curve_fit(
             func_abs, omegas, np.abs(transfunc[:, i]))
 

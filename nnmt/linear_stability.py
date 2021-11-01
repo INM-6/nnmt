@@ -1,41 +1,58 @@
+"""
+Functions for linear stability analysis.
+
+Parameter Functions
+*******************
+
+.. autosummary::
+    :toctree: _toctree/
+
+_solve_characteristic_equation_lambertw
+_linalg_max_eigenvalue
+
+"""
+
 import numpy as np
 from scipy.special import lambertw
 
 
-def solve_characteristic_equation_lambertw(
+def _solve_characteristic_equation_lambertw(
         branch_nr, tau, delay, connectivity):
     """
-    Uses the Lambert W function to compute the eigenvalue by solving the
-    characteristic equation with delay for a given branch number.
+    Uses the Lambert W function to compute the eigenvalue.
+    
+    Solves the characteristic equation with delay for a given branch number.
+    The equation is given and explained in :cite:t:`senk2020`, Eq. 7. 
 
     Parameters
     ----------
-    branch_nr: int
+    branch_nr : int
         Branch number.
-    tau: np.array
+    tau : np.array
         Time constants in s.
-    delay: np.array
+    delay : np.array
         Delays in s.
-    connectivity:
+    connectivity :
         Effective connectivity matrix.
 
     Returns
     -------
-    eigenval
+    eigenval: np.array
+        Eigenvalues.
     """
     # only scalar or equal value for all populations accepted
     for v in [tau, delay]:
         assert np.isscalar(v) or len(np.unique(v) == 1)
     t, d = np.unique(tau)[0], np.unique(delay)[0]
 
-    c = linalg_max_eigenvalue(connectivity)
+    c = _linalg_max_eigenvalue(connectivity)
 
-    eigenval = -1. / t + 1. / d * \
-        lambertw(c * d / t * np.exp(d / t), branch_nr)
+    eigenval = (-1. / t + 1. / d *
+        lambertw(c * d / t * np.exp(d / t), branch_nr))
     return eigenval
 
 
-def linalg_max_eigenvalue(matrix):
+def _linalg_max_eigenvalue(matrix):
     """
     Computes the eigenvalue with the largest absolute value of a given matrix.
 

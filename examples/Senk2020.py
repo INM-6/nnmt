@@ -7,6 +7,15 @@ Example demonstrating the methods used in Figures 5 and 6 of :cite:t:`senk2020`.
 Author: Johanna Senk
 """
 
+##########################################################################
+# Executing this script first generates data using the functions
+# scan_fit_transfer_function() and linear_stability_analysis().
+# This data is written to .npy files in the temp directory.
+# Each of the following three functions generates one figure:
+# network sketches, results from scan_fit_transfer_function(), and results
+# from linear_stability_analysis().
+##########################################################################
+
 import os
 import sys
 import nnmt.spatial as spatial
@@ -21,6 +30,7 @@ import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Patch
+from matplotlib import ticker
 plt.style.use('frontiers.mplstyle')
 mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
                      'axes.titlepad': 0.0,
@@ -141,6 +151,8 @@ params = {
 
 def scan_fit_transfer_function():
     """
+    Iterates over working points and fits the LIF transfer function.
+
     Iterates over pairs of mean and standard deviations of the input to compute
     - the excitatory and inhibitory external firing rates required to preserve
       the working point,
@@ -215,6 +227,8 @@ def scan_fit_transfer_function():
 
 def linear_stability_analysis():
     """
+    Performs linear stability analysis for the rate and  spiking models.
+
     Fixes the working point, computes and fits the LIF transfer function and
     assess the linear stability of the network with a spatial connectivity
     profile.
@@ -258,9 +272,9 @@ def linear_stability_analysis():
     eigenvalues = np.zeros((len(branches), len(k_wavenumbers)), dtype=complex)
     for i, branch_nr in enumerate(branches):
         for j, k_wavenumber in enumerate(k_wavenumbers):
-            connectivity = W_rate * spatial.spatial_profile_boxcar(
+            connectivity = W_rate * spatial._spatial_profile_boxcar(
                 k_wavenumber, network.network_params['width'])
-            eigenvalues[i, j] = linstab.solve_characteristic_equation_lambertw(
+            eigenvalues[i, j] = linstab._solve_characteristic_equation_lambertw(
                 branch_nr=branch_nr, tau=tau_rate,
                 delay=network.network_params['D_mean'], connectivity=connectivity)
     # index of eigenvalue with maximum real part
@@ -330,22 +344,22 @@ def figure_Senk2020_network_structure():
         figsize=(
             params['figwidth_1col'],
             params['figwidth_1col']))
-    gs = gridspec.GridSpec(2, 2, figure=fig, wspace=0, hspace=0)
+    gs = gridspec.GridSpec(2, 2, figure=fig, wspace=0.2, hspace=0)
 
-    _add_label(plt.subplot(gs[0, :]), 'A')
+    _add_label(plt.subplot(gs[0, :]), 'A', xshift=-0.04, yshift=-0.1)
     plt.gca().set_axis_off()
 
     ax = _plot_network_sketch_sun(gs[1, 0])
     _add_label(ax, 'B', xshift=-0.085)
 
     ax = _plot_spatial_profile(gs[1, 1])
-    _add_label(ax, 'C')
+    _add_label(ax, 'C', yshift=1.08)
 
     svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
     w_svg, h_svg = svg_mpl.get_size()
     svg_mpl.set_size((w_svg + 'pt', h_svg + 'pt'))
     svg_sketch = sg.fromfile(sketch_fn).getroot()
-    svg_sketch.moveto(x=50, y=0, scale_x=1.5)
+    svg_sketch.moveto(x=50, y=10, scale_x=1.5)
     svg_mpl.append(svg_sketch)
     svg_mpl.save(f'{plot_fn}.svg')
     os_return = os.system(f'inkscape --export-eps={plot_fn}.eps {plot_fn}.svg')
@@ -358,12 +372,11 @@ def figure_Senk2020_network_structure():
 
 def figure_Senk2020_input_scan():
     """
-    Loads and plots precomputed results from scanning working points and fitting
-    the transfer function.
+    Loads and plots precomputed results from scanning working ponits.
 
     (A) Input scan: set external rates and predicted rates.
-    (B) Input scan: fit results.
-    (C) Transfer function (original and fit).
+    (B) Transfer function (original and fit).
+    (C) Input scan: fit results.
     """
     tf_scan_results = np.load(params['fname_tf_scan_results'],
                               allow_pickle=True).item()
@@ -377,10 +390,10 @@ def figure_Senk2020_input_scan():
     xshift = -0.6
     yshift = 0.22
     _add_label(axes[0], 'A', xshift=xshift, yshift=yshift)
-    _add_label(axes[3], 'B', xshift=xshift, yshift=yshift)
+    _add_label(axes[3], 'C', xshift=xshift, yshift=yshift)
 
     ax = _plot_transfer_functions(gs[0, 7:], tf_scan_results)
-    _add_label(ax, 'C', xshift=-0.4, yshift=0.02)
+    _add_label(ax, 'B', xshift=-0.4, yshift=0.02)
 
     plt.savefig(params['figure_fname'] + '_input_scan.eps')
     return
@@ -388,8 +401,7 @@ def figure_Senk2020_input_scan():
 
 def figure_Senk2020_eigenvalues():
     """
-    Loads and plots precomputed results from linear stability analysis with
-    rate and spiking model.
+    Loads and plots precomputed results from linear stability analysis.
 
     (A) Eigenvalues vs. wavenumbers.
     (B) Eigenvalues vs. interpolation parameter.
@@ -425,39 +437,38 @@ def figure_Senk2020_eigenvalues():
 def _solve_chareq_numerically_alpha(
         lambda_rate, k, alpha, network, tau_rate, W_rate):
     """
-    Solves the full characteristic equation numerically for given wave number
-    and interpolation parameter.
-
+    Solves the full characteristic equation numerically.
+    
     Parameters
     ----------
     lambda_rate: complex float
         Eigenvalue of rate model in 1/s.
-    k: float
+    k : float
         Wave number in 1/m.
-    alpha: float
+    alpha : float
         Interpolation parameter.
-    network: nnmt.models.Network or child class instance
+    network : nnmt.models.Network or child class instance
         Network instance.
-    tau_rate: np.array
+    tau_rate : np.array
         Time constants of rate model in s.
-    W_rate: np.array
+    W_rate : np.array
         Weight matrix of rate model.
 
     Returns
     -------
-    lamb:
+    lamb :
         Numerically optimized eigenvalues as a function of the interpolation
         parameter.
     """
     def fsolve_complex(l_re_im):
         l = complex(l_re_im[0], l_re_im[1])
 
-        spatial_profile = spatial.spatial_profile_boxcar(
+        spatial_profile = spatial._spatial_profile_boxcar(
             k=k, width=network.network_params['width'])
 
-        eff_conn_spiking = linstab.linalg_max_eigenvalue(
+        eff_conn_spiking = linstab._linalg_max_eigenvalue(
             _effective_connectivity_spiking(l, network) * spatial_profile)
-        eff_conn_rate = linstab.linalg_max_eigenvalue(
+        eff_conn_rate = linstab._linalg_max_eigenvalue(
             _effective_connectivity_rate(
                 l, tau_rate, W_rate) * spatial_profile)
 
@@ -481,27 +492,26 @@ def _solve_chareq_numerically_alpha(
 def _solve_lambda_of_alpha_integral(
         lambda_rate, k, alphas, network, tau_rate, W_rate):
     """
-    Integrates the derivative of the eigenvalue with respect to the
-    interpolation parameters for a given wave number.
+    Integrates the derivative of the eigenvalue wrt. interpolation parameters.
 
     Parameters
     ----------
-    lambda_rate: complex float
+    lambda_rate : complex float
         Eigenvalue of rate model in 1/s.
-    k: float
+    k : float
         Wave number in 1/m.
-    alphas: np.array of floats
+    alphas : np.array of floats
         All interpolation parameters.
-    network: nnmt.models.Network or child class instance
+    network : nnmt.models.Network or child class instance
         Network instance.
-    tau_rate: np.array
+    tau_rate : np.array
         Time constants of rate model in s.
-    W_rate: np.array
+    W_rate : np.array
         Weight matrix of rate model.
 
     Returns
     -------
-    lambdas_of_alpha:
+    lambdas_of_alpha :
         Numerically integrated eigenvalues as a function of interpolation
         parameters.
     """
@@ -525,14 +535,14 @@ def _effective_connectivity_spiking(l, network):
 
     Parameters
     ----------
-    l: complex float
+    l : complex float
         Eigenvalue in 1/s.
-    network: nnmt.models.Network or child class instance
+    network : nnmt.models.Network or child class instance
         Network instance.
 
     Returns
     -------
-    eff_conn:
+    eff_conn :
         Effective connectivity.
     """
     omega = complex(0, -l)
@@ -552,14 +562,14 @@ def _effective_connectivity_rate(l, tau_rate, W_rate):
 
     Parameters
     ----------
-    l: complex float
+    l : complex float
         Eigenvalue in 1/s.
-    network: nnmt.models.Network or child class instance
+    network : nnmt.models.Network or child class instance
         Network instance.
 
     Returns
     -------
-    eff_conn:
+    eff_conn :
         Effective connectivity.
     """
     omega = complex(0, -l)
@@ -569,43 +579,42 @@ def _effective_connectivity_rate(l, tau_rate, W_rate):
 
 def _d_lambda_d_alpha(l, alpha, k, network, tau_rate, W_rate):
     """
-    Computes the derivative of the eigenvalue with respect to the interpolation
-    parameter.
+    Computes the derivative of the eigenvalue wrt. the interpolation parameter.
 
     Parameters
     ----------
-    l: complex float
+    l : complex float
         Eigenvalue of rate model in 1/s.
-    alpha: float
+    alpha : float
         Interpolation parameter.
-    k: float
+    k : float
         Wave number in 1/m.
-    network: nnmt.models.Network or child class instance
+    network : nnmt.models.Network or child class instance
         Network instance.
-    tau_rate: np.array
+    tau_rate : np.array
         Time constants of rate model in s.
-    W_rate: np.array
+    W_rate : np.array
         Weight matrix of rate model.
 
     Returns
     -------
-    deriv:
+    deriv :
         Derivative.
     """
-    spatial_profile = spatial.spatial_profile_boxcar(
+    spatial_profile = spatial._spatial_profile_boxcar(
         k=k, width=network.network_params['width'])
 
-    eff_conn_spiking = linstab.linalg_max_eigenvalue(
+    eff_conn_spiking = linstab._linalg_max_eigenvalue(
         _effective_connectivity_spiking(l, network) * spatial_profile)
-    eff_conn_rate = linstab.linalg_max_eigenvalue(
+    eff_conn_rate = linstab._linalg_max_eigenvalue(
         _effective_connectivity_rate(l, tau_rate, W_rate) * spatial_profile)
 
     eff_conn_alpha = alpha * eff_conn_spiking + (1. - alpha) * eff_conn_rate
 
-    d_eff_conn_spiking_d_lambda = linstab.linalg_max_eigenvalue(
+    d_eff_conn_spiking_d_lambda = linstab._linalg_max_eigenvalue(
         _d_eff_conn_spiking_d_lambda(l, network) * spatial_profile)
 
-    d_eff_conn_rate_d_lambda = linstab.linalg_max_eigenvalue(
+    d_eff_conn_rate_d_lambda = linstab._linalg_max_eigenvalue(
         _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate) * spatial_profile)
 
     d_eff_conn_alpha_d_lambda = alpha * d_eff_conn_spiking_d_lambda + \
@@ -624,19 +633,18 @@ def _d_lambda_d_alpha(l, alpha, k, network, tau_rate, W_rate):
 
 def _d_eff_conn_spiking_d_lambda(l, network):
     """
-    Numerically computes the derivative of the effective connectivity of the
-    spiking model.
+    Computes the derivative of the effective connectivity of the spiking model.
 
     Parameters
     ----------
-    l: complex float
+    l : complex float
         Eigenvalue of rate model in 1/s.
-    network: nnmt.models.Network or child class instance
+    network : nnmt.models.Network or child class instance
         Network instance.
 
     Returns
     -------
-    deriv:
+    deriv :
         Derivative.
     """
     def f(x):
@@ -651,11 +659,11 @@ def _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate):
 
     Parameters
     ----------
-    l: complex float
+    l : complex float
         Eigenvalue of rate model in 1/s.
-    tau_rate: np.array
+    tau_rate : np.array
         Time constants of rate model in s.
-    W_rate: np.array
+    W_rate : np.array
         Weight matrix of rate model.
 
     Returns
@@ -679,7 +687,7 @@ def _plot_network_sketch_sun(gs_glob):
 
     Parameters
     ----------
-    gs_glob: GridSpec cell
+    gs_glob : GridSpec cell
         Global GridSpec cell to plot into.
     """
     ax = plt.subplot(gs_glob)
@@ -729,12 +737,11 @@ def _plot_network_sketch_sun(gs_glob):
 
 def _plot_spatial_profile(gs_glob):
     """
-    Plots spatial conenctivity profile for an excitatory and an inhibitory
-    population.
+    Plots spatial conenctivity profile for an exc. and an inh. population.
 
     Parameters
     ----------
-    gs_glob: GridSpec cell
+    gs_glob : GridSpec cell
         Global GridSpec cell to plot into.
     """
     def _get_p(rs, width):
@@ -744,7 +751,9 @@ def _plot_spatial_profile(gs_glob):
         p[np.where(np.abs(rs) <= width)] = height
         return p
 
-    ax = plt.subplot(gs_glob)
+    gs = gs_glob.subgridspec(4, 1)
+
+    ax = plt.subplot(gs[1:3])
 
     blue = params['colors']['ex_blue']
     red = params['colors']['inh_red']
@@ -778,10 +787,9 @@ def _plot_spatial_profile(gs_glob):
 
     ax.set_xlim(rs[0], rs[-1])
     ax.set_xlabel(params['quantities']['displacement']['label'])
-    ax.set_ylim((0, 1.2 * np.max(ip)))
     ax.get_yaxis().set_visible(False)
     ax.spines['left'].set_visible(False)
-    ax.set_title('connection\n probability $p$', y=0.9)
+    ax.set_title('connection\n probability $p$')
     return ax
 
 
@@ -791,9 +799,9 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
 
     Parameters
     ----------
-    gs_glob: GridSpec cell
+    gs_glob : GridSpec cell
         Global GridSpec cell to plot into.
-    tf_scan_results: dict
+    tf_scan_results : dict
        Loaded results from scan_fit_transfer_function().
     """
     gs = gridspec.GridSpecFromSubplotSpec(
@@ -831,6 +839,8 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
 
         cb = plt.colorbar(img)
         cb.ax.tick_params(pad=0)
+        cb.locator = ticker.MaxNLocator(nbins=4)
+        cb.update_ticks()
         # star for mu and sigma used in this circuit (0.5 offset for
         # pcolormesh)
         xmu = np.max(ax.get_xticks() - 0.5) * (mu_star - np.min(mus)) \
@@ -852,14 +862,15 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
 
 def _plot_transfer_functions(gs_glob, tf_scan_results):
     """
-    Plots transfer function and fit for selection of parameters computed with
-    scan_fit_transfer_function().
+    Plots transfer function and fit for selection of parameters.
+    
+    Uses results computed with scan_fit_transfer_function().
 
     Parameters
     ----------
-    gs_glob: GridSpec cell
+    gs_glob : GridSpec cell
         Global GridSpec cell to plot into.
-    tf_scan_results: dict
+    tf_scan_results : dict
        Loaded results from scan_fit_transfer_function().
     """
     gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs_glob, hspace=0)
@@ -953,14 +964,15 @@ def _plot_transfer_functions(gs_glob, tf_scan_results):
 
 def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
     """
-    Plots eigenvalues from rate model vs. wavenumbers computed with
-    linear_stability_analysis().
+    Plots eigenvalues from rate model vs. wavenumbers.
+    
+    Uses results computed with linear_stability_analysis().
 
     Parameters
     ----------
-    gs_glob: GridSpec cell
+    gs_glob : GridSpec cell
         Global GridSpec cell to plot into.
-    stability_results: dict
+    stability_results : dict
         Loaded results from linear_stability_analysis().
     """
     gs = gridspec.GridSpecFromSubplotSpec(
@@ -1032,14 +1044,15 @@ def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
 
 def _plot_eigenvalues_alpha(gs_glob, stability_results):
     """
-    Plots linear interpolation of eigenvalues computed in
-    linear_stability_analysis().
+    Plots linear interpolation of eigenvalues.
+    
+    Uses results computed with linear_stability_analysis().
 
     Parameters
     ----------
-    gs_glob: GridSpec cell
+    gs_glob : GridSpec cell
         Global GridSpec cell to plot into.
-    stability_results: dict
+    stability_results : dict
         Loaded results from linear_stability_analysis().
     """
     gs = gridspec.GridSpecFromSubplotSpec(
@@ -1114,15 +1127,15 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
     Parameters:
     -----------
-    ax: matplotlib.axes.Axes object
+    ax : matplotlib.axes.Axes object
         Axes.
-    label: str
+    label : str
         Letter.
-    xshift: float
+    xshift : float
         x-shift of label position.
-    yshift: float
+    yshift : float
         y-shift of label position.
-    scale_fs: float
+    scale_fs : float
         Scale factor for font size.
     """
     label_pos = [0., 1.]
