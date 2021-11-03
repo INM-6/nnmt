@@ -118,23 +118,26 @@ for count, (ev, subpanel, panel_label) in enumerate(
     data = np.ma.masked_where(projection_of_sensitivity_measure == 0,
                               projection_of_sensitivity_measure)
 
-    heatmap = ax.imshow(data,
+    # np.flipud needed to cope for different origin compared to imshow
+    heatmap = ax.pcolormesh(np.flipud(data),
                         vmin=-z,
                         vmax=z,
                         cmap=colormap,
-                        aspect='equal')
+                        edgecolors='k')
+    
+    ax.set_aspect('equal')
 
     # Minor ticks
-    ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
-    ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
-    ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
-    ax.tick_params(axis='x', which='minor', bottom=False)
-    ax.tick_params(axis='y', which='minor', left=False)
-    
+    # ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
+    # ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
+    # ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
+    # ax.tick_params(axis='x', which='minor', bottom=False)
+    # ax.tick_params(axis='y', which='minor', left=False)
+
     
     if labels is not None:
-        ax.set_xticks(np.arange(len(labels)))
-        ax.set_yticks(np.arange(len(labels)))
+        ax.set_xticks(np.arange(len(labels))+0.5)
+        ax.set_yticks(np.arange(len(labels))+0.5)
         ax.set_xticklabels(labels, rotation=90)
         ax.set_yticklabels(labels)
 
@@ -158,24 +161,27 @@ for count, (ev, subpanel, panel_label) in enumerate(
     data = np.ma.masked_where(projection_of_sensitivity_measure == 0,
                               projection_of_sensitivity_measure)
 
-    heatmap = ax.imshow(data,
+    heatmap = ax.pcolormesh(np.flipud(data),
                         vmin=-z,
                         vmax=z,
-                        cmap=colormap,
-                        aspect='equal')
+                        cmap=colormap,    
+                        edgecolors='k')
+    
+    ax.set_aspect('equal')
     
     
     # Minor ticks
-    ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
-    ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
-    ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
-    ax.tick_params(axis='x', which='minor', bottom=False)
-    ax.tick_params(axis='y', which='minor', left=False)
-
+    # ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
+    # ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
+    # ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
+    # ax.tick_params(axis='x', which='minor', bottom=False)
+    # ax.tick_params(axis='y', which='minor', left=False)
+    
+    # ax.grid(True, color='k', linestyle='-', linewidth=0.6)
     
     if labels is not None:
-        ax.set_xticks(np.arange(len(labels)))
-        ax.set_yticks(np.arange(len(labels)))
+        ax.set_xticks(np.arange(len(labels))+0.5)
+        ax.set_yticks(np.arange(len(labels))+0.5)
         ax.set_xticklabels(labels, rotation=90)
         ax.set_yticklabels([])
 
