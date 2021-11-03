@@ -1417,6 +1417,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
     sensitivity_freq = T.real*k_per[0] + T.imag*k_per[1]
     
     sensitivity_measure = {
+            'eigenvalue_index': eigenvalue_index,
             'critical_frequency': frequency,
             'critical_frequency_index': frequency_index,
             'critical_eigenvalue': critical_eigenvalue,
