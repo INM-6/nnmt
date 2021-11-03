@@ -10,6 +10,7 @@ This example reproduces Fig. 6 and 7 in :cite:t:`bos2016`.
 
 import nnmt
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -74,15 +75,20 @@ grid_specification = gridspec.GridSpec(2, 2, figure=fig)
 # grid_specification.update(
 #     left=0.05, right=0.95, bottom=0.08, top=0.93, wspace=0.05, hspace=0.1)
 
-colormap = 'coolwarm'
 labels = ['2/3E', '2/3I', '4E', '4I', '5E', '5I', '6E', '6I']
 
 # too small for frontiers
 # plt.rcParams['xtick.labelsize'] = 'x-small'
 # plt.rcParams['ytick.labelsize'] = 'x-small'
 
+colormap = mpl.cm.get_cmap('coolwarm').copy()
 # set colorbar max and min
 z = 1
+
+# by default np.nan are set to black with full transparency
+# .eps can't handle transparency
+colormap.set_bad('w',1.)
+
 label_prms = dict(x=-0.3, y=1.2, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 panel_labels = ['(A)', '(B)', '(C)', '(D)']
@@ -105,16 +111,26 @@ for count, (ev, subpanel, panel_label) in enumerate(
     
     rounded_frequency = str(int(np.round(frequency,0)))
 
-    plot_title = r'$\mathbf{Z}^{\mathrm{amp}}(' + \
+    plot_title = r'$\mathbf{Z}_{j=%s}^{\mathrm{amp}}(' % ev + \
         f'{rounded_frequency}' + r'\,\mathrm{Hz})$'
     ax.set_title(plot_title)
 
-    heatmap = ax.imshow(projection_of_sensitivity_measure,
+    data = np.ma.masked_where(projection_of_sensitivity_measure == 0,
+                              projection_of_sensitivity_measure)
+
+    heatmap = ax.imshow(data,
                         vmin=-z,
                         vmax=z,
                         cmap=colormap,
                         aspect='equal')
 
+    # Minor ticks
+    ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
+    ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
+    ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
+    ax.tick_params(axis='x', which='minor', bottom=False)
+    ax.tick_params(axis='y', which='minor', left=False)
+    
     
     if labels is not None:
         ax.set_xticks(np.arange(len(labels)))
@@ -135,15 +151,27 @@ for count, (ev, subpanel, panel_label) in enumerate(
     
     rounded_frequency = str(int(np.round(frequency,0)))
 
-    plot_title = r'$\mathbf{Z}^{\mathrm{freq}}(' + \
+    plot_title = r'$\mathbf{Z}_{j=%s}^{\mathrm{amp}}(' % ev + \
         f'{rounded_frequency}' + r'\,\mathrm{Hz})$'
     ax.set_title(plot_title)
+    
+    data = np.ma.masked_where(projection_of_sensitivity_measure == 0,
+                              projection_of_sensitivity_measure)
 
-    heatmap = ax.imshow(projection_of_sensitivity_measure,
+    heatmap = ax.imshow(data,
                         vmin=-z,
                         vmax=z,
                         cmap=colormap,
                         aspect='equal')
+    
+    
+    # Minor ticks
+    ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
+    ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
+    ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
+    ax.tick_params(axis='x', which='minor', bottom=False)
+    ax.tick_params(axis='y', which='minor', left=False)
+
     
     if labels is not None:
         ax.set_xticks(np.arange(len(labels)))
@@ -197,6 +225,8 @@ heatmap = ax.imshow(projection_of_sensitivity_measure,
                     vmin=-z,
                     vmax=z,
                     cmap=colormap)
+
+
 colorbar(heatmap)
 if labels is not None:
     ax.set_xticks(np.arange(len(labels)))
