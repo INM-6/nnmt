@@ -123,7 +123,9 @@ for count, (ev, subpanel, panel_label) in enumerate(
                         vmin=-z,
                         vmax=z,
                         cmap=colormap,
-                        edgecolors='k')
+                        edgecolors='k',
+                        linewidth=0.6)
+
     
     ax.set_aspect('equal')
 
@@ -139,7 +141,7 @@ for count, (ev, subpanel, panel_label) in enumerate(
         ax.set_xticks(np.arange(len(labels))+0.5)
         ax.set_yticks(np.arange(len(labels))+0.5)
         ax.set_xticklabels(labels, rotation=90)
-        ax.set_yticklabels(labels)
+        ax.set_yticklabels(list(reversed(labels)))
 
     ax.set_xlabel('sources')
     ax.set_ylabel('targets')
@@ -165,7 +167,8 @@ for count, (ev, subpanel, panel_label) in enumerate(
                         vmin=-z,
                         vmax=z,
                         cmap=colormap,    
-                        edgecolors='k')
+                        edgecolors='k',
+                        linewidth=0.6)
     
     ax.set_aspect('equal')
     
