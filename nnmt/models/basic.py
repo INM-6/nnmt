@@ -1,5 +1,5 @@
 """
-Defines Basic network class. A plain network without any assumed structure.
+Defines Basic network model. A plain network without any assumed structure.
 """
 
 import numpy as np
@@ -10,17 +10,50 @@ from .. import ureg
 
 class Basic(Network):
     """
-    Simple basic network that does not assume any network structure.
+    Model similar to Microcircuit, without assuming any network structure.
 
-    This network only reads in the parameter yaml files and calculates the most
+    This model only reads in the parameter yaml files and calculates the most
     basic dependend parameters. It converts the weights from pA to mV,
     calculates relative thresholds and converts the analysis frequencies to
     angular frequencies.
 
+    Parameters
+    ----------
+    network_params : [str | dict]
+        Network parameters yaml file name or dictionary including:
+
+        - `C` : float
+            Membrane capacitance in pF.
+        - `V_th_abs` : [float | np.array]
+            Absolute threshold potential in mV.
+        - `V_0_abs` : [float | np.array]
+            Absolute reset potential in mV.
+        - `populations` : list of strings
+            Names of different populations.
+        - `tau_s` : float
+            Synaptic time constant in ms.
+        - `W` : np.array
+            Matrix of amplitudes of post synaptic current in pA. It needs to
+            be a `len(populations) x len(populations)` matrix.
+        - `W_ext`: np.array
+            Matrix of amplitudes of external post synaptic current in pA. It
+            needs to be a `len(populations) x len(external_populations)`
+            matrix.
+
+    analysis_params : [str | dict]
+        Analysis parameters yaml file name or dictionary including:
+
+        - `df` : float
+            Step size between two analysis frequencies.
+        - `f_min` : float
+            Minimal analysis frequency.
+        - `f_max` : float
+            Maximal analysis frequency.
+
     See Also
     --------
-    nnmt.models.Network : Parent class
-
+    nnmt.models.Network : Parent class defining all arguments, attributes, and
+                          methods.
     """
 
     def __init__(self, network_params=None, analysis_params=None, file=None):
@@ -38,14 +71,20 @@ class Basic(Network):
 
         self._convert_param_dicts_to_base_units_and_strip_units()
 
+    def _instantiate(self, new_network_params, new_analysis_params):
+        return Basic(new_network_params, new_analysis_params)
+
     def _calculate_dependent_network_parameters(self):
         """
-        Calculate all network parameters derived from parameters in yaml file
+        Calculate all network parameters derived from parameters in yaml file.
 
-        Returns:
-        --------
+        Calculates the number of populations, the relative potentials, and
+        converts the weights from pA to mV.
+
+        Returns
+        -------
         dict
-            dictionary containing all derived network parameters
+            Dictionary containing all derived network parameters.
         """
         derived_params = {}
 
@@ -61,8 +100,8 @@ class Basic(Network):
 
         # convert weights in pA (current) to weights in mV (voltage)
         tau_s_div_C = self.network_params['tau_s'] / self.network_params['C']
-        derived_params['J'] = (
-            tau_s_div_C * self.network_params['W']).to(ureg.mV)
+        derived_params['J'] = (tau_s_div_C
+                               * self.network_params['W']).to(ureg.mV)
 
         derived_params['J_ext'] = (
             tau_s_div_C * self.network_params['W_ext']).to(ureg.mV)
@@ -71,12 +110,14 @@ class Basic(Network):
 
     def _calculate_dependent_analysis_parameters(self):
         """
-        Calculate all analysis parameters derived from parameters in yaml file
+        Calculate all analysis parameters derived from parameters in yaml file.
 
-        Returns:
-        --------
+        Calculates the angular analysis frequencies.
+
+        Returns
+        -------
         dict
-            dictionary containing derived parameters
+            Dictionary containing derived parameters.
         """
         derived_params = {}
 
@@ -104,7 +145,8 @@ class Basic(Network):
                                 self.analysis_params['dk'])
 
             @ureg.wraps(ureg.meters**(-1), (ureg.meters**(-1),
-                                            ureg.meters**(-1), ureg.meters**(-1)))
+                                            ureg.meters**(-1),
+                                            ureg.meters**(-1)))
             def calc_wavenumbers(k_min, k_max, dk):
                 """ Gets range of wavenumbers """
                 return np.arange(k_min, k_max + dk, dk)

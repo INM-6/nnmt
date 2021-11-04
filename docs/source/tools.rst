@@ -1,38 +1,50 @@
+.. _sec_tools:
+
 =====
 Tools
 =====
 
-Here you find all the tools the toolbox currently contains sorted by topics
+Here you find all of the tools currently in the toolbox, sorted by submodule.
 
-Calculating network properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The tools, which are the implementations of the contained analytical methods,
+are the core of NNMT. There are underscored _tools that expect all required
+parameters direcly as arguments, and respective wrapper tools that expect a
+:ref:`model <sec_models>` as argument.
+
+Please read the :ref:`overview <sec_overview>` for more details.
+
+******************
+Network properties
+******************
 
 .. toctree::
    :maxdepth: 1
-   
+
    network_properties
-   
-Leaky integrate and fire neurons
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+********************************
+Leaky integrate-and-fire neurons
+********************************
 
 .. toctree::
    :maxdepth: 1
-   
+
    lif
-   
-Mapping spiking to rate models
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*****************************
+Spatially structured networks
+*****************************
 
 .. toctree::
    :maxdepth: 1
-   
-   mappings
-   
-Activity patterns in spatially structured networks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   spatial
+
+*************************
+Linear stability analysis
+*************************
 
 .. toctree::
    :maxdepth: 1
-   
-   spatial_1d
-   spatial_2d
+
+   linear_stability

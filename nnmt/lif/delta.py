@@ -1,28 +1,28 @@
 """
-Functions for delta shaped post synaptic potentials.
+Collection of functions for LIF neurons with delta synapses.
 
 Network Functions
 *****************
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     firing_rates
     mean_input
     std_input
-    
+
 Parameter Functions
 *******************
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     _firing_rates
     _firing_rates_for_given_input
     _mean_input
     _std_input
     _derivative_of_firing_rates_wrt_mean_input
-    
+
 """
 
 import numpy as np
@@ -37,7 +37,6 @@ from scipy.integrate import quad as _quad
 from . import _static
 from ..utils import (_cache,
                      _check_positive_params)
-from .. import ureg
 
 
 _prefix = 'lif.delta.'
@@ -49,36 +48,16 @@ def firing_rates(network, **kwargs):
 
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
-        Network with the network parameters listed in the following.
-
-    Network parameters
-    ------------------
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
-    V_0_rel : float or 1d array
-        Relative reset potential in V.
-    V_th_rel : float or 1d array
-        Relative threshold potential in V.
-    tau_m : float or 1d array
-        Membrane time constant in s.
-    tau_r : float or 1d array
-        Refractory time in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters listed in the docstring of
+        :func:`nnmt.lif.delta._firing_rates`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`~nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._static._firing_rate_integration`.
 
-    Returns:
-    --------
-    Quantity(np.array, 'hertz')
+    Returns
+    -------
+    np.array
         Array of firing rates of each population in Hz.
     """
     list_of_params = [
@@ -96,7 +75,7 @@ def firing_rates(network, **kwargs):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-        
+
     params.update(kwargs)
 
     return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
@@ -106,9 +85,36 @@ def firing_rates(network, **kwargs):
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
                   **kwargs):
     """
-    Plain calculation of firing rates for delta PSCs.
+    Calculation of firing rates for delta PSCs.
 
-    See :code:`lif.delta.firing_rates` for full documentation.
+    Parameters
+    ----------
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    V_0_rel : [float | 1d array]
+        Relative reset potential in V.
+    V_th_rel : [float | 1d array]
+        Relative threshold potential in V.
+    tau_m : [float | 1d array]
+        Membrane time constant in s.
+    tau_r : [float | 1d array]
+        Refractory time in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`nnmt.lif._static._firing_rate_integration`.
+
+    Returns
+    -------
+    np.array
+        Array of firing rates of each population in Hz.
     """
     firing_rate_params = {
         'V_0_rel': V_0_rel,
@@ -135,25 +141,24 @@ def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
     """
     Calculates stationary firing rate for delta shaped PSCs.
 
-    For more documentation see `firing_rates`.
-
-    Parameters:
-    -----------
-    tau_m: float
-        Membrane time constant in s.
-    tau_r: float
-        Refractory time in s.
-    V_0_rel: float or np.array
+    Parameters
+    ----------
+    V_0_rel : [float | 1d array]
         Relative reset potential in V.
-    V_th_rel: float or np.array
+    V_th_rel : [float | 1d array]
         Relative threshold potential in V.
-    mu: float or np.array
+    mu : [float | 1d array]
         Mean input to population of neurons.
-    sigma: float or np.array
+    sigma : [float | 1d array]
         Standard deviation of input to population of neurons.
+    tau_m : [float | 1d array]
+        Membrane time constant in s.
+    tau_r : [float | 1d array]
+        Refractory time in s.
 
-    Returns:
-    float or np.array
+    Returns
+    -------
+    [float | np.array]
         Firing rates in Hz.
     """
     y_th = (V_th_rel - mu) / sigma
@@ -267,37 +272,15 @@ def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
 
-    Following Fourcaud & Brunel (2002).
-
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
-
-    Network results
-    ---------------
-    nu : Quantity(np.array, 'hertz')
-        Firing rates of populations in Hz.
-
-    Network parameters
-    ------------------
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
-    tau_m : float or 1d array
-        Membrane time constant in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
+    network : Network object
+        Model with the network parameters and previously calculated results
+        listed in :func:`nnmt.lif.delta._mean_input`.
 
     Returns
     -------
-    Quantity(np.array, 'volt')
+    np.array
         Array of mean inputs to each population in V.
     '''
     list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
@@ -314,40 +297,20 @@ def mean_input(network):
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
+@_check_positive_params
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
-    Plain calculation of mean neuronal input.
-
-    See :code:`lif.delta.mean_input` for full documentation.
-    """
-    return _static._mean_input(nu, J, K, tau_m,
-                               J_ext, K_ext, nu_ext)
-
-
-def std_input(network):
-    '''
-    Calculates standard deviation of inputs to populations.
-
-    Following Fourcaud & Brunel (2002).
+    Calc mean input for lif neurons in fixed in-degree connectivity network.
 
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
-
-    Network results
-    ---------------
-    nu : Quantity(np.array, 'hertz')
+    nu : np.array
         Firing rates of populations in Hz.
-
-    Network parameters
-    ------------------
     J : np.array
         Weight matrix in V.
     K : np.array
-        Indegree matrix.
-    tau_m : float or 1d array
+        In-degree matrix.
+    tau_m : [float | 1d array]
         Membrane time constant in s.
     J_ext : np.array
         External weight matrix in V.
@@ -358,7 +321,26 @@ def std_input(network):
 
     Returns
     -------
-    Quantity(np.array, 'volt')
+    np.array
+        Array of mean inputs to each population in V.
+    """
+    return _static._mean_input(nu, J, K, tau_m,
+                               J_ext, K_ext, nu_ext)
+
+
+def std_input(network):
+    '''
+    Calculates standard deviation of inputs to populations.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in :func:`nnmt.lif.delta._std_input`.
+
+    Returns
+    -------
+    np.array
         Array of mean inputs to each population in V.
     '''
     list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
@@ -375,11 +357,32 @@ def std_input(network):
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
+@_check_positive_params
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of standard deviation of neuronal input.
 
-    See :code:`lif.exp.mean_input` for full documentation.
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        In-degree matrix.
+    tau_m : [float | 1d array]
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+
+    Returns
+    -------
+    np.array
+        Array of mean inputs to each population in V.
     """
     return _static._std_input(nu, J, K, tau_m,
                               J_ext, K_ext, nu_ext)
@@ -388,30 +391,27 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
 def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
                                                tau_m, tau_r):
     """
-    Derivative of the stationary firing rate without synaptic filtering
-    with respect to the mean input
+    Derivative of the stationary firing rate with respect to the mean input.
 
     Parameters
     ----------
-    tau_m : float
-        Membrane time constant in seconds.
-    tau_s : float
-        Synaptic time constant in seconds.
-    tau_r : float
-        Refractory time in seconds.
-    V_th_rel : float
-        Relative threshold potential in mV.
     V_0_rel : float
-        Relative reset potential in mV.
+        Relative reset potential in V.
+    V_th_rel : float
+        Relative threshold potential in V.
     mu : float
-        Mean neuron activity in mV.
+        Mean neuron activity in V.
     sigma : float
-        Standard deviation of neuron activity in mV.
+        Standard deviation of neuron activity in V.
+    tau_m : float
+        Membrane time constant in s.
+    tau_r : float
+        Refractory time in s.
 
     Returns
     -------
     float
-        Zero frequency limit of white noise transfer function in Hz/mV.
+        Zero frequency limit of white noise transfer function in Hz/V.
     """
     if np.any(sigma == 0):
         raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')

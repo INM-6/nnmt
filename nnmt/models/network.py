@@ -7,15 +7,13 @@ import numpy as np
 
 from .. import ureg
 from .. import input_output as io
-from ..utils import (
-    _convert_from_si_to_prefixed,
-    )
+from .. import utils
 
 
 class Network():
     """
     Basic Network parent class all other models inherit from.
-    
+
     This class serves as a container for network parameters, analysis
     parameters, and results calculated using the toolbox. It has convenient
     saving and loading methods.
@@ -31,7 +29,7 @@ class Network():
     file : str, optional
         File name of h5 file from which network can be loaded. Default is
         ``None``.
-        
+
     Attributes
     ----------
     analysis_params : dict
@@ -60,8 +58,8 @@ class Network():
     result_units : dict
         This is where the units of the results are stored. They are retrieved
         when saving results.
-        
-        
+
+
     Methods
     -------
     save
@@ -77,12 +75,12 @@ class Network():
     copy
         Returns a deep copy of the network.
     """
-    
+
     def __init__(self, network_params=None, analysis_params=None, file=None):
-        
+
         self.input_units = {}
         self.result_units = {}
-        
+
         if file:
             self.load(file)
         else:
@@ -112,11 +110,11 @@ class Network():
                 self.analysis_params = analysis_params
             else:
                 raise ValueError('Invalid value for `network_params`.')
-                        
+
             # empty results
             self.results = {}
             self.results_hash_dict = {}
-        
+
     def _convert_param_dicts_to_base_units_and_strip_units(self):
         """
         Converts the parameter dicts to base units and strips the units.
@@ -129,7 +127,7 @@ class Network():
                     dict[key] = quantity.to_base_units().magnitude
                 except AttributeError:
                     pass
-            
+
     def _add_units_to_param_dicts_and_convert_to_input_units(self):
         """
         Adds units to the parameter dicts and converts them to input units.
@@ -140,16 +138,16 @@ class Network():
         self.analysis_params = (
             self._add_units_to_dict_and_convert_to_input_units(
                 self.analysis_params))
-    
+
     def _add_units_to_dict_and_convert_to_input_units(self, dict):
         """
         Adds units to a unitless dict and converts them to input units.
-        
+
         Parameters
         ----------
         dict : dict
             Dictionary to be converted.
-            
+
         Returns
         -------
         dict
@@ -159,58 +157,56 @@ class Network():
         for key in dict.keys():
             try:
                 input_unit = self.input_units[key]
-                dict[key] = _convert_from_si_to_prefixed(dict[key], input_unit)
+                dict[key] = utils._convert_from_si_to_prefixed(dict[key],
+                                                               input_unit)
             except KeyError:
                 pass
         return dict
-    
+
     def _add_result_units(self):
         """
         Adds units stored in networks result_units dict to results dict.
         """
-        
+
         for key, unit in self.result_units.items():
             self.results[key] = ureg.Quantity(self.results[key], unit)
-        
+
     def _strip_result_units(self):
         """
         Converts units to SI and strips units from results dict.
         """
-        
+
         for key, value in self.results.items():
             if isinstance(value, ureg.Quantity):
                 self.results[key] = value.magnitude
                 self.result_units[key] = str(value.units)
 
-    def save(self, file, overwrite=False):
+    def save(self, file):
         """
         Save network to h5 file.
-        
+
         The networks' dictionaires (network_params, analysis_params, results,
         results_hash_dict) are stored. Quantities are converted to value-unit
         dictionaries.
-        
+
         Parameters
         ----------
         file : str
             Output file name.
-        overwrite : bool
-            Whether to overwrite an existing h5 file or not. If there already
-            is one, h5py tries to update the h5 dictionary.
         """
         self._add_units_to_param_dicts_and_convert_to_input_units()
         self._add_result_units()
-        io.save_network(file, self, overwrite)
+        io.save_network(file, self)
         self._convert_param_dicts_to_base_units_and_strip_units()
         self._strip_result_units()
-        
+
     def save_results(self, file):
         """
         Saves results and parameters to h5 file.
 
-        Parameters:
-        -----------
-        file: str
+        Parameters
+        ----------
+        file : str
             Output file name.
         """
         self._add_units_to_param_dicts_and_convert_to_input_units()
@@ -219,19 +215,19 @@ class Network():
                       analysis_params=self.analysis_params)
         io.save_quantity_dict_to_h5(file, output)
         self._convert_param_dicts_to_base_units_and_strip_units()
-    
+
     def load(self, file):
         """
         Load network from h5 file.
-        
+
         The networks' dictionaires (network_params, analysis_params, results,
         results_hash_dict) are loaded.
-        
+
         Note: The network's state is overwritten!
-        
-        Parameters:
-        -----------
-        file: str
+
+        Parameters
+        ----------
+        file : str
             Input file name.
         """
         (self.network_params,
@@ -251,27 +247,27 @@ class Network():
         """
         Change parameters and return network with specified parameters.
 
-        Parameters:
-        -----------
-        changed_network_params: dict
+        Parameters
+        ----------
+        changed_network_params : dict
             Dictionary specifying which network parameters should be altered.
-        changed_analysis_params: dict
+        changed_analysis_params : dict
             Dictionary specifying which analysis parameters should be altered.
-        overwrite: bool
+        overwrite : bool
             Specifying whether existing network should be overwritten. Note:
             This deletes the existing results!
 
-        Returns:
-        --------
+        Returns
+        -------
         Network object
             New network with specified parameters.
         """
-        
+
         new_network_params = self.network_params.copy()
         new_network_params.update(changed_network_params)
         new_analysis_params = self.analysis_params.copy()
         new_analysis_params.update(changed_analysis_params)
-        
+
         if overwrite:
             self.network_params = new_network_params
             self.analysis_params = new_analysis_params
@@ -282,8 +278,16 @@ class Network():
             self.results_hash_dict = {}
             return self
         else:
-            return Network(new_network_params, new_analysis_params)
-        
+            return self._instantiate(new_network_params, new_analysis_params)
+
+    def _instantiate(self, new_network_params, new_analysis_params):
+        """
+        Helper method for change of parameters that instatiates network.
+
+        Needs to be implemented for each child class seperately.
+        """
+        return Network(new_network_params, new_analysis_params)
+
     def copy(self):
         """
         Returns a deep copy of the network.
@@ -300,10 +304,10 @@ class Network():
     def clear_results(self, results=None):
         """
         Remove calculated results or specified ones from internal dicts.
-        
+
         Parameters
         ----------
-        results: None or list
+        results : [None | list]
             List of results to be removed. Default is None.
         """
         if results is not None:

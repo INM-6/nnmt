@@ -1,9 +1,7 @@
+.. _sec_utils:
+
 =====
-Utils
+utils
 =====
 
-.. toctree::
-   :maxdepth: 1
-   
-   input_output
-   internal_utils
+.. automodule:: nnmt.utils

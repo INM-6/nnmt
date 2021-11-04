@@ -51,7 +51,7 @@ params = {
     'figwidth_2cols': 180. / 25.4,
 
     # file name of final figure
-    'figure_fname': 'figures/Senk2020',
+    'figure_fname': 'Senk2020',
 
     # file names for intermediate results
     'fname_tf_scan_results': 'temp/Senk2020_scan_fit_transfer_function.npy',
@@ -338,7 +338,7 @@ def figure_Senk2020_network_structure():
         'This figure requires: "import svgutils.transform as sg"')
 
     plot_fn = params['figure_fname'] + '_network_structure'
-    sketch_fn = 'sketches/Senk2020_sketch.svg'
+    sketch_fn = 'Senk2020_sketch.svg'
 
     fig = plt.figure(
         figsize=(

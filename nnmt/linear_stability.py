@@ -5,10 +5,10 @@ Parameter Functions
 *******************
 
 .. autosummary::
-    :toctree: _toctree/
+    :toctree: _toctree/linear_stability/
 
-_solve_characteristic_equation_lambertw
-_linalg_max_eigenvalue
+    _solve_characteristic_equation_lambertw
+    _linalg_max_eigenvalue
 
 """
 
@@ -32,7 +32,7 @@ def _solve_characteristic_equation_lambertw(
         Time constants in s.
     delay : np.array
         Delays in s.
-    connectivity :
+    connectivity : np.array
         Effective connectivity matrix.
 
     Returns

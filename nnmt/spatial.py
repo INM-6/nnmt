@@ -5,9 +5,9 @@ Parameter Functions
 *******************
 
 .. autosummary::
-    :toctree: _toctree/
+    :toctree: _toctree/spatial/
 
-_spatial_profile_boxcar
+    _spatial_profile_boxcar
 
 """
 

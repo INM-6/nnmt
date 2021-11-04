@@ -6,27 +6,27 @@ Cache
 
 .. autosummary::
     :toctree: _toctree/utils/
-    
+
     _cache
-    
+
 Checks
 ******
 
 .. autosummary::
     :toctree: _toctree/utils/
-    
+
     check_if_positive
     check_for_valid_k_in_fast_synaptic_regime
     _check_positive_params
     _check_k_in_fast_synaptic_regime
-    
+
 
 Unit and Pint Related Functions
 *******************************
 
 .. autosummary::
     :toctree: _toctree/utils/
-    
+
     pint_append
     pint_array
     pint_array_of_dimension_plus_one
@@ -35,15 +35,15 @@ Unit and Pint Related Functions
     _convert_to_si_and_strip_units
     _convert_from_si_to_prefixed
     _convert_from_prefixed_to_si
-    
+
 Miscellaneous
 *************
 
 .. autosummary::
     :toctree: _toctree/utils/
-    
+
     build_full_arg_list
-    
+
 """
 
 import inspect
@@ -57,17 +57,18 @@ from . import ureg
 
 def _cache(network, func, params, result_keys, units=None):
     """
-    Cache resuls of `func(**params)` into network dicts using result_keys.
-    
+    Save result of ``func(**params)`` into network dicts using `result_keys`.
+
     This function serves as a wrapper for functions that calculate quantities
     which are to be stored in the network's result dicts. First it creates a
     hash using the function name, the passed parameters, and the result keys,
-    and checks whether this hash is a key of the network's results_hash_dict.
-    If this is the case, the old result is returned.
-    
-    If not, the new result is calculated and stored in the results_hash_dict
-    and the results dict. The unit of the returned result is stored in the
-    network's result_units dict. Then the new result is returned.
+    and checks whether this hash is a key of the network's
+    ``results_hash_dict``. If this is the case, the old result is returned.
+
+    If not, the new result is calculated and stored in the
+    ``results_hash_dict`` and the ``results`` dict. The unit of the returned
+    result is stored in the network's ``result_units dict``. Then the new
+    result is returned.
 
     Parameters
     ----------
@@ -76,15 +77,15 @@ def _cache(network, func, params, result_keys, units=None):
     func : function
         Function whose return value should be cached.
     params : dict
-        Parameters passed on to func.
+        Parameters passed on to `func`.
     result_keys : str or list of str
         Specifies under which keys the result should be stored.
     units : str or list of str
-        Units of results. Default is ``None``.
+        Units of results. Default is None.
 
     Returns
     -------
-    func(**params)
+    ``func(**params)``
     """
     # make sure result keys are array
     # here we convert them to a list, because otherwise you might run into a
@@ -93,15 +94,15 @@ def _cache(network, func, params, result_keys, units=None):
     # this then leads to a problem when loading the h5 file, because the
     # h5py_wrapper doesn't know the numpy string type.
     result_keys = np.atleast_1d(result_keys).tolist()
-    
+
     # create unique hash for given function parameter combination
     label = str((func.__name__, result_keys, tuple(sorted(params.items()))))
     h = hashlib.md5(label.encode('utf-8')).hexdigest()
-    
+
     # collect results
     results = getattr(network, 'results')
     results_hash_dict = getattr(network, 'results_hash_dict')
-    
+
     # if corresponding result exists return cached value
     if h in results_hash_dict.keys():
         if len(result_keys) == 1:
@@ -112,18 +113,18 @@ def _cache(network, func, params, result_keys, units=None):
     else:
         # calculate new results
         new_results = func(**params)
-            
+
         # create hash dict entry
         if len(result_keys) == 1:
             hash_dict = {result_keys[0]: new_results}
         else:
             assert len(result_keys) == len(new_results)
             hash_dict = dict(zip(result_keys, new_results))
-    
+
         hash_dict['params'] = params
         # add entry to hash dict
         results_hash_dict[h] = hash_dict
-        
+
     # update results
     if len(result_keys) == 1:
         results[result_keys[0]] = new_results
@@ -142,9 +143,9 @@ def _cache(network, func, params, result_keys, units=None):
         assert len(result_keys) == len(units)
         result_units.update(dict(zip(result_keys, units)))
         setattr(network, 'result_units', result_units)
-    
+
     return new_results
-    
+
 
 def check_if_positive(parameters, parameter_names):
     """Check that will raise an error if parameters are negative."""
@@ -160,7 +161,7 @@ def check_if_positive(parameters, parameter_names):
 
 
 def _check_positive_params(func):
-    """Decorator that checks that a fixed list of params is positive."""
+    """Decorator that checks that a fixed list of parameters is positive."""
     all_pos_params = ['C',
                       'K',
                       'K_ext',
@@ -181,36 +182,34 @@ def _check_positive_params(func):
                       'tau_r',
                       'nu_ext',
                       ]
-    
+
     @wraps(func)
     def decorator_check(*args, **kwargs):
         signature = inspect.signature(func)
         pos_param_names = [param for param in signature.parameters
                            if param in all_pos_params]
-        if len(args) != 0:
-            pos_params = [args[i] for i, param
-                          in enumerate(signature.parameters)
-                          if param in pos_param_names]
-        else:
-            pos_params = [kwargs[param] for param in pos_param_names]
+        all_args = build_full_arg_list(signature, args, kwargs)
+        pos_params = [all_args[i] for i, param
+                      in enumerate(signature.parameters)
+                      if param in pos_param_names]
         check_if_positive(pos_params, pos_param_names)
         return func(*args, **kwargs)
     return decorator_check
 
 
 def check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s):
-    """ Check whether we are in fast synaptic regime."""
+    """ Check whether `tau_m` and `tau_s` imply fast synaptic regime."""
     k = np.atleast_1d(np.sqrt(tau_s / tau_m))
     if np.any((np.sqrt(0.1) < k)):
         k_warning = ('k=sqrt(tau_s/tau_m)={} might be too large for '
                      'calculation of firing rates via Taylor expansion!'
                      ).format(k)
         warnings.warn(k_warning)
-        
-        
+
+
 def _check_k_in_fast_synaptic_regime(func):
     """
-    Decorator that checks whether func is operating in fast synaptic regime.
+    Decorator checking whether `func` is operating in fast synaptic regime.
     """
     @wraps(func)
     def decorator_check(*args, **kwargs):
@@ -231,7 +230,7 @@ def _check_k_in_fast_synaptic_regime(func):
 def pint_append(array, quantity, axis=0):
     """
     Append quantity to np.array quantity. Handles units correctly.
-    
+
     Parameters
     ----------
     array : pint Quantity with np.array magnitude or just np.array
@@ -240,7 +239,7 @@ def pint_append(array, quantity, axis=0):
         Quantity which should be appended to array.
     axis : num
         Axis along which to append quantity to array.
-        
+
     Returns
     -------
     pint Quantity with np.array magnitude
@@ -251,12 +250,12 @@ def pint_append(array, quantity, axis=0):
                          axis=axis) * array.units
     else:
         return np.append(array, [quantity], axis=axis)
-    
-    
+
+
 def pint_array(quantity_list):
     """
     Create quantity with magnitude np.array. Handles units correctly.
-    
+
     Parameters
     ----------
     quantity_list : list
@@ -269,18 +268,19 @@ def pint_array(quantity_list):
     except AttributeError:
         array = np.array(quantity_list)
     return array
-    
-    
+
+
 def pint_array_of_dimension_plus_one(quantity):
     """
-    Create quantity with magnitude np.array with one more dimension.
-    than quantity. Handles units correctly.
+    Create quantity with magnitude np.array with one more dimension
+
+    Handles units correctly.
     """
     if isinstance(quantity, ureg.Quantity):
         return np.array([quantity.magnitude]) * quantity.units
     else:
         return np.array([quantity])
-    
+
 
 def _strip_units(dict):
     """
@@ -302,14 +302,14 @@ def _to_si_units(dict):
             dict[key] = item.to_base_units()
         except AttributeError:
             pass
-        
-        
+
+
 def _convert_to_si_and_strip_units(dict):
     """Converts dict of quantities to si units and strips them."""
     _to_si_units(dict)
     _strip_units(dict)
-        
-        
+
+
 def _convert_from_si_to_prefixed(magnitude, unit):
     """ Converts a SI magnitude to the given unit. """
     try:
@@ -337,7 +337,7 @@ def _convert_from_prefixed_to_si(magnitude, unit):
 def build_full_arg_list(signature, args, kwargs):
     """
     Creates a full list of arguments including standard arguments.
-    
+
     Parameters
     ----------
     signature : Signature object
@@ -346,7 +346,7 @@ def build_full_arg_list(signature, args, kwargs):
         List of passed positional arguments.
     kwargs : dict
         Dict of passed keyword arguments.
-    
+
     Returns
     -------
     list
@@ -356,12 +356,12 @@ def build_full_arg_list(signature, args, kwargs):
     keys = list(signature.parameters.keys())[len(args):]
     defaults = [param.default for param
                 in signature.parameters.values()][len(args):]
-    
+
     full_list = list(args)
     for key, default in zip(keys, defaults):
         if key in kwargs.keys():
             full_list.append(kwargs[key])
         else:
             full_list.append(default)
-        
+
     return full_list
