@@ -791,36 +791,17 @@ def fit_transfer_function(network):
 
     Parameters
     ----------
-    network : nnmt.create.Network or child class instance.
-        Network with the network parameters listed in the following.
-
-    Network parameters
-    ------------------
-    tau_m : float
-        Membrane time constant in s.
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
-
-    Analysis parameters
-    -------------------
-    omegas : float or np.ndarray
-        Input frequencies to population in Hz.
-
-    Network results
-    ---------------
-    transfer_function : np.array
-        Transfer functions for each population with the following shape:
-        (number of freqencies, number of populations).
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters, analysis parameters and results
+        listed in :func:`nnmt.lif.exp._fit_transfer_function`.
 
     Returns
     -------
-    transfer_function_fit : ureg.Quantity(np.array, 'hertz/volt')
-        Fit of transfer functions for each population with the following shape:
-        (number of freqencies, number of populations).
-    tau_rate : ureg.Quantity(np.array, 's')
-        Fitted time constant for each population.
+    transfer_function_fit : np.array
+        Fit of transfer functions in Hertz/volt for each population with the
+        following shape: (number of freqencies, number of populations).
+    tau_rate : np.array
+        Fitted time constant for each population in s.
     W_rate : np.array
         Matrix of fitted weights (unitless).
     fit_error : float
@@ -857,6 +838,32 @@ def fit_transfer_function(network):
 def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     """
     Fits transfer function. Parameter scaling for LIF exp.
+
+    Parameters
+    ----------
+    transfer_function : np.array
+        Transfer functions for each population with the following shape:
+        (number of freqencies, number of populations).
+    omegas : [float | np.ndarray]
+        Input frequencies to population in Hz.
+    tau_m : float
+        Membrane time constant in s.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+
+    Returns
+    -------
+    transfer_function_fit : np.array
+        Fit of transfer functions in Hertz/volt for each population with the
+        following shape: (number of freqencies, number of populations).
+    tau_rate : np.array
+        Fitted time constant for each population in s.
+    W_rate : np.array
+        Matrix of fitted weights (unitless).
+    fit_error : float
+        Combined fit error.
 
     See :code:`lif.exp.fit_transfer_function` for full documentation.
     """
