@@ -20,9 +20,9 @@ def _solve_characteristic_equation_lambertw(
         branch_nr, tau, delay, connectivity):
     """
     Uses the Lambert W function to compute the eigenvalue.
-    
+
     Solves the characteristic equation with delay for a given branch number.
-    The equation is given and explained in :cite:t:`senk2020`, Eq. 7. 
+    The equation is given and explained in :cite:t:`senk2020`, Eq. 7.
 
     Parameters
     ----------
@@ -37,7 +37,7 @@ def _solve_characteristic_equation_lambertw(
 
     Returns
     -------
-    eigenval: np.array
+    np.array
         Eigenvalues.
     """
     # only scalar or equal value for all populations accepted
@@ -47,8 +47,8 @@ def _solve_characteristic_equation_lambertw(
 
     c = _linalg_max_eigenvalue(connectivity)
 
-    eigenval = (-1. / t + 1. / d *
-        lambertw(c * d / t * np.exp(d / t), branch_nr))
+    eigenval = (-1. / t + 1. / d
+                * lambertw(c * d / t * np.exp(d / t), branch_nr))
     return eigenval
 
 
@@ -58,12 +58,13 @@ def _linalg_max_eigenvalue(matrix):
 
     Parameters
     ----------
-    matrix: np.array
+    matrix : np.array
         Matrix to calculate eigenvalues from.
 
     Returns
     -------
-    max_eigval:
+    float
+        Maximum eigenvalue.
     """
     eigvals = np.linalg.eigvals(matrix)
     max_eigval = eigvals[np.argmax(np.abs(eigvals))]

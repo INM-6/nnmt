@@ -2,7 +2,7 @@
 Senk et al. 2020
 ================
 
-Example demonstrating the methods used in Figures 5 and 6 of :cite:t:`senk2020`.
+Example demonstrating the methods used in Figures 5, 6 of :cite:t:`senk2020`.
 
 Author: Johanna Senk
 """
@@ -438,7 +438,7 @@ def _solve_chareq_numerically_alpha(
         lambda_rate, k, alpha, network, tau_rate, W_rate):
     """
     Solves the full characteristic equation numerically.
-    
+
     Parameters
     ----------
     lambda_rate: complex float
@@ -863,7 +863,7 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
 def _plot_transfer_functions(gs_glob, tf_scan_results):
     """
     Plots transfer function and fit for selection of parameters.
-    
+
     Uses results computed with scan_fit_transfer_function().
 
     Parameters
@@ -965,7 +965,7 @@ def _plot_transfer_functions(gs_glob, tf_scan_results):
 def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
     """
     Plots eigenvalues from rate model vs. wavenumbers.
-    
+
     Uses results computed with linear_stability_analysis().
 
     Parameters
@@ -1045,7 +1045,7 @@ def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
 def _plot_eigenvalues_alpha(gs_glob, stability_results):
     """
     Plots linear interpolation of eigenvalues.
-    
+
     Uses results computed with linear_stability_analysis().
 
     Parameters

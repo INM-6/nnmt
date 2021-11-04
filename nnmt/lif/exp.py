@@ -6,7 +6,7 @@ Network Functions
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     firing_rates
     mean_input
     std_input
@@ -18,13 +18,13 @@ Network Functions
     sensitivity_measure
     power_spectra
     external_rates_for_fixed_input
-    
+
 Parameter Functions
 *******************
 
 .. autosummary::
     :toctree: _toctree/lif/
-    
+
     _firing_rates
     _firing_rate_shift
     _firing_rate_taylor
@@ -39,7 +39,7 @@ Parameter Functions
     _sensitivity_measure
     _power_spectra
     _external_rates_for_fixed_input
-    
+
 """
 
 import warnings
@@ -190,10 +190,10 @@ def firing_rates(network, method='shift', **kwargs):
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-    
+
     params['method'] = method
     params.update(kwargs)
-    
+
     return _cache(network,
                   _firing_rates, params, _prefix + 'firing_rates', 'hertz')
 
@@ -220,7 +220,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
         }
-    
+
     if method == 'shift':
         return _static._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,
@@ -796,24 +796,24 @@ def fit_transfer_function(network):
     Analysis parameters
     -------------------
     omegas : float or np.ndarray
-        Input frequencies to population in Hz
+        Input frequencies to population in Hz.
 
     Network results
     ---------------
     transfer_function : np.array
         Transfer functions for each population with the following shape:
-        (number of freqencies, number of populations)
+        (number of freqencies, number of populations).
 
     Returns
     -------
     transfer_function_fit : ureg.Quantity(np.array, 'hertz/volt')
         Fit of transfer functions for each population with the following shape:
-        (number of freqencies, number of populations)
-    tau_rate: ureg.Quantity(np.array, 's')
+        (number of freqencies, number of populations).
+    tau_rate : ureg.Quantity(np.array, 's')
         Fitted time constant for each population.
     W_rate : np.array
         Matrix of fitted weights (unitless).
-    fit_error: float
+    fit_error : float
         Combined fit error.
     """
     list_of_params = ['tau_m', 'J', 'K']
@@ -833,14 +833,14 @@ def fit_transfer_function(network):
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
     return _cache(network, _fit_transfer_function, params,
-                [_prefix + 'transfer_function_fit',
-                 _prefix + 'tau_rate',
-                 _prefix + 'W_rate',
-                 _prefix + 'fit_error'],
-                ['hertz / volt',
-                 'seconds',
-                  None,
-                  None])
+                  [_prefix + 'transfer_function_fit',
+                   _prefix + 'tau_rate',
+                   _prefix + 'W_rate',
+                   _prefix + 'fit_error'],
+                  ['hertz / volt',
+                   'seconds',
+                   None,
+                   None])
 
 
 @_check_positive_params
@@ -848,7 +848,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     """
     Fits transfer function. Parameter scaling for LIF exp.
 
-    See :code:`lif.exp.fit_transfer_function` for full documentation.    
+    See :code:`lif.exp.fit_transfer_function` for full documentation.
     """
     transfer_function_fit, tau_rate, h0, fit_error = \
         _static._fit_transfer_function(transfer_function, omegas)
@@ -1320,11 +1320,11 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
 def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
     """
     Calculate external rates needed to get fixed mean and std input.
-    
+
     Uses least square method to find best fitting solution for external rates
     such that the mean and standard deviation of the input to the neuronal
     populations is as close as possible to ``mu_set`` and ``sigma_set``.
-    
+
     Generalization of equation E1 of Helias et al. 2013 and the corrected
     version in appendix F of Senk et al. 2020.
 
@@ -1380,7 +1380,7 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
             "connectivity!\n"
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
-    
+
     params['mu_set'] = mu_set
     params['sigma_set'] = sigma_set
     params['method'] = method
@@ -1454,15 +1454,15 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
                          J_ext=0, K_ext=0, nu_ext=0)
     sigma_loc = _std_input(target_rates, J, K, tau_m,
                            J_ext=0, K_ext=0, nu_ext=0)
-    
+
     # external working point that is to be achieved
     mu_ext = mu_set - mu_loc
     var_ext = sigma_set**2 - sigma_loc**2
-    
+
     # the linear set of equations that needs to be solved
     LHS = np.append(K_ext * J_ext, K_ext * J_ext**2, axis=0)
     RHS = np.append(mu_ext / tau_m, var_ext / tau_m)
-    
+
     # find a solution as good as possible using least square method
     nu_ext = np.linalg.lstsq(LHS, RHS, rcond=None)[0]
 

@@ -27,7 +27,7 @@ def _spatial_profile_boxcar(k, width):
 
     Returns
     -------
-    ft : float
+    float
         Fourier transform of spatial profile.
     """
     if k == 0:
