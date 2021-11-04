@@ -22,11 +22,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'NNMT'
-copyright = '2021, Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Karolína Korvasová, Hannah Bos, Jannis Schuecker, Moritz Helias'
-author = 'Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Karolína Korvasová, Hannah Bos, Jannis Schuecker, Moritz Helias'
+copyright = '2021, Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Moritz Helias'
+author = 'Moritz Layer, Johanna Senk, Simon Essink, Alexander van Meegen, Moritz Helias'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -63,7 +63,7 @@ extensions = [
 # napoleon_use_param = False
 
 sphinx_gallery_conf = {
-     'examples_dirs': '../../examples',   # path to your example scripts
+     'examples_dirs': '../../examples',  # path to your example scripts
      'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
      'plot_gallery': 'False'
 }
@@ -122,7 +122,7 @@ html_theme_options = {
 
 # The name of the image file (relative to this directory) to place at the top
 # of the sidebar
-html_logo = 'images/logo.png'
+# html_logo = 'images/logo.png'
 
 # html_copy_source = False
 

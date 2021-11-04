@@ -181,7 +181,7 @@ class Network():
                 self.results[key] = value.magnitude
                 self.result_units[key] = str(value.units)
 
-    def save(self, file, overwrite=False):
+    def save(self, file):
         """
         Save network to h5 file.
 
@@ -193,13 +193,10 @@ class Network():
         ----------
         file : str
             Output file name.
-        overwrite : bool
-            Whether to overwrite an existing h5 file or not. If there already
-            is one, h5py tries to update the h5 dictionary.
         """
         self._add_units_to_param_dicts_and_convert_to_input_units()
         self._add_result_units()
-        io.save_network(file, self, overwrite)
+        io.save_network(file, self)
         self._convert_param_dicts_to_base_units_and_strip_units()
         self._strip_result_units()
 
@@ -207,9 +204,9 @@ class Network():
         """
         Saves results and parameters to h5 file.
 
-        Parameters:
-        -----------
-        file: str
+        Parameters
+        ----------
+        file : str
             Output file name.
         """
         self._add_units_to_param_dicts_and_convert_to_input_units()
@@ -228,9 +225,9 @@ class Network():
 
         Note: The network's state is overwritten!
 
-        Parameters:
-        -----------
-        file: str
+        Parameters
+        ----------
+        file : str
             Input file name.
         """
         (self.network_params,
@@ -250,18 +247,18 @@ class Network():
         """
         Change parameters and return network with specified parameters.
 
-        Parameters:
-        -----------
-        changed_network_params: dict
+        Parameters
+        ----------
+        changed_network_params : dict
             Dictionary specifying which network parameters should be altered.
-        changed_analysis_params: dict
+        changed_analysis_params : dict
             Dictionary specifying which analysis parameters should be altered.
-        overwrite: bool
+        overwrite : bool
             Specifying whether existing network should be overwritten. Note:
             This deletes the existing results!
 
-        Returns:
-        --------
+        Returns
+        -------
         Network object
             New network with specified parameters.
         """
@@ -310,7 +307,7 @@ class Network():
 
         Parameters
         ----------
-        results: None or list
+        results : [None | list]
             List of results to be removed. Default is None.
         """
         if results is not None:

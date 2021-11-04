@@ -1,10 +1,10 @@
 Installation
 ============
 
-If you have a local copy of the
-`NNMT repository <https://github.com/INM-6/nnmt>`_, you can install NNMT by
-changing your working directory to your local copy of the repository and
-running:
+If you cloned the `NNMT repository <https://github.com/INM-6/nnmt>`_, you can
+install NNMT by changing your working directory to your local copy of the
+repository and running the command:
+
 
 .. code:: bash
 

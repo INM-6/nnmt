@@ -7,10 +7,10 @@ Functions
 
 .. autosummary::
     :toctree: _toctree/network_properties/
-    
+
     delay_dist_matrix
     _delay_dist_matrix
-    
+
 '''
 
 
@@ -27,32 +27,21 @@ def delay_dist_matrix(network, freqs=None):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.
 
-    Assumes lower boundary for truncated Gaussian distributed delays to be zero
-    (exact would be dt, the minimal time step).
+    See :func:`nnmt.network_properties._delay_dist_matrix` for details.
 
     Parameters
     ----------
     network : Network object
-        The network for which to calcluate the delay distribution matrix. It
-        needs to have the following items in :code:`network_params`:
-        
-            Delay : array_like
-                Delay matrix in seconds
-            Delay_sd : array_like
-                Delay standard deviation matrix in seconds.
-            delay_dist : {'none', 'truncated_gaussian', 'gaussian'}
-                String specifying delay distribution.
-        
-        And the following items in :code:`analysis_params`:
-           
-            omegas : array_like, optional
-                The considered angular frequencies , if `freqs` is not passed
-                explicitely.
-                
+        The network for which to calcluate the delay distribution matrix, with
+
+        - ``network_params``: `Delay`, `Delay_sd`, `delay_dist`
+        - ``analysis_params``: `freqs`, optional
+
     freqs : array_like, optional
         The frequencies for which to calculate the delay distribution matrix in
-        Hz.
-            
+        Hz. Can alternatively be contained in the ``analysis_params`` of
+        `network`.
+
     Returns
     -------
     np.ndarray
@@ -80,13 +69,27 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.
 
-    See Also
-    --------
-    delay_dist_matrix : Wrapper function with full documentation.
-    '''
+    Assumes lower boundary for truncated Gaussian distributed delays to be zero
+    (exact would be dt, the minimal time step).
 
+    Parameters
+    ----------
+    Delay : array_like
+        Delay matrix in seconds
+    Delay_sd : array_like
+        Delay standard deviation matrix in seconds.
+    delay_dist : {'none', 'truncated_gaussian', 'gaussian'}
+        String specifying delay distribution.
+    omegas : array_like, optional
+       The considered angular frequencies in 2*pi*Hz.
+
+    Returns
+    -------
+    np.ndarray
+        Matrix of delay distribution specific pre-factors at frequency omegas.
+    '''
     omegas = np.array([np.ones(Delay.shape) * omega for omega in omegas])
-    
+
     if delay_dist == 'none':
         return np.exp(- 1j * omegas * Delay)
 

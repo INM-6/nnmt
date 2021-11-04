@@ -1,32 +1,26 @@
+.. _sec_models:
+
+======
 Models
 ======
 
-Network objects in NNMT basically are containers for network parameters,
-analysis parameters, and results. They come with convenient saving and loading
-routines and allow defining how to convert your parameter files (we mostly use
-``yaml`` files, but you can use whatever suits you the best) to network
-parameters.
+Here you find all the models currently available in NNMT.
 
-Network parameters are all parameters that describe properties of the network
-itself, like for example the number of neurons in each population, or the
-membrane time constants.
+Models in NNMT basically are containers for network parameters, analysis
+parameters, and results. They come with convenience routines for changing
+parameters, saving, and loading results. They can be instantiated using
+``yaml`` files or dictionaries, and they typically require network parameters
+and analysis parameters as arguments.
 
-Analysis parameters are all parameters that do not describe properties of the
-network, but need to be defined in order to calculate quantities of interest.
-For example, one needs to define the frequencies for which to calculate the
-power spectra.
+Please read the :ref:`overview <sec_overview>` for more details.
 
-Using networks can make calculating quantities much easier, because many
-quantities rely on previous results. When you calculate a quantity using a
-network, the results are always stored, so other functions can grab those
-results easily.
+*************
+Network class
+*************
 
-Network Class
-^^^^^^^^^^^^^
-
-This is the parent class, all other network models inherit from. It defines the
-attributes NNMT functions assume to find and defines saving and loading
-methods, as well as some convenience methods.
+This is the parent class all other network models inherit from. It defines the
+attributes NNMT tools assume to find and defines methods for changing
+parameters, saving, and loading results.
 
 .. autosummary::
   :toctree: _autosummary
@@ -34,19 +28,20 @@ methods, as well as some convenience methods.
   :recursive:
 
   nnmt.models.Network
-  
 
-Implemented Network Models
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+**************************
+Implemented network models
+**************************
 
-These are network models derived from the generic ``Network`` object. They
-define how parameter files are read in and how network parameters and analysis
-parameters are calculated.
+These are network models derived from the generic :class:`nnmt.models.Network`
+class. They define how parameter files are read in and how dependent network
+and analysis parameters are calculated from the parameter files.
 
 .. autosummary::
   :toctree: _autosummary
   :template: custom-class-template.rst
   :recursive:
 
+  nnmt.models.Plain
   nnmt.models.Basic
   nnmt.models.Microcircuit
