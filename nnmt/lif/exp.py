@@ -789,6 +789,8 @@ def fit_transfer_function(network):
     """
     Fits transfer function (low-pass filter) with least-squares fit.
 
+    See :func:`nnmt.lif.exp._fit_transfer_function` for full documentation.
+
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
@@ -864,8 +866,6 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
         Matrix of fitted weights (unitless).
     fit_error : float
         Combined fit error.
-
-    See :code:`lif.exp.fit_transfer_function` for full documentation.
     """
     transfer_function_fit, tau_rate, h0, fit_error = \
         _static._fit_transfer_function(transfer_function, omegas)

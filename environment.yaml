@@ -1,4 +1,4 @@
-name: nnmt
+name: nnmt_temp
 channels:
   - defaults
   - conda-forge
