@@ -17,6 +17,10 @@ class Basic(Network):
     calculates relative thresholds and converts the analysis frequencies to
     angular frequencies.
 
+    It optionally calculates the spatial Fourier wavenumbers (also known as k
+    values) needed for a linear stability analysis of spatially structured
+    network models.
+
     Parameters
     ----------
     network_params : [str | dict]
@@ -49,6 +53,12 @@ class Basic(Network):
             Minimal analysis frequency.
         - `f_max` : float
             Maximal analysis frequency.
+        - `dk` : float, optional
+            Step size between two k values.
+        - `k_min` : float, optional
+            Minimal k value.
+        - `k_max` : float, optional
+            Maximal k value.
 
     See Also
     --------
@@ -112,7 +122,8 @@ class Basic(Network):
         """
         Calculate all analysis parameters derived from parameters in yaml file.
 
-        Calculates the angular analysis frequencies.
+        Calculates the angular analysis frequencies and optionally the range
+        of wavenumbers needed for spatial analyses.
 
         Returns
         -------
