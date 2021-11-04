@@ -9,12 +9,11 @@ Author: Johanna Senk
 
 ##########################################################################
 # Executing this script first generates data using the functions
-# scan_fit_transfer_function() and linear_stability_analysis().
-# This data is written to .npy files in the temp directory.
+# ``scan_fit_transfer_function()`` and ``linear_stability_analysis()``.
+# This data is written to ``.npy`` files in the ``temp`` directory.
 # Each of the following three functions generates one figure:
-# network sketches, results from scan_fit_transfer_function(), and results
-# from linear_stability_analysis().
-##########################################################################
+# ``network sketches``, results from ``scan_fit_transfer_function()``, and
+# results from ``linear_stability_analysis()``.
 
 import os
 import sys
@@ -42,7 +41,7 @@ except BaseException:
 
 
 ##########################################################################
-# Parameter definitions.
+# Parameter definitions
 ##########################################################################
 
 params = {
@@ -144,9 +143,12 @@ params = {
 
 
 ##########################################################################
-# Main functions: calculate results (meanfield and linear stability analysis)
+# Main functions
+# #########################################################################
+
+# #########################################################################
+# Calculate results (meanfield and linear stability analysis)
 # and create the figure.
-##########################################################################
 
 
 def scan_fit_transfer_function():
@@ -430,7 +432,7 @@ def figure_Senk2020_eigenvalues():
 
 
 ##########################################################################
-# Helper function for linear stability analyisis (linear interpolation).
+# Helper function for linear stability analyisis (linear interpolation)
 ##########################################################################
 
 
@@ -677,7 +679,7 @@ def _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate):
 
 
 ##########################################################################
-# Plot functions for network illustrations and results.
+# Plot functions for network illustrations and results
 ##########################################################################
 
 
@@ -1147,7 +1149,7 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 
 ##########################################################################
-# Execution of main functions.
+# Execution of main functions
 ##########################################################################
 
 if __name__ == '__main__':
