@@ -1550,7 +1550,7 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     RHS = np.append(mu_ext / tau_m, var_ext / tau_m)
 
     # find a solution as good as possible using least square method
-    nu_ext = np.linalg.lstsq(LHS, RHS)[0]
+    nu_ext = np.linalg.lstsq(LHS, RHS, rcond=None)[0]
     print(nu_ext)
 
     if np.any(nu_ext < 0):
