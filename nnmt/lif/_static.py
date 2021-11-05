@@ -286,12 +286,32 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
 
 def _fit_transfer_function(transfunc, omegas):
     """
-    Fits transfer function (low-pass filter) for the given frequencies.
+    Fits the transfer function (tf) of a low-pass filter to the passed tf.
 
-    A least-squares fit is used.
+    A least-squares fit is used for the fitting procedure.
 
     For details refer to
     :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
+
+    Parameters
+    ----------
+    transfer_function : np.array
+        Transfer functions for each population with the following shape:
+        (number of freqencies, number of populations).
+    omegas : [float | np.ndarray]
+        Input frequencies to population in Hz.
+
+    Returns
+    -------
+    transfer_function_fit : np.array
+        Fit of transfer functions in Hertz/volt for each population with the
+        following shape: (number of freqencies, number of populations).
+    tau_rate : np.array
+        Fitted time constant for each population in s.
+    h0 : ?
+        ?
+    fit_error : float
+        Combined fit error.
     """
     def func(omega, tau, h0):
         return h0 / (1. + 1j * omega * tau)

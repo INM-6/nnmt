@@ -787,7 +787,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
 def fit_transfer_function(network):
     """
-    Fits transfer function (low-pass filter) with least-squares fit.
+    Fits the transfer function (tf) of a low-pass filter to the passed tf.
 
     See :func:`nnmt.lif.exp._fit_transfer_function` for full documentation.
 
@@ -839,7 +839,13 @@ def fit_transfer_function(network):
 @_check_positive_params
 def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     """
-    Fits transfer function. Parameter scaling for LIF exp.
+    Fits the transfer function (tf) of a low-pass filter to the passed tf.
+
+    For details of the fitting procedure see
+    :func:`nnmt._static._fit_transfer_function`.
+
+    For details of the theory refer to
+    :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
 
     Parameters
     ----------
