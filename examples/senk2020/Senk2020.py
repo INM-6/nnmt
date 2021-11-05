@@ -41,9 +41,9 @@ except BaseException:
 
 
 ##########################################################################
+# =====================
 # Parameter definitions
-##########################################################################
-
+# =====================
 params = {
     # figure width in inch
     'figwidth_1col': 85. / 25.4,
@@ -149,14 +149,12 @@ params = {
 
 
 ##########################################################################
+# ==============
 # Main functions
-# #########################################################################
-
-# #########################################################################
+# ==============
+#
 # Calculate results (meanfield and linear stability analysis)
 # and create the figure.
-
-
 def scan_fit_transfer_function():
     """
     Iterates over working points and fits the LIF transfer function.
@@ -231,7 +229,6 @@ def scan_fit_transfer_function():
                     np.isclose(res_t, res_t[0]).all())
                 tf_scan_results[key][i, j] = res[:, 0]
     np.save(params['fname_tf_scan_results'], tf_scan_results)
-    return
 
 
 def linear_stability_analysis():
@@ -334,7 +331,6 @@ def linear_stability_analysis():
         'lambdas_chareq': lambdas_chareq}
 
     np.save(params['fname_stability_results'], stability_results)
-    return
 
 
 def figure_Senk2020_network_structure():
@@ -378,7 +374,6 @@ def figure_Senk2020_network_structure():
         os.remove(f'{plot_fn}.svg')
     else:
         print('Conversion to eps using inkscape failed, keeping svg...')
-    return
 
 
 def figure_Senk2020_input_scan():
@@ -407,7 +402,6 @@ def figure_Senk2020_input_scan():
     _add_label(ax, 'B', xshift=-0.4, yshift=0.02)
 
     plt.savefig(params['figure_fname'] + '_input_scan.eps')
-    return
 
 
 def figure_Senk2020_eigenvalues():
@@ -437,14 +431,12 @@ def figure_Senk2020_eigenvalues():
     _add_label(ax, 'B', xshift=xshift - 0.05, yshift=yshift)
 
     plt.savefig(params['figure_fname'] + '_eigenvalues.eps')
-    return
 
 
 ##########################################################################
-# Helper function for linear stability analyisis (linear interpolation)
-##########################################################################
-
-
+# ======================================================================
+# Helper functions for linear stability analyisis (linear interpolation)
+# ======================================================================
 def _solve_chareq_numerically_alpha(
         lambda_rate, k, alpha, network, tau_rate, W_rate):
     """
@@ -688,10 +680,9 @@ def _d_eff_conn_rate_d_lambda(lam, tau_rate, W_rate):
 
 
 ##########################################################################
+# ====================================================
 # Plot functions for network illustrations and results
-##########################################################################
-
-
+# ====================================================
 def _plot_network_sketch_sun(gs_glob):
     """
     Illustrates ring-like network structure.
@@ -1158,13 +1149,12 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
             ha='left', va='bottom',
             transform=ax.transAxes, fontweight='bold',
             fontsize=mpl.rcParams['font.size'] * scale_fs)
-    return
 
 
 ##########################################################################
+# ===========================
 # Execution of main functions
-##########################################################################
-
+# ===========================
 if __name__ == '__main__':
 
     scan_fit_transfer_function()
