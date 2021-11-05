@@ -13,6 +13,7 @@ Static Quantities
     _mean_input
     std_input
     _std_input
+    _fit_transfer_function
 
 """
 
@@ -150,7 +151,7 @@ def mean_input(network, prefix):
     See Also
     --------
     nnmt.lif._general._mean_input : For full documentation of network
-                                   parameters.
+                                    parameters.
     '''
     return _input_calc(network, prefix, _mean_input)
 
@@ -177,7 +178,8 @@ def std_input(network, prefix):
 
     See Also
     --------
-    nnmt.lif._general._std_input : For full documentation of network parameters.
+    nnmt.lif._general._std_input : For full documentation of network
+                                   parameters.
     '''
     return _input_calc(network, prefix, _std_input)
 
@@ -340,7 +342,7 @@ def _fit_transfer_function(transfunc, omegas):
         sign_imag = 1 if (transfunc[-1, i].imag > 0) else -1
         sign_imag_fit = 1 if (transfunc_fit[-1, i].imag > 0) else -1
         if sign_imag != sign_imag_fit:
-            transfunc_fit[:,i].imag *= -1
+            transfunc_fit[:, i].imag *= -1
             tau_rate[i] *= -1
 
         # standard deviation
