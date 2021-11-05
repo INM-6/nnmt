@@ -64,24 +64,30 @@ params = {
                        'scale': 1e3},
         'std_input': {'label': r'std input $\sigma$ (mV)',
                       'scale': 1e3},
-        'nu_ext_exc': {'label': 'exc. external rate\n' + r'$\nu_\mathrm{ext,E}$ (1000/s)',
-                       'scale': 1e-3},
-        'nu_ext_inh': {'label': 'inh. external rate\n' + r'$\nu_\mathrm{ext,I}$ (1000/s)',
-                       'scale': 1e-3},
+        'nu_ext_exc': {
+            'label': 'exc. external rate\n' + r'$\nu_\mathrm{ext,E}$ (1000/s)',
+            'scale': 1e-3},
+        'nu_ext_inh': {
+            'label': 'inh. external rate\n' + r'$\nu_\mathrm{ext,I}$ (1000/s)',
+            'scale': 1e-3},
         'firing_rates': {'label': 'rate\n' + r'$\nu$ (1/s)',
                          'scale': 1.},
         'tau_rate': {'label': 'fit time constant\n' + r'$\tau$ (ms)',
                      'scale': 1e3},
-        'W_rate': {'label': 'fit exc. weight\n' + r'$w_\mathrm{E}$',  # unitless
-                   'scale': 1.},
+        'W_rate': {'label': 'fit exc. weight\n' + r'$w_\mathrm{E}$',
+                   'scale': 1.},  # unitless
         'fit_error': {'label': 'fit error\n' + r'$\epsilon$ (%)',
                       'scale': 1e2},
         'transfer_function': {'label': 'transfer function $H_\mu$',
                               'scale': 1e-3},
-        'transfer_function_amplitude': {'label': r'amplitude $|H_\mu|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'},
-        'transfer_function_phase': {'label': r'phase $\angle H\mu\quad(\circ)$', },
-        'frequencies': {'label': r'frequency $\mathrm{Im}[\lambda]/(2\pi)$ (Hz)',
-                        'scale': 1.},
+        'transfer_function_amplitude': {
+            'label':
+                r'amplitude $|H_\mu|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'},
+        'transfer_function_phase': {
+            'label': r'phase $\angle H\mu\quad(\circ)$', },
+        'frequencies': {
+            'label': r'frequency $\mathrm{Im}[\lambda]/(2\pi)$ (Hz)',
+            'scale': 1.},
         'k_wavenumbers': {'label': 'wavenumber $k$ (1/mm)',
                           'scale': 1e-3},
         'eigenvalues': {'label': r'eigenvalue $\lambda$'},
@@ -163,7 +169,8 @@ def scan_fit_transfer_function():
     - the least-squares fit of the LIF transfer function (low-pass filter) with
       the fitting error and the fit results (time constants and weights).
     """
-    print('Iterating over working points and fitting the LIF transfer function.')
+    print('Iterating over working points and fitting the LIF transfer '
+          'function.')
 
     network = BasicNetwork(
         network_params='parameters/Senk2020_network_params.yaml',
@@ -276,9 +283,11 @@ def linear_stability_analysis():
         for j, k_wavenumber in enumerate(k_wavenumbers):
             connectivity = W_rate * spatial._spatial_profile_boxcar(
                 k_wavenumber, network.network_params['width'])
-            eigenvalues[i, j] = linstab._solve_characteristic_equation_lambertw(
-                branch_nr=branch_nr, tau=tau_rate,
-                delay=network.network_params['D_mean'], connectivity=connectivity)
+            eigenvalues[i, j] = (
+                linstab._solve_characteristic_equation_lambertw(
+                    branch_nr=branch_nr, tau=tau_rate,
+                    delay=network.network_params['D_mean'],
+                    connectivity=connectivity))
     # index of eigenvalue with maximum real part
     idx_max = list(
         np.unravel_index(np.argmax(eigenvalues.real), eigenvalues.shape))
@@ -463,21 +472,21 @@ def _solve_chareq_numerically_alpha(
         parameter.
     """
     def fsolve_complex(l_re_im):
-        l = complex(l_re_im[0], l_re_im[1])
+        lam = complex(l_re_im[0], l_re_im[1])
 
         spatial_profile = spatial._spatial_profile_boxcar(
             k=k, width=network.network_params['width'])
 
         eff_conn_spiking = linstab._linalg_max_eigenvalue(
-            _effective_connectivity_spiking(l, network) * spatial_profile)
+            _effective_connectivity_spiking(lam, network) * spatial_profile)
         eff_conn_rate = linstab._linalg_max_eigenvalue(
             _effective_connectivity_rate(
-                l, tau_rate, W_rate) * spatial_profile)
+                lam, tau_rate, W_rate) * spatial_profile)
 
         eff_conn_alpha = alpha * eff_conn_spiking + \
             (1. - alpha) * eff_conn_rate
 
-        roots = eff_conn_alpha * np.exp(-l * d) - 1.
+        roots = eff_conn_alpha * np.exp(-lam * d) - 1.
 
         return [roots.real, roots.imag]
 
@@ -521,23 +530,23 @@ def _solve_lambda_of_alpha_integral(
     lambda0_list = [lambda_rate.real, lambda_rate.imag]
 
     def derivative(lambda_list, alpha):
-        l = complex(lambda_list[0], lambda_list[1])
-        deriv = _d_lambda_d_alpha(l, alpha, k, network, tau_rate, W_rate)
+        lam = complex(lambda_list[0], lambda_list[1])
+        deriv = _d_lambda_d_alpha(lam, alpha, k, network, tau_rate, W_rate)
         return [deriv.real, deriv.imag]
 
     llist = sint.odeint(func=derivative, y0=lambda0_list, t=alphas)
 
-    lambdas_of_alpha = [complex(l[0], l[1]) for l in llist]
+    lambdas_of_alpha = [complex(lam[0], lam[1]) for lam in llist]
     return lambdas_of_alpha
 
 
-def _effective_connectivity_spiking(l, network):
+def _effective_connectivity_spiking(lam, network):
     """
     Computes the effective connectivity of the spiking model.
 
     Parameters
     ----------
-    l : complex float
+    lam : complex float
         Eigenvalue in 1/s.
     network : nnmt.models.Network or child class instance
         Network instance.
@@ -547,7 +556,7 @@ def _effective_connectivity_spiking(l, network):
     eff_conn :
         Effective connectivity.
     """
-    omega = complex(0, -l)
+    omega = complex(0, -lam)
     transfunc = mft.transfer_function(
         network=network, freqs=np.array([omega / (2. * np.pi)]))
 
@@ -558,13 +567,13 @@ def _effective_connectivity_spiking(l, network):
     return eff_conn
 
 
-def _effective_connectivity_rate(l, tau_rate, W_rate):
+def _effective_connectivity_rate(lam, tau_rate, W_rate):
     """
     Computes the effective connectivity of the rate model.
 
     Parameters
     ----------
-    l : complex float
+    lam : complex float
         Eigenvalue in 1/s.
     network : nnmt.models.Network or child class instance
         Network instance.
@@ -574,18 +583,18 @@ def _effective_connectivity_rate(l, tau_rate, W_rate):
     eff_conn :
         Effective connectivity.
     """
-    omega = complex(0, -l)
+    omega = complex(0, -lam)
     eff_conn = W_rate / (1. + 1j * omega * tau_rate)
     return eff_conn
 
 
-def _d_lambda_d_alpha(l, alpha, k, network, tau_rate, W_rate):
+def _d_lambda_d_alpha(lam, alpha, k, network, tau_rate, W_rate):
     """
     Computes the derivative of the eigenvalue wrt. the interpolation parameter.
 
     Parameters
     ----------
-    l : complex float
+    lam : complex float
         Eigenvalue of rate model in 1/s.
     alpha : float
         Interpolation parameter.
@@ -607,17 +616,17 @@ def _d_lambda_d_alpha(l, alpha, k, network, tau_rate, W_rate):
         k=k, width=network.network_params['width'])
 
     eff_conn_spiking = linstab._linalg_max_eigenvalue(
-        _effective_connectivity_spiking(l, network) * spatial_profile)
+        _effective_connectivity_spiking(lam, network) * spatial_profile)
     eff_conn_rate = linstab._linalg_max_eigenvalue(
-        _effective_connectivity_rate(l, tau_rate, W_rate) * spatial_profile)
+        _effective_connectivity_rate(lam, tau_rate, W_rate) * spatial_profile)
 
     eff_conn_alpha = alpha * eff_conn_spiking + (1. - alpha) * eff_conn_rate
 
     d_eff_conn_spiking_d_lambda = linstab._linalg_max_eigenvalue(
-        _d_eff_conn_spiking_d_lambda(l, network) * spatial_profile)
+        _d_eff_conn_spiking_d_lambda(lam, network) * spatial_profile)
 
     d_eff_conn_rate_d_lambda = linstab._linalg_max_eigenvalue(
-        _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate) * spatial_profile)
+        _d_eff_conn_rate_d_lambda(lam, tau_rate, W_rate) * spatial_profile)
 
     d_eff_conn_alpha_d_lambda = alpha * d_eff_conn_spiking_d_lambda + \
         (1. - alpha) * d_eff_conn_rate_d_lambda
@@ -633,7 +642,7 @@ def _d_lambda_d_alpha(l, alpha, k, network, tau_rate, W_rate):
     return deriv
 
 
-def _d_eff_conn_spiking_d_lambda(l, network):
+def _d_eff_conn_spiking_d_lambda(lam, network):
     """
     Computes the derivative of the effective connectivity of the spiking model.
 
@@ -651,11 +660,11 @@ def _d_eff_conn_spiking_d_lambda(l, network):
     """
     def f(x):
         return _effective_connectivity_spiking(x, network)
-    deriv = smisc.derivative(func=f, x0=l, dx=1e-10)
+    deriv = smisc.derivative(func=f, x0=lam, dx=1e-10)
     return deriv
 
 
-def _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate):
+def _d_eff_conn_rate_d_lambda(lam, tau_rate, W_rate):
     """
     Computes the derivative of the effective connectivity of the rate model.
 
@@ -673,7 +682,7 @@ def _d_eff_conn_rate_d_lambda(l, tau_rate, W_rate):
     deriv:
         Derivative.
     """
-    lp = 1. / (1. + l * tau_rate)
+    lp = 1. / (1. + lam * tau_rate)
     deriv = -1. * W_rate * lp**2 * tau_rate
     return deriv
 
@@ -847,7 +856,8 @@ def _plot_mean_std_images(gs_glob, tf_scan_results):
         # pcolormesh)
         xmu = np.max(ax.get_xticks() - 0.5) * (mu_star - np.min(mus)) \
             / (np.max(mus) - np.min(mus)) + 0.5
-        ysigma = np.max(ax.get_yticks() - 0.5) * (sigma_star - np.min(sigmas)) \
+        ysigma = np.max(ax.get_yticks() - 0.5) \
+            * (sigma_star - np.min(sigmas)) \
             / (np.max(sigmas) - np.min(sigmas)) + 0.5
 
         ax.plot(xmu, ysigma,
@@ -925,8 +935,10 @@ def _plot_transfer_functions(gs_glob, tf_scan_results):
                 for ax, ylabel in zip(
                     [ax_amplitude,
                      ax_phase],
-                    [params['quantities']['transfer_function_amplitude']['label'],
-                     params['quantities']['transfer_function_phase']['label']]):
+                    [params['quantities']['transfer_function_amplitude'][
+                        'label'],
+                     params['quantities']['transfer_function_phase'][
+                         'label']]):
 
                     if any(frequencies > 0):
                         ax.set_xscale('log')
@@ -1013,9 +1025,9 @@ def _plot_eigenvalues_wavenumber(gs_glob, stability_results):
     labels = ['0', '-1', '1', '-2', '2', '-3']  # ordered
     handles_old, labels_old = ax_real.get_legend_handles_labels()
     handles = []
-    for l in labels:
+    for lam in labels:
         for i, lo in enumerate(labels_old):
-            if l == lo:
+            if lam == lo:
                 handles.append(handles_old[i])
     ax_real.legend(handles, labels, title='branch number', ncol=3,
                    columnspacing=0.1, loc='center', bbox_to_anchor=(0.55, 0.2))
@@ -1099,7 +1111,8 @@ def _plot_eigenvalues_alpha(gs_glob, stability_results):
             # star marker
             if branch_nr == 0:
                 ax.plot(0,
-                        np.abs(fun(stability_results['eigenval_max'])) * scale_ev,
+                        np.abs(fun(stability_results['eigenval_max']))
+                        * scale_ev,
                         marker='*',
                         markerfacecolor='k',
                         markeredgecolor='none',
