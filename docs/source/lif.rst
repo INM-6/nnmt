@@ -14,7 +14,7 @@ below).
 
   nnmt.lif.delta
   nnmt.lif.exp
-  nnmt.lif._static
+  nnmt.lif._general
 
 ******
 Theory

@@ -57,7 +57,7 @@ from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
                      _cache)
 
-from . import _static
+from . import _general
 
 from .delta import (
     _firing_rates_for_given_input as _delta_firing_rate,
@@ -88,7 +88,7 @@ def working_point(network, method='shift', **kwargs):
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -116,7 +116,7 @@ def firing_rates(network, method='shift', **kwargs):
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -183,7 +183,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -207,11 +207,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         }
 
     if method == 'shift':
-        return _static._firing_rate_integration(_firing_rate_shift,
+        return _general._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,
                                                 input_params, **kwargs)
     elif method == 'taylor':
-        return _static._firing_rate_integration(_firing_rate_taylor,
+        return _general._firing_rate_integration(_firing_rate_taylor,
                                                 firing_rate_params,
                                                 input_params, **kwargs)
 
@@ -461,7 +461,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     np.array
         Array of mean inputs to each population in V.
     """
-    return _static._mean_input(nu, J, K, tau_m,
+    return _general._mean_input(nu, J, K, tau_m,
                                J_ext, K_ext, nu_ext)
 
 
@@ -523,7 +523,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     np.array
         Array of mean inputs to each population in V.
     """
-    return _static._std_input(nu, J, K, tau_m,
+    return _general._std_input(nu, J, K, tau_m,
                               J_ext, K_ext, nu_ext)
 
 
@@ -842,7 +842,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     Fits the transfer function (tf) of a low-pass filter to the passed tf.
 
     For details of the fitting procedure see
-    :func:`nnmt._static._fit_transfer_function`.
+    :func:`nnmt._general._fit_transfer_function`.
 
     For details of the theory refer to
     :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
@@ -874,7 +874,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
         Combined fit error.
     """
     transfer_function_fit, tau_rate, h0, fit_error = \
-        _static._fit_transfer_function(transfer_function, omegas)
+        _general._fit_transfer_function(transfer_function, omegas)
 
     # weight matrix of rate model
     W_rate = h0 * tau_m * J * K

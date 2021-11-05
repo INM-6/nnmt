@@ -102,7 +102,7 @@ for the toolbox:
 - **Resuse as much code as possible.** If two functions in
   different submodules (e.g. in ``lif.exp`` and ``lif.delta``) use the same
   function, the function should be put into a higher module at a higher level.
-  In the ``lif`` module we introduced the ``_static`` module which serves this
+  In the ``lif`` module we introduced the ``_general`` module which serves this
   purpose. Keep in mind that if two modules that need a similar function are
   not both part of the same submodule, it might be sensible to combine them in
   a new submodule.

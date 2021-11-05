@@ -131,14 +131,14 @@ def mean_input(network, prefix):
     '''
     Calcs mean input for `network` and stores results using `prefix`.
 
-    See :func:`nnmt.lif._static._mean_input` for full documentation.
+    See :func:`nnmt.lif._general._mean_input` for full documentation.
 
     Parameters
     ----------
     network : Network object
         The network model for which the mean input is to be calculated. Needs
         to contain the parameters defined in
-        :func:`nnmt.lif._static._mean_input`.
+        :func:`nnmt.lif._general._mean_input`.
     prefix : str
         The prefix used to store the result (e.g. 'lif.delta.').
 
@@ -149,7 +149,7 @@ def mean_input(network, prefix):
 
     See Also
     --------
-    nnmt.lif._static._mean_input : For full documentation of network
+    nnmt.lif._general._mean_input : For full documentation of network
                                    parameters.
     '''
     return _input_calc(network, prefix, _mean_input)
@@ -159,14 +159,14 @@ def std_input(network, prefix):
     '''
     Calcs std of input for `network` and stores results using `prefix`.
 
-    See :func:`nnmt.lif._static._std_input` for full documentation.
+    See :func:`nnmt.lif._general._std_input` for full documentation.
 
     Parameters
     ----------
     network : Network object
         The network model for which the mean input is to be calculated. Needs
         to contain the parameters defined in
-        :func:`nnmt.lif._static._std_input`.
+        :func:`nnmt.lif._general._std_input`.
     prefix : str
         The prefix used to store the result (e.g. 'lif.delta.').
 
@@ -177,7 +177,7 @@ def std_input(network, prefix):
 
     See Also
     --------
-    nnmt.lif._static._std_input : For full documentation of network parameters.
+    nnmt.lif._general._std_input : For full documentation of network parameters.
     '''
     return _input_calc(network, prefix, _std_input)
 
