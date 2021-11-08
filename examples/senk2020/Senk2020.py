@@ -281,7 +281,7 @@ def linear_stability_analysis():
             connectivity = W_rate * spatial._ft_spatial_profile_boxcar(
                 k_wavenumber, network.network_params['width'])
             eigenvalues[i, j] = (
-                linstab._solve_characteristic_equation_lambertw(
+                linstab._solve_chareq_lambertw_constant_delay(
                     branch_nr=branch_nr, tau=tau_rate,
                     delay=network.network_params['D_mean'],
                     connectivity=connectivity))

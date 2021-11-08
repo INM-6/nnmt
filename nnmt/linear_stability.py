@@ -7,7 +7,7 @@ Parameter Functions
 .. autosummary::
     :toctree: _toctree/linear_stability/
 
-    _solve_characteristic_equation_lambertw
+    _solve_chareq_lambertw_constant_delay
     _linalg_max_eigenvalue
 
 """
@@ -16,7 +16,7 @@ import numpy as np
 from scipy.special import lambertw
 
 
-def _solve_characteristic_equation_lambertw(
+def _solve_chareq_lambertw_constant_delay(
         branch_nr, tau, delay, connectivity):
     """
     Uses the Lambert W function to compute the eigenvalue.
