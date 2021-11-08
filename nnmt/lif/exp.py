@@ -1551,7 +1551,6 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
 
     # find a solution as good as possible using least square method
     nu_ext = np.linalg.lstsq(LHS, RHS, rcond=None)[0]
-    print(nu_ext)
 
     if np.any(nu_ext < 0):
         raise RuntimeError(f'Negative rate detected: {nu_ext}')

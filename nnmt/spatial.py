@@ -7,14 +7,14 @@ Parameter Functions
 .. autosummary::
     :toctree: _toctree/spatial/
 
-    _spatial_profile_boxcar
+    _ft_spatial_profile_boxcar
 
 """
 
 import numpy as np
 
 
-def _spatial_profile_boxcar(k, width):
+def _ft_spatial_profile_boxcar(k, width):
     """
     Fourier transform of boxcar connectivity kernel at given wave number.
 

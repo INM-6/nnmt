@@ -247,7 +247,7 @@ def linear_stability_analysis():
     - integrating the derivative of the eigenvalue with respect to the
       interpolation parameter.
     """
-    print('Performing linear stability analysis'
+    print('Performing linear stability analysis '
           'for the rate and spiking models.')
 
     network = BasicNetwork(
@@ -278,7 +278,7 @@ def linear_stability_analysis():
     eigenvalues = np.zeros((len(branches), len(k_wavenumbers)), dtype=complex)
     for i, branch_nr in enumerate(branches):
         for j, k_wavenumber in enumerate(k_wavenumbers):
-            connectivity = W_rate * spatial._spatial_profile_boxcar(
+            connectivity = W_rate * spatial._ft_spatial_profile_boxcar(
                 k_wavenumber, network.network_params['width'])
             eigenvalues[i, j] = (
                 linstab._solve_characteristic_equation_lambertw(
@@ -466,7 +466,7 @@ def _solve_chareq_numerically_alpha(
     def fsolve_complex(l_re_im):
         lam = complex(l_re_im[0], l_re_im[1])
 
-        spatial_profile = spatial._spatial_profile_boxcar(
+        spatial_profile = spatial._ft_spatial_profile_boxcar(
             k=k, width=network.network_params['width'])
 
         eff_conn_spiking = linstab._linalg_max_eigenvalue(
@@ -604,7 +604,7 @@ def _d_lambda_d_alpha(lam, alpha, k, network, tau_rate, W_rate):
     deriv :
         Derivative.
     """
-    spatial_profile = spatial._spatial_profile_boxcar(
+    spatial_profile = spatial._ft_spatial_profile_boxcar(
         k=k, width=network.network_params['width'])
 
     eff_conn_spiking = linstab._linalg_max_eigenvalue(
