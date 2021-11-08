@@ -309,9 +309,9 @@ def _fit_transfer_function(transfunc, omegas):
         Fit of transfer functions in Hertz/volt for each population with the
         following shape: (number of freqencies, number of populations).
     tau_rate : np.array
-        Fitted time constant for each population in s.
-    h0 : ?
-        ?
+        Fitted time constant of low-pass filter for each population in s.
+    h0 : np.array
+        Fitted gain of low-pass filter for each population in Hertz/volt.
     fit_error : float
         Combined fit error.
     """
