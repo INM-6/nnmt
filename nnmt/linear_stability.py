@@ -33,7 +33,11 @@ def _solve_chareq_lambertw_constant_delay(
     delay : np.array
         Delays in s.
     connectivity : np.array
-        Effective connectivity matrix.
+        Matrix defining the connectivity. For non-spatial networks, this is just
+        the weight matrix. For spatial networks, this is an effective
+        connectivity matrix; each element is the weight multiplied with the
+        Fourier transform of the spatial profile at the wave number k for which
+        the characteristic equation is to be evaluated.
 
     Returns
     -------
