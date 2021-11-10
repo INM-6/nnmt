@@ -319,22 +319,12 @@ class Test_save_network:
 
 class Test_load_network:
 
-    def test_warning_is_raised_if_file_doesnt_exist(self, tmpdir):
+    def test_excpetion_is_raised_if_file_doesnt_exist(self, tmpdir):
         file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            with pytest.warns(UserWarning):
+            with pytest.raises(IOError):
                 io.load_network(file)
-
-    def test_returns_empty_dicts_if_no_file_present(self, tmpdir):
-        file = 'test.h5'
-        tmp_test = tmpdir.mkdir('tmp_test')
-        with tmp_test.as_cwd():
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
-                outputs = io.load_network(file)
-            for output in outputs:
-                assert not bool(output)
 
     def test_input_is_converted_to_quantities(self, tmpdir,
                                               network_dict_val_unit):
