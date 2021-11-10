@@ -1467,7 +1467,7 @@ def sensitivity_measure_per_eigenmode(network):
 
     Returns
     -------
-    dict :
+    dict
         Sensitivity measure dictionary.
     """
     params = {}
@@ -1498,7 +1498,7 @@ def _sensitivity_measure_per_eigenmode(effective_connectivity,
 
     Returns
     -------
-    dict:
+    dict
         Dictionary of dictionaries containing the sensitivity measure results.
         The dictionary keys are the eigenvalue indices.
     """
