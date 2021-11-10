@@ -138,7 +138,7 @@ class Test_val_unit_to_quantities:
             )
         converted = io.val_unit_to_quantities(val_unit_pairs)
         assert converted == quantity_dict
-        
+
     def test_nested_dictionaries_are_converted_correctly(self):
         test = dict(a=dict(a1=dict(val=1, unit='hertz'),
                            a2=dict(val=2, unit='ms')),
@@ -192,7 +192,7 @@ class Test_quantities_to_val_unit:
         assert conv_item[0] == exp_item[0]
         assert conv_item[1]['unit'] == exp_item[1]['unit']
         assert_array_equal(conv_item[1]['val'], exp_item[1]['val'])
-        
+
     def test_nested_dictionaries_are_converted_correctly(self):
         test = dict(a=dict(a1=1 * ureg.ms,
                            a2=[1, 2, 3] * ureg.Hz),
@@ -206,10 +206,10 @@ class Test_quantities_to_val_unit:
         assert isinstance(converted['b']['b1'], dict)
         assert isinstance(converted['b']['b2'], dict)
         assert isinstance(converted['c'], dict)
-        
-        
+
+
 class Test_convert_arrays_in_dict_to_list:
-    
+
     def test_converts_simple_dict(self):
         tdict = {'a': np.array([1, 2, 3]),
                  'b': [3, 4, 5],
@@ -218,7 +218,7 @@ class Test_convert_arrays_in_dict_to_list:
         converted = io.convert_arrays_in_dict_to_lists(tdict)
         tdict.update({'a': [1, 2, 3]})
         check_quantity_dicts_are_equal(converted, tdict)
-        
+
     def test_converts_nested_dict(self):
         tdict = {'a': {'val': np.array([1, 2, 3]), 'unit': 'ms'},
                  'b': [3, 4, 5],
@@ -227,10 +227,10 @@ class Test_convert_arrays_in_dict_to_list:
         converted = io.convert_arrays_in_dict_to_lists(tdict)
         tdict.update({'a': {'val': [1, 2, 3], 'unit': 'ms'}})
         check_quantity_dicts_are_equal(converted, tdict)
-        
-        
+
+
 class Test_save_quantity_dict_to_yaml:
-    
+
     def test_quantities_to_val_unit_called(self, mocker, tmpdir,
                                            network_dict_quantity):
         file = 'test.yaml'
@@ -254,8 +254,8 @@ class Test_save_quantity_dict_to_yaml:
             # check that dicts are not empty
             for sdict in loaded:
                 assert bool(sdict)
-            
-            
+
+
 class Test_load_val_unit_dict_from_yaml:
 
     def test_val_unit_to_quantities_called(self, mocker):
@@ -288,25 +288,25 @@ class Test_save_network:
             with pytest.raises(IOError):
                 io.save_network(file, network)
                 io.save_network(file, network)
-            
+
     def test_save_creates_correct_output(self, tmpdir, empty_network):
         file = 'test.h5'
         keys = ['results', 'results_hash_dict', 'network_params',
                 'analysis_params']
-        
+
         def _test_func(x):
             return x
-    
+
         def test_function(network):
             return nnmt.utils._cache(network, _test_func, {'x': 1}, 'test')
-    
+
         empty_network.network_params['a'] = 1
         empty_network.analysis_params['a'] = 1
         test_function(empty_network)
-        
+
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
-            io.save_network(file, empty_network, overwrite=True)
+            io.save_network(file, empty_network)
             output = io.load_h5(file)
             for key in keys:
                 assert key in output.keys()
@@ -315,17 +315,17 @@ class Test_save_network:
                 assert bool(sub_dict)
             # check that all quantities have been converted
             check_dict_contains_no_quantity(output)
-            
-                
+
+
 class Test_load_network:
-    
+
     def test_warning_is_raised_if_file_doesnt_exist(self, tmpdir):
         file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             with pytest.warns(UserWarning):
                 io.load_network(file)
-                
+
     def test_returns_empty_dicts_if_no_file_present(self, tmpdir):
         file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
@@ -335,7 +335,7 @@ class Test_load_network:
                 outputs = io.load_network(file)
             for output in outputs:
                 assert not bool(output)
-            
+
     def test_input_is_converted_to_quantities(self, tmpdir,
                                               network_dict_val_unit):
         file = 'test.h5'
@@ -346,7 +346,7 @@ class Test_load_network:
             # check that all val unit dicts have been converted to quantities
             for output in outputs:
                 check_dict_contains_no_val_unit_dict(output)
-        
+
     def test_loaded_dictionaries_are_not_empty(self, tmpdir,
                                                network_dict_val_unit):
         file = 'test.h5'
@@ -357,7 +357,7 @@ class Test_load_network:
             # check that no loaded dictionary is empty
             for sub_dict in outputs:
                 assert bool(sub_dict)
-            
+
     def test_returns_dictionaries_in_correct_order(self, tmpdir,
                                                    network_dict_val_unit):
         file = 'test.h5'
@@ -371,10 +371,10 @@ class Test_load_network:
             rhd = [dict for dict in outputs[3].values()]
             assert 'test' in rhd[0].keys()
             assert 'analysis_params' in rhd[0].keys()
-            
+
 
 class Test_save_quantity_dict_to_h5:
-    
+
     def test_h5_is_created(self, tmpdir, network_dict_quantity):
         file = 'test.h5'
         tmp_test = tmpdir.mkdir('tmp_test')
@@ -391,7 +391,7 @@ class Test_save_quantity_dict_to_h5:
             with pytest.raises(IOError):
                 io.save_quantity_dict_to_h5(file, network_dict_quantity)
                 io.save_quantity_dict_to_h5(file, network_dict_quantity)
-                
+
     def test_save_creates_correct_output(self, tmpdir, network_dict_quantity):
         file = 'test.h5'
         keys = ['results', 'results_hash_dict', 'network_params',
@@ -427,7 +427,7 @@ class Test_load_val_unit_dict_from_h5:
             output = io.load_val_unit_dict_from_h5(file)
             # check that all val unit dicts have been converted to quantities
             check_dict_contains_no_val_unit_dict(output)
-            
+
     def test_loaded_dictionaries_are_not_empty(self, tmpdir,
                                                network_dict_val_unit):
         file = 'test.h5'
@@ -453,7 +453,7 @@ class Test_create_hash:
 
 
 class Test_save_and_load_h5:
-    
+
     @pytest.mark.parametrize('val_unit_pair',
                              val_unit_pairs,
                              ids=ids)
@@ -463,7 +463,7 @@ class Test_save_and_load_h5:
             io.save_h5('test.h5', val_unit_pair)
             input = io.load_h5('test.h5')
             check_quantity_dicts_are_equal(val_unit_pair, input)
-            
+
     def test_save_and_load_numerical_dict_key(self, tmpdir):
         output = {1: 'one', 'a': 'cross_check', 4.2: 'the answer divided by 10'}
         tmp_test = tmpdir.mkdir('tmp_test')

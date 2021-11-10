@@ -1,5 +1,5 @@
 """
-Response Nonlinearities
+Response nonlinearities
 =======================
 
 In this example, we reproduce the different types of response nonlinearities of
@@ -155,8 +155,8 @@ def plot_rates(ax, nu_ext_arr_lst, nu_arr_lst, xmax, ymax, xlabel, ylabel,
         ax.plot(nu_ext_arr_lst[i], nu_arr, 'o')
     ax.set_xlim(0, xmax)
     ax.set_ylim(0, ymax)
-    ax.set_xticks((0, xmax))
-    ax.set_yticks((0, ymax))
+    ax.set_xticks((0, xmax/2, xmax))
+    ax.set_yticks((0, ymax/2, ymax))
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
@@ -164,54 +164,54 @@ def plot_rates(ax, nu_ext_arr_lst, nu_arr_lst, xmax, ymax, xlabel, ylabel,
 
 
 print('Plotting...')
-fig = plt.figure(figsize=(3.34646, 3.34646),  # one column figure, 85mm wide
+fig = plt.figure(figsize=(7.08661, 2.95276),  # two column figure, 180mm wide
                  constrained_layout=True)
-gs = gridspec.GridSpec(3, 2, figure=fig)
-label_prms = dict(x=-0.3, y=1.4, fontsize=10, fontweight='bold',
+gs = gridspec.GridSpec(2, 3, figure=fig)
+label_prms = dict(x=-0.3, y=1.45, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 colors = ['#4c72b0', '#c44e52']
 # Sketch
 ax_sketch = fig.add_subplot(gs[0, 0])
 ax_sketch.axis('off')
-ax_sketch.set_title('Network')
+ax_sketch.set_title('network\nsketch')
 ax_sketch.text(s='(A)', transform=ax_sketch.transAxes, **label_prms)
 # Saturation-driven nonlinearity
 plot_rates(fig.add_subplot(gs[0, 1]), [nu_ext_sdn], [nu_sdn], 100, 500,
-           '', r'$\nu$ [spks/s]', 'SDN',
+           '', r'rate $\nu$ (1/s)', 'saturation-driven\nnonlinearity',
            colors, '(B)', label_prms)
 # Saturation-driven multisolution
-plot_rates(fig.add_subplot(gs[1, 0]),
+plot_rates(fig.add_subplot(gs[0, 2]),
            [nu_ext_sdm_a, nu_ext_sdm_b, nu_ext_sdm_c, nu_ext_sdm_d],
            [nu_sdm_a, nu_sdm_b, nu_sdm_c, nu_sdm_d], 100, 500,
-           '', r'$\nu$ [spks/s]', 'SDM',
+           '', '', 'saturation-driven\nmulti-solution',
            colors, '(C)', label_prms)
 # Response-onset supersaturation
-plot_rates(fig.add_subplot(gs[1, 1]), [nu_ext_ros_a, nu_ext_ros_b],
+plot_rates(fig.add_subplot(gs[1, 0]), [nu_ext_ros_a, nu_ext_ros_b],
            [nu_ros_a, nu_ros_b], 50, 5,
-           '', '', 'ROS',
-           colors, '(D)', label_prms)
+           r'external rate $\nu_X$ (1/s)', r'rate $\nu$ (1/s)',
+           'response-onset\nsupersaturation', colors, '(D)', label_prms)
 # Mean-driven multisolution
-plot_rates(fig.add_subplot(gs[2, 0]),
+plot_rates(fig.add_subplot(gs[1, 1]),
            [nu_ext_mdm_a, nu_ext_mdm_b, nu_ext_mdm_c],
            [nu_mdm_a, nu_mdm_b, nu_mdm_c], 10, 50,
-           r'$\nu_X$ [spks/s]', r'$\nu$ [spks/s]', 'MDM',
+           r'external rate $\nu_X$ (1/s)', '', 'mean-driven\nmulti-solution',
            colors, '(E)', label_prms)
 # Noise-driven multisolution
-plot_rates(fig.add_subplot(gs[2, 1]),
+plot_rates(fig.add_subplot(gs[1, 2]),
            [nu_ext_ndm_a, nu_ext_ndm_b, nu_ext_ndm_c, nu_ext_ndm_d],
            [nu_ndm_a, nu_ndm_b, nu_ndm_c, nu_ndm_d], 5, 10,
-           r'$\nu_X$ [spks/s]', '', 'NDM',
+           r'external rate $\nu_X$ (1/s)', '', 'noise-driven\nmulti-solution',
            colors, '(F)', label_prms)
 
 # insert sketch using svgutil, try saving as pdf using inkscape
 if insert_sketch:
-    sketch_fn = 'figures/brunel_sketch.svg'
-    plot_fn = 'figures/response_nonlinearities'
+    sketch_fn = 'brunel_sketch.svg'
+    plot_fn = 'response_nonlinearities'
     svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
     w_svg, h_svg = svg_mpl.get_size()
     svg_mpl.set_size((w_svg+'pt', h_svg+'pt'))
     svg_sketch = sg.fromfile(sketch_fn).getroot()
-    svg_sketch.moveto(x=5, y=20, scale_x=0.75)
+    svg_sketch.moveto(x=25, y=30, scale_x=1.0)
     svg_mpl.append(svg_sketch)
     svg_mpl.save(f'{plot_fn}.svg')
     os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')

@@ -122,7 +122,7 @@ tests/fixtures/integration/data/network.h5
 tests/fixtures/integration/make_Bos2016_data/meanfield/kummers_function.pyf
 
 # output of example scripts
-examples/figures/response_nonlinearities.pdf
+examples/response_nonlinearities/response_nonlinearities.pdf
 examples/figures/microcircuit_firing_rates_Bos2016.pdf
 examples/figures/power_spectra_Bos2016.pdf
 examples/figures/eigenvalue_trajectories_Bos2016.pdf
