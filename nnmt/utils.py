@@ -57,7 +57,7 @@ from . import ureg
 
 def _cache(network, func, params, result_keys, units=None):
     """
-    Cache resuls of `func(**params)` into network dicts using result_keys.
+    Cache results of `func(**params)` into network dicts using result_keys.
 
     This function serves as a wrapper for functions that calculate quantities
     which are to be stored in the network's result dicts. First it creates a
