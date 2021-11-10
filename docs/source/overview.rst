@@ -87,9 +87,8 @@ computation with :func:`nnmt.lif.exp.firing_rates` and a
 
 .. code:: python
 
-    microcircuit = nnmt.models.Basic('network_params.yaml',
-                                     'analysis_params.yaml')
-    rates = nnmt.lif.exp.firing_rates(microcircuit)
+    network = nnmt.models.Basic('network_params.yaml')
+    rates = nnmt.lif.exp.firing_rates(network)
 
 where we defined the respective parameters in ``yaml`` files in the following
 format:
