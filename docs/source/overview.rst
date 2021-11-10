@@ -32,10 +32,10 @@ integrate-and-fire neurons with exponential synapses can be done using
                                        tau_m, tau_r, tau_s,
                                        J_ext, K_ext, nu_ext)
 
-However, certain _tools require a large number of inputs, which makes working
-with them a little cumbersome. To simplify their usage and support users
-unfamiliar with the underlying theory, we developed the more convenient model
-workflow.
+However, certain _tools require a large number of inputs, which can make
+working with them a little cumbersome. To simplify their usage and support
+users unfamiliar with the underlying theory, we developed the more convenient
+model workflow.
 
 **************
 Model workflow
@@ -46,12 +46,12 @@ one can instantiate a :ref:`Model <sec_models>` and pass it to the
 corresponding **non-underscored wrapper** or **tool**.
 
 Models basically are containers for network parameters, analysis parameters,
-and results, with convenient methods for changing parameters, saving, and
-loading results. On instantiation they read in network and analysis parameters
-from dictionaries or ``yaml`` files, calculate further depenend parameters from
-those, and convert all parameters to SI units. *Network parameters* are all
-parameters that describe properties of the network itself, like for example the
-number of neurons in each population or the membrane time constants. *Analysis*
+and results, with methods for changing parameters, saving, and loading results.
+On instantiation they read in network and analysis parameters from dictionaries
+or ``yaml`` files, calculate further depenend parameters from those, and
+convert all parameters to SI units. *Network parameters* are all parameters
+that describe properties of the network itself, like for example the number of
+neurons in each population or the membrane time constants. *Analysis*
 *parameters* are all parameters that do not describe properties of the network
 but need to be defined in order to calculate quantities of interest. For
 example, one needs to define the frequencies for which to calculate a frequency
@@ -83,12 +83,12 @@ detect this and return the cached result instead.
 
 Returning to the firing rate example from above, we can conduct the same
 computation with :func:`nnmt.lif.exp.firing_rates` and a
-:class:`nnmt.models.Microcircuit` model:
+:class:`nnmt.models.Basic` model:
 
 .. code:: python
 
-    microcircuit = nnmt.models.Microcircuit('network_params.yaml',
-                                            'analysis_params.yaml')
+    microcircuit = nnmt.models.Basic('network_params.yaml',
+                                     'analysis_params.yaml')
     rates = nnmt.lif.exp.firing_rates(microcircuit)
 
 where we defined the respective parameters in ``yaml`` files in the following
