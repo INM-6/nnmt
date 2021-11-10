@@ -9,24 +9,20 @@ analysis based on mean-field theory.
 Please visit our [official documentation](<link to official doc>).
 
 In order to compile the documentation on your own, you have to change your
-working directory to ``nnmt/`` and install and activate the provided conda
+working directory to `nnmt/` and install and activate the provided conda
 environment
-
-.. code:: bash
-
+```
   conda env create -f environment.yaml
   conda activate nnmt
-
+```
 Change you working directory to ``nnmt/docs/`` and run the following commands
-
-.. code:: bash
-
+```
   make clean
   make html
-
-This will compile the documentation and create the folder ``build/``.
+```
+This will compile the documentation and create the folder `build/`.
 Now you can access the documentation using your preferred browser by opening
-the file ``build/html/index.html``.
+the file `build/html/index.html`.
 
 #### Citation
 
