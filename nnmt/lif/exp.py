@@ -1186,7 +1186,8 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
     # initialize containers
     distances = np.zeros([eig.shape[0] - 1, eig.shape[1]])
     multi_swaps = {}
-    resorted_eigenvalues_mask = np.tile(np.arange(eig.shape[1]), (eig.shape[0], 1))
+    resorted_eigenvalues_mask = np.tile(
+        np.arange(eig.shape[1]), (eig.shape[0], 1))
     
     # loop over all frequencies > 0
     for i in range(1, eig.shape[0]):
@@ -1310,8 +1311,8 @@ def sensitivity_measure(network, frequency,
         params['effective_connectivity'] = (
             network.results['lif.exp.effective_connectivity'])
         params['frequency'] = frequency
-        params['analysis_frequencies'] = \
-            network.analysis_params['omegas'] / 2 / np.pi
+        params['analysis_frequencies'] = (
+            network.analysis_params['omegas'] / 2 / np.pi)
         params['resorted_eigenvalues_mask'] = resorted_eigenvalues_mask
         params['eigenvalue_index'] = eigenvalue_index
         
@@ -1401,7 +1402,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
     # brings eigenvalue towards or away from one, 
     # resulting in an increased or 
     # decreased peak amplitude in the spectrum
-    k = np.asarray([1, 0])-np.asarray([critical_eigenvalue.real,
+    k = np.asarray([1, 0]) - np.asarray([critical_eigenvalue.real,
                                        critical_eigenvalue.imag])
     # normalize k
     k /= np.sqrt(np.dot(k, k))
@@ -1473,8 +1474,8 @@ def sensitivity_measure_per_eigenmode(network):
     try:
         params['effective_connectivity'] = (
             network.results['lif.exp.effective_connectivity'])
-        params['analysis_frequencies'] = \
-            network.analysis_params['omegas'] / 2 / np.pi
+        params['analysis_frequencies'] = (
+            network.analysis_params['omegas'] / 2 / np.pi)
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
@@ -1502,8 +1503,8 @@ def _sensitivity_measure_per_eigenmode(effective_connectivity,
         The dictionary keys are the eigenvalue indices.
     """
     eigenvalues = np.linalg.eig(effective_connectivity)[0]
-    resorted_eigenvalues, resorted_eigenvalues_mask = \
-        _resort_eigenvalues(eigenvalues)
+    resorted_eigenvalues, resorted_eigenvalues_mask = (
+        _resort_eigenvalues(eigenvalues))
     
     sensitivity_measure_dictionary = defaultdict(int)
     
@@ -1512,13 +1513,12 @@ def _sensitivity_measure_per_eigenmode(effective_connectivity,
     for eig_index, eig in enumerate(resorted_eigenvalues.T):
         critical_frequency = analysis_frequencies[np.argmin(abs(eig-1.0))]        
 
-        sensitivity_measure_dictionary[eig_index] = \
-            _sensitivity_measure(effective_connectivity,
-                             frequency=critical_frequency,
-                             analysis_frequencies=analysis_frequencies,
-                             resorted_eigenvalues_mask=\
-                                 resorted_eigenvalues_mask,
-                             eigenvalue_index=eig_index)
+        sensitivity_measure_dictionary[eig_index] = _sensitivity_measure(
+            effective_connectivity,
+            frequency=critical_frequency,
+            analysis_frequencies=analysis_frequencies,
+            resorted_eigenvalues_mask=resorted_eigenvalues_mask,
+            eigenvalue_index=eig_index)
         
     return sensitivity_measure_dictionary
 
