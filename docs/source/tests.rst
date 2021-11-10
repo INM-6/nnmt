@@ -5,8 +5,8 @@ Tests
 =====
 
 We have an extensive test suite using the ``pytest`` framework. If you want to
-run all the tests, you can simply do so by installing and activating the conda
-environment specified in the provided ``environment.yaml`` file, and running:
+run all the tests, you can do so by installing and activating the conda
+environment specified in the provided ``environment.yaml`` file, and running
 
 .. code::
 
