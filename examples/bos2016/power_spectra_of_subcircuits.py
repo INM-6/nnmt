@@ -19,14 +19,14 @@ plt.style.use('frontiers.mplstyle')
 # %%
 # Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+    network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+    analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 frequencies = microcircuit.analysis_params['omegas']/(2*np.pi)
 full_indegree_matrix = microcircuit.network_params['K']
 
 # %%
 # Read the simulated power spectra from the publicated data.
-fix_path = '../tests/fixtures/integration/data/'
+fix_path = '../../tests/fixtures/integration/data/'
 result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 
 # %%

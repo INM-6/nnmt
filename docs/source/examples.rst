@@ -13,9 +13,9 @@ Examples
    auto_examples/fix_working_point
    auto_examples/sensitivity_measure
    auto_examples/power_spectra
-   auto_examples/microcircuit_firing_rates_Bos2016
-   auto_examples/power_spectra_Bos2016
-   auto_examples/eigenvalue_trajectories_Bos2016
-   auto_examples/sensitivity_measure_Bos2016
-   auto_examples/power_spectra_of_subcircuits_Bos2016
-   auto_examples/transfer_functions_Schuecker2015
+   auto_examples/bos2016/microcircuit_firing_rates
+   auto_examples/bos2016/power_spectra
+   auto_examples/bos2016/eigenvalue_trajectories
+   auto_examples/bos2016/sensitivity_measure
+   auto_examples/bos2016/power_spectra_of_subcircuits
+   auto_examples/schuecker2015/transfer_functions

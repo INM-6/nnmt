@@ -30,8 +30,8 @@ plt.style.use('frontiers.mplstyle')
 # %% 
 # Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+    network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+    analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 
 # %%

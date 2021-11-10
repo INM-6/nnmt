@@ -20,8 +20,8 @@ plt.style.use('frontiers.mplstyle')
 # %%
 # Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+    network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+    analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 full_indegree_matrix = microcircuit.network_params['K']
 
@@ -63,8 +63,8 @@ for i, layer in enumerate(['23', '4', '5', '6']):
     isolated_layers_results[layer] = defaultdict(str)
     
     microcircuit_isolated_layers = nnmt.models.Microcircuit(
-        network_params='../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-        analysis_params='../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+        network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+        analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
     isolated_layers_results[layer]['network'] = microcircuit_isolated_layers
     
     # calculate working point for exponentially shape post synaptic currents

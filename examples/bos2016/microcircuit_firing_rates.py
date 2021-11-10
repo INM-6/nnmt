@@ -17,7 +17,7 @@ plt.style.use('frontiers.mplstyle')
 # %%
 # Create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    '../tests/fixtures/integration/config/Bos2016_network_params.yaml')
+    '../../tests/fixtures/integration/config/Bos2016_network_params.yaml')
 
 # %%
 # Calculate the firing rates for exponentially shaped post synaptic currents.
@@ -26,7 +26,7 @@ firing_rates = nnmt.lif.exp.firing_rates(microcircuit, method='taylor')
 print(f'Mean rates: {firing_rates}')
 # %%
 # Load the simulated rates publicated in :cite:t:`bos2016` for comparison.
-fix_path = '../tests/fixtures/integration/data/'
+fix_path = '../../tests/fixtures/integration/data/'
 result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_rates = result['fig_microcircuit']['rates_sim']*1000
 

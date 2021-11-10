@@ -20,7 +20,7 @@ plt.style.use('frontiers.mplstyle')
 # in :cite:t:`schuecker2015` were gathered in a .yaml-File and are loaded here. 
 
 params = nnmt.input_output.load_val_unit_dict_from_yaml(
-        '../tests/fixtures/integration/config/Schuecker2015_parameters.yaml')
+        '../../tests/fixtures/integration/config/Schuecker2015_parameters.yaml')
 
 # without converting to si
 network_params = params.copy()
@@ -182,4 +182,4 @@ axB.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 axB.legend(title='$(\mu, \sigma)$ in mV', title_fontsize=None,
           handlelength=2, labelspacing=0.0)
 
-plt.savefig('figures/transfer_functions_Schuecker2015.eps')
+plt.savefig('transfer_functions_Schuecker2015.eps')
