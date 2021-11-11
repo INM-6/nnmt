@@ -8,7 +8,6 @@ Parameter Functions
     :toctree: _toctree/linear_stability/
 
     _solve_chareq_lambertw_constant_delay
-    _linalg_max_eigenvalue
 
 """
 
@@ -19,10 +18,10 @@ from scipy.special import lambertw
 def _solve_chareq_lambertw_constant_delay(
         branch_nr, tau, delay, connectivity):
     """
-    Uses the Lambert W function to compute the eigenvalue.
-
-    Solves the characteristic equation with delay for a given branch number.
-    The equation is given and explained in :cite:t:`senk2020`, Eq. 7.
+    Uses the Lambert W function to solve a characteristic equation with delay.
+    
+    Computes the temporal eigenvalue given in :cite:t:`senk2020`, Eq. 7, for a
+    given branch number.
 
     Parameters
     ----------
@@ -41,35 +40,19 @@ def _solve_chareq_lambertw_constant_delay(
 
     Returns
     -------
-    np.array
-        Eigenvalues.
+    eigenval : np.complex
+        Temporal eigenvalue solving the characteristic equation.
     """
     # only scalar or equal value for all populations accepted
     for v in [tau, delay]:
         assert np.isscalar(v) or len(np.unique(v) == 1)
     t, d = np.unique(tau)[0], np.unique(delay)[0]
 
-    c = _linalg_max_eigenvalue(connectivity)
+    # eigenvalue of connectivity matrix with largest absolute value.
+    # (an example for these eigenvalues is given in Senk et al. (2020), Eq. 5)
+    cs = np.linalg.eigvals(connectivity)
+    c = cs[np.argmax(np.abs(cs))]
 
     eigenval = (-1. / t + 1. / d
                 * lambertw(c * d / t * np.exp(d / t), branch_nr))
     return eigenval
-
-
-def _linalg_max_eigenvalue(matrix):
-    """
-    Computes the eigenvalue with the largest absolute value of a given matrix.
-
-    Parameters
-    ----------
-    matrix : np.array
-        Matrix to calculate eigenvalues from.
-
-    Returns
-    -------
-    float
-        Maximum eigenvalue.
-    """
-    eigvals = np.linalg.eigvals(matrix)
-    max_eigval = eigvals[np.argmax(np.abs(eigvals))]
-    return max_eigval

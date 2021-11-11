@@ -469,9 +469,9 @@ def _solve_chareq_numerically_alpha(
         spatial_profile = spatial._ft_spatial_profile_boxcar(
             k=k, width=network.network_params['width'])
 
-        eff_conn_spiking = linstab._linalg_max_eigenvalue(
+        eff_conn_spiking = _linalg_max_eigenvalue(
             _effective_connectivity_spiking(lam, network) * spatial_profile)
-        eff_conn_rate = linstab._linalg_max_eigenvalue(
+        eff_conn_rate = _linalg_max_eigenvalue(
             _effective_connectivity_rate(
                 lam, tau_rate, W_rate) * spatial_profile)
 
@@ -607,17 +607,17 @@ def _d_lambda_d_alpha(lam, alpha, k, network, tau_rate, W_rate):
     spatial_profile = spatial._ft_spatial_profile_boxcar(
         k=k, width=network.network_params['width'])
 
-    eff_conn_spiking = linstab._linalg_max_eigenvalue(
+    eff_conn_spiking = _linalg_max_eigenvalue(
         _effective_connectivity_spiking(lam, network) * spatial_profile)
-    eff_conn_rate = linstab._linalg_max_eigenvalue(
+    eff_conn_rate = _linalg_max_eigenvalue(
         _effective_connectivity_rate(lam, tau_rate, W_rate) * spatial_profile)
 
     eff_conn_alpha = alpha * eff_conn_spiking + (1. - alpha) * eff_conn_rate
 
-    d_eff_conn_spiking_d_lambda = linstab._linalg_max_eigenvalue(
+    d_eff_conn_spiking_d_lambda = _linalg_max_eigenvalue(
         _d_eff_conn_spiking_d_lambda(lam, network) * spatial_profile)
 
-    d_eff_conn_rate_d_lambda = linstab._linalg_max_eigenvalue(
+    d_eff_conn_rate_d_lambda = _linalg_max_eigenvalue(
         _d_eff_conn_rate_d_lambda(lam, tau_rate, W_rate) * spatial_profile)
 
     d_eff_conn_alpha_d_lambda = alpha * d_eff_conn_spiking_d_lambda + \
@@ -677,6 +677,29 @@ def _d_eff_conn_rate_d_lambda(lam, tau_rate, W_rate):
     lp = 1. / (1. + lam * tau_rate)
     deriv = -1. * W_rate * lp**2 * tau_rate
     return deriv
+
+
+def _linalg_max_eigenvalue(matrix):
+    """
+    Computes the eigenvalue with the largest absolute value of a given matrix.
+
+    Note that this a general matrix operation and the eigenvalue should not be
+    confused with lambda, the temporal eigenvalue of a characteristic
+    equation.
+
+    Parameters
+    ----------
+    matrix : np.array
+        Matrix to calculate eigenvalues from.
+
+    Returns
+    -------
+    float
+        Maximum eigenvalue.
+    """
+    eigvals = np.linalg.eigvals(matrix)
+    max_eigval = eigvals[np.argmax(np.abs(eigvals))]
+    return max_eigval
 
 
 ##########################################################################
