@@ -45,7 +45,7 @@ def _solve_chareq_lambertw_constant_delay(
     """
     # only scalar or equal value for all populations accepted
     for v in [tau, delay]:
-        assert np.isscalar(v) or len(np.unique(v) == 1)
+        assert (np.isscalar(v) or len(np.unique(v)) == 1)
     t, d = np.unique(tau)[0], np.unique(delay)[0]
 
     # eigenvalue of connectivity matrix with largest absolute value.
