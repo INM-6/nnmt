@@ -66,9 +66,10 @@ class Basic(Network):
         self.network_params.update(derived_network_params)
 
         # calculate dependend analysis parameters
-        derived_analysis_params = (
-            self._calculate_dependent_analysis_parameters())
-        self.analysis_params.update(derived_analysis_params)
+        if analysis_params is not None:
+            derived_analysis_params = (
+                self._calculate_dependent_analysis_parameters())
+            self.analysis_params.update(derived_analysis_params)
 
         self._convert_param_dicts_to_base_units_and_strip_units()
 
@@ -94,8 +95,7 @@ class Basic(Network):
         derived_params['dimension'] = dim
 
         # reset reference potential to 0
-        derived_params['V_0_rel'] = np.ones(
-            self.network_params['V_0_abs'].shape) * 0 * ureg.mV
+        derived_params['V_0_rel'] = np.zeros(dim) * ureg.mV
         derived_params['V_th_rel'] = (self.network_params['V_th_abs']
                                       - self.network_params['V_0_abs'])
 

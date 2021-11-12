@@ -1,0 +1,14 @@
+---
+# frequencies
+f_min:
+  val: 0.1
+  unit: Hz
+
+f_max:
+  val: 150.
+  unit: Hz
+
+df:
+  val: 0.5
+  unit: Hz
+...
