@@ -626,7 +626,15 @@ class Test_sensitivity_measure:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        assert_allclose(self.func(**params), output)
+        output_func = self.func(**params)
+        
+        # check all keys are the same
+        for k in output.keys():
+            assert(k in output_func.keys()) 
+        assert(output.keys()==output_func.keys())
+        # check all values are close
+        for key in output:
+            assert_allclose(output[key], output_func[key])
 
 
 class Test_power_spectra:

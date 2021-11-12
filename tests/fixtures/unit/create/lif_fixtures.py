@@ -9,8 +9,8 @@ WARNING: Only use this script, if your code is trustworthy! The script runs
          working correctly, a lot of tests will pass despite your code giving
          wrong results.
 
-If you still want to run this script type:
-python tests/fixtures/create/lif_fixtures.py -f <module>
+If you still want to run this script type, go to /nnmt/tests/fixture/:
+python unit/create/lif_fixtures.py -f <module>
 
 Usage: lif_fixtures.py [options] <module>
 

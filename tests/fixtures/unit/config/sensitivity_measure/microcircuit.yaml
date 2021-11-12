@@ -1,3 +1,19 @@
+frequency:
+  - 3.14
+
+analysis_frequencies:
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+
+resorted_eigenvalues_mask: None
+
+eigenvalue_index: 6
+
 # number of neurons in populations
 N:
   - 20683

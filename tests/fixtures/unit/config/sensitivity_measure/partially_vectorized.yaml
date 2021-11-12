@@ -1,3 +1,22 @@
+frequency:
+  - 5.0
+
+analysis_frequencies:
+  - 4.0
+  - 5.0
+  - 6.0
+
+resorted_eigenvalues_mask:
+  - - 0
+    - 1
+  - - 1
+    - 0
+  - - 0
+    - 1
+
+
+eigenvalue_index: 1
+
 N:
   - 1000
   - 2000

@@ -1241,8 +1241,8 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
 
 
 def sensitivity_measure(network, frequency, 
-                        resorted_eigenvalues_mask=None,
-                        eigenvalue_index=None):
+                        resorted_eigenvalues_mask='None',
+                        eigenvalue_index='None'):
     """
     Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
 
@@ -1382,13 +1382,18 @@ def _sensitivity_measure(effective_connectivity, frequency,
     # for brevity the sensitivity measure is called T in the following
     T = np.zeros(eff_conn_of_omega.shape, dtype=complex)
     e, U_l, U_r = slinalg.eig(eff_conn_of_omega, left=True, right=True)
-    if resorted_eigenvalues_mask is not None:
+    
+    # TODO: currently need to catch this for the fixture creation 
+    if isinstance(resorted_eigenvalues_mask, str) and resorted_eigenvalues_mask == 'None':
+        resorted_eigenvalues_mask = 'None'
+    
+    if resorted_eigenvalues_mask is not 'None':
         # apply the resorting
         e = e[resorted_eigenvalues_mask[frequency_index, :]]
         U_l = U_l[:, resorted_eigenvalues_mask[frequency_index, :]]
         U_r = U_r[:, resorted_eigenvalues_mask[frequency_index, :]]
     
-    if eigenvalue_index is None:
+    if eigenvalue_index is 'None':
         # find eigenvalue closest to one
         eigenvalue_index = np.argmin(np.abs(e - 1))
         
