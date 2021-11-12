@@ -5,7 +5,7 @@ Spatial patterns
 This example demonstrates the methods used in Figure 6 of :cite:t:`senk2020`.
 A figure illustrating the network structure of the used model is set up in
 :doc:`network_structure`.
-The same model is used in the example :doc:`spatial_patterns`.
+The same model is used in the example :doc:`fit_transfer_function`.
 
 """
 
@@ -22,11 +22,11 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 plt.style.use('frontiers.mplstyle')
 mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
-                     'axes.titlepad': 0.0})
+                     'axes.titlepad': 0.0,
+                     'figure.constrained_layout.use': False})
 
-###############################################################################
+#############################################################################
 # First, we define parameters for data generation and plotting.
-##########################################################################
 
 params = {
     # mean and standard deviation of input used for stability analysis (in V)
@@ -35,27 +35,27 @@ params = {
     # labels and corresponding scaling parameters for plotted quantities
     'quantities': {
         'k_wavenumbers': {
-			'label': 'wavenumber $k$ (1/mm)',
+            'label': 'wavenumber $k$ (1/mm)',
             'scale': 1e-3},
         'eigenvalues': {
-			'label': r'eigenvalue $\lambda$'},
+            'label': r'eigenvalue $\lambda$'},
         'eigenvalues_real': {
-			'label': 'Re[$\lambda$] (1000/s)',
+            'label': r'Re[$\lambda$] (1000/s)',
             'scale': 1e-3},
         'eigenvalues_imag': {
-			'label': 'Im[$\lambda$] (1000/s)',
+            'label': r'Im[$\lambda$] (1000/s)',
             'scale': 1e-3}},
 
     # figure width in inch
     'figwidth_1col': 85. / 25.4,
 
     # colors for branches of Lambert W function
-    'colors_br': {0: '#994455', # dark red
-                  -1: '#EE99AA', # light red
-                  1: '#004488', # dark blue
-                  -2: '#6699CC', # light blue
-                  2: '#997700', # dark yellow
-                  -3: '#EECC66'}} # light yellow
+    'colors_br': {0: '#994455',  # dark red
+                  -1: '#EE99AA',  # light red
+                  1: '#004488',  # dark blue
+                  -2: '#6699CC',  # light blue
+                  2: '#997700',  # dark yellow
+                  -3: '#EECC66'}}  # light yellow
 
 ##########################################################################
 # ================
@@ -65,6 +65,7 @@ params = {
 # too specific for a global integration into NNMT.
 # These functions are concerned with solving the characteristic equation of the
 # spiking and rate models and interpolating between them.
+
 
 def _solve_chareq_numerically_alpha(
         lambda_rate, k, alpha, network, tau_rate, W_rate):
@@ -105,7 +106,7 @@ def _solve_chareq_numerically_alpha(
                 lam, tau_rate, W_rate) * spatial_profile)
 
         eff_conn_alpha = (alpha * eff_conn_spiking
-	                  + (1. - alpha) * eff_conn_rate)
+                          + (1. - alpha) * eff_conn_rate)
 
         roots = eff_conn_alpha * np.exp(-lam * d) - 1.
 
@@ -333,6 +334,7 @@ def _linalg_max_eigenvalue(matrix):
 ###############################################################################
 # We also define a helper function for adding labels to figure panels.
 
+
 def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
     """
     Adds label to plot panel given by axis.
@@ -359,7 +361,7 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 ##########################################################################
 # ===============
-# Generating data 
+# Generating data
 # ===============
 # We instantiate a ``Basic`` model with a set of pre-defined network and
 # analysis parameters.
@@ -369,8 +371,8 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 print('Instantiating network model.')
 
 network = BasicNetwork(
-network_params='Senk2020_network_params.yaml',
-analysis_params='Senk2020_analysis_params.yaml')
+    network_params='Senk2020_network_params.yaml',
+    analysis_params='Senk2020_analysis_params.yaml')
 
 ##########################################################################
 # The working point is set with a given mean and standard deviation of the
@@ -382,12 +384,12 @@ analysis_params='Senk2020_analysis_params.yaml')
 
 # fix working point via external rates
 nu_ext = mft.external_rates_for_fixed_input(
-	network,
-	mu_set=params['mean_std_inputs_stability'][0],
-	sigma_set=params['mean_std_inputs_stability'][1])
+    network,
+    mu_set=params['mean_std_inputs_stability'][0],
+    sigma_set=params['mean_std_inputs_stability'][1])
 
 network.change_parameters(changed_network_params={'nu_ext': nu_ext},
-			  overwrite=True)
+                          overwrite=True)
 
 # calculate transfer function and its fit
 mft.working_point(network)
@@ -411,24 +413,24 @@ branches = sorted(params['colors_br'].keys())
 k_wavenumbers = network.analysis_params['k_wavenumbers']
 eigenvalues = np.zeros((len(branches), len(k_wavenumbers)), dtype=complex)
 for i, branch_nr in enumerate(branches):
-	for j, k_wavenumber in enumerate(k_wavenumbers):
-		connectivity = W_rate * spatial._ft_spatial_profile_boxcar(
-			k_wavenumber, network.network_params['width'])
-		eigenvalues[i, j] = (
-			linstab._solve_chareq_lambertw_constant_delay(
-				branch_nr=branch_nr, tau=tau_rate,
-				delay=network.network_params['D_mean'],
-				connectivity=connectivity))
+    for j, k_wavenumber in enumerate(k_wavenumbers):
+        connectivity = W_rate * spatial._ft_spatial_profile_boxcar(
+            k_wavenumber, network.network_params['width'])
+        eigenvalues[i, j] = (
+            linstab._solve_chareq_lambertw_constant_delay(
+                branch_nr=branch_nr, tau=tau_rate,
+                delay=network.network_params['D_mean'],
+                connectivity=connectivity))
 # index of eigenvalue with maximum real part
 idx_max = list(
-	np.unravel_index(np.argmax(eigenvalues.real), eigenvalues.shape))
+    np.unravel_index(np.argmax(eigenvalues.real), eigenvalues.shape))
 
 # if max at branch -1, swap with 0
 if branches[idx_max[0]] == -1:
-	idx_n1 = idx_max[0]  # index of current branch -1
-	idx_0 = list(branches).index(0)  # index of current branch 0
-	eigenvalues[[idx_n1, idx_0], [idx_0, idx_n1]]
-	idx_max[0] = idx_0
+    idx_n1 = idx_max[0]  # index of current branch -1
+    idx_0 = list(branches).index(0)  # index of current branch 0
+    eigenvalues[[idx_n1, idx_0], [idx_0, idx_n1]]
+    idx_max[0] = idx_0
 
 eigenval_max = eigenvalues[idx_max[0], idx_max[1]]
 k_eigenval_max = k_wavenumbers[idx_max[1]]
@@ -436,7 +438,8 @@ idx_k_eigenval_max = idx_max[1]
 
 ##########################################################################
 # Then, we perform a linear interpolation of eigenvalues from the rate model
-# (analytical) to the spiking model (LIF, only numerical) by two methods:
+# (analytical) to the spiking model (LIF, only numerical) by two methods and
+# loop here over branch numbers:
 #  1. solving the full characteristic equation numerically and
 #  2. integrating the derivative of the eigenvalue with respect to the
 #     interpolation parameter.
@@ -447,42 +450,42 @@ alphas = np.linspace(0, 1, 5)
 lambdas_integral = np.zeros((len(branches), (len(alphas))), dtype=complex)
 lambdas_chareq = np.zeros((len(branches), len(alphas)), dtype=complex)
 for i, branch_nr in enumerate(branches):
-	print(f'    branch number = {branch_nr}')
+    print(f'    branch number = {branch_nr}')
 
     # evaluate all eigenvalues at k_eig_max
-	# (wavenumbers with largest real part of eigenvalue from theory)
-	lambda0 = eigenvalues[i, idx_k_eigenval_max]
-	# 1. solution by solving the characteristic equation numerically
-	for j, alpha in enumerate(alphas):
-		lambdas_chareq[i, j] = _solve_chareq_numerically_alpha(
-			lambda_rate=lambda0, k=k_eigenval_max, alpha=alpha,
-			network=network, tau_rate=tau_rate, W_rate=W_rate)
+    # (wavenumbers with largest real part of eigenvalue from theory)
+    lambda0 = eigenvalues[i, idx_k_eigenval_max]
+    # 1. solution by solving the characteristic equation numerically
+    for j, alpha in enumerate(alphas):
+        lambdas_chareq[i, j] = _solve_chareq_numerically_alpha(
+            lambda_rate=lambda0, k=k_eigenval_max, alpha=alpha,
+            network=network, tau_rate=tau_rate, W_rate=W_rate)
 
-	# 2. solution by solving the integral
-	lambdas_integral[i, :] = _solve_lambda_of_alpha_integral(
-		lambda_rate=lambda0, k=k_eigenval_max, alphas=alphas,
-		network=network, tau_rate=tau_rate, W_rate=W_rate)
+    # 2. solution by solving the integral
+    lambdas_integral[i, :] = _solve_lambda_of_alpha_integral(
+        lambda_rate=lambda0, k=k_eigenval_max, alphas=alphas,
+        network=network, tau_rate=tau_rate, W_rate=W_rate)
 
 ##########################################################################
 # All results are stored in ``stability_results``.
 
 stability_results = {
-	'branches': branches,
-	'k_wavenumbers': k_wavenumbers,
-	'eigenvalues': eigenvalues,
-	'eigenval_max': eigenval_max,
-	'k_eigenval_max': k_eigenval_max,
-	'idx_k_eigenval_max': idx_k_eigenval_max,
-	'alphas': alphas,
-	'lambdas_integral': lambdas_integral,
-	'lambdas_chareq': lambdas_chareq}
+    'branches': branches,
+    'k_wavenumbers': k_wavenumbers,
+    'eigenvalues': eigenvalues,
+    'eigenval_max': eigenval_max,
+    'k_eigenval_max': k_eigenval_max,
+    'idx_k_eigenval_max': idx_k_eigenval_max,
+    'alphas': alphas,
+    'lambdas_integral': lambdas_integral,
+    'lambdas_chareq': lambdas_chareq}
 
 ##########################################################################
 # ========
 # Plotting
 # ========
 # We generate a figure with two panels
-# The figure will span one column.
+# The figure spans one column.
 
 print('Plotting.')
 
@@ -493,15 +496,16 @@ plt.subplots_adjust(bottom=0.19, top=0.95, left=0.15, right=0.93, wspace=1.2)
 ##########################################################################
 # To panel A, we plot eigenvalues from the rate model vs. wavenumbers.
 
-gs_rt = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0,0], hspace=0.1)
+gs_rt = gridspec.GridSpecFromSubplotSpec(
+    2, 1, subplot_spec=gs[0, 0], hspace=0.1)
 
 ax_real = plt.subplot(gs_rt[0])
 _add_label(ax_real, 'A', xshift=-0.6, yshift=0.02)
 ax_imag = plt.subplot(gs_rt[1])
 
 if (params['quantities']['eigenvalues_real']['scale'] ==
-		params['quantities']['eigenvalues_imag']['scale']):
-	scale_ev = params['quantities']['eigenvalues_real']['scale']
+        params['quantities']['eigenvalues_imag']['scale']):
+    scale_ev = params['quantities']['eigenvalues_real']['scale']
 
 branches = stability_results['branches']
 k_wavenumbers = stability_results['k_wavenumbers']
@@ -509,16 +513,16 @@ eigenvalues = stability_results['eigenvalues']
 
 ks = k_wavenumbers * params['quantities']['k_wavenumbers']['scale']
 for i, branch_nr in enumerate(branches):
-	ax_real.plot(ks, np.real(eigenvalues)[i] * scale_ev,
-					color=params['colors_br'][branch_nr],
-					label=branch_nr)
-	ax_real.set_ylabel(params['quantities']['eigenvalues_real']['label'],
-						labelpad=5.5)
+    ax_real.plot(ks, np.real(eigenvalues)[i] * scale_ev,
+                 color=params['colors_br'][branch_nr],
+                 label=branch_nr)
+    ax_real.set_ylabel(params['quantities']['eigenvalues_real']['label'],
+                       labelpad=5.5)
 
-	ax_imag.plot(ks, np.imag(eigenvalues)[i] * scale_ev,
-					color=params['colors_br'][branch_nr])
-	ax_imag.set_ylabel(params['quantities']['eigenvalues_imag']['label'],
-						labelpad=0)
+    ax_imag.plot(ks, np.imag(eigenvalues)[i] * scale_ev,
+                 color=params['colors_br'][branch_nr])
+    ax_imag.set_ylabel(params['quantities']['eigenvalues_imag']['label'],
+                       labelpad=0)
 
 ax_real.set_title(params['quantities']['eigenvalues']['label'])
 ax_real.set_xticklabels([])
@@ -530,11 +534,11 @@ labels = ['0', '-1', '1', '-2', '2', '-3']  # ordered
 handles_old, labels_old = ax_real.get_legend_handles_labels()
 handles = []
 for lam in labels:
-	for i, lo in enumerate(labels_old):
-		if lam == lo:
-			handles.append(handles_old[i])
+    for i, lo in enumerate(labels_old):
+        if lam == lo:
+            handles.append(handles_old[i])
 ax_real.legend(handles, labels, title='branch number', ncol=3,
-				columnspacing=0.1, loc='center', bbox_to_anchor=(0.55, 0.2))
+               columnspacing=0.1, loc='center', bbox_to_anchor=(0.55, 0.2))
 
 # find index where imag. of principle branch becomes 0 for xlims
 lambdas_imag = np.imag(eigenvalues)
@@ -545,32 +549,32 @@ offset = 5  # manual offset
 klim = ks[idx_0 - offset]
 
 for ax in [ax_real, ax_imag]:
-	ax.axhline(0, linestyle='-', color='k',
-				linewidth=mpl.rcParams['lines.linewidth'] * 0.5)
-	ax.set_xlim(ks[0], klim)
+    ax.axhline(0, linestyle='-', color='k',
+                            linewidth=mpl.rcParams['lines.linewidth'] * 0.5)
+    ax.set_xlim(ks[0], klim)
 
 # star for maximum real part
 for ax, fun in zip([ax_real, ax_imag],
-					[np.real, np.imag]):
-	ax.plot(stability_results['k_eigenval_max']
-			* params['quantities']['k_wavenumbers']['scale'],
-			np.abs(fun(stability_results['eigenval_max']) * scale_ev),
-			marker='*', markerfacecolor='k', markeredgecolor='none',
-			markersize=mpl.rcParams['lines.markersize'] * 2.)
+                   [np.real, np.imag]):
+    ax.plot(stability_results['k_eigenval_max']
+            * params['quantities']['k_wavenumbers']['scale'],
+            np.abs(fun(stability_results['eigenval_max']) * scale_ev),
+            marker='*', markerfacecolor='k', markeredgecolor='none',
+            markersize=mpl.rcParams['lines.markersize'] * 2.)
 
 ##########################################################################
-# To panel B, we plot the linear interpolation of eigenvalues. 
+# To panel B, we plot the linear interpolation of eigenvalues.
 
 gs_int = gridspec.GridSpecFromSubplotSpec(
-	2, 1, subplot_spec=gs[0,1], hspace=0.1)
+    2, 1, subplot_spec=gs[0, 1], hspace=0.1)
 
 ax_real = plt.subplot(gs_int[0])
 _add_label(ax_real, 'B', xshift=-0.65, yshift=0.02)
 ax_imag = plt.subplot(gs_int[1])
 
 if (params['quantities']['eigenvalues_real']['scale'] ==
-		params['quantities']['eigenvalues_imag']['scale']):
-	scale_ev = params['quantities']['eigenvalues_real']['scale']
+        params['quantities']['eigenvalues_imag']['scale']):
+    scale_ev = params['quantities']['eigenvalues_real']['scale']
 
 branches = stability_results['branches']
 alphas = stability_results['alphas']
@@ -579,37 +583,37 @@ lambdas_chareq = stability_results['lambdas_chareq']
 
 xlim = [-0.1, 1.1]
 for i, branch_nr in enumerate(branches):
-	for ax, fun, lab in zip([ax_real, ax_imag],
-							[np.real, np.imag],
-							['real', 'imag']):
-		ax.plot(alphas,
-				fun(lambdas_integral[i]) * scale_ev,
-				linestyle='',
-				color=params['colors_br'][branch_nr],
-				marker='o',
-				markersize=mpl.rcParams['lines.markersize'] * 1.5,
-				markeredgecolor='none')
-		ax.plot(alphas, fun(lambdas_chareq[i]) * scale_ev,
-				linestyle='-',
-				color=params['colors_br'][branch_nr],
-				markeredgecolor='none')
-		ax.set_ylabel(params['quantities']['eigenvalues_' + lab]['label'],
-						labelpad=0)
+    for ax, fun, lab in zip([ax_real, ax_imag],
+                            [np.real, np.imag],
+                            ['real', 'imag']):
+        ax.plot(alphas,
+                fun(lambdas_integral[i]) * scale_ev,
+                linestyle='',
+                color=params['colors_br'][branch_nr],
+                marker='o',
+                markersize=mpl.rcParams['lines.markersize'] * 1.5,
+                markeredgecolor='none')
+        ax.plot(alphas, fun(lambdas_chareq[i]) * scale_ev,
+                linestyle='-',
+                color=params['colors_br'][branch_nr],
+                markeredgecolor='none')
+        ax.set_ylabel(params['quantities']['eigenvalues_' + lab]['label'],
+                      labelpad=0)
 
-		# lambda = 0
-		ax.plot(xlim, [0, 0], 'k-',
-				linewidth=mpl.rcParams['lines.linewidth'] * 0.5)
-		ax.set_xlim(xlim[0], xlim[1])
+        # lambda = 0
+        ax.plot(xlim, [0, 0], 'k-',
+                linewidth=mpl.rcParams['lines.linewidth'] * 0.5)
+        ax.set_xlim(xlim[0], xlim[1])
 
-		# star marker
-		if branch_nr == 0:
-			ax.plot(0,
-					np.abs(fun(stability_results['eigenval_max']))
-					* scale_ev,
-					marker='*',
-					markerfacecolor='k',
-					markeredgecolor='none',
-					markersize=mpl.rcParams['lines.markersize'] * 2.)
+        # star marker
+        if branch_nr == 0:
+            ax.plot(0,
+                    np.abs(fun(stability_results['eigenval_max']))
+                    * scale_ev,
+                    marker='*',
+                    markerfacecolor='k',
+                    markeredgecolor='none',
+                    markersize=mpl.rcParams['lines.markersize'] * 2.)
 
 xticks = [0, 0.5, 1]
 ax_real.set_title(params['quantities']['eigenvalues']['label'])
@@ -621,14 +625,13 @@ ax_imag.set_xticklabels(['0.0\nrate\nmodel', '0.5', '1.0\nspiking\nmodel'])
 
 # legend for symbols
 integral = mpl.lines.Line2D([], [], color='k',
-							marker='o', linestyle='', label='integral')
+                            marker='o', linestyle='', label='integral')
 chareq = mpl.lines.Line2D([], [], color='k',
-							marker=None, linestyle='-', label='char. eq.')
+                          marker=None, linestyle='-', label='char. eq.')
 ax_real.legend(
-	handles=[integral, chareq], bbox_to_anchor=(0.6, 0.7), loc='center')
+    handles=[integral, chareq], bbox_to_anchor=(0.6, 0.7), loc='center')
 
 ##########################################################################
 # The final figure is saved to file.
 
 plt.savefig('Senk2020_spatial_patterns.eps')
-

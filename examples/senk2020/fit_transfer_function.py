@@ -45,10 +45,10 @@ params = {
     # labels and corresponding scaling parameters for plotted quantities
     'quantities': {
         'mean_input': {
-	    	'label': r'mean input $\mu$ (mV)',
+            'label': r'mean input $\mu$ (mV)',
             'scale': 1e3},
         'std_input': {
-	    	'label': r'std input $\sigma$ (mV)',
+            'label': r'std input $\sigma$ (mV)',
             'scale': 1e3},
         'nu_ext_exc': {
             'label': 'exc. external rate\n' + r'$\nu_\mathrm{ext,E}$ (1000/s)',
@@ -57,19 +57,19 @@ params = {
             'label': 'inh. external rate\n' + r'$\nu_\mathrm{ext,I}$ (1000/s)',
             'scale': 1e-3},
         'firing_rates': {
-	    	'label': 'rate\n' + r'$\nu$ (1/s)',
+            'label': 'rate\n' + r'$\nu$ (1/s)',
             'scale': 1.},
         'tau_rate': {
-	    	'label': 'fit time constant\n' + r'$\tau$ (ms)',
+            'label': 'fit time constant\n' + r'$\tau$ (ms)',
             'scale': 1e3},
         'W_rate': {
-	    	'label': 'fit exc. weight\n' + r'$w_\mathrm{E}$',
+            'label': 'fit exc. weight\n' + r'$w_\mathrm{E}$',
             'scale': 1.},  # unitless
         'fit_error': {
-	    	'label': 'fit error\n' + r'$\epsilon$ (%)',
+            'label': 'fit error\n' + r'$\epsilon$ (%)',
             'scale': 1e2},
         'transfer_function': {
-	    	'label': 'transfer function $H_\mu$',
+            'label': r'transfer function $H_\mu$',
             'scale': 1e-3},
         'transfer_function_amplitude': {
             'label':
@@ -85,7 +85,7 @@ params = {
     'colors': {
         'light_grey': '#BBBBBB',
         'dark_grey': '#555555',
-        'dark_purple': '#882E72',  # no. 9 
+        'dark_purple': '#882E72',  # no. 9
         'light_purple': '#D1BBD7',  # no. 3
         'dark_green': '#4EB265',  # no. 15
         'light_green': '#CAE0AB',  # no. 17
@@ -128,31 +128,32 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 ##########################################################################
 # ===============
-# Generating data 
+# Generating data
 # ===============
 # We instantiate a ``Basic`` model with a set of pre-defined network and
 # analysis parameters.
 # The relative inhibition is here g = 5 in contrast to the original Figure 5 of
 # :cite:t:`senk2020` which uses g = 6.
 
+
 network = BasicNetwork(
-	network_params='Senk2020_network_params.yaml',
-	analysis_params='Senk2020_analysis_params.yaml')
- 
+    network_params='Senk2020_network_params.yaml',
+    analysis_params='Senk2020_analysis_params.yaml')
+
 ##########################################################################
 # All results will be stored in ``tf_scan_results``.
 
 tf_scan_results = {}
 tf_scan_results['frequencies'] = \
-	network.analysis_params['omegas'] / (2. * np.pi)
+    network.analysis_params['omegas'] / (2. * np.pi)
 dims = (len(params['mean_inputs_scan']), len(params['std_inputs_scan']))
 for key in ['nu_ext_exc', 'nu_ext_inh', 'firing_rates',
-           'tau_rate', 'fit_error', 'W_rate']:
-	tf_scan_results[key] = np.zeros(dims)
+            'tau_rate', 'fit_error', 'W_rate']:
+    tf_scan_results[key] = np.zeros(dims)
 for key in ['transfer_function', 'transfer_function_fit']:
-	tf_scan_results[key] = np.zeros(
-		(dims[0], dims[1], len(network.analysis_params['omegas'])),
-		dtype=complex)
+    tf_scan_results[key] = np.zeros(
+        (dims[0], dims[1], len(network.analysis_params['omegas'])),
+        dtype=complex)
 
 ##########################################################################
 # The main loop for generating the data iterates over working points which are
@@ -166,48 +167,48 @@ for key in ['transfer_function', 'transfer_function_fit']:
 print('Iterating over working points and fitting the LIF transfer function.')
 
 for i, mu in enumerate(params['mean_inputs_scan']):
-	for j, sigma in enumerate(params['std_inputs_scan']):
+    for j, sigma in enumerate(params['std_inputs_scan']):
 
-		print(f'    (mu, sigma) = ({mu * 1e3}, {sigma * 1e3}) mV')
+        print(f'    (mu, sigma) = ({mu * 1e3}, {sigma * 1e3}) mV')
 
         # fix working point via external rates
-		nu_ext = mft.external_rates_for_fixed_input(
-			network, mu_set=mu, sigma_set=sigma)
+        nu_ext = mft.external_rates_for_fixed_input(
+            network, mu_set=mu, sigma_set=sigma)
 
-		network.change_parameters(
-			changed_network_params={'nu_ext': nu_ext},
-			overwrite=True)
+        network.change_parameters(
+            changed_network_params={'nu_ext': nu_ext},
+            overwrite=True)
 
-		# calculate transfer function and its fit
-		mft.working_point(network)
-		mft.transfer_function(network)
-		mft.fit_transfer_function(network)
+        # calculate transfer function and its fit
+        mft.working_point(network)
+        mft.transfer_function(network)
+        mft.fit_transfer_function(network)
 
-		# store results
-		tf_scan_results['nu_ext_exc'][i, j] = nu_ext[0]
-		tf_scan_results['nu_ext_inh'][i, j] = nu_ext[1]
+        # store results
+        tf_scan_results['nu_ext_exc'][i, j] = nu_ext[0]
+        tf_scan_results['nu_ext_inh'][i, j] = nu_ext[1]
 
-		# 1D results (assert equal values for populations, store only one)
-		for key in ['firing_rates', 'tau_rate', 'fit_error']:
-			res = network.results[mft._prefix + key]
-			assert len(np.shape(res)) == 1 and len(np.unique(res)) == 1
-			tf_scan_results[key][i, j] = res[0]
+        # 1D results (assert equal values for populations, store only one)
+        for key in ['firing_rates', 'tau_rate', 'fit_error']:
+            res = network.results[mft._prefix + key]
+            assert len(np.shape(res)) == 1 and len(np.unique(res)) == 1
+            tf_scan_results[key][i, j] = res[0]
 
-		# 2D results (assert equal rows, store only first value (E->E,I))
-		for key in ['W_rate']:
-			res = network.results[mft._prefix + key]
-			assert len(
-				np.shape(res)) == 2 and np.isclose(
-				res, res[0]).all()
-			tf_scan_results[key][i, j] = res[0, 0]
+        # 2D results (assert equal rows, store only first value (E->E,I))
+        for key in ['W_rate']:
+            res = network.results[mft._prefix + key]
+            assert len(
+                np.shape(res)) == 2 and np.isclose(
+                res, res[0]).all()
+            tf_scan_results[key][i, j] = res[0, 0]
 
-		# 2D results (assert equal columns for populations, store only one)
-		for key in ['transfer_function', 'transfer_function_fit']:
-			res = network.results[mft._prefix + key]
-			res_t = np.transpose(res)
-			assert (len(np.shape(res)) == 2) and (
-				np.isclose(res_t, res_t[0]).all())
-			tf_scan_results[key][i, j] = res[:, 0]
+        # 2D results (assert equal columns for populations, store only one)
+        for key in ['transfer_function', 'transfer_function_fit']:
+            res = network.results[mft._prefix + key]
+            res_t = np.transpose(res)
+            assert (len(np.shape(res)) == 2) and (
+                np.isclose(res_t, res_t[0]).all())
+            tf_scan_results[key][i, j] = res[:, 0]
 
 ##########################################################################
 # ========
@@ -215,7 +216,7 @@ for i, mu in enumerate(params['mean_inputs_scan']):
 # ========
 # We generate a figure with three panels to show the results from scanning
 # over the input.
-# The figure will span two columns.
+# The figure spans two columns.
 
 print('Plotting.')
 
@@ -225,9 +226,9 @@ gs = gridspec.GridSpec(1, 10, figure=fig)
 
 ##########################################################################
 # First, we plot results from scanning over the full ranges of working points.
-# Panel A will contain the fixed external rates and the predicted firing rates
+# Panel A contains the fixed external rates and the predicted firing rates
 # of the neuronal populations.
-# Panel C will contain the results from fitting the transfer function, i.e.,
+# Panel C contains the results from fitting the transfer function, i.e.,
 # the time constants, weights, and fit errors.
 
 gs_wp = gridspec.GridSpecFromSubplotSpec(
@@ -239,11 +240,13 @@ mu_star = params['mean_std_inputs_stability'][0]
 sigma_star = params['mean_std_inputs_stability'][1]
 
 for k, key in enumerate([
-    'nu_ext_exc', 'nu_ext_inh', 'firing_rates', # panel A
-    'tau_rate', 'W_rate', 'fit_error']): # panel C
+    'nu_ext_exc', 'nu_ext_inh', 'firing_rates',  # panel A
+        'tau_rate', 'W_rate', 'fit_error']):  # panel C
     ax = plt.subplot(gs_wp[k])
     img = ax.pcolormesh(
-        np.transpose(tf_scan_results[key] * params['quantities'][key]['scale']))
+        np.transpose(
+            tf_scan_results[key] *
+            params['quantities'][key]['scale']))
 
     # pcolormesh places ticks by default to lower bound, therefore add 0.5
     ax.set_xticks(np.arange(len(mus)) + 0.5)
@@ -260,7 +263,7 @@ for k, key in enumerate([
         ax.set_ylabel(params['quantities']['std_input']['label'])
     else:
         ax.set_yticklabels([])
-    
+
     xshift = -0.6
     yshift = 0.22
     if k == 0:
@@ -290,10 +293,11 @@ for k, key in enumerate([
     ax.set_title(params['quantities'][key]['label'])
 
 ##########################################################################
-# To panel B, we plot the LIF transfer function and fit for some selected
+# To panel B, we plot the LIF transfer function and its fit for some selected
 # working points.
 
-gs_tf = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 7:], hspace=0)
+gs_tf = gridspec.GridSpecFromSubplotSpec(
+    2, 1, subplot_spec=gs[0, 7:], hspace=0)
 ax_amplitude = plt.subplot(gs_tf[0])
 _add_label(ax_amplitude, 'B', xshift=-0.4, yshift=0.02)
 ax_phase = plt.subplot(gs_tf[1])
@@ -330,7 +334,7 @@ for i, mu in enumerate(params['mean_inputs_scan']):
 
             # phase
             tf_orig = np.arctan2(np.imag(transfer_function),
-                                    np.real(transfer_function)) * 180 / np.pi
+                                 np.real(transfer_function)) * 180 / np.pi
             tf_fit = np.arctan2(
                 np.imag(transfer_function_fit),
                 np.real(transfer_function_fit)) * 180 / np.pi
@@ -343,12 +347,9 @@ for i, mu in enumerate(params['mean_inputs_scan']):
                 params['quantities']['frequencies']['label'])
 
             for ax, ylabel in zip(
-                [ax_amplitude,
-                    ax_phase],
-                [params['quantities']['transfer_function_amplitude'][
-                    'label'],
-                    params['quantities']['transfer_function_phase'][
-                        'label']]):
+                [ax_amplitude, ax_phase],
+                [params['quantities']['transfer_function_amplitude']['label'],
+                 params['quantities']['transfer_function_phase']['label']]):
 
                 if any(frequencies > 0):
                     ax.set_xscale('log')
