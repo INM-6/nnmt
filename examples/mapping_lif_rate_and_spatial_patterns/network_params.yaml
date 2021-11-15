@@ -1,0 +1,118 @@
+# label of network parameters
+label: EI_spatial
+
+# population names
+populations:
+    - EX
+    - IN
+
+# number of neurons in populations
+N:
+    - 4000
+    - 1000
+
+## neuron parameters
+# absolute reset potential
+V_0_abs:
+    val: 
+      - -65.0
+      - -65.0
+    unit: mV
+          
+# absolute threshold of membrane potential
+V_th_abs:
+    val:
+      - -50.0
+      - -50.0
+    unit: mV
+
+# membrane capacitance
+C:
+    val:
+      - 250.0
+      - 250.0
+    unit: pF
+
+# membrane time constant
+tau_m:
+    val:
+      - 5.0
+      - 5.0
+    unit: ms
+
+# refractory time
+tau_r:
+    val:
+      - 0.0
+      - 0.0
+    unit: ms
+
+## synapse parameters
+# synaptic time constant
+tau_s:
+    val:
+      - 0.5
+      - 0.5
+    unit: ms
+
+# mean delays
+D_mean:
+    val:
+       - - 1.5
+         - 1.5
+       - - 1.5
+         - 1.5
+    unit: ms
+
+# standard deviations of delays
+D_std:
+    val:
+       - - 0.0
+         - 0.0
+       - - 0.0
+         - 0.0
+    unit: ms
+
+# delay distribution, options: none, gaussian (standard deviation is defined
+# above), truncated gaussian (standard deviation is defined above, truncation
+# at zero)
+delay_dist: none
+
+# PSC amplitudes (g=5)
+W:
+    val:
+       - - 87.8
+         - -439.0
+       - - 87.8
+         - -439.0
+    unit: pA
+
+# in-degrees
+K:
+    - - 400
+      - 100
+    - - 400
+      - 100
+
+# PSC amplitudes external
+W_ext:
+    val:
+       - - 87.8
+         - -439.0
+       - - 87.8
+         - -439.0
+    unit: pA
+
+# number of external neurons
+K_ext:
+    - 1
+    - 1
+
+## spatial structure
+# half width of connections, radius of mask
+width:
+    val:
+        - 0.2
+        - 0.07
+    unit: mm
+

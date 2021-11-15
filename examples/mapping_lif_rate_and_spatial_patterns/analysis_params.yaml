@@ -1,0 +1,25 @@
+# frequencies
+f_min:
+    val: 1.0
+    unit: Hz
+
+f_max:
+    val: 200.0
+    unit: Hz
+
+df:
+    val: 1.0
+    unit: Hz
+
+# wavenumbers
+k_min:
+    val: 1.0
+    unit: 1 / mm
+
+k_max:
+    val: 100.0
+    unit: 1 / mm
+
+dk:
+    val: 0.5
+    unit: 1 / mm

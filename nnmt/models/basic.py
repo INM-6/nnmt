@@ -17,11 +17,14 @@ class Basic(Network):
     calculates relative thresholds and converts the analysis frequencies to
     angular frequencies.
 
+    It optionally calculates the spatial Fourier wavenumbers (also known as k
+    values) needed for a linear stability analysis of spatially structured
+    network models.
+
     Parameters
     ----------
     network_params : [str | dict]
         Network parameters yaml file name or dictionary including:
-
 
         - `C` : float
             Membrane capacitance in pF.
@@ -50,6 +53,12 @@ class Basic(Network):
             Minimal analysis frequency.
         - `f_max` : float
             Maximal analysis frequency.
+        - `dk` : float, optional
+            Step size between two k values.
+        - `k_min` : float, optional
+            Minimal k value.
+        - `k_max` : float, optional
+            Maximal k value.
 
     See Also
     --------
@@ -113,7 +122,8 @@ class Basic(Network):
         """
         Calculate all analysis parameters derived from parameters in yaml file.
 
-        Calculates the angular analysis frequencies.
+        Calculates the angular analysis frequencies and optionally the range
+        of wavenumbers needed for spatial analyses.
 
         Returns
         -------
@@ -131,8 +141,27 @@ class Basic(Network):
         @ureg.wraps(ureg.Hz, (ureg.Hz, ureg.Hz, ureg.Hz))
         def calc_evaluated_omegas(w_min, w_max, dw):
             """ Calculates omegas at which functions are to be evaluated """
-            return np.arange(w_min, w_max, dw)
+            return np.arange(w_min, w_max + dw, dw)
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
 
+        # wavenumbers (obtional)
+        if all(
+            key in self.analysis_params for key in [
+                'k_min',
+                'k_max',
+                'dk']):
+            k_min, k_max, dk = (self.analysis_params['k_min'],
+                                self.analysis_params['k_max'],
+                                self.analysis_params['dk'])
+
+            @ureg.wraps(ureg.meters**(-1), (ureg.meters**(-1),
+                                            ureg.meters**(-1),
+                                            ureg.meters**(-1)))
+            def calc_wavenumbers(k_min, k_max, dk):
+                """ Gets range of wavenumbers """
+                return np.arange(k_min, k_max + dk, dk)
+
+            derived_params['k_wavenumbers'] = calc_wavenumbers(
+                k_min, k_max, dk)
         return derived_params

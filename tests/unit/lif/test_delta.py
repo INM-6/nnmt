@@ -34,7 +34,7 @@ def real_siegert(tau_m, tau_r, V_th_rel, V_0_rel, mu, sigma):
     # scalars and doesn't do anything if they are arrays of appropriate size
     tau_m = tau_m + y_th - y_th
     tau_r = tau_r + y_th - y_th
-    
+
     nu = np.zeros(len(mu))
     for i, (mu, sigma, y_th, y_r, tau_m, tau_r) in enumerate(
             zip(mu, sigma, y_th, y_r, tau_m, tau_r)):
@@ -50,24 +50,24 @@ def empty_network():
 
 
 class Test_firing_rates_wrapper:
-    
+
     func = staticmethod(delta.firing_rates)
-    
+
     def mock_firing_rate_integration(self, mocker):
         mocker.patch(
-            'nnmt.lif._static._firing_rate_integration',
+            'nnmt.lif._general._firing_rate_integration',
             return_value=1
             )
-    
+
     def test_raise_exception_if_not_all_parameters_available(self, mocker,
                                                              empty_network):
         self.mock_firing_rate_integration(mocker)
         with pytest.raises(RuntimeError):
             self.func(empty_network)
-            
+
 
 class Test_firing_rates:
-    
+
     func = staticmethod(delta._firing_rates_for_given_input)
     fixtures = 'lif_delta_firing_rate.h5'
     rtol = 1e-4
@@ -83,7 +83,7 @@ class Test_firing_rates:
     def test_gives_similar_results_as_real_siegert_if_siegert_converges(
             self, unit_fixtures):
         params = unit_fixtures.pop('params')
-        
+
         siegert = real_siegert(**params)
         if not np.any(np.isnan(siegert)):
             assert_allclose(self.func(**params), siegert, rtol=self.rtol)
@@ -95,7 +95,7 @@ class Test_firing_rates:
 
 
 class Test_siegert_helper:
-    
+
     def test_erfcx_quadrature_order_detection(self):
         rtol = 1e-12
         a = np.random.uniform(0, 10)
@@ -122,7 +122,7 @@ class Test_derivative_of_firing_rates_wrt_mean_input:
 
     func = staticmethod(delta._derivative_of_firing_rates_wrt_mean_input)
     output_key = 'd_nu_d_mu'
-    
+
     def test_pos_params_neg_raise_exception(self, std_unitless_params,
                                             pos_keys):
         check_pos_params_neg_raise_exception(self.func, std_unitless_params,

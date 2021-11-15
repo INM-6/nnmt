@@ -34,7 +34,7 @@ from scipy.special import (
     )
 from scipy.integrate import quad as _quad
 
-from . import _static
+from . import _general
 from ..utils import (_cache,
                      _check_positive_params)
 
@@ -53,7 +53,7 @@ def firing_rates(network, **kwargs):
         :func:`nnmt.lif.delta._firing_rates`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -109,7 +109,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         Firing rates of external populations in Hz.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -131,7 +131,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         'nu_ext': nu_ext,
         }
 
-    return _static._firing_rate_integration(_firing_rates_for_given_input,
+    return _general._firing_rate_integration(_firing_rates_for_given_input,
                                             firing_rate_params,
                                             input_params, **kwargs)
 
@@ -324,7 +324,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     np.array
         Array of mean inputs to each population in V.
     """
-    return _static._mean_input(nu, J, K, tau_m,
+    return _general._mean_input(nu, J, K, tau_m,
                                J_ext, K_ext, nu_ext)
 
 
@@ -384,7 +384,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     np.array
         Array of mean inputs to each population in V.
     """
-    return _static._std_input(nu, J, K, tau_m,
+    return _general._std_input(nu, J, K, tau_m,
                               J_ext, K_ext, nu_ext)
 
 

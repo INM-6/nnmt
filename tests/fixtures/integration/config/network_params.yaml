@@ -1,7 +1,4 @@
 ---
-# Label, that is used to trigger calculation of network-specific derived
-# parameters. Changing this label currently disables the calculation of
-# microcircuit specific derived parameters!
 label: microcircuit
 
 populations:
@@ -164,7 +161,7 @@ g: 4.0
 nu_ext:
   val: 8.0
   unit: Hz
-  
+
 # membrane time constant
 tau_m_ext:
   val: 10.0

@@ -104,10 +104,10 @@ if __name__ == '__main__':
         elif (module == 'inputs') or (module == 'all'):
             config_path = 'unit/config/inputs/'
             regime_params, regimes = load_params_and_regimes(config_path)
-            create_and_save_fixtures(nnmt.lif._static._mean_input,
+            create_and_save_fixtures(nnmt.lif._general._mean_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_mean_input.h5')
-            create_and_save_fixtures(nnmt.lif._static._std_input,
+            create_and_save_fixtures(nnmt.lif._general._std_input,
                                      regime_params, regimes,
                                      fixture_path + 'lif_std_input.h5')
         elif (module == 'transfer_functions') or (module == 'all'):
