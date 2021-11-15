@@ -1183,17 +1183,20 @@ def _match_eigenvalues_across_frequencies(eigenvalues, margin=1e-5):
     """
     eig = eigenvalues.copy()
     
+    n_freqs = eig.shape[0]
+    n_evals = eig.shape[1]
+    
     # define vector of eigenvalues at frequency 0
     previous = eig[0, :]
     
     # initialize containers
-    distances = np.zeros([eig.shape[0] - 1, eig.shape[1]])
+    distances = np.zeros([n_freqs - 1, n_evals])
     multi_swaps = {}
     resorted_eigenvalues_mask = np.tile(
-        np.arange(eig.shape[1]), (eig.shape[0], 1))
+        np.arange(n_evals), (n_freqs, 1))
     
     # loop over all frequencies > 0
-    for i in range(1, eig.shape[0]):
+    for i in range(1, n_freqs):
         # compare new to previous
         new = eig[i, :]
         distances[i-1, :] = abs(previous - new)
@@ -1201,10 +1204,11 @@ def _match_eigenvalues_across_frequencies(eigenvalues, margin=1e-5):
         # get all distances which are larger than margin
         if np.any(distances[i-1, :] > margin):
             indices = np.argwhere(distances[i-1, :] > margin).reshape(-1)
-            # postpone the resorting, if more than two eigenvalues need to be
-            # swapped (multi_swap)
+            # if more than two or more eigenvalues need to be
+            # swapped, store this in multi_swaps dictionary
             if len(indices) >= 2:
                 multi_swaps[i-1] = indices
+                
         previous = new
 
     if multi_swaps:
@@ -1225,10 +1229,21 @@ def _match_eigenvalues_across_frequencies(eigenvalues, margin=1e-5):
                 # to the eigenvalues at the next frequency step
                 index = np.argmin(
                     np.abs(original[i+1, indices_to_swap] - original[i, k]))
+                
                 # resort this one eigenvalue until the next frequency index
                 # for which a multi-swap is necessary
                 eig[i+1:j+1, k] = original[i+1:j+1, indices_to_swap[index]]
                 resorted_eigenvalues_mask[i+1:j+1, k] = indices_to_swap[index]
+                
+            # check for ambiguous resorting
+            _, counts = np.unique(resorted_eigenvalues_mask[i+1, :],
+                                    return_counts=True)
+            if any(counts >= 2):
+                warnings.warn(
+                    'Ambiguous eigenvalue resorting detected at frequency '
+                    f'index {i+1}. '
+                    'Please cross-check the sorting and consider modifying '
+                    'the margin and/or the frequency resolution.')
                 
         # deal with the last swap
         original = eig.copy()
@@ -1239,6 +1254,17 @@ def _match_eigenvalues_across_frequencies(eigenvalues, margin=1e-5):
                 np.abs(original[i+1, indices_to_swap] - original[i, k]))
             eig[i+1, k] = original[i+1, indices_to_swap[index]]
             resorted_eigenvalues_mask[i+1, k] = indices_to_swap[index]
+        
+        # check for ambiguous resorting
+        _, counts = np.unique(resorted_eigenvalues_mask[i+1, :],
+                                return_counts=True)
+        if any(counts >= 2):
+            warnings.warn(
+                'Ambiguous eigenvalue resorting detected at frequency '
+                f'index {i+1}. '
+                'Please cross-check the sorting and consider modifying '
+                'the margin and/or the frequency resolution.')
+        
         
     return eig, resorted_eigenvalues_mask
 
