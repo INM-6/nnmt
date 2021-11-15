@@ -18,10 +18,14 @@ from scipy.special import lambertw
 def _solve_chareq_lambertw_constant_delay(
         branch_nr, tau, delay, connectivity):
     """
-    Uses the Lambert W function to solve a characteristic equation with delay.
-    
-    Computes the temporal eigenvalue given in :cite:t:`senk2020`, Eq. 7, for a
-    given branch number.
+    Calcs the most critical eigenvalue for neural networks with constant delay.
+
+    Uses the Lambert W function to solve the characteristic equation for the
+    respective system. This function can be applied to networks without (Eq. 1
+    in :cite:t:`helias2013`) and with (Eq. 1 in :cite:t:`senk2020`) a spatially
+    structured connectivity. It computes the most critical temporal eigenvalue
+    given by Eq. 8 in :cite:t:`helias2013` or Eq. 7 in :cite:t:`senk2020`
+    respectively for any given branch number.
 
     Parameters
     ----------
@@ -32,8 +36,8 @@ def _solve_chareq_lambertw_constant_delay(
     delay : np.array
         Delays in s.
     connectivity : np.array
-        Matrix defining the connectivity. For non-spatial networks, this is just
-        the weight matrix. For spatial networks, this is an effective
+        Matrix defining the connectivity. For non-spatial networks, this is
+        just the weight matrix. For spatial networks, this is an effective
         connectivity matrix; each element is the weight multiplied with the
         Fourier transform of the spatial profile at the wave number k for which
         the characteristic equation is to be evaluated.
