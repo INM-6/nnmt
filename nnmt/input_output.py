@@ -466,13 +466,7 @@ def load_network(file):
     results_hash_dict : dict
         Dictionary where all calculated results are stored.
     """
-    try:
-        input = load_val_unit_dict_from_h5(file)
-    # if not existing OSError is raised by h5py_wrapper, then return empty dict
-    except IOError:
-        message = f'File {file} not found!'
-        warnings.warn(message)
-        return {}, {}, {}, {}
+    input = load_val_unit_dict_from_h5(file)
 
     return (input['network_params'],
             input['analysis_params'],

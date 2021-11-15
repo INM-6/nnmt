@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="39.82933mm"
+   height="63.080299mm"
+   viewBox="0 0 39.829331 63.080299"
+   version="1.1"
+   id="svg2608"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="directory_structure.svg">
+  <defs
+     id="defs2602" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8"
+     inkscape:cx="139.77072"
+     inkscape:cy="150.0601"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="1"
+     fit-margin-left="1"
+     fit-margin-right="1"
+     fit-margin-bottom="1"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata2605">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-144.14415,-116.87017)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.23333311px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="152.40685"
+       y="120.95628"
+       id="text330"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan328"
+         x="152.40685"
+         y="120.95628"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.23333311px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';stroke-width:0.26458332px">NNMT</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot332"
+       style="font-style:normal;font-weight:normal;font-size:13.33333302px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="matrix(0.26458333,0,0,0.26458333,145.43434,108.79898)"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><flowRegion
+         id="flowRegion334"><rect
+           id="rect336"
+           width="60"
+           height="20"
+           x="50"
+           y="54.448818" /></flowRegion><flowPara
+         id="flowPara340">nnmt</flowPara></flowRoot>    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="158.78925"
+       y="172.40936"
+       id="text346"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan344"
+         x="158.78925"
+         y="172.40936"
+         style="stroke-width:0.26458332px">docs</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="158.78925"
+       y="175.67929"
+       id="text350"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan348"
+         x="158.78925"
+         y="175.67929"
+         style="stroke-width:0.26458332px">examples</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="158.88916"
+       y="178.90051"
+       id="text354"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan352"
+         x="158.88916"
+         y="178.90051"
+         style="stroke-width:0.26458332px">tests</tspan></text>
+    <rect
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#b63c40;stroke-width:0.60000002;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"
+       id="rect440"
+       width="27.781248"
+       height="19.04999"
+       x="150.95166"
+       y="127.96774"
+       rx="0"
+       ry="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.17499995px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="162.56389"
+       y="132.0688"
+       id="text358"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan356"
+         x="162.56389"
+         y="132.0688"
+         style="stroke-width:0.26458332px">lif</tspan><tspan
+         sodipodi:role="line"
+         x="162.56389"
+         y="136.03755"
+         style="stroke-width:0.26458332px"
+         id="tspan360" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.17499995px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="162.69101"
+       y="142.06183"
+       id="text364"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         x="162.69101"
+         y="142.06183"
+         style="stroke-width:0.26458332px"
+         id="tspan366">spatial</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.17499995px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="162.52357"
+       y="145.54315"
+       id="text372"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan370"
+         x="162.52357"
+         y="145.54315"
+         style="stroke-width:0.26458332px">...</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.17499995px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="162.57474"
+       y="150.84525"
+       id="text376"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan374"
+         x="162.57474"
+         y="150.84525"
+         style="stroke-width:0.26458332px">models</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.17499995px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="162.56389"
+       y="164.52084"
+       id="text380"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan378"
+         x="162.56389"
+         y="164.52084"
+         style="stroke-width:0.26458332px">input_output</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.17499995px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="162.59332"
+       y="168.3168"
+       id="text384"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan382"
+         x="162.59332"
+         y="168.3168"
+         style="stroke-width:0.26458332px">utils</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.82222223px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="166.90141"
+       y="135.50839"
+       id="text388"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan386"
+         x="166.90141"
+         y="135.50839"
+         style="stroke-width:0.26458332px">delta</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.82222223px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="166.90141"
+       y="138.02194"
+       id="text392"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan390"
+         x="166.90141"
+         y="138.02194"
+         style="stroke-width:0.26458332px">exp</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.82222223px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="166.78015"
+       y="154.69058"
+       id="text396"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan394"
+         x="166.78015"
+         y="154.69058"
+         style="stroke-width:0.26458332px">Microcircuit</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.82222223px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="166.78015"
+       y="157.60095"
+       id="text400"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan398"
+         x="166.78015"
+         y="157.60095"
+         style="stroke-width:0.26458332px">Plain</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 161.6125,151.51564 v 5.29167 h 3.96875"
+       id="path430"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 153.5975,122.1469 v 55.5625"
+       id="path402"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 153.5975,177.7094 h 3.96875"
+       id="path404"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 153.5975,174.53439 h 3.96875"
+       id="path406"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 153.5975,171.35939 h 3.96875"
+       id="path408"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 153.5975,125.58648 h 3.96875"
+       id="path410"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 157.56625,126.64482 v 41.01041"
+       id="path412"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 157.56625,130.61357 H 161.535"
+       id="path414"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 157.56625,141.46148 H 161.535"
+       id="path416"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 157.56625,145.43023 H 161.535"
+       id="path418"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 157.56625,150.19272 H 161.535"
+       id="path420"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 157.56625,163.56225 H 161.535"
+       id="path422"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 157.56625,167.531 H 161.535"
+       id="path424"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 161.51895,131.93648 v 5.29167 h 3.96875"
+       id="path426"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 161.51895,134.58232 h 3.96875"
+       id="path428"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 161.6125,154.16147 h 3.96875"
+       id="path432"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#828282;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 161.6125,156.80731 v 2.64583 h 3.96875"
+       id="path434"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.82222223px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="166.75534"
+       y="159.71771"
+       id="text438"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan436"
+         x="166.75534"
+         y="159.71771"
+         style="stroke-width:0.26458332px">...</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b63c40;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-145.61264"
+       y="148.89655"
+       id="text12439-3"
+       transform="rotate(-90)"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/layer/repositories/lmt_publication/documents/frontiers/figures/directory_structure.png"><tspan
+         sodipodi:role="line"
+         id="tspan12437-6"
+         x="-145.61264"
+         y="148.89655"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.93888903px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';fill:#b63c40;fill-opacity:1;stroke-width:0.26458332px">Tools</tspan></text>
+  </g>
+</svg>

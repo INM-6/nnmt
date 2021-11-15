@@ -65,6 +65,7 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
               (nu - firing_rate_func(nu))^2
             using least squares. Raises an error if the solution is a local
             minimum with mean squared differnce above eps_tol.
+
     eps_tol : float
         Maximal incremental stepsize at which to stop the iteration procedure.
         Default is 1e-7.

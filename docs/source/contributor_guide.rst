@@ -122,7 +122,7 @@ We decided to **sort them into different submodules**. Originally, starting off
 with tools for LIF neurons, we thought the most sensible split is according to
 neuron type (e.g. LIF, binary, etc.) and then, if required, another split
 according to synapse type (e.g. delta, exponential). But analytical theories of
-neuronal network models are very versatile. Therefore other ways of sorting the
+neuronal network models are quite versatile. Therefore other ways of sorting the
 tools might be more appropriate for different tools.
 
 It is vital that all tools have **meaningful names** and
@@ -183,8 +183,7 @@ Typically, one wants to define parameters in some sort of parameter file (we
 usually use ``yaml`` files for this), load them, and then calculate further,
 dependent parameters from these. The details of how these dependent parameters
 are calculated depend on the model that one is planning to investigate.
-Defining a custom model class allows users to do this in a very organized
-setting.
+Defining a custom model class allows users to do this in an organized setting.
 
 A model should
 
