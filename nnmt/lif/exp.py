@@ -1542,21 +1542,23 @@ def _sensitivity_measure_all_eigenmodes(effective_connectivity,
     resorted_eigenvalues, resorted_eigenvalues_mask = (
         _match_eigenvalues_across_frequencies(eigenvalues, margin=margin))
     
-    sensitivity_measure_dictionary = defaultdict(int)
+    sensitivity_measure_dictionary = defaultdict(str)
     
     # identify frequency which is closest to the point complex(1, 0) 
     # per eigenvalue trajectory    
     for eig_index, eig in enumerate(resorted_eigenvalues.T):
         critical_frequency = analysis_frequencies[np.argmin(abs(eig-1.0))]        
 
-        sensitivity_measure_dictionary[eig_index] = _sensitivity_measure(
+        # unfortunately h5py can't save dictionaries with int as keys, thus 
+        # the eigenvalue index is stored as a string
+        sensitivity_measure_dictionary[str(eig_index)] = _sensitivity_measure(
             effective_connectivity,
             frequency=critical_frequency,
             analysis_frequencies=analysis_frequencies,
             resorted_eigenvalues_mask=resorted_eigenvalues_mask,
             eigenvalue_index=eig_index)
         
-    return sensitivity_measure_dictionary
+    return dict(sensitivity_measure_dictionary)
 
     
 def power_spectra(network):

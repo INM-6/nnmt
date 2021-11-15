@@ -46,11 +46,12 @@ power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 # reproduce Fig. 4 in Bos 2016.
 
 for i in range(8):
+    i = str(i)
     print(sensitivity_dict[i]['critical_frequency'])
     
 # manually identified the following indices to correspond to the markers shown
 # in :cite:t:`bos2016`
-eigenvalues_to_be_plotted = [0, 1, 2, 3, 5, 6]
+eigenvalues_to_be_plotted = [str(i) for i in [0, 1, 2, 3, 5, 6]]
 print(f'Eigenvalues to be plotted: {eigenvalues_to_be_plotted}')
 
 # %%
@@ -101,11 +102,12 @@ for i, layer in enumerate(['23', '4', '5', '6']):
 # identify which eigenvalues should be plotted to reproduce Fig.4 of Bos 2016
 for i, layer in enumerate(['23', '4', '5', '6']):
     for j in range(2):
+        j = str(j)
         print(layer, j, isolated_layers_results[layer]['sensitivity_dict'][j]['critical_frequency'])
 
-layer_eigenvalue_tuples_to_be_plotted = [('23', 1), ('4', 1),
-                                         ('5', 1), ('6', 1),
-                                         ('23', 0), ('5', 0)]
+layer_eigenvalue_tuples_to_be_plotted = [('23', '1'), ('4', '1'),
+                                         ('5', '1'), ('6', '1'),
+                                         ('23', '0'), ('5', '0')]
 
 # %%
 # Plotting
@@ -125,7 +127,7 @@ gsC = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=grid_specification[2])
 ### Panel A
 # top
 ax = fig.add_subplot(gsA[0])
-N = resorted_eigenvalues.shape[0]
+N = resorted_eigenvalues.shape[0] # N frequencies
 dc = 1/float(N)
 for i in range(0, N, 3):
     ax.plot(resorted_eigenvalues[i].real, 
@@ -187,7 +189,7 @@ def get_color(i, layer):
 
 # top
 ax = fig.add_subplot(gsB[0])
-N = resorted_eigenvalues.shape[0]
+N = resorted_eigenvalues.shape[1] # N populations
 dc = 1/float(N)
 for i, layer in enumerate(['23', '4', '5', '6']):
     # [:, 2*layer:2*layer+2] in the original code serves to plot only the non-zero eigenspectra 

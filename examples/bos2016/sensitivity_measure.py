@@ -49,21 +49,23 @@ nnmt.lif.exp.effective_connectivity(microcircuit)
 
 sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(microcircuit)
 # %%
-import pickle
+# save or load intermediate
+# import pickle
 # pickle.dump(sensitivity_dict, open('sensitivity_dict.pkl', 'wb'))
-sensitivity_dict = pickle.load(open('sensitivity_dict.pkl', 'rb'))
+# sensitivity_dict = pickle.load(open('sensitivity_dict.pkl', 'rb'))
 # %%
 # print necessary entries of the sensitivity measure dictionary to see
 # which eigenvalues are needed to reproduce Fig.6 and Fig.7 of Bos 2016
 for i in range(8):
+    i = str(i)
     print(sensitivity_dict[i]['critical_frequency'])
     print(sensitivity_dict[i]['critical_eigenvalue'])
     print(sensitivity_dict[i]['k'])
     print(sensitivity_dict[i]['k_per'])    
     
 # identified these indices manually    
-eigenvalues_to_plot_high = [1, 0, 3, 2]
-eigenvalue_to_plot_low = 6
+eigenvalues_to_plot_high = [str(i) for i in [1, 0, 3, 2]]
+eigenvalue_to_plot_low = str(6)
 
 # %%
 # Plotting: Sensitivity Measure corresponding to high frequency peak (Fig. 6)
