@@ -17,7 +17,7 @@ import matplotlib.ticker
 plt.style.use('frontiers.mplstyle')
 
 # %%
-# Create an instance of the network model class `Microcircuit`.
+# First, create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
@@ -25,7 +25,7 @@ frequencies = microcircuit.analysis_params['omegas']/(2*np.pi)
 full_indegree_matrix = microcircuit.network_params['K']
 
 # %%
-# Read the simulated power spectra from the publicated data.
+# Read the simulated power spectra from the publicated data for comparison.
 fix_path = '../../tests/fixtures/integration/data/'
 result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 
@@ -53,7 +53,7 @@ low_gamma_subcircuit = microcircuit.copy()
 # construct a matrix with the wanted connections
 # "The circuit is composed of the connections corresponding to the five largest 
 # matrix elements of Z amp (64 Hz) and the eight largest elements 
-# of Z freq (64 Hz)"
+# of Z freq (64 Hz)" (Bos 2016)
 reducing_matrix = np.zeros((8,8))
 reducing_matrix[0,0:4] = 1
 reducing_matrix[1,0:2] = 1
@@ -63,12 +63,6 @@ reducing_matrix[3,0] = 1
 low_gamma_subcircuit.network_params.update({
     'K': full_indegree_matrix*reducing_matrix
 })
-
-# low_gamma_subcircuit.change_parameters(changed_network_params={
-#     'K': full_indegree_matrix*reducing_matrix})
-# there is no way of retaining the results with changed_network_params:
-# would need the previously obtained working point!
-
 
 # calculate the transfer function
 nnmt.lif.exp.transfer_function(low_gamma_subcircuit, method='taylor')
@@ -104,7 +98,7 @@ nnmt.lif.exp.effective_connectivity(without_23E_4I)
 without_23E_4I_power_spectra = nnmt.lif.exp.power_spectra(without_23E_4I)
 
 # %%
-# Plotting
+# Plotting everything together.
 
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
@@ -188,4 +182,4 @@ for gs, pop_idx in zip(gsB, [0,2,3]):
     ax.set_xlim([0.0, 100.0])
     ax.set_ylim([1e-6, 1e0])
 
-plt.savefig('figures/power_spectra_of_subcircuits_Bos2016.pdf')
+plt.savefig('figures/power_spectra_of_subcircuits_Bos2016.png')

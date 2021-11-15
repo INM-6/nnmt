@@ -18,7 +18,7 @@ from collections import defaultdict
 plt.style.use('frontiers.mplstyle')
 
 # %%
-# Create an instance of the network model class `Microcircuit`.
+# First, create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
@@ -27,7 +27,9 @@ full_indegree_matrix = microcircuit.network_params['K']
 
 # %%
 # Calculate all necessary quantities and finally the eigenvalues of the 
-# effective connectivity matrix, sensitivity dictionary and the power spectra.
+# effective connectivity matrix. To add further details to the plot, we
+# here also compute the sensitivity measure for all eigenmodes
+# and the power spectra.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -42,21 +44,24 @@ sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(network=micro
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 
 # %%
-# Identify the indices of the eigenvalue that should be plotted to 
+# Identify the indices of the eigenvalues that should be plotted to 
 # reproduce Fig. 4 in Bos 2016.
 
 for i in range(8):
     i = str(i)
     print(sensitivity_dict[i]['critical_frequency'])
     
-# manually identified the following indices to correspond to the markers shown
-# in :cite:t:`bos2016`
+# Here, we manually identified the following indices to correspond to the 
+# markers shown in the publication.
 eigenvalues_to_be_plotted = [str(i) for i in [0, 1, 2, 3, 5, 6]]
 print(f'Eigenvalues to be plotted: {eigenvalues_to_be_plotted}')
 
 # %%
-# Alter the indegree matrix to consist just of the individual isolated layers
+# For comparison with the complete circuit, we here alter the indegree matrix 
+# such that it just consist of the individual isolated layers
 # and calculate the corresponding eigenvalue spectra and power spectra.
+# Note: This isolated layers are treated at the same working point as the whole
+# circuit.
 
 isolated_layers_results = defaultdict(str)
 for i, layer in enumerate(['23', '4', '5', '6']):
@@ -110,7 +115,7 @@ layer_eigenvalue_tuples_to_be_plotted = [('23', '1'), ('4', '1'),
                                          ('23', '0'), ('5', '0')]
 
 # %%
-# Plotting
+# Finally, we plot everything together.
 
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
@@ -258,4 +263,4 @@ for i, layer in enumerate(['23', '4']):
         ax.set_ylim([2*1e-5, 4*1e-1])
         ax.set_xlabel('frequency $f$(1/$s$)')
         
-plt.savefig('figures/eigenvalue_trajectories_Bos2016.pdf')
+plt.savefig('figures/eigenvalue_trajectories_Bos2016.png')

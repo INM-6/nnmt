@@ -28,7 +28,7 @@ def colorbar(mappable, cax=None):
 plt.style.use('frontiers.mplstyle')
 
 # %% 
-# Create an instance of the network model class `Microcircuit`.
+# First, create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
@@ -36,7 +36,7 @@ frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 
 # %%
 # Calculate all necessary quantities and finally the sensitivity 
-# measure dictionary.
+# measure for all eigenmodes.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -49,13 +49,10 @@ nnmt.lif.exp.effective_connectivity(microcircuit)
 
 sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(microcircuit)
 # %%
-# save or load intermediate
-# import pickle
-# pickle.dump(sensitivity_dict, open('sensitivity_dict.pkl', 'wb'))
-# sensitivity_dict = pickle.load(open('sensitivity_dict.pkl', 'rb'))
-# %%
-# print necessary entries of the sensitivity measure dictionary to see
-# which eigenvalues are needed to reproduce Fig.6 and Fig.7 of Bos 2016
+# Here, we print the necessary entries of the sensitivity measure 
+# dictionary to see which eigenvalues are needed to reproduce 
+# Fig.6 and Fig.7 of Bos 2016
+
 for i in range(8):
     i = str(i)
     print(sensitivity_dict[i]['critical_frequency'])
@@ -63,7 +60,7 @@ for i in range(8):
     print(sensitivity_dict[i]['k'])
     print(sensitivity_dict[i]['k_per'])    
     
-# identified these indices manually    
+# We identified indices manually. 
 eigenvalues_to_plot_high = [str(i) for i in [1, 0, 3, 2]]
 eigenvalue_to_plot_low = str(6)
 
@@ -74,16 +71,11 @@ eigenvalue_to_plot_low = str(6)
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
                  constrained_layout=True)
 grid_specification = gridspec.GridSpec(2, 2, figure=fig)
-# grid_specification.update(
-#     left=0.05, right=0.95, bottom=0.08, top=0.93, wspace=0.05, hspace=0.1)
 
 labels = ['2/3E', '2/3I', '4E', '4I', '5E', '5I', '6E', '6I']
 
-# too small for frontiers
-# plt.rcParams['xtick.labelsize'] = 'x-small'
-# plt.rcParams['ytick.labelsize'] = 'x-small'
-
 colormap = mpl.cm.get_cmap('coolwarm').copy()
+
 # set colorbar max and min
 z = 1
 
@@ -127,17 +119,8 @@ for count, (ev, subpanel, panel_label) in enumerate(
                         cmap=colormap,
                         edgecolors='k',
                         linewidth=0.6)
-
     
     ax.set_aspect('equal')
-
-    # Minor ticks
-    # ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
-    # ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
-    # ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
-    # ax.tick_params(axis='x', which='minor', bottom=False)
-    # ax.tick_params(axis='y', which='minor', left=False)
-
     
     if labels is not None:
         ax.set_xticks(np.arange(len(labels))+0.5)
@@ -148,7 +131,6 @@ for count, (ev, subpanel, panel_label) in enumerate(
     ax.set_xlabel('sources')
     ax.set_ylabel('targets')
     
-
     # sensitivity_measure_frequency
     ax = fig.add_subplot(gs[1])
     
@@ -174,16 +156,6 @@ for count, (ev, subpanel, panel_label) in enumerate(
     
     ax.set_aspect('equal')
     
-    
-    # Minor ticks
-    # ax.set_xticks(np.arange(-.5, len(labels), 1), minor=True)
-    # ax.set_yticks(np.arange(-.5, len(labels), 1), minor=True)
-    # ax.grid(which='minor', color='k', linestyle='-', linewidth=0.6)
-    # ax.tick_params(axis='x', which='minor', bottom=False)
-    # ax.tick_params(axis='y', which='minor', left=False)
-    
-    # ax.grid(True, color='k', linestyle='-', linewidth=0.6)
-    
     if labels is not None:
         ax.set_xticks(np.arange(len(labels))+0.5)
         ax.set_yticks(np.arange(len(labels))+0.5)
@@ -191,7 +163,6 @@ for count, (ev, subpanel, panel_label) in enumerate(
         ax.set_yticklabels([])
 
     ax.set_xlabel('sources')
-    # ax.set_ylabel('targets')
         
     colorbar_ax = fig.add_subplot(gs[2])
     
@@ -203,7 +174,7 @@ for count, (ev, subpanel, panel_label) in enumerate(
 fig.set_constrained_layout_pads(w_pad=0, h_pad=0,
                                 hspace=0.1, wspace=0.1)    
     
-plt.savefig('figures/sensitivity_measure_high_gamma_Bos2016.eps')
+plt.savefig('figures/sensitivity_measure_high_gamma_Bos2016.png')
 
 # %%
 # Plotting: Sensitivity Measure corresponding to low frequencies (Fig. 7)
@@ -237,7 +208,6 @@ heatmap = ax.imshow(projection_of_sensitivity_measure,
                     vmax=z,
                     cmap=colormap)
 
-
 colorbar(heatmap)
 if labels is not None:
     ax.set_xticks(np.arange(len(labels)))
@@ -248,5 +218,5 @@ if labels is not None:
 ax.set_xlabel('sources')
 ax.set_ylabel('targets')
 
-plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.pdf', bbox_inches='tight')
+plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.png', bbox_inches='tight')
 # %%

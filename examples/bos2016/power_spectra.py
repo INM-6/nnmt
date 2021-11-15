@@ -17,7 +17,7 @@ import matplotlib.ticker
 plt.style.use('frontiers.mplstyle')
 
 # %%
-# Create an instance of the network model class `Microcircuit`.
+# First, create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
     network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
@@ -37,14 +37,15 @@ nnmt.lif.exp.effective_connectivity(microcircuit)
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit)
 
 # %%
-# Read the simulated power spectra from the publicated data.
-fix_path = '../tests/fixtures/integration/data/'
+# Read the simulated power spectra from the publicated data for comparison.
+
+fix_path = '../../tests/fixtures/integration/data/'
 result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
 simulated_power_spectra_1_window = result['fig_microcircuit']['1']
 simulated_power_spectra_20_window = result['fig_microcircuit']['20']
 
 # %%
-# Plotting
+# Plotting mean-field prediction and simulated results together.
 
 # two column figure, 180 mm wide
 fig = plt.figure(figsize=(7.08661, 7.08661/2),
@@ -103,4 +104,4 @@ for layer in [0, 1, 2, 3]:
             ax.set_ylabel(r'power spectrum $|C(\omega)|\quad(1/\mathrm{s}^2)$')
             ax.legend()
     
-plt.savefig('figures/power_spectra_Bos2016.eps')
+plt.savefig('figures/power_spectra_Bos2016.png')
