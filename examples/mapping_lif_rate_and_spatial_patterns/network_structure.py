@@ -40,10 +40,10 @@ assert 'svgutils' in sys.modules, (
 
 params = {
     # figure file name (without extension)
-    'figure_fn': 'Senk2020_network_structure',
+    'figure_fn': 'network_structure',
 
     # file name of external sketch
-    'sketch_fn': 'Senk2020_sketch.svg',
+    'sketch_fn': 'network_sketch.svg',
 
     # figure width in inch
     'figwidth_1col': 85. / 25.4,
@@ -167,8 +167,8 @@ blue = params['colors']['ex_blue']
 red = params['colors']['inh_red']
 
 network = BasicNetwork(
-    network_params='Senk2020_network_params.yaml',
-    analysis_params='Senk2020_analysis_params.yaml')
+    network_params='network_params.yaml',
+    analysis_params='analysis_params.yaml')
 ewidth = network.network_params['width'][0] * \
     params['quantities']['displacement']['scale']
 iwidth = network.network_params['width'][1] * \

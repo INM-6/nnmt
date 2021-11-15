@@ -371,8 +371,8 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 print('Instantiating network model.')
 
 network = BasicNetwork(
-    network_params='Senk2020_network_params.yaml',
-    analysis_params='Senk2020_analysis_params.yaml')
+    network_params='network_params.yaml',
+    analysis_params='analysis_params.yaml')
 
 ##########################################################################
 # The working point is set with a given mean and standard deviation of the
@@ -634,4 +634,4 @@ ax_real.legend(
 ##########################################################################
 # The final figure is saved to file.
 
-plt.savefig('Senk2020_spatial_patterns.eps')
+plt.savefig('spatial_patterns.eps')

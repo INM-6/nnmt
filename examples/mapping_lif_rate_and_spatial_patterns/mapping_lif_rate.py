@@ -1,8 +1,9 @@
 """
-Fitting the transfer function for different working points
-==========================================================
+Mapping LIF to rate network
+===========================
 
 This example demonstrates the methods used in Figure 5 of :cite:t:`senk2020`.
+The transfer function of a LIF neuron is fitted for different working points.
 A figure illustrating the network structure of the used model is set up in
 :doc:`network_structure`.
 The same model is used in the example :doc:`spatial_patterns`.
@@ -137,8 +138,8 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 
 network = BasicNetwork(
-    network_params='Senk2020_network_params.yaml',
-    analysis_params='Senk2020_analysis_params.yaml')
+    network_params='network_params.yaml',
+    analysis_params='analysis_params.yaml')
 
 ##########################################################################
 # All results will be stored in ``tf_scan_results``.
@@ -386,4 +387,4 @@ ax_amplitude.legend(handles=[spiking, rate])
 ##########################################################################
 # The final figure is saved to file.
 
-plt.savefig('Senk2020_fit_transfer_function.eps')
+plt.savefig('mapping_lif_rate.eps')

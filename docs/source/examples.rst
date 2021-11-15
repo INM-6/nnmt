@@ -11,4 +11,4 @@ Examples
    auto_examples/intermediate_usage_example/intermediate_usage_example
    auto_examples/microcircuit_rates/microcircuit_rates
    auto_examples/response_nonlinearities/response_nonlinearities
-   senk2020_index.rst
+   mapping_lif_rate_and_spatial_patterns_index.rst
