@@ -229,7 +229,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
     def test_sensitivity_measure(self, network, ground_truth_result, freqs):
         ground_truth_data = ground_truth_result['sensitivity_measure']
                 
-        sensitivity_dict = nnmt.lif.exp.sensitivity_measure_per_eigenmode(
+        sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
             network)
         
         # in the Bos results, the eigenvalue were not resorted to match
@@ -237,7 +237,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         # the resorting has to be reversed
         eigenvalues = np.linalg.eig(
             nnmt.lif.exp.effective_connectivity(network))[0]
-        _, resorting_mask = nnmt.lif.exp._resort_eigenvalues(eigenvalues)
+        _, resorting_mask = nnmt.lif.exp._match_eigenvalues_across_frequencies(eigenvalues)
 
         # loop through different eigenvalues and check corresponding results
         # from Bos

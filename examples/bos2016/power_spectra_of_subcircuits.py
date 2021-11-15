@@ -51,7 +51,7 @@ power_spectra = nnmt.lif.exp.power_spectra(microcircuit)
 low_gamma_subcircuit = microcircuit.copy()
 
 # construct a matrix with the wanted connections
-# "The circuit iscomposed of the connections corresponding to the five largest 
+# "The circuit is composed of the connections corresponding to the five largest 
 # matrix elements of Z amp (64 Hz) and the eight largest elements 
 # of Z freq (64 Hz)"
 reducing_matrix = np.zeros((8,8))

@@ -36,8 +36,8 @@ nnmt.lif.exp.transfer_function(microcircuit, method='taylor')
 # calculate the delay distribution matrix
 nnmt.network_properties.delay_dist_matrix(microcircuit)
 eigenvalues = np.linalg.eig(nnmt.lif.exp.effective_connectivity(microcircuit))[0]
-resorted_eigenvalues, new_indices = nnmt.lif.exp._resort_eigenvalues(eigenvalues)
-sensitivity_dict = nnmt.lif.exp.sensitivity_measure_per_eigenmode(network=microcircuit)
+resorted_eigenvalues, new_indices = nnmt.lif.exp._match_eigenvalues_across_frequencies(eigenvalues)
+sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(network=microcircuit)
 # calculate the power spectra
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit).T
 
@@ -82,11 +82,11 @@ for i, layer in enumerate(['23', '4', '5', '6']):
     # calculate the delay distribution matrix
     nnmt.network_properties.delay_dist_matrix(isolated_layers_results[layer]['network'])
     eigenvalue_spectra_layer = np.linalg.eig(
-            nnmt.lif.exp.effective_connectivity(isolated_layers_results[layer]['network']))[0].T
+            nnmt.lif.exp.effective_connectivity(isolated_layers_results[layer]['network']))[0]
     # calculate the power spectra
     power_spectra_layer = nnmt.lif.exp.power_spectra(isolated_layers_results[layer]['network']).T
     
-    resorted_eigenvalue_spectra_layer, new_indices_layer = nnmt.lif.exp._resort_eigenvalues(
+    resorted_eigenvalue_spectra_layer, new_indices_layer = nnmt.lif.exp._match_eigenvalues_across_frequencies(
         eigenvalue_spectra_layer)
     
     isolated_layers_results[layer]['eigenvalue_spectra'] = eigenvalue_spectra_layer
@@ -96,7 +96,7 @@ for i, layer in enumerate(['23', '4', '5', '6']):
 # Calculate the sensitivity measure dictionary for each isolated layer.
 for i, layer in enumerate(['23', '4', '5', '6']):
     layer = isolated_layers_results[layer]
-    layer['sensitivity_dict'] = nnmt.lif.exp.sensitivity_measure_per_eigenmode(layer['network'])
+    layer['sensitivity_dict'] = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(layer['network'])
 
 # identify which eigenvalues should be plotted to reproduce Fig.4 of Bos 2016
 for i, layer in enumerate(['23', '4', '5', '6']):

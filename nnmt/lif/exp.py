@@ -1143,7 +1143,7 @@ def _propagator(effective_connectivity):
     return prop
 
 
-def _resort_eigenvalues(eigenvalues, margin=1e-5):
+def _match_eigenvalues_across_frequencies(eigenvalues, margin=1e-5):
     """
     Resorts the eigenvalues of the effective connectivity matrix.
     
@@ -1152,14 +1152,17 @@ def _resort_eigenvalues(eigenvalues, margin=1e-5):
     utility function calculates the distance between subsequent (in frequency) 
     eigenvalues and matches them if the distance is smaller equal the margin.
     
+    This is done to obtain eigenvalue trajectories as in Fig. 4 of
+    :cite:t:`bos2016`.
+    
     If just two eigenvalue have a larger distance than the margin, they can
     be immediately swapped. If more eigenvalues have a larger distance, the
     resorting is more complicated (multi-swaps).
     
     The default value for the margin is chosen from experience. The smaller
     the frequency step in in the analysis frequencies, the smaller the margin
-    needs to be chosen. It is recommended to cross-check the resorting by
-    plotting the eigenvalues across frequencies in the complex plane.
+    needs to be chosen. **It is recommended to cross-check the resorting by
+    plotting the eigenvalues across frequencies in the complex plane.**
     
     Parameters
     ----------
@@ -1263,7 +1266,7 @@ def sensitivity_measure(network, frequency,
         Frequency at which the sensitivity is evaluated in Hz.
     resorted_eigenvalues_mask : np.ndarray
         Mapping from old to new indices (e.g. for resorting the eigenmodes) as
-        obtained from _resort_eigenvalues.
+        obtained from _match_eigenvalues_across_frequencies.
         Shape : (num populations, num analysis freqs)
     eigenvalue_index : int
         Index specifying the eigenvalue and corresponding eigenmode for which
@@ -1341,7 +1344,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
         Analysis frequencies.
     resorted_eigenvalues_mask : np.ndarray
         Mapping from old to new indices (e.g. for resorting the eigenmodes) as
-        obtained from _resort_eigenvalues.
+        obtained from _match_eigenvalues_across_frequencies.
         Shape : (num analysis freqs, num populations)
     eigenvalue_index : int
         Index specifying the eigenvalue and corresponding eigenmode for which
@@ -1442,7 +1445,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
     return sensitivity_measure
 
 
-def sensitivity_measure_per_eigenmode(network):
+def sensitivity_measure_all_eigenmodes(network, margin=1e-5):
     """
     Calculates sensitivity measure for each eigenmode.
     
@@ -1481,15 +1484,17 @@ def sensitivity_measure_per_eigenmode(network):
             network.results['lif.exp.effective_connectivity'])
         params['analysis_frequencies'] = (
             network.analysis_params['omegas'] / 2 / np.pi)
+        params['margin'] = margin
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
-    return _cache(network, _sensitivity_measure_per_eigenmode, params,
-                  _prefix + 'sensitivity_measure_per_eigenmode')
+    return _cache(network, _sensitivity_measure_all_eigenmodes, params,
+                  _prefix + 'sensitivity_measure_all_eigenmodes')
     
 
-def _sensitivity_measure_per_eigenmode(effective_connectivity,
-                                       analysis_frequencies):
+def _sensitivity_measure_all_eigenmodes(effective_connectivity,
+                                       analysis_frequencies,
+                                       margin=1e-5):
     """
     Calculates sensitivity measure for each eigenmode.
 
@@ -1509,7 +1514,7 @@ def _sensitivity_measure_per_eigenmode(effective_connectivity,
     """
     eigenvalues = np.linalg.eig(effective_connectivity)[0]
     resorted_eigenvalues, resorted_eigenvalues_mask = (
-        _resort_eigenvalues(eigenvalues))
+        _match_eigenvalues_across_frequencies(eigenvalues, margin=margin))
     
     sensitivity_measure_dictionary = defaultdict(int)
     

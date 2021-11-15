@@ -47,7 +47,7 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(microcircuit)
 
-sensitivity_dict = nnmt.lif.exp.sensitivity_measure_per_eigenmode(microcircuit)
+sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(microcircuit)
 # %%
 import pickle
 # pickle.dump(sensitivity_dict, open('sensitivity_dict.pkl', 'wb'))
