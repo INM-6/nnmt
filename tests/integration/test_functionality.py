@@ -1,8 +1,7 @@
 import pytest
 import numpy as np
 from numpy.testing import (
-    assert_allclose,
-    assert_raises,
+    assert_allclose
     )
 
 import nnmt
@@ -94,13 +93,19 @@ class Test_Network_functions_give_correct_results:
             network, frequency=frequency)
         
         sm_fix = std_results[self.prefix + 'sensitivity_measure']
-        # check all keys are the same
-        for k in sm.keys():
-            assert(k in sm_fix.keys()) 
-        assert(sm.keys()==sm_fix.keys())
-        # check all values are close
-        for key in sm:
-            assert_allclose(sm[key], sm_fix[key])
+        check_quantity_dicts_are_allclose(sm, sm_fix)
+        
+    def test_sensitivity_measure_all_eigenmodes(self, network, std_results):
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.transfer_function(network)
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.effective_connectivity(network)
+        margin = network.analysis_params['margin']
+        sm = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network, margin=margin)
+        
+        sm_fix = std_results[self.prefix + 'sensitivity_measure_all_eigenmodes']
+        check_quantity_dicts_are_allclose(sm, sm_fix)
     
     def test_power_spectra(self, network, std_results):
         nnmt.lif.exp.working_point(network)
@@ -193,15 +198,22 @@ class Test_saving_and_loading:
                                                     frequency=frequency)
         save_and_load(network, tmpdir)
         sm_loaded = network.results[self.prefix + 'sensitivity_measure']
+        check_quantity_dicts_are_allclose(sm_saved, sm_loaded)
         
-        # check all keys are the same
-        for k in sm_saved.keys():
-            assert(k in sm_loaded.keys()) 
-        assert(sm_saved.keys()==sm_loaded.keys())
-        # check all values are close
-        for key in sm_saved:
-            assert_allclose(sm_saved[key], sm_loaded[key])
-          
+    def test_sensitivity_measure_all_eigenmodes(self, network, tmpdir):
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.transfer_function(network)
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.effective_connectivity(network)
+        margin = network.analysis_params['margin']
+        sm_saved = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network, margin=margin)
+        
+        save_and_load(network, tmpdir)
+        sm_loaded = network.results[
+            self.prefix + 'sensitivity_measure_all_eigenmodes']  
+        check_quantity_dicts_are_allclose(sm_saved, sm_loaded)
+
     def test_power_spectra(self, network, tmpdir):
         nnmt.lif.exp.working_point(network)
         nnmt.lif.exp.transfer_function(network)
@@ -312,15 +324,21 @@ class Test_temporary_storage_of_results:
         frequency = network.analysis_params['omega']/(2*np.pi)
         sm = nnmt.lif.exp.sensitivity_measure(network, 
                                               frequency=frequency)
-        
         sm_fix = network.results[self.prefix + 'sensitivity_measure']
-        # check all keys are the same
-        for k in sm.keys():
-            assert(k in sm_fix.keys()) 
-        assert(sm.keys()==sm_fix.keys())
-        # check all values are close
-        for key in sm:
-            assert_allclose(sm[key], sm_fix[key])
+        check_quantity_dicts_are_allclose(sm, sm_fix)
+        
+    def test_sensitivity_measure_all_eigenmodes(self, network):
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.transfer_function(network)
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.effective_connectivity(network)
+        margin = network.analysis_params['margin']
+        sm = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network, margin=margin)
+        sm_fix = network.results[
+            self.prefix + 'sensitivity_measure_all_eigenmodes']
+        check_quantity_dicts_are_allclose(sm, sm_fix)    
+    
 
     def test_power_spectra(self, network):
         nnmt.lif.exp.working_point(network)

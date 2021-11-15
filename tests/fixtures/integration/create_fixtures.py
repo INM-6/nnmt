@@ -44,6 +44,8 @@ if __name__ == '__main__':
         
         omega = network.analysis_params['omega']
         frequency = omega/(2*np.pi)
+        margin = network.analysis_params['margin']
+        
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
         network.results[
@@ -61,6 +63,7 @@ if __name__ == '__main__':
             network, method='shift')
         nnmt.lif.exp.effective_connectivity(network)
         nnmt.lif.exp.sensitivity_measure(network, frequency=frequency)
+        nnmt.lif.exp.sensitivity_measure_all_eigenmodes(network, margin=margin)
         nnmt.lif.exp.power_spectra(network)
         # nnmt.lif.exp.additional_rates_for_fixed_input(
         #     network, mean_input_set, std_input_set)
