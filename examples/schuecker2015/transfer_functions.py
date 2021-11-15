@@ -20,7 +20,8 @@ plt.style.use('frontiers.mplstyle')
 # in :cite:t:`schuecker2015` were gathered in a .yaml-File and are loaded here. 
 
 params = nnmt.input_output.load_val_unit_dict_from_yaml(
-        '../../tests/fixtures/integration/config/Schuecker2015_parameters.yaml')
+        '../../tests/fixtures/integration/config/'
+        'Schuecker2015_parameters.yaml')
 
 # without converting to si
 network_params = params.copy()
@@ -145,10 +146,11 @@ for sigma in test_results['sigma'].keys():
                         label=f'({np.round(mu, 1)}, {sigma})')
         # just zero frequency
         # axA.semilogx(zero_freq,
-        #                 test_results['sigma'][sigma]['mu'][mu]['absolute_value'][0],
-        #                 '+',
-        #                 color=colors[i],
-        #                 markersize=markersize_cross)
+        #              test_results['sigma'][sigma]['mu'][mu][
+        #              'absolute_value'][0],
+        #              '+',
+        #              color=colors[i],
+        #              markersize=markersize_cross)
 
 axA.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
 axA.set_ylabel(r'amplitude $|n(\omega)|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'

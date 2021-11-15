@@ -30,8 +30,10 @@ plt.style.use('frontiers.mplstyle')
 # %% 
 # First, create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+    network_params=
+    '../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+    analysis_params=
+    '../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 
 # %%
@@ -47,7 +49,8 @@ nnmt.network_properties.delay_dist_matrix(microcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(microcircuit)
 
-sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(microcircuit)
+sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+    microcircuit)
 # %%
 # Here, we print the necessary entries of the sensitivity measure 
 # dictionary to see which eigenvalues are needed to reproduce 
@@ -218,5 +221,5 @@ if labels is not None:
 ax.set_xlabel('sources')
 ax.set_ylabel('targets')
 
-plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.png', bbox_inches='tight')
-# %%
+plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.png', 
+            bbox_inches='tight')

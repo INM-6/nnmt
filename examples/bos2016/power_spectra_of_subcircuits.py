@@ -19,15 +19,18 @@ plt.style.use('frontiers.mplstyle')
 # %%
 # First, create an instance of the network model class `Microcircuit`.
 microcircuit = nnmt.models.Microcircuit(
-    network_params='../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
-    analysis_params='../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+    network_params=
+    '../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
+    analysis_params=
+    '../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
 frequencies = microcircuit.analysis_params['omegas']/(2*np.pi)
 full_indegree_matrix = microcircuit.network_params['K']
 
 # %%
 # Read the simulated power spectra from the publicated data for comparison.
 fix_path = '../../tests/fixtures/integration/data/'
-result = nnmt.input_output.load_h5(fix_path + 'Bos2016_publicated_and_converted_data.h5')
+result = nnmt.input_output.load_h5(fix_path + 
+                                   'Bos2016_publicated_and_converted_data.h5')
 
 # %%
 # Calculate all necessary quantities and finally the power spectra.
@@ -71,7 +74,8 @@ nnmt.network_properties.delay_dist_matrix(low_gamma_subcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(low_gamma_subcircuit)
 # calculate the power spectra
-low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(low_gamma_subcircuit)
+low_gamma_subcircuit_power_spectra = nnmt.lif.exp.power_spectra(
+    low_gamma_subcircuit)
 
 # %%
 # Initialize a new network instance to calculate results without connections
