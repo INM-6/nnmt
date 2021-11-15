@@ -18,4 +18,4 @@ print(f"std input: {wp['std_input']}")
 print(f"firing rates: {wp['firing_rates']}")
 
 # save results to h5 file
-network.save('test.h5')
+network.save('microcircuit_working_point.h5')

@@ -18,3 +18,4 @@ Examples
    auto_examples/bos2016/power_spectra_of_subcircuits
    auto_examples/schuecker2015/transfer_functions
    
+   mapping_lif_rate_and_spatial_patterns_index.rst

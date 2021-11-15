@@ -77,7 +77,7 @@ class Test_firing_rates_wrapper:
 
     def mock_firing_rate_integration(self, mocker):
         mocker.patch(
-            'nnmt.lif._static._firing_rate_integration',
+            'nnmt.lif._general._firing_rate_integration',
             return_value=1
             )
 

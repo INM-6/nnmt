@@ -30,3 +30,21 @@ Leaky integrate-and-fire neurons
    :maxdepth: 1
 
    lif
+
+*****************************
+Spatially structured networks
+*****************************
+
+.. toctree::
+   :maxdepth: 1
+
+   spatial
+
+*************************
+Linear stability analysis
+*************************
+
+.. toctree::
+   :maxdepth: 1
+
+   linear_stability

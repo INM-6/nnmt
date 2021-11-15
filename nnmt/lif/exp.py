@@ -12,6 +12,7 @@ Network Functions
     std_input
     working_point
     transfer_function
+    fit_transfer_function
     effective_connectivity
     propagator
     sensitivity_measure
@@ -31,6 +32,7 @@ Parameter Functions
     _std_input
     _transfer_function_shift
     _transfer_function_taylor
+    _fit_transfer_function
     _derivative_of_firing_rates_wrt_mean_input
     _derivative_of_firing_rates_wrt_input_rate
     _effective_connectivity
@@ -56,9 +58,7 @@ from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
                      _cache)
 
-from ..network_properties import delay_dist_matrix
-
-from . import _static
+from . import _general
 
 from .delta import (
     _firing_rates_for_given_input as _delta_firing_rate,
@@ -89,7 +89,7 @@ def working_point(network, method='shift', **kwargs):
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -117,7 +117,7 @@ def firing_rates(network, method='shift', **kwargs):
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -184,7 +184,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._static._firing_rate_integration`.
+        :func:`nnmt.lif._general._firing_rate_integration`.
 
     Returns
     -------
@@ -208,11 +208,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         }
 
     if method == 'shift':
-        return _static._firing_rate_integration(_firing_rate_shift,
+        return _general._firing_rate_integration(_firing_rate_shift,
                                                 firing_rate_params,
                                                 input_params, **kwargs)
     elif method == 'taylor':
-        return _static._firing_rate_integration(_firing_rate_taylor,
+        return _general._firing_rate_integration(_firing_rate_taylor,
                                                 firing_rate_params,
                                                 input_params, **kwargs)
 
@@ -462,7 +462,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     np.array
         Array of mean inputs to each population in V.
     """
-    return _static._mean_input(nu, J, K, tau_m,
+    return _general._mean_input(nu, J, K, tau_m,
                                J_ext, K_ext, nu_ext)
 
 
@@ -524,7 +524,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     np.array
         Array of mean inputs to each population in V.
     """
-    return _static._std_input(nu, J, K, tau_m,
+    return _general._std_input(nu, J, K, tau_m,
                               J_ext, K_ext, nu_ext)
 
 
@@ -784,6 +784,103 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     if synaptic_filter:
         result *= _synaptic_filter(omegas, tau_s)
     return result
+
+
+def fit_transfer_function(network):
+    """
+    Fits the transfer function (tf) of a low-pass filter to the passed tf.
+
+    See :func:`nnmt.lif.exp._fit_transfer_function` for full documentation.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters, analysis parameters and results
+        listed in :func:`nnmt.lif.exp._fit_transfer_function`.
+
+    Returns
+    -------
+    transfer_function_fit : np.array
+        Fit of transfer functions in Hertz/volt for each population with the
+        following shape: (number of freqencies, number of populations).
+    tau_rate : np.array
+        Fitted time constant for each population in s.
+    W_rate : np.array
+        Matrix of fitted weights (unitless).
+    fit_error : float
+        Combined fit error.
+    """
+    list_of_params = ['tau_m', 'J', 'K']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+        params['omegas'] = network.analysis_params['omegas']
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for fitting the transfer function!\n"
+            "Have a look into the documentation for more details on 'lif' "
+            "parameters.")
+    try:
+        params['transfer_function'] = (
+            network.results['lif.exp.transfer_function'])
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+    return _cache(network, _fit_transfer_function, params,
+                  [_prefix + 'transfer_function_fit',
+                   _prefix + 'tau_rate',
+                   _prefix + 'W_rate',
+                   _prefix + 'fit_error'],
+                  ['hertz / volt',
+                   'seconds',
+                   None,
+                   None])
+
+
+@_check_positive_params
+def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
+    """
+    Fits the transfer function (tf) of a low-pass filter to the passed tf.
+
+    For details of the fitting procedure see
+    :func:`nnmt._general._fit_transfer_function`.
+
+    For details of the theory refer to
+    :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
+
+    Parameters
+    ----------
+    transfer_function : np.array
+        Transfer functions for each population with the following shape:
+        (number of freqencies, number of populations).
+    omegas : [float | np.ndarray]
+        Input frequencies to population in Hz.
+    tau_m : float
+        Membrane time constant in s.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+
+    Returns
+    -------
+    transfer_function_fit : np.array
+        Fit of transfer functions in Hertz/volt for each population with the
+        following shape: (number of freqencies, number of populations).
+    tau_rate : np.array
+        Fitted time constant for each population in s.
+    W_rate : np.array
+        Matrix of fitted weights (unitless).
+    fit_error : float
+        Combined fit error.
+    """
+    transfer_function_fit, tau_rate, h0, fit_error = \
+        _general._fit_transfer_function(transfer_function, omegas)
+
+    # weight matrix of rate model
+    W_rate = h0 * tau_m * J * K
+
+    return transfer_function_fit, tau_rate, W_rate, fit_error
 
 
 def _synaptic_filter(omegas, tau_s):
@@ -1801,8 +1898,7 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     RHS = np.append(mu_ext / tau_m, var_ext / tau_m)
 
     # find a solution as good as possible using least square method
-    nu_ext = np.linalg.lstsq(LHS, RHS)[0]
-    print(nu_ext)
+    nu_ext = np.linalg.lstsq(LHS, RHS, rcond=None)[0]
 
     if np.any(nu_ext < 0):
         raise RuntimeError(f'Negative rate detected: {nu_ext}')

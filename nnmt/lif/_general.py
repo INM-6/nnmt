@@ -13,6 +13,7 @@ Static Quantities
     _mean_input
     std_input
     _std_input
+    _fit_transfer_function
 
 """
 
@@ -64,6 +65,7 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
               (nu - firing_rate_func(nu))^2
             using least squares. Raises an error if the solution is a local
             minimum with mean squared differnce above eps_tol.
+
     eps_tol : float
         Maximal incremental stepsize at which to stop the iteration procedure.
         Default is 1e-7.
@@ -131,14 +133,14 @@ def mean_input(network, prefix):
     '''
     Calcs mean input for `network` and stores results using `prefix`.
 
-    See :func:`nnmt.lif._static._mean_input` for full documentation.
+    See :func:`nnmt.lif._general._mean_input` for full documentation.
 
     Parameters
     ----------
     network : Network object
         The network model for which the mean input is to be calculated. Needs
         to contain the parameters defined in
-        :func:`nnmt.lif._static._mean_input`.
+        :func:`nnmt.lif._general._mean_input`.
     prefix : str
         The prefix used to store the result (e.g. 'lif.delta.').
 
@@ -149,8 +151,8 @@ def mean_input(network, prefix):
 
     See Also
     --------
-    nnmt.lif._static._mean_input : For full documentation of network
-                                   parameters.
+    nnmt.lif._general._mean_input : For full documentation of network
+                                    parameters.
     '''
     return _input_calc(network, prefix, _mean_input)
 
@@ -159,14 +161,14 @@ def std_input(network, prefix):
     '''
     Calcs std of input for `network` and stores results using `prefix`.
 
-    See :func:`nnmt.lif._static._std_input` for full documentation.
+    See :func:`nnmt.lif._general._std_input` for full documentation.
 
     Parameters
     ----------
     network : Network object
         The network model for which the mean input is to be calculated. Needs
         to contain the parameters defined in
-        :func:`nnmt.lif._static._std_input`.
+        :func:`nnmt.lif._general._std_input`.
     prefix : str
         The prefix used to store the result (e.g. 'lif.delta.').
 
@@ -177,7 +179,8 @@ def std_input(network, prefix):
 
     See Also
     --------
-    nnmt.lif._static._std_input : For full documentation of network parameters.
+    nnmt.lif._general._std_input : For full documentation of network
+                                   parameters.
     '''
     return _input_calc(network, prefix, _std_input)
 
@@ -282,3 +285,74 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     var = var0 + var_ext
     # standard deviation is square root of variance
     return np.sqrt(var)
+
+
+def _fit_transfer_function(transfunc, omegas):
+    """
+    Fits the transfer function (tf) of a low-pass filter to the passed tf.
+
+    A least-squares fit is used for the fitting procedure.
+
+    For details refer to
+    :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
+
+    Parameters
+    ----------
+    transfer_function : np.array
+        Transfer functions for each population with the following shape:
+        (number of freqencies, number of populations).
+    omegas : [float | np.ndarray]
+        Input frequencies to population in Hz.
+
+    Returns
+    -------
+    transfer_function_fit : np.array
+        Fit of transfer functions in Hertz/volt for each population with the
+        following shape: (number of freqencies, number of populations).
+    tau_rate : np.array
+        Fitted time constant of low-pass filter for each population in s.
+    h0 : np.array
+        Fitted gain of low-pass filter for each population in Hertz/volt.
+    fit_error : float
+        Combined fit error.
+    """
+    def func(omega, tau, h0):
+        return h0 / (1. + 1j * omega * tau)
+
+    # absolute value for fitting
+    def func_abs(omega, tau, h0):
+        return np.abs(func(omega, tau, h0))
+
+    transfunc_fit = np.zeros(np.shape(transfunc), dtype=np.complex_)
+    dim = np.shape(transfunc)[1]
+    tau_rate = np.zeros(dim)
+    h0 = np.zeros(dim)
+    fit_error = np.zeros(dim)
+
+    for i in np.arange(dim):
+        # fit low-pass filter transfer function (func) to LIF transfer function
+        # (transfunc) to obtain parameters of rate model with fit errors
+        fitParams, fitCovariances = sopt.curve_fit(
+            func_abs, omegas, np.abs(transfunc[:, i]))
+
+        tau_rate[i] = fitParams[0]
+        h0[i] = fitParams[1]
+        transfunc_fit[:, i] = func(omegas, tau_rate[i], h0[i])
+
+        # adjust sign of imaginary part (just check sign of last value)
+        sign_imag = 1 if (transfunc[-1, i].imag > 0) else -1
+        sign_imag_fit = 1 if (transfunc_fit[-1, i].imag > 0) else -1
+        if sign_imag != sign_imag_fit:
+            transfunc_fit[:, i].imag *= -1
+            tau_rate[i] *= -1
+
+        # standard deviation
+        fit_errs = np.sqrt(np.diag(fitCovariances))
+        # relative error
+        err_tau = fit_errs[0] / tau_rate[i]
+        err_h0 = fit_errs[1] / h0[i]
+
+        # combined error
+        fit_error[i] = np.sqrt(err_tau**2 + err_h0**2)
+
+    return transfunc_fit, tau_rate, h0, fit_error

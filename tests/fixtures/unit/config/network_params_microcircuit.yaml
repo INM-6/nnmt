@@ -1,7 +1,4 @@
 ---
-# Label, that is used to trigger calculation of network-specific derived
-# parameters. Changing this label currently disables the calculation of
-# microcircuit specific derived parameters!
 label: microcircuit
 
 populations:
@@ -268,7 +265,7 @@ tau_rate:
     - 7.06862226
     - 4.43713224
   unit: millisecond
-    
+
 W_rate:
   val:
     - - 2.57119625
@@ -335,7 +332,7 @@ W_rate:
       - -0.209952163
       - 1.42198836
       - -11.034198
-      
+
 # for spatial networks
 width:
   val: 1.0
