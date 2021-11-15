@@ -79,3 +79,5 @@ effective_connectivity:
         - -0.50652
       - - 50.32720000000001
         - -81.5232
+
+margin: 0.5

@@ -23,9 +23,10 @@ import docopt
 import inspect
 import sys
 import os
+import numpy as np
 import nnmt.input_output as io
 
-from nnmt.input_output import load_val_unit_dict_from_yaml
+from nnmt.input_output import load_val_unit_dict
 from nnmt.utils import (
     _strip_units,
     _to_si_units,
@@ -63,8 +64,9 @@ def create_and_save_fixtures(func, regime_params, regimes, file):
 
 def load_params_and_regimes(config_path):
     param_files = os.listdir(config_path)
-    regimes = [file.replace('.yaml', '') for file in param_files]
-    regime_params = [load_val_unit_dict_from_yaml(config_path + file)
+    regimes = [file.replace('.yaml', '').replace('.h5', '') 
+               for file in param_files]
+    regime_params = [load_val_unit_dict(config_path + file)
                      for file in param_files]
     for dict in regime_params:
         _to_si_units(dict)
@@ -142,6 +144,10 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_sensitivity_measure.h5')
+            create_and_save_fixtures(nnmt.lif.exp._sensitivity_measure_all_eigenmodes,
+                                     regime_params, regimes,
+                                     fixture_path
+                                     + 'lif_exp_sensitivity_measure_all_eigenmodes.h5')
             create_and_save_fixtures(nnmt.lif.exp._power_spectra,
                                      regime_params, regimes,
                                      fixture_path
@@ -150,6 +156,36 @@ if __name__ == '__main__':
                                      regime_params, regimes,
                                      fixture_path
                                      + 'lif_exp_propagator.h5')
+        elif (module == '_match_eigenvalues_across_frequencies') or (
+            module == 'all'):
+            # loading complex values from a .yaml does not work with 
+            # yaml.safe_load(), here we bypass this via .h5
+            
+            # load effective connectivity from .yaml
+            config_path = 'unit/config/sensitivity_measure/'
+            regime_params, regimes = load_params_and_regimes(config_path)
+            # save complex eigenvalues as source for the fixtures
+            intermediate_config_path = (
+                'unit/config/_match_eigenvalues_across_frequencies/')
+            # calculate complex eigenvalues and save to .h5
+            for regime, params in zip(regimes, regime_params):
+                effective_connectivity = params['effective_connectivity']
+                quantity_dict = {'margin' : params['margin'],
+                                 'eigenvalues' : np.linalg.eig(
+                                     effective_connectivity)[0]}
+                
+                nnmt.input_output.save_quantity_dict_to_h5(
+                    os.path.join(intermediate_config_path,
+                                 f'{regime}.h5'), 
+                    quantity_dict)
+            # create the fixtures
+            regime_params, regimes = load_params_and_regimes(
+                intermediate_config_path)
+            create_and_save_fixtures(
+                nnmt.lif.exp._match_eigenvalues_across_frequencies,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_match_eigenvalues_across_frequencies.h5')
         elif (module == 'external_rates') or (module == 'all'):
             config_path = 'unit/config/external_rates/'
             regime_params, regimes = load_params_and_regimes(config_path)

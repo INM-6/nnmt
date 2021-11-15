@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from numpy.testing import (
     assert_allclose,
+    assert_raises,
     )
 
 import nnmt
@@ -390,3 +391,25 @@ class Test_negative_firing_rate_regime:
                                           analysis_params_file)
         firing_rates = nnmt.lif.exp.firing_rates(network)
         assert not any(firing_rates < 0)
+
+class Test_ambiguous_match_eigenvalues_across_frequencies:
+    """
+    The matching of eigenvalues across frequencies can be ambiguous if
+    two eigenvalues at frequency step i+1 are closest to the same eigenvalue
+    at frequency step i. We here test that a warning is raised in such a
+    situation.
+    """
+    
+    def test_warning_ambiguous_match_eigenvalues(self):
+        ambiguous_eigenvalues_params_file = (
+            'tests/fixtures/integration/config/'
+            'minimal_ambiguous_eigenvalues.yaml')
+        ambiguous_eigenvalues_params = (
+            nnmt.input_output.load_val_unit_dict_from_yaml(
+                ambiguous_eigenvalues_params_file))
+        print(ambiguous_eigenvalues_params)
+        
+        with pytest.warns(UserWarning):
+            nnmt.lif.exp._match_eigenvalues_across_frequencies(
+                **ambiguous_eigenvalues_params
+            )

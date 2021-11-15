@@ -14,7 +14,6 @@ resorted_eigenvalues_mask:
   - - 0
     - 1
 
-
 eigenvalue_index: 1
 
 N:
@@ -87,3 +86,5 @@ effective_connectivity:
         - -0.3798899999999999
       - - 50.32720000000001
         - -61.14239999999999
+
+margin: 0.1

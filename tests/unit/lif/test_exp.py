@@ -10,7 +10,8 @@ from ...checks import (check_pos_params_neg_raise_exception,
                        check_V_0_larger_V_th_raise_exception,
                        check_warning_is_given_if_k_is_critical,
                        check_correct_output,
-                       check_correct_output_for_several_mus_and_sigmas)
+                       check_correct_output_for_several_mus_and_sigmas,
+                       check_quantity_dicts_are_allclose)
 
 from .test_delta import real_siegert
 
@@ -628,13 +629,32 @@ class Test_sensitivity_measure:
         output = unit_fixtures.pop('output')
         output_func = self.func(**params)
         
-        # check all keys are the same
-        for k in output.keys():
-            assert(k in output_func.keys()) 
-        assert(output.keys()==output_func.keys())
-        # check all values are close
-        for key in output:
-            assert_allclose(output[key], output_func[key])
+        check_quantity_dicts_are_allclose(output, output_func)
+    
+    
+class Test_sensitivity_measure_all_eigenmodes:
+
+    func = staticmethod(exp._sensitivity_measure_all_eigenmodes)
+    fixtures = 'lif_exp_sensitivity_measure_all_eigenmodes.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        output_func = self.func(**params)
+        
+        check_quantity_dicts_are_allclose(output, output_func)    
+        
+        
+class Test_match_eigenvalues_across_frequencies:
+
+    func = staticmethod(exp._match_eigenvalues_across_frequencies)
+    fixtures = 'lif_exp_match_eigenvalues_across_frequencies.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        
+        assert_allclose(self.func(**params), output)
 
 
 class Test_power_spectra:
