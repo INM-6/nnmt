@@ -16,6 +16,7 @@ Network Functions
     effective_connectivity
     propagator
     sensitivity_measure
+    sensitivity_measure_all_eigenmodes
     power_spectra
     external_rates_for_fixed_input
 
@@ -37,7 +38,9 @@ Parameter Functions
     _derivative_of_firing_rates_wrt_input_rate
     _effective_connectivity
     _propagator
+    _match_eigenvalues_across_frequencies
     _sensitivity_measure
+    _sensitivity_measure_all_eigenmodes
     _power_spectra
     _external_rates_for_fixed_input
 
@@ -1266,7 +1269,7 @@ def _match_eigenvalues_across_frequencies(eigenvalues, margin=1e-5):
     eigenvalues : np.ndarray
         Eigenvalues of the effective connectivity matrix
         Shape: (num analysis freqs, num populations)
-    margin : np.float
+    margin : float
         Maximal allowed distance between the eigenvalues of the effective
         connectivity matrix at two subsequent frequencies.
 
@@ -1569,31 +1572,18 @@ def _sensitivity_measure(effective_connectivity, frequency,
 
 def sensitivity_measure_all_eigenmodes(network, margin=1e-5):
     """
-    Calculates sensitivity measure for each eigenmode.
+    Calculates the :func:`_sensitivity_measure` for each eigenmode.
 
-    Identifies the frequency which is closest to complex(1,0) for each
-    eigenvalue trajectory and evaluates the sensitivity measure, as well as its
-    projections on the direction that influences the amplitude and the
-    direction that influences the frequency are calculated.
-
-    The results are stored in a dictionary with the eigenvalue index as key
-    and the calculated quantities as values.
+    See :func:`_sensitivity_measure_all_eigenmodes` for full documentation.
 
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
         listed in the following.
-
-    Analysis Parameters
-    -------------------
-    omegas : float or np.ndarray
-        Input frequencies to population in Hz.
-
-    Network results
-    ---------------
-    effective_connectivity : np.ndarray
-        Effective connectivity matrix.
+    margin : float
+        Maximal allowed distance between the eigenvalues of the effective
+        connectivity matrix at two subsequent frequencies.
 
     Returns
     -------
@@ -1618,7 +1608,15 @@ def _sensitivity_measure_all_eigenmodes(effective_connectivity,
                                         analysis_frequencies,
                                         margin=1e-5):
     """
-    Calculates sensitivity measure for each eigenmode.
+    Calculates the :func:`_sensitivity_measure` for each eigenmode.
+
+    Identifies the frequency which is closest to complex(1,0) for each
+    eigenvalue trajectory and evaluates the sensitivity measure, as well as its
+    projections on the direction that influences the amplitude and the
+    direction that influences the frequency are calculated.
+
+    The results are stored in a dictionary with the eigenvalue index as key
+    and the calculated quantities as values.
 
     Parameters
     ----------
@@ -1626,7 +1624,10 @@ def _sensitivity_measure_all_eigenmodes(effective_connectivity,
         Effective connectivity matrix.
         Shape : ()
     analysis_frequencies : np.ndarray
-        Analysis frequencies.
+        Analysis frequencies in Hz.
+    margin : float
+        Maximal allowed distance between the eigenvalues of the effective
+        connectivity matrix at two subsequent frequencies.
 
     Returns
     -------
