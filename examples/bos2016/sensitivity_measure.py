@@ -34,8 +34,20 @@ microcircuit = nnmt.models.Microcircuit(
     '../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params=
     '../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
-frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 
+# %%
+# The frequency resolution used in the original publication was quite high.
+# Here, we reduce the frequency resolution for faster execution.
+reduce_frequency_resolution = True
+
+if reduce_frequency_resolution:
+    microcircuit.change_parameters(changed_analysis_params={'df': 1},
+                                overwrite=True)
+    derived_analysis_params = (
+        microcircuit._calculate_dependent_analysis_parameters())
+    microcircuit.analysis_params.update(derived_analysis_params)
+
+frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 # %%
 # Calculate all necessary quantities and finally the sensitivity 
 # measure for all eigenmodes.

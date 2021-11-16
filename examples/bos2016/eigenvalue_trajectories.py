@@ -24,6 +24,19 @@ microcircuit = nnmt.models.Microcircuit(
     '../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
     analysis_params=
     '../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+
+# %%
+# The frequency resolution used in the original publication was quite high.
+# Here, we reduce the frequency resolution for faster execution.
+reduce_frequency_resolution = True
+
+if reduce_frequency_resolution:
+    microcircuit.change_parameters(changed_analysis_params={'df': 5},
+                                overwrite=True)
+    derived_analysis_params = (
+        microcircuit._calculate_dependent_analysis_parameters())
+    microcircuit.analysis_params.update(derived_analysis_params)
+
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 full_indegree_matrix = microcircuit.network_params['K']
 
@@ -72,12 +85,22 @@ isolated_layers_results = defaultdict(str)
 for i, layer in enumerate(['23', '4', '5', '6']):
     print(f'Modify connectivity to obtain isolated {layer}.')
     isolated_layers_results[layer] = defaultdict(str)
-    
+
     microcircuit_isolated_layers = nnmt.models.Microcircuit(
         network_params=
         '../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
         analysis_params=
         '../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml')
+        
+    if reduce_frequency_resolution:
+        microcircuit_isolated_layers.change_parameters(
+            changed_analysis_params={'df': 5},
+            overwrite=True)
+        derived_analysis_params = (
+            microcircuit_isolated_layers._calculate_dependent_analysis_parameters())
+        microcircuit_isolated_layers.analysis_params.update(
+            derived_analysis_params)
+    
     isolated_layers_results[layer]['network'] = microcircuit_isolated_layers
     
     # calculate working point for exponentially shape post synaptic currents
