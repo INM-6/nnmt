@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from numpy.testing import (
-    assert_allclose,
+    assert_allclose
     )
 
 import nnmt
@@ -88,9 +88,24 @@ class Test_Network_functions_give_correct_results:
         nnmt.lif.exp.transfer_function(network)
         nnmt.network_properties.delay_dist_matrix(network)
         nnmt.lif.exp.effective_connectivity(network)
+        frequency = network.analysis_params['omega']/(2*np.pi)
         sm = nnmt.lif.exp.sensitivity_measure(
-            network,)
-        assert_allclose(sm, std_results[self.prefix + 'sensitivity_measure'])
+            network, frequency=frequency)
+        
+        sm_fix = std_results[self.prefix + 'sensitivity_measure']
+        check_quantity_dicts_are_allclose(sm, sm_fix)
+        
+    def test_sensitivity_measure_all_eigenmodes(self, network, std_results):
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.transfer_function(network)
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.effective_connectivity(network)
+        margin = network.analysis_params['margin']
+        sm = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network, margin=margin)
+        
+        sm_fix = std_results[self.prefix + 'sensitivity_measure_all_eigenmodes']
+        check_quantity_dicts_are_allclose(sm, sm_fix)
     
     def test_power_spectra(self, network, std_results):
         nnmt.lif.exp.working_point(network)
@@ -178,11 +193,27 @@ class Test_saving_and_loading:
         nnmt.lif.exp.transfer_function(network)
         nnmt.network_properties.delay_dist_matrix(network)
         nnmt.lif.exp.effective_connectivity(network)
-        sm_saved = nnmt.lif.exp.sensitivity_measure(network)
+        frequency = network.analysis_params['omega']/(2*np.pi)
+        sm_saved = nnmt.lif.exp.sensitivity_measure(network,
+                                                    frequency=frequency)
         save_and_load(network, tmpdir)
         sm_loaded = network.results[self.prefix + 'sensitivity_measure']
-        assert_quantity_allclose(sm_saved, sm_loaded)
-    
+        check_quantity_dicts_are_allclose(sm_saved, sm_loaded)
+        
+    def test_sensitivity_measure_all_eigenmodes(self, network, tmpdir):
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.transfer_function(network)
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.effective_connectivity(network)
+        margin = network.analysis_params['margin']
+        sm_saved = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network, margin=margin)
+        
+        save_and_load(network, tmpdir)
+        sm_loaded = network.results[
+            self.prefix + 'sensitivity_measure_all_eigenmodes']  
+        check_quantity_dicts_are_allclose(sm_saved, sm_loaded)
+
     def test_power_spectra(self, network, tmpdir):
         nnmt.lif.exp.working_point(network)
         nnmt.lif.exp.transfer_function(network)
@@ -290,10 +321,25 @@ class Test_temporary_storage_of_results:
         nnmt.lif.exp.transfer_function(network)
         nnmt.network_properties.delay_dist_matrix(network)
         nnmt.lif.exp.effective_connectivity(network)
-        sensitivity_measure = nnmt.lif.exp.sensitivity_measure(network)
-        assert_allclose(sensitivity_measure,
-                        network.results[self.prefix + 'sensitivity_measure'])
+        frequency = network.analysis_params['omega']/(2*np.pi)
+        sm = nnmt.lif.exp.sensitivity_measure(network, 
+                                              frequency=frequency)
+        sm_fix = network.results[self.prefix + 'sensitivity_measure']
+        check_quantity_dicts_are_allclose(sm, sm_fix)
+        
+    def test_sensitivity_measure_all_eigenmodes(self, network):
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.transfer_function(network)
+        nnmt.network_properties.delay_dist_matrix(network)
+        nnmt.lif.exp.effective_connectivity(network)
+        margin = network.analysis_params['margin']
+        sm = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network, margin=margin)
+        sm_fix = network.results[
+            self.prefix + 'sensitivity_measure_all_eigenmodes']
+        check_quantity_dicts_are_allclose(sm, sm_fix)    
     
+
     def test_power_spectra(self, network):
         nnmt.lif.exp.working_point(network)
         nnmt.lif.exp.transfer_function(network)
@@ -363,3 +409,25 @@ class Test_negative_firing_rate_regime:
                                           analysis_params_file)
         firing_rates = nnmt.lif.exp.firing_rates(network)
         assert not any(firing_rates < 0)
+
+class Test_ambiguous_match_eigenvalues_across_frequencies:
+    """
+    The matching of eigenvalues across frequencies can be ambiguous if
+    two eigenvalues at frequency step i+1 are closest to the same eigenvalue
+    at frequency step i. We here test that a warning is raised in such a
+    situation.
+    """
+    
+    def test_warning_ambiguous_match_eigenvalues(self):
+        ambiguous_eigenvalues_params_file = (
+            'tests/fixtures/integration/config/'
+            'minimal_ambiguous_eigenvalues.yaml')
+        ambiguous_eigenvalues_params = (
+            nnmt.input_output.load_val_unit_dict_from_yaml(
+                ambiguous_eigenvalues_params_file))
+        print(ambiguous_eigenvalues_params)
+        
+        with pytest.warns(UserWarning):
+            nnmt.lif.exp._match_eigenvalues_across_frequencies(
+                **ambiguous_eigenvalues_params
+            )

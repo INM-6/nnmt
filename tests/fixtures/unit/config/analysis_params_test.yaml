@@ -67,4 +67,7 @@ num_modes: 1
 # branches of Lambert W function to be considered
 branches:
   - 0
+  
+# parameter governing match eigenvalues across frequencies
+margin: 10
 ...

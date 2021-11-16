@@ -64,4 +64,6 @@ tf_mode: analytical
 
 # number of modes used when fast response time constants are calculated
 num_modes: 1
+# parameter governing match eigenvalues across frequencies
+margin: 10
 ...

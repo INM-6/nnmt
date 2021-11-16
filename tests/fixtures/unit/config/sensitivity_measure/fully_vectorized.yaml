@@ -1,3 +1,15 @@
+frequency:
+  - 1.0
+
+analysis_frequencies:
+  - 1.0
+  - 2.0
+  - 3.0
+
+resorted_eigenvalues_mask: None
+
+eigenvalue_index: 0
+
 N:
   - 1000
   - 2000
@@ -67,3 +79,5 @@ effective_connectivity:
         - -0.50652
       - - 50.32720000000001
         - -81.5232
+
+margin: 0.5

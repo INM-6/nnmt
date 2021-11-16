@@ -22,6 +22,7 @@ import docopt
 import sys
 
 import nnmt
+import numpy as np
 
 
 if __name__ == '__main__':
@@ -42,6 +43,9 @@ if __name__ == '__main__':
             config_path + 'analysis_params.yaml')
         
         omega = network.analysis_params['omega']
+        frequency = omega/(2*np.pi)
+        margin = network.analysis_params['margin']
+        
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
         network.results[
@@ -58,8 +62,9 @@ if __name__ == '__main__':
         network.results['lif.exp.tf_shift'] = nnmt.lif.exp.transfer_function(
             network, method='shift')
         nnmt.lif.exp.effective_connectivity(network)
-        nnmt.lif.exp.sensitivity_measure(network)
+        nnmt.lif.exp.sensitivity_measure(network, frequency=frequency)
+        nnmt.lif.exp.sensitivity_measure_all_eigenmodes(network, margin=margin)
         nnmt.lif.exp.power_spectra(network)
         # nnmt.lif.exp.additional_rates_for_fixed_input(
         #     network, mean_input_set, std_input_set)
-        network.save(file=fixture_path + 'std_results.h5', overwrite=True)
+        network.save(file=fixture_path + 'std_results.h5')

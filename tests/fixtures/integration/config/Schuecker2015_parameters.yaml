@@ -49,4 +49,7 @@ f_end_exponent:
 
 n_freqs:
   val: 500
+
+dimension:
+  val: 1
 ...

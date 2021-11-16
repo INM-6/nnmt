@@ -423,6 +423,22 @@ def load_val_unit_dict_from_h5(file):
     converted = val_unit_to_quantities(loaded)
     return converted
 
+def load_val_unit_dict(file):
+    """
+    Load and convert val unit dict from either h5 or yaml file to dict of 
+    quantities.
+
+    Parameters
+    ----------
+    file : str
+        String specifying input file name.
+    """
+    if '.yaml' in file:
+        quantity_dict = load_val_unit_dict_from_yaml(file)
+    elif '.h5' in file:
+        quantity_dict = load_val_unit_dict_from_h5(file)
+    return quantity_dict
+
 
 def save_network(file, network):
     """

@@ -9,7 +9,6 @@ Microcircuit. PLoS Comput. Biol. 12, 1–34 (2016).
 """
 
 import pytest
-from collections import defaultdict
 
 import numpy as np
 from numpy.testing import (
@@ -28,7 +27,7 @@ config_path = 'tests/fixtures/integration/config/'
 fix_path = 'tests/fixtures/integration/data/'
 
 # options for debugging
-save_data = False
+save_data = True
 use_saved_data = False
 
 
@@ -61,14 +60,14 @@ def network(exemplary_frequency_idx):
     nnmt.lif.exp.transfer_function(network, method='taylor')
     nnmt.network_properties.delay_dist_matrix(network)
     nnmt.lif.exp.effective_connectivity(network)
-        
+
     omega = network.analysis_params['omegas'][exemplary_frequency_idx]
     network.analysis_params['omega'] = omega
-    
+
     yield network.copy()
-    
+
     if save_data:
-        network.save(file=fix_path + 'network.h5', overwrite=True)
+        network.save(file=fix_path + 'network.h5')
 
 
 @pytest.fixture
@@ -77,13 +76,13 @@ def network_params(network):
     params = network.network_params.copy()
     network._convert_param_dicts_to_base_units_and_strip_units()
     return params
-    
+
 
 @pytest.fixture
 def bos_params(bos_code_result):
     params = bos_code_result['params'].copy()
     return params
-    
+
 
 @pytest.fixture(scope='class')
 def freqs(network):
@@ -95,26 +94,27 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
 
     @pytest.mark.parametrize('nnmt_key, bos_key', [['populations',
                                                    'populations'],
-                                                  ['N', 'N'],
-                                                  ['C', 'C'],
-                                                  ['tau_m', 'taum'],
-                                                  ['tau_r', 'taur'],
-                                                  ['tau_s', 'tauf'],
-                                                  ['V_th_abs', 'Vth'],
-                                                  ['V_0_abs', 'V0'],
-                                                  ['d_e', 'de'],
-                                                  ['d_i', 'di'],
-                                                  ['d_e_sd', 'de_sd'],
-                                                  ['d_i_sd', 'di_sd'],
-                                                  ['delay_dist', 'delay_dist'],
-                                                  ['w', 'w'],
-                                                  ['K', 'I'],
-                                                  ['g', 'g'],
-                                                  ['nu_ext', 'v_ext'],
-                                                  ['K_ext', 'Next'],
-                                                  ['Delay', 'Delay'],
-                                                  ['Delay_sd', 'Delay_sd'],
-                                                  ])
+                                                   ['N', 'N'],
+                                                   ['C', 'C'],
+                                                   ['tau_m', 'taum'],
+                                                   ['tau_r', 'taur'],
+                                                   ['tau_s', 'tauf'],
+                                                   ['V_th_abs', 'Vth'],
+                                                   ['V_0_abs', 'V0'],
+                                                   ['d_e', 'de'],
+                                                   ['d_i', 'di'],
+                                                   ['d_e_sd', 'de_sd'],
+                                                   ['d_i_sd', 'di_sd'],
+                                                   ['delay_dist',
+                                                    'delay_dist'],
+                                                   ['w', 'w'],
+                                                   ['K', 'I'],
+                                                   ['g', 'g'],
+                                                   ['nu_ext', 'v_ext'],
+                                                   ['K_ext', 'Next'],
+                                                   ['Delay', 'Delay'],
+                                                   ['Delay_sd', 'Delay_sd'],
+                                                   ])
     def test_network_parameters(self, network_params, bos_params,
                                 nnmt_key, bos_key):
         network_param = network_params[nnmt_key]
@@ -129,7 +129,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
             assert_allclose(network_param, bos_param)
         except TypeError:
             assert_array_equal(network_param, bos_param)
-            
+
     def test_analysis_frequencies(self, ground_truth_result, bos_code_result,
                                   freqs, exemplary_frequency_idx):
         ground_truth_data = ground_truth_result['fig_microcircuit']['freq_ana']
@@ -152,7 +152,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         assert_array_almost_equal(bos_code_data, ground_truth_data, decimal=5)
         # check ground truth data vs data generated via nnmt
         assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
-        
+
     def test_delay_distribution_at_single_frequency(self, network,
                                                     bos_code_result):
         # ground truth data does not exist, but as regenerated bos_code_data
@@ -165,7 +165,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         assert_array_equal(test_data.shape, bos_code_data.shape)
         assert_array_equal(test_data, bos_code_data)
         nnmt.network_properties.delay_dist_matrix(network)
-        
+
     def test_effective_connectivity_at_single_frequency(self,
                                                         network,
                                                         bos_code_result):
@@ -191,7 +191,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         test_data = nnmt.lif.exp.transfer_function(network, method='taylor').T
         assert_array_equal(test_data.shape, bos_code_data.shape)
         assert_array_almost_equal(test_data / 1000, bos_code_data, decimal=4)
-        
+
     def test_power_spectra(self, network, ground_truth_result,
                            bos_code_result):
         # Bos code actually calculates square of the power
@@ -206,7 +206,7 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         test_data = nnmt.lif.exp.power_spectra(network).T
         assert_array_equal(test_data.shape, ground_truth_data.shape)
         assert_array_almost_equal(test_data, ground_truth_data, decimal=3)
-    
+
     def test_eigenvalue_trajectories(self, network, ground_truth_result,
                                      bos_code_result):
         eigenvalue_spectra = eigenvalue_spectra = np.linalg.eig(
@@ -225,82 +225,80 @@ class Test_lif_meanfield_toolbox_vs_Bos_2016:
         assert_array_almost_equal(
             test_data.transpose()[:ground_truth_data.shape[0], :],
             ground_truth_data, decimal=4)
-        
+
     def test_sensitivity_measure(self, network, ground_truth_result, freqs):
-        power_spectra = nnmt.lif.exp.power_spectra(network).T
-        eigenvalue_spectra = np.linalg.eig(
-            nnmt.lif.exp.effective_connectivity(network))[0].T
         ground_truth_data = ground_truth_result['sensitivity_measure']
-        
-        # check whether highest power is identified correctly
-        # TODO maybe not necessary
-        pop_idx, freq_idx = np.unravel_index(np.argmax(power_spectra),
-                                             np.shape(power_spectra))
-        fmax = freqs[freq_idx]
-        assert fmax == ground_truth_data['high_gamma1']['f_peak']
 
-        # identify frequency which is closest to the point complex(1,0) per
-        # eigenvalue trajectory
-        sensitivity_dict = defaultdict(int)
-        for eig_index, eig in enumerate(eigenvalue_spectra):
-            critical_frequency = freqs[np.argmin(abs(eig - 1.0))]
-            critical_frequency_index = np.argmin(
-                abs(freqs - critical_frequency))
-            critical_eigenvalue = eig[critical_frequency_index]
+        sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
+            network)
 
-            sensitivity_dict[eig_index] = {
-                'critical_frequency': critical_frequency,
-                'critical_frequency_index': critical_frequency_index,
-                'critical_eigenvalue': critical_eigenvalue}
-        
-        # identify which eigenvalue contributes most to this peak
-        for eig_index, eig_results in sensitivity_dict.items():
-            if eig_results['critical_frequency'] == fmax:
-                eigenvalue_index = eig_index
-                print(f"eigenvalue that contributes most to identified peak "
-                      f"at {fmax}: {eigenvalue_index}")
+        # in the Bos results, the eigenvalue were not resorted to match
+        # across frequencies, hence to compare the eigenvalue indices
+        # the resorting has to be reversed
+        eigenvalues = np.linalg.eig(
+            nnmt.lif.exp.effective_connectivity(network))[0]
+        _, resorting_mask = nnmt.lif.exp._match_eigenvalues_across_frequencies(
+            eigenvalues)
 
-        # see lines 224 ff in make_Bos2016_data/sensitivity_measure.py
-        assert eigenvalue_index == 1
+        # loop through different eigenvalues and check corresponding results
+        # from Bos
+        for eig_index in range(network.network_params['dimension']):
+            num_eig_index = eig_index
+            eig_index = str(eig_index)
+            freq_idx = sensitivity_dict[eig_index][
+                'critical_frequency_index']
+            not_resorted_eig_index = resorting_mask[freq_idx][num_eig_index]
+            if not_resorted_eig_index in [0, 1, 2, 3]:
+                truth = ground_truth_data[
+                    f'high_gamma{not_resorted_eig_index}']
+            elif not_resorted_eig_index == 4:
+                truth = ground_truth_data[f'gamma{not_resorted_eig_index}']
+            elif not_resorted_eig_index == 6:
+                truth = ground_truth_data[f'low{not_resorted_eig_index}']
+            else:
+                print(f'{not_resorted_eig_index} not stored in ground truth')
+                continue
 
-        # test sensitivity measure
-        omegas = np.array([fmax * 2 * np.pi])
-        network.analysis_params['omegas'] = omegas
-        nnmt.network_properties.delay_dist_matrix(network)
-        nnmt.lif.exp.transfer_function(network, method='taylor')
-        nnmt.lif.exp.effective_connectivity(network)
-        Z = nnmt.lif.exp.sensitivity_measure(network)[0]
-        assert_array_almost_equal(Z,
-                                  ground_truth_data['high_gamma1']['Z'],
-                                  decimal=4)
+            print(eig_index, not_resorted_eig_index)
 
-        # test critical eigenvalue
-        eigc = sensitivity_dict[eigenvalue_index]['critical_eigenvalue']
-        fmax = sensitivity_dict[eigenvalue_index]['critical_frequency']
-        assert_array_almost_equal(eigc,
-                                  ground_truth_data['high_gamma1']['eigc'],
-                                  decimal=5)
+            # check frequency which is closest to the point complex(1,0)
+            fmax = sensitivity_dict[eig_index]['critical_frequency']
+            # allow for one frequency step deviation
+            df = network.analysis_params['df']
+            assert fmax-df <= truth['f_peak'] <= fmax+df
 
-        # test vector (k) between critical eigenvalue and complex(1,0)
-        # and repective perpendicular (k_per)
-        k = np.asarray([1, 0]) - np.asarray([eigc.real,
-                                             eigc.imag])
-        k /= np.sqrt(np.dot(k, k))
-        k_per = np.asarray([-k[1], k[0]])
-        k_per /= np.sqrt(np.dot(k_per, k_per))
-        assert_array_almost_equal(k,
-                                  ground_truth_data['high_gamma1']['k'],
-                                  decimal=4)
-        assert_array_almost_equal(k_per,
-                                  ground_truth_data['high_gamma1']['k_per'],
-                                  decimal=4)
+            # test sensitivity measure
+            sensitivity = sensitivity_dict[eig_index]['sensitivity']
+            assert_array_almost_equal(sensitivity,
+                                      truth['Z'],
+                                      decimal=2)
 
-        # test projections of sensitivty measure onto k and k_per
-        Z_amp = Z.real * k[0] + Z.imag * k[1]
-        Z_freq = Z.real * k_per[0] + Z.imag * k_per[1]
-        assert_array_almost_equal(Z_amp,
-                                  ground_truth_data['high_gamma1']['Z_amp'],
-                                  decimal=4)
-        assert_array_almost_equal(Z_freq,
-                                  ground_truth_data['high_gamma1']['Z_freq'],
-                                  decimal=4)
+            # test critical eigenvalue
+            eigc = sensitivity_dict[eig_index]['critical_eigenvalue']
+            assert_array_almost_equal(eigc,
+                                      truth['eigc'],
+                                      decimal=3)
+
+            # test vector (k) between critical eigenvalue and complex(1,0)
+            # and repective perpendicular (k_per)
+
+            k = sensitivity_dict[eig_index]['k']
+            k_per = sensitivity_dict[eig_index]['k_per']
+
+            assert_array_almost_equal(k,
+                                      truth['k'],
+                                      decimal=2)
+            assert_array_almost_equal(k_per,
+                                      truth['k_per'],
+                                      decimal=2)
+
+            # test projections of sensitivty measure onto k and k_per
+            Z_amp = sensitivity_dict[eig_index]['sensitivity_amp']
+            Z_freq = sensitivity_dict[eig_index]['sensitivity_freq']
+
+            assert_array_almost_equal(Z_amp,
+                                      truth['Z_amp'],
+                                      decimal=2)
+            assert_array_almost_equal(Z_freq,
+                                      truth['Z_freq'],
+                                      decimal=2)
