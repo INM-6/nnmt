@@ -1515,13 +1515,13 @@ def _sensitivity_measure(effective_connectivity, frequency,
             and resorted_eigenvalues_mask == 'None'):
         resorted_eigenvalues_mask = 'None'
 
-    if resorted_eigenvalues_mask != 'None':
+    if resorted_eigenvalues_mask is not 'None':
         # apply the resorting
         e = e[resorted_eigenvalues_mask[frequency_index, :]]
         U_l = U_l[:, resorted_eigenvalues_mask[frequency_index, :]]
         U_r = U_r[:, resorted_eigenvalues_mask[frequency_index, :]]
 
-    if eigenvalue_index == 'None':
+    if eigenvalue_index is 'None':
         # find eigenvalue closest to one
         eigenvalue_index = np.argmin(np.abs(e - 1))
 
@@ -1626,11 +1626,8 @@ def _sensitivity_measure_all_eigenmodes(effective_connectivity,
     analysis_frequencies : np.ndarray
         Analysis frequencies in Hz.
     margin : float
-<<<<<<< HEAD
         Maximal allowed distance between the eigenvalues of the effective
         connectivity matrix at two subsequent frequencies.
-=======
->>>>>>> 8a404b675417464f5e1575e30e566da4f918ce2a
 
     Returns
     -------
