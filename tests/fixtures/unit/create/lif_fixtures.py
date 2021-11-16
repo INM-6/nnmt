@@ -9,7 +9,7 @@ WARNING: Only use this script, if your code is trustworthy! The script runs
          working correctly, a lot of tests will pass despite your code giving
          wrong results.
 
-If you still want to run this script type, go to /nnmt/tests/fixture/:
+If you still want to run this script, go to /nnmt/tests/fixture/ and type:
 python unit/create/lif_fixtures.py -f <module>
 
 Usage: lif_fixtures.py [options] <module>
@@ -64,7 +64,7 @@ def create_and_save_fixtures(func, regime_params, regimes, file):
 
 def load_params_and_regimes(config_path):
     param_files = os.listdir(config_path)
-    regimes = [file.replace('.yaml', '').replace('.h5', '') 
+    regimes = [file.replace('.yaml', '').replace('.h5', '')
                for file in param_files]
     regime_params = [load_val_unit_dict(config_path + file)
                      for file in param_files]
@@ -158,9 +158,9 @@ if __name__ == '__main__':
                                      + 'lif_exp_propagator.h5')
         elif (module == '_match_eigenvalues_across_frequencies') or (
             module == 'all'):
-            # loading complex values from a .yaml does not work with 
+            # loading complex values from a .yaml does not work with
             # yaml.safe_load(), here we bypass this via .h5
-            
+
             # load effective connectivity from .yaml
             config_path = 'unit/config/sensitivity_measure/'
             regime_params, regimes = load_params_and_regimes(config_path)
@@ -173,10 +173,10 @@ if __name__ == '__main__':
                 quantity_dict = {'margin' : params['margin'],
                                  'eigenvalues' : np.linalg.eig(
                                      effective_connectivity)[0]}
-                
+
                 nnmt.input_output.save_quantity_dict_to_h5(
                     os.path.join(intermediate_config_path,
-                                 f'{regime}.h5'), 
+                                 f'{regime}.h5'),
                     quantity_dict)
             # create the fixtures
             regime_params, regimes = load_params_and_regimes(
