@@ -1626,8 +1626,11 @@ def _sensitivity_measure_all_eigenmodes(effective_connectivity,
     analysis_frequencies : np.ndarray
         Analysis frequencies in Hz.
     margin : float
+<<<<<<< HEAD
         Maximal allowed distance between the eigenvalues of the effective
         connectivity matrix at two subsequent frequencies.
+=======
+>>>>>>> 8a404b675417464f5e1575e30e566da4f918ce2a
 
     Returns
     -------
