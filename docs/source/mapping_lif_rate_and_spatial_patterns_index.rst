@@ -1,6 +1,6 @@
-==============================================
-Mapping LIF to rate network & spatial patterns
-==============================================
+==========================================================
+Mapping LIF to rate network & spatial patterns (Senk 2020)
+==========================================================
 
 This example reproduces methods used by :cite:t:`senk2020`.
 
