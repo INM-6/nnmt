@@ -6,7 +6,7 @@ analysis based on mean-field theory.
 
 #### Documentation
 
-Please visit our [official documentation](<link to official doc>).
+Please visit our [official documentation](<https://nnmt.readthedocs.io/en/latest/index.html>).
 
 In order to compile the documentation on your own, you have to change your
 working directory to `nnmt/` and install and activate the provided conda
