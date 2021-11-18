@@ -167,8 +167,8 @@ blue = params['colors']['ex_blue']
 red = params['colors']['inh_red']
 
 network = BasicNetwork(
-    network_params='network_params.yaml',
-    analysis_params='analysis_params.yaml')
+    network_params='Senk2020_network_params.yaml',
+    analysis_params='Senk2020_analysis_params.yaml')
 ewidth = network.network_params['width'][0] * \
     params['quantities']['displacement']['scale']
 iwidth = network.network_params['width'][1] * \

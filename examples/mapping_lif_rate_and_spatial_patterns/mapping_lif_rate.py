@@ -138,8 +138,8 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 
 network = BasicNetwork(
-    network_params='network_params.yaml',
-    analysis_params='analysis_params.yaml')
+    network_params='Senk2020_network_params.yaml',
+    analysis_params='Senk2020_analysis_params.yaml')
 
 ##########################################################################
 # All results will be stored in ``tf_scan_results``.
