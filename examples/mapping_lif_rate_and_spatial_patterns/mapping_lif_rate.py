@@ -67,7 +67,7 @@ params = {
             'label': 'fit exc. weight\n' + r'$w_\mathrm{E}$',
             'scale': 1.},  # unitless
         'fit_error': {
-            'label': 'fit error\n' + r'$\epsilon$ (%)',
+            'label': 'fit error\n' + r'$\eta$ (%)',
             'scale': 1e2},
         'transfer_function': {
             'label': r'transfer function $H_\mu$',
