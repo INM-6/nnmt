@@ -70,13 +70,13 @@ params = {
             'label': 'fit error\n' + r'$\eta$ (%)',
             'scale': 1e2},
         'transfer_function': {
-            'label': r'transfer function $H_\mu$',
+            'label': r'transfer function $H$',
             'scale': 1e-3},
         'transfer_function_amplitude': {
             'label':
-                r'amplitude $|H_\mu|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'},
+                r'amplitude $|H|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'},
         'transfer_function_phase': {
-            'label': r'phase $\angle H\mu\quad(\circ)$', },
+            'label': r'phase $\angle H\quad(\circ)$', },
         'frequencies': {
             'label': r'frequency $\mathrm{Im}[\lambda]/(2\pi)$ (Hz)',
             'scale': 1.}},
