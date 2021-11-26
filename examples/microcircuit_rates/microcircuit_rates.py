@@ -51,7 +51,7 @@ print(f'Mean simulated rates: {simulated_rates}')
 
 ###############################################################################
 # Finally, we plot the rates together in one plot.
-width = 0.03937007874 * 80
+width = 0.03937007874 * 85
 height = width * 1.3
 
 fig = plt.figure(figsize=(width, height),
@@ -99,14 +99,15 @@ if insert_sketch:
     w_svg, h_svg = svg_mpl.get_size()
     svg_mpl.set_size((w_svg+'pt', h_svg+'pt'))
     svg_sketch = sg.fromfile(sketch_fn).getroot()
-    svg_sketch.moveto(x=30, y=10, scale_x=0.56, scale_y=0.56)
+    svg_sketch.moveto(x=30, y=10, scale_x=0.61, scale_y=0.61)
     svg_mpl.append(svg_sketch)
     svg_mpl.save(f'{plot_fn}.svg')
     os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
     if os_return == 0:
-        os.remove(f'{plot_fn}.svg')
+        # os.remove(f'{plot_fn}.svg')
+        pass
     else:
         print('Conversion to pdf using inkscape failed, keeping svg...')
 
 ax0.annotate('(sketch)', xy=(0.35, 0.6))
-plt.show()
+# plt.show()
