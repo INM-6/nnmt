@@ -203,7 +203,7 @@ ax.set_title('connection\n probability $p$')
 # Finally, the external network sketch is included and the figure is saved to
 # file.
 
-svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
+svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=False))
 w_svg, h_svg = svg_mpl.get_size()
 svg_mpl.set_size((w_svg + 'pt', h_svg + 'pt'))
 svg_sketch = sg.fromfile(params['sketch_fn']).getroot()
