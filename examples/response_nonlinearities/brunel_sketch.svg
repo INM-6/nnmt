@@ -27,9 +27,9 @@
      inkscape:window-height="1020"
      id="namedview2553"
      showgrid="false"
-     inkscape:zoom="5.6568543"
-     inkscape:cx="43.156806"
-     inkscape:cy="36.207766"
+     inkscape:zoom="22.627417"
+     inkscape:cx="57.84307"
+     inkscape:cy="6.1496691"
      inkscape:window-x="0"
      inkscape:window-y="28"
      inkscape:window-maximized="1"
@@ -149,6 +149,7 @@
 
 
 
+
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:70.40000153px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:8.80000019px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -161,6 +162,7 @@
      x="710.08673"
      y="-1170.9064"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:93.8666687px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';fill:#ffffff;fill-opacity:1;stroke-width:8.80000019px">I</tspan></text>
+
 
 
 
@@ -183,6 +185,7 @@
    id="tspan1060">EX</tspan>, K<tspan
    style="font-size:64.99999762%;baseline-shift:sub"
    id="tspan1058">EX</tspan></tspan></text>
+
 
 
 
@@ -209,6 +212,7 @@
 
 
 
+
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:64px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:8px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -225,6 +229,7 @@
    id="tspan1134">EI</tspan>, K<tspan
    style="font-size:64.99999762%;baseline-shift:sub"
    id="tspan1132">EI</tspan></tspan></text>
+
 
 
 
@@ -247,6 +252,7 @@
 
 
 
+
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:64px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:8px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -263,6 +269,7 @@
    id="tspan1190">II</tspan>, K<tspan
    style="font-size:64.99999762%;baseline-shift:sub"
    id="tspan1188">II</tspan></tspan></text>
+
 
 
 
@@ -285,6 +292,7 @@
 
 
 
+
 <path
    sodipodi:type="star"
    style="opacity:1;vector-effect:none;fill:#4c72b0;fill-opacity:1;stroke:none;stroke-width:6.51317406;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:19.53952243, 6.51317416;stroke-dashoffset:0;stroke-opacity:0.39215686"
@@ -304,20 +312,21 @@
    inkscape:transform-center-y="-2.4730413e-05" /><text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:70.40000153px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:8.80000019px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-   x="522.07922"
-   y="-946.81854"
+   x="495.5593"
+   y="-952.65216"
    id="text1451-6"
    transform="scale(1,-1)"><tspan
      sodipodi:role="line"
      id="tspan1449-7"
-     x="522.07922"
-     y="-946.81854"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:64px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';fill:#ffffff;fill-opacity:1;stroke-width:8.80000019px">X</tspan><tspan
+     x="495.5593"
+     y="-952.65216"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:58.66666794px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';fill:#ffffff;fill-opacity:1;stroke-width:8.80000019px">ext</tspan><tspan
      sodipodi:role="line"
-     x="522.07922"
-     y="-856.03046"
+     x="495.5593"
+     y="-860.47864"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:64px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';fill:#ffffff;fill-opacity:1;stroke-width:8.80000019px"
      id="tspan879" /></text>
+
 
 
 
