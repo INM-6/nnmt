@@ -41,7 +41,8 @@ params = {
     'mean_std_inputs_stability': np.array([10., 10.]) * 1e-3,
 
     # figure width in inch
-    'figwidth_2cols': 180. / 25.4,
+    # (setting the value a bit smaller results in 180 mm width of .eps output)
+    'figwidth_2cols': 7.08, # < 180. / 25.4
 
     # labels and corresponding scaling parameters for plotted quantities
     'quantities': {
