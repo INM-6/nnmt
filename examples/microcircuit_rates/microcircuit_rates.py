@@ -95,7 +95,7 @@ plt.legend([bars[0], nnmt_handle, bars[1]],
 if insert_sketch:
     sketch_fn = 'microcircuit_sketch.svg'
     plot_fn = 'microcircuit_rates'
-    svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
+    svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=False))
     w_svg, h_svg = svg_mpl.get_size()
     svg_mpl.set_size((w_svg+'pt', h_svg+'pt'))
     svg_sketch = sg.fromfile(sketch_fn).getroot()
@@ -104,10 +104,9 @@ if insert_sketch:
     svg_mpl.save(f'{plot_fn}.svg')
     os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
     if os_return == 0:
-        # os.remove(f'{plot_fn}.svg')
-        pass
+        os.remove(f'{plot_fn}.svg')
     else:
         print('Conversion to pdf using inkscape failed, keeping svg...')
 
 ax0.annotate('(sketch)', xy=(0.35, 0.6))
-# plt.show()
+plt.show()
