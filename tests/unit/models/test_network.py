@@ -149,16 +149,18 @@ class Test_saving_and_loading:
     def test_load_correctly_sets_network_dictionaries(self, tmpdir,
                                                       empty_network):
         network = empty_network
-        network.network_params['test'] = 1
-        network.analysis_params['test'] = 2
-        network.results['test'] = 3
-        network.results_hash_dict['test'] = 4
-        network.result_units['test'] = 'millivolt'
+        network.network_params['test_network_param'] = 1 * ureg.mV
+        network.analysis_params['test_analysis_param'] = 2 * ureg.pA
+        network.results['test_result'] = 3
+        network.results_hash_dict['test_rhd'] = 4
+        network.result_units['test_result'] = 'millivolt'
+        network._convert_param_dicts_to_base_units_and_strip_units()
         nparams = network.network_params
         aparams = network.analysis_params
         results = network.results
         rhd = network.results_hash_dict
         result_units = network.result_units
+        input_units = network.input_units
         tmp_test = tmpdir.mkdir('tmp_test')
         with tmp_test.as_cwd():
             network.save('test.h5')
@@ -167,12 +169,14 @@ class Test_saving_and_loading:
             network.results = {}
             network.results_hash_dict = {}
             network.result_units = {}
+            network.input_units = {}
             network.load('test.h5')
             check_quantity_dicts_are_equal(nparams, network.network_params)
             check_quantity_dicts_are_equal(aparams, network.analysis_params)
             check_quantity_dicts_are_equal(results, network.results)
             check_quantity_dicts_are_equal(rhd, network.results_hash_dict)
             check_quantity_dicts_are_equal(result_units, network.result_units)
+            check_quantity_dicts_are_equal(input_units, network.input_units)
 
     def test_save_adds_units_to_results(self, mocker, tmpdir, empty_network):
         empty_network.results['test'] = 1
