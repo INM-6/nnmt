@@ -201,28 +201,28 @@ class Test_meta_functions:
         assert empty_network.show() == ['ham', 'spam']
 
     def test_change_network_parameters(self, network):
-        new_tau_m = 1000 * ureg.ms
+        new_tau_m = 1000
         update = dict(tau_m=new_tau_m)
         network.change_parameters(changed_network_params=update,
                                   overwrite=True)
         assert network.network_params['tau_m'] == new_tau_m
 
     def test_change_analysis_parameters(self, network):
-        new_df = 1000 * ureg.Hz
+        new_df = 1000
         update = dict(df=new_df)
         network.change_parameters(changed_analysis_params=update,
                                   overwrite=True)
-        assert network.analysis_params['df'] == new_df
+        assert network.analysis_params['df'] == 1000
 
     def test_change_parameters_returns_new_network(self, network):
-        new_tau_m = 1000 * ureg.ms
+        new_tau_m = 1000
         update = dict(tau_m=new_tau_m)
         new_network = network.change_parameters(changed_network_params=update)
         assert new_network is not network
 
     def test_change_parameters_returns_new_network_with_uncoupled_dicts(
             self, network):
-        new_tau_m = 1000 * ureg.ms
+        new_tau_m = 1000
         update = dict(tau_m=new_tau_m)
         new_network = network.change_parameters(changed_network_params=update)
         new_network.network_params['K'] = np.array([1, 2, 3])
@@ -235,12 +235,39 @@ class Test_meta_functions:
                                new_network.analysis_params['omegas'])
 
     def test_change_parameter_deletes_results_if_overwrite_true(self, network):
-        new_tau_m = 1000 * ureg.ms
+        new_tau_m = 1000
         update = dict(tau_m=new_tau_m)
         network.change_parameters(changed_network_params=update,
                                   overwrite=True)
         assert len(network.results.items()) == 0
         assert len(network.results_hash_dict.items()) == 0
+
+    def test_change_parameters_updates_dependent_parameters_overwrite_true(
+            self, network):
+        new_tau_s = network.network_params['tau_s'] * 2
+        j_old = network.network_params['j']
+        update = dict(tau_s=new_tau_s)
+        network.change_parameters(changed_network_params=update,
+                                  overwrite=True)
+        assert pytest.approx(j_old * 2) == network.network_params['j']
+
+    def test_change_parameters_updates_dependent_parameters_overwrite_false(
+            self, network):
+        new_tau_s = network.network_params['tau_s'] * 2
+        j_old = network.network_params['j']
+        update = dict(tau_s=new_tau_s)
+        network = network.change_parameters(changed_network_params=update,
+                                            overwrite=False)
+        assert pytest.approx(j_old * 2) == network.network_params['j']
+
+    def test_change_parameters_adds_new_parameters(
+            self, network):
+        new_param = 42
+        update = dict(new_param=new_param)
+        j_old = network.network_params['j']
+        network.change_parameters(changed_network_params=update,
+                                  overwrite=True)
+        assert new_param == network.network_params['new_param']
 
 
 class Test_clear_results:

@@ -247,6 +247,9 @@ class Network():
         """
         Change parameters and return network with specified parameters.
 
+        Note: Do not change parameters that are calculated on network
+        instantiation. This will lead to inconsistencies.
+
         Parameters
         ----------
         changed_network_params : dict
@@ -267,16 +270,17 @@ class Network():
         new_network_params.update(changed_network_params)
         new_analysis_params = self.analysis_params.copy()
         new_analysis_params.update(changed_analysis_params)
+        self._add_units_to_param_dicts_and_convert_to_input_units()
 
         if overwrite:
-            self.network_params = new_network_params
-            self.analysis_params = new_analysis_params
             # delete results, because otherwise get inconsistens return values
             # from _check_and_store. We do not keep track, which quantities
             # have been recalculated or not.
             self.results = {}
             self.results_hash_dict = {}
-            return self
+            self.result_units = {}
+
+            self = self.__init__(new_network_params, new_analysis_params)
         else:
             return self._instantiate(new_network_params, new_analysis_params)
 
