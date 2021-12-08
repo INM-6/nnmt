@@ -251,9 +251,7 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     [float | np.array]
         Stationary firing rate in Hz.
     """
-    # using _zetac (zeta-1), because zeta is giving nan result for arguments
-    # smaller 1
-    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    alpha = __alpha_voltage_shift()
     # effective threshold
     # additional factor sigma is canceled in siegert
     V_th1 = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
@@ -296,9 +294,7 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     [float | np.array]
         Stationary firing rate in Hz.
     """
-    # use _zetac function (zeta-1) because zeta is not giving finite values for
-    # arguments smaller 1.
-    alpha = np.sqrt(2.) * abs(_zetac(0.5) + 1)
+    alpha = __alpha_voltage_shift()
 
     nu0 = _delta_firing_rate(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
     nu0_dPhi = _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
@@ -312,6 +308,16 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
         return result.item(0)
     else:
         return result
+
+
+def __alpha_voltage_shift():
+    r"""
+    Returns the constant :math:`\sqrt{2}|\zeta(1/2)|`.
+
+    Uses zetac, which returns zeta - 1, because zeta is returning nan for
+    arguments smaller 1.
+    """
+    return np.sqrt(2) * abs(_zetac(0.5) + 1)
 
 
 def _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
@@ -663,7 +669,7 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         _equalize_shape(mu, sigma, tau_m, tau_r, tau_s, V_th_rel, V_0_rel))
 
     # effective threshold and reset
-    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    alpha = __alpha_voltage_shift()
     V_th_shifted = V_th_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     V_0_shifted = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
 
@@ -772,7 +778,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         x_r = np.sqrt(2.) * (V_0_rel - mu) / sigma
 
         z = -0.5 + 1j * np.outer(omegas[regular_mask], tau_m)
-        alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+        alpha = __alpha_voltage_shift()
         k = np.sqrt(tau_s / tau_m)
         A = alpha * tau_m * delta_rates * k / np.sqrt(2)
         a0 = _Psi(z, x_t) - _Psi(z, x_r)
@@ -951,7 +957,7 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
     if np.any(sigma == 0):
         raise ZeroDivisionError('Function contains division by sigma!')
 
-    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    alpha = __alpha_voltage_shift()
     x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
     integral = 1 / tau_m / _delta_firing_rate(
@@ -1061,7 +1067,7 @@ def _derivative_of_firing_rates_wrt_input_rate(
         if sigma == 0:
             raise ZeroDivisionError('Phi_prime_mu contains division by sigma!')
 
-    alpha = np.sqrt(2) * abs(_zetac(0.5) + 1)
+    alpha = __alpha_voltage_shift()
 
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
