@@ -31,6 +31,7 @@ Parameter Functions
     _firing_rate_taylor
     _mean_input
     _std_input
+    _transfer_function
     _transfer_function_shift
     _transfer_function_taylor
     _fit_transfer_function
@@ -617,6 +618,55 @@ def transfer_function(network, freqs=None, method='shift',
         return _cache(network, _transfer_function_taylor, params,
                       _prefix + 'transfer_function',
                       'hertz / volt')
+
+
+def _transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
+                       omegas, method='shift', synaptic_filter=True):
+    """
+    Calculates the transfer function at given frequencies ``omegas``.
+
+    Either :func:`nnmt.lif.exp._transfer_function_shift` (standard) or
+    :func:`nnmt.lif.exp._transfer_function_taylor` is used.
+
+    Parameters
+    ----------
+    mu : [float | np.array]
+        Mean neuron activity of one population in V.
+    sigma : [float | np.array]
+        Standard deviation of neuron activity of one population in V.
+    tau_m : [float | np.array]
+        Membrane time constant in s.
+    tau_s : [float | np.array]
+        Synaptic time constant in s.
+    tau_r : [float | np.array]
+        Refractory time in s.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
+    omegas : [float | np.array]
+        Input angular frequency to population in Hz.
+    method : {'shift', 'taylor'}, optional
+        Method used to integrate the adapted Siegert function. Default is
+        'shift'.
+    synaptic_filter : bool
+        Whether an additional synaptic low pass filter is to be used or not.
+        Default is True.
+
+    Returns
+    -------
+    [float | np.array]
+        Transfer function in Hz/V.
+    """
+
+    if method == 'shift':
+        return _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r,
+                                        V_th_rel, V_0_rel, omegas,
+                                        synaptic_filter)
+    elif method == 'taylor':
+        return _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r,
+                                         V_th_rel, V_0_rel, omegas,
+                                         synaptic_filter)
 
 
 @_check_positive_params
@@ -1698,7 +1748,7 @@ def power_spectra(network):
     Returns
     -------
     np.ndarray
-        Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
+        Power spectrum in Hz. Shape: (len(freqs), len(populations)).
     """
 
     list_of_params = ['J', 'K', 'N', 'tau_m']
@@ -1748,7 +1798,7 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
     Returns
     -------
     np.ndarray
-        Power spectrum in Hz**2. Shape: (len(freqs), len(populations)).
+        Power spectrum in Hz. Shape: (len(freqs), len(populations)).
     """
     power = np.zeros(effective_connectivity.shape[0:2])
     for i, W in enumerate(effective_connectivity):
