@@ -5,7 +5,7 @@ Structure of ring network
 This example illustrates the structure of the ring network used by
 :cite:t:`senk2020`.
 Mean-field results of this model are shown in the examples
-:doc:`fit_transfer_function` and :doc:`spatial_patterns`.
+:doc:`mapping_lif_rate` and :doc:`spatial_patterns`.
 
 """
 

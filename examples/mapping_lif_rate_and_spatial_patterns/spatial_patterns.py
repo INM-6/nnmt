@@ -5,7 +5,7 @@ Spatial patterns
 This example demonstrates the methods used in Figure 6 of :cite:t:`senk2020`.
 A figure illustrating the network structure of the used model is set up in
 :doc:`network_structure`.
-The same model is used in the example :doc:`fit_transfer_function`.
+The same model is used in the example :doc:`mapping_lif_rate`.
 
 """
 
