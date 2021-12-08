@@ -158,8 +158,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
 
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
-    deviation sigma, using Eq. 4.33 in :cite:t:`fourcaud2002` with Taylor
-    expansion around k = sqrt(tau_s/tau_m).
+    deviation sigma based on :cite:t:`fourcaud2002`, using either a shift of
+    the integration boundaries in the white noise Siegert formula, as derived
+    in :cite:t:`schuecker2015` (default), or a Taylor expansion around
+    :math:`k = \sqrt{\\tau_\mathrm{s}/\\tau_\mathrm{m}}` of Eq. 4.33 in
+    :cite:t:`fourcaud2002`.
 
     Parameters
     ----------
@@ -271,7 +274,7 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
     deviation sigma, using Eq. 4.33 in :cite:t:`fourcaud2002` with Taylor
-    expansion around k = sqrt(tau_s/tau_m).
+    expansion around :math:`k = \sqrt{\\tau_\mathrm{s}/\\tau_\mathrm{m}}`.
 
     Parameters
     ----------
@@ -541,12 +544,17 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
 def transfer_function(network, freqs=None, method='shift',
                       synaptic_filter=True):
     """
-    Calculates transfer function.
+    Calculates the transfer function for each population for given frequencies.
+
+    Requires the computation of :func:`nnmt.lif.exp.mean_input` and
+    :func:`nnmt.lif.exp.std_input` first.
+
+    See :func:`nnmt.lif.exp._transfer_function` for full documentation.
 
     Parameters
     ----------
     network : nnmt.create.Network or child class instance.
-        Network with the network parameters listed in
+        Network with the parameters listed in
         :func:`nnmt.lif.exp._transfer_function`.
     freqs : np.ndarray
         Frequencies for which transfer function should be calculated. You can
@@ -556,31 +564,6 @@ def transfer_function(network, freqs=None, method='shift',
     synaptic_filter : bool
         Whether an additional synaptic low pass filter is to be used or not.
         Default is True.
-
-    Network parameters
-    ------------------
-    tau_m : float
-        Membrane time constant in s.
-    tau_s : float
-        Synaptic time constant in s.
-    tau_r : float
-        Refractory time in s.
-    V_0_rel : float
-        Relative reset potential in V.
-    V_th_rel : float
-        Relative threshold potential in V.
-
-    Analysis Parameters
-    -------------------
-    omegas : [float | np.narray]
-        Input frequencies to population in Hz.
-
-    Network results
-    ---------------
-    mean_input : [float | np.narray]
-        Mean neuron activity of one population in V.
-    std_input : [float | np.narray]
-        Standard deviation of neuron activity of one population in V.
 
     Returns
     -------
@@ -623,9 +606,9 @@ def transfer_function(network, freqs=None, method='shift',
 def _transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
                        omegas, method='shift', synaptic_filter=True):
     """
-    Calculates the transfer function at given frequencies ``omegas``.
+    Calculates the transfer function at given angular frequencies ``omegas``.
 
-    Either :func:`nnmt.lif.exp._transfer_function_shift` (standard) or
+    Either :func:`nnmt.lif.exp._transfer_function_shift` (default) or
     :func:`nnmt.lif.exp._transfer_function_taylor` is used.
 
     Parameters
@@ -974,34 +957,30 @@ def _similar_array(x, array):
 def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
                                                tau_m, tau_r, tau_s):
     """
-    Derivative of the stationary firing rates with synaptic filtering
-    with respect to the mean input
+    Derivative of the stationary firing rates with respect to the mean input.
 
-    See Appendix B in
-    Schuecker, J., Diesmann, M. & Helias, M.
-    Reduction of colored noise in excitable systems to white
-    noise and dynamic boundary conditions. 1–23 (2014).
+    See Appendix B in :cite:t:`schuecker2014`.
 
-    Parameters:
-    -----------
-    tau_m: float
+    Parameters
+    ----------
+    tau_m : [float | np.ndarray]
         Membrane time constant in s.
-    tau_s: float
+    tau_s : [float | np.ndarray]
         Synaptic time constant in s.
-    tau_r: float
+    tau_r : [float | np.ndarray]
         Refractory time in s.
-    V_th_rel: float
+    V_th_rel : [float | np.ndarray]
         Relative threshold potential in V.
-    V_0_rel: float
+    V_0_rel : [float | np.ndarray]
         Relative reset potential in V.
-    mu: float
+    mu : [float | np.ndarray]
         Mean neuron activity in V.
-    sigma:
+    sigma : [float | np.ndarray]
         Standard deviation of neuron activity in V.
 
-    Returns:
-    --------
-    float:
+    Returns
+    -------
+    float
         Zero frequency limit of colored noise transfer function in Hz/V.
     """
     if np.any(sigma == 0):
@@ -1023,15 +1002,9 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
 
 def _Phi(s):
     """
-    helper function to calculate stationary firing rates with synaptic
-    filtering
+    Helper function to calc stationary firing rates with synaptic filtering.
 
-    corresponds to u^-2 F in Eq. 53 of the following publication
-
-
-    Schuecker, J., Diesmann, M. & Helias, M.
-    Reduction of colored noise in excitable systems to white
-    noise and dynamic boundary conditions. 1–23 (2014).
+    Corresponds to u^-2 F in Eq. 53 of :cite:t:`schuecker2014`.
     """
     return np.sqrt(np.pi / 2.) * (np.exp(s**2 / 2.)
                                   * (1 + _erf(s / np.sqrt(2))))
@@ -1065,7 +1038,7 @@ def _d_2_Psi(z, x):
 
 def _Phi_prime_mu(s, sigma):
     """
-    Derivative of the helper function _Phi(s) with respect to the mean input
+    Derivative of the helper function _Phi(s) with respect to the mean input.
     """
     if np.any(sigma < 0):
         raise ValueError('sigma needs to be larger than zero!')
@@ -1082,27 +1055,26 @@ def _Phi_prime_mu(s, sigma):
 def _derivative_of_firing_rates_wrt_input_rate(
         mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel, j):
     """
-    Derivative of the stationary firing rates with synaptic filtering
-    with respect to input rate.
+    Derivative of the stationary firing rates with respect to input rate.
 
     Parameters
     ----------
-    mu : float
-        Mean neuron activity.
+    mu : [float | np.ndarray]
+        Mean neuron activity in V.
     sigma :
-        Standard deviation of neuron activity.
-    tau_m : float
-        Membrane time constant.
-    tau_s : float
-        Synaptic time constant.
-    tau_r : float
-        Refractory time.
-    V_th_rel : float
-        Relative threshold potential.
-    V_0_rel : float
-        Relative reset potential.
+        Standard deviation of neuron activity in V.
+    tau_m : [float | np.ndarray]
+        Membrane time constant in s.
+    tau_s : [float | np.ndarray]
+        Synaptic time constant in s.
+    tau_r : [float | np.ndarray]
+        Refractory time in s.
+    V_th_rel : [float | np.ndarray]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.ndarray]
+        Relative reset potential in V.
     j : float
-        Effective connectivity weight.
+        Effective connectivity weight in V.
 
     Returns
     -------
