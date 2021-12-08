@@ -10,11 +10,14 @@ This example reproduces Fig. 1E in :cite:t:`bos2016`.
 
 import nnmt
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker
 
 plt.style.use('frontiers.mplstyle')
+mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
+                     'axes.titlepad': 0.0})
 
 # %%
 # First, create an instance of the network model class `Microcircuit`.
@@ -63,8 +66,9 @@ simulated_power_spectra_20_window = result['fig_microcircuit']['20']
 # Plotting mean-field prediction and simulated results together.
 
 # two column figure, 180 mm wide
-fig = plt.figure(figsize=(7.08661, 7.08661/2),
-                 constrained_layout=True)
+width = 180. / 25.4 
+height = 90. / 25.4
+fig = plt.figure(figsize=(width, height))
 grid_specification = gridspec.GridSpec(2, 4, figure=fig)
 
 for layer in [0, 1, 2, 3]:

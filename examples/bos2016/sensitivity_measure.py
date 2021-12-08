@@ -83,7 +83,10 @@ eigenvalue_to_plot_low = str(6)
 # Plotting: Sensitivity Measure corresponding to high frequency peak (Fig. 6)
 
 # two column figure, 180 mm wide
-fig = plt.figure(figsize=(7.08661, 7.08661/2),
+width = 180. / 25.4 
+height = 90. / 25.4
+
+fig = plt.figure(figsize=(width, height),
                  constrained_layout=True)
 grid_specification = gridspec.GridSpec(2, 2, figure=fig)
 

@@ -14,6 +14,8 @@ from collections import defaultdict
 import matplotlib.ticker
 
 plt.style.use('frontiers.mplstyle')
+mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
+                     'axes.titlepad': 0.0})
 
 # %%
 # The parameters used for calculation of the transfer functions 
@@ -105,10 +107,10 @@ for i, index in enumerate(indices):
         
 # %%
 # Plotting
-width = 3.34646 * 2
-height = 3.34646 / 2 + 0.4
-fig = plt.figure(figsize=(width, height),
-                 constrained_layout=True)
+width = 180. / 25.4 
+height = 75. / 25.4
+
+fig = plt.figure(figsize=(width, height))
 
 grid_specification = gridspec.GridSpec(1, 2, figure=fig)
 
@@ -153,11 +155,11 @@ for sigma in test_results['sigma'].keys():
         #              markersize=markersize_cross)
 
 axA.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-axA.set_ylabel(r'amplitude $|n(\omega)|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'
+axA.set_ylabel(r'amplitude $|N_{\mathrm{cn}}\left(\omega\right)|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'
                ,labelpad = 0)
 
 axB.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
-axB.set_ylabel(r'phase $\angle n(\omega)\quad(^{\circ})$'
+axB.set_ylabel(r'phase $\angle N_{\mathrm{cn}}\left(\omega\right)\quad(^{\circ})$'
                ,labelpad = 2)
 
 axA.set_xticks([1e-1, 1e0, 1e1, 1e2])
@@ -166,7 +168,7 @@ axA.set_yticks([0, 6, 12])
 axB.set_xticks([1e-1, 1e0, 1e1, 1e2])
 axB.set_yticks([-60, -30, 0])
 
-label_prms = dict(x=-0.3, y=1.2, fontsize=10, fontweight='bold',
+label_prms = dict(x=-0.05, y=1.1, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 axA.text(s='(A)', transform=axA.transAxes, **label_prms)
 axB.text(s='(B)', transform=axB.transAxes, **label_prms)
@@ -182,6 +184,7 @@ axB.xaxis.set_minor_locator(x_minor)
 axB.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 
 axB.legend(title='$(\mu, \sigma)$ in mV', title_fontsize=None,
-          handlelength=2, labelspacing=0.0)
+          handlelength=2, labelspacing=0.0,
+          loc='lower left')
 
 plt.savefig('transfer_functions_Schuecker2015.eps')
