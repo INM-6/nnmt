@@ -110,12 +110,19 @@ class Basic(Network):
 
         # convert weights in pA (current) to weights in mV (voltage)
         tau_s_div_C = self.network_params['tau_s'] / self.network_params['C']
-        derived_params['J'] = (tau_s_div_C
-                               * self.network_params['W']).to(ureg.mV)
+        derived_params['J'] = tau_s_div_C * self.network_params['W']
 
-        derived_params['J_ext'] = (
-            tau_s_div_C * self.network_params['W_ext']).to(ureg.mV)
+        try:
+            derived_params['J'].ito(ureg.mV)
+        except AttributeError:
+            pass
 
+        derived_params['J_ext'] = tau_s_div_C * self.network_params['W_ext']
+
+        try:
+            derived_params['J_ext'].ito(ureg.mV)
+        except AttributeError:
+            pass
         return derived_params
 
     def _calculate_dependent_analysis_parameters(self):
@@ -137,31 +144,44 @@ class Basic(Network):
         w_max = 2 * np.pi * self.analysis_params['f_max']
         dw = 2 * np.pi * self.analysis_params['df']
 
+        try:
+            w_min = w_min.magnitude
+            w_max = w_max.magnitude
+            dw = dw.magnitude
+        except AttributeError:
+            pass
+
         # enable usage of quantities
-        @ureg.wraps(ureg.Hz, (ureg.Hz, ureg.Hz, ureg.Hz))
         def calc_evaluated_omegas(w_min, w_max, dw):
             """ Calculates omegas at which functions are to be evaluated """
-            return np.arange(w_min, w_max + dw, dw)
+            return np.arange(w_min, w_max, dw)
 
         derived_params['omegas'] = calc_evaluated_omegas(w_min, w_max, dw)
 
-        # wavenumbers (obtional)
-        if all(
-            key in self.analysis_params for key in [
-                'k_min',
-                'k_max',
-                'dk']):
-            k_min, k_max, dk = (self.analysis_params['k_min'],
-                                self.analysis_params['k_max'],
-                                self.analysis_params['dk'])
+        try:
+            w_min = w_min.magnitude
+            w_max = w_max.magnitude
+            dw = dw.magnitude
+        except AttributeError:
+            pass
 
-            @ureg.wraps(ureg.meters**(-1), (ureg.meters**(-1),
-                                            ureg.meters**(-1),
-                                            ureg.meters**(-1)))
-            def calc_wavenumbers(k_min, k_max, dk):
-                """ Gets range of wavenumbers """
-                return np.arange(k_min, k_max + dk, dk)
+        def calc_evaluated_wavenumbers(k_min, k_max, dk):
+            return np.arange(k_min, k_max, dk)
 
-            derived_params['k_wavenumbers'] = calc_wavenumbers(
-                k_min, k_max, dk)
+        try:
+            k_min = self.analysis_params['k_min']
+            k_max = self.analysis_params['k_max']
+            dk = self.analysis_params['dk']
+            try:
+                k_min = k_min.to_base_units().magnitude
+                k_max = k_max.to_base_units().magnitude
+                dk = dk.to_base_units().magnitude
+            except AttributeError:
+                pass
+
+            derived_params['k_wavenumbers'] = (
+                calc_evaluated_wavenumbers(k_min, k_max, dk))
+        except KeyError:
+            pass
+
         return derived_params
