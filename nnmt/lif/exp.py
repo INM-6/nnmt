@@ -1121,28 +1121,15 @@ def effective_connectivity(network):
     Note that the frequencies of the transfer function and the delay
     distribution matrix need to be matching.
 
+    Requires computing :func:`nnmt.lif.exp.transfer_function` first.
+
+    See :func:`nnmt.lif.exp._effective_connectivity` for full documentation.
+
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
+    network : nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
-        listed in the following.
-
-    Network results
-    ---------------
-    transfer_function : np.ndarray
-        Transfer function for given frequencies in Hz/V.
-
-    Network Parameters
-    ------------------
-    D : np.ndarray
-        Unitless delay distribution of shape
-        (len(omegas), len(populations), len(populations)).
-    J : np.ndarray
-        Weight matrix in V.
-    K : np.ndarray
-        Indegree matrix.
-    tau_m : float
-        Membrane time constant in s.
+        listed in :func:`nnmt.lif.exp._effective_connectivity`.
 
     Returns:
     --------
@@ -1176,18 +1163,15 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     """
     Effective connectivity for different frequencies.
 
-    See equation 12 and following in Bos 2015.
+    See Eq. 12 and following in :cite:t:`bos2016`.
 
     Note that the frequencies of the transfer function and the delay
     distribution matrix need to be matching.
 
-    Network results
-    ---------------
-    transfer_function : np.ndarray
-        Transfer_function for given frequencies in hertz/V.
-
     Parameters
     ----------
+    transfer_function : np.ndarray
+        Transfer_function for given frequencies in hertz/V.
     D : np.ndarray
         Unitless delay distribution of shape
         (len(omegas), len(populations), len(populations)).
@@ -1221,7 +1205,11 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
 
 def propagator(network):
     """
-    Propagator for different frequencies.
+    Propagator for different frequencies as in Eq. 16 in :cite:t:`bos2016`.
+
+    Requires computing :func:`nnmt.lif.exp.effective_connectivity` first.
+
+    See :func:`nnmt.lif.exp._propagator` for full documentation.
 
     Parameters
     ----------
@@ -1252,7 +1240,7 @@ def propagator(network):
 
 def _propagator(effective_connectivity):
     """
-    Propagator of network.
+    Propagator for different frequencies as in Eq. 16 in :cite:t:`bos2016`.
 
     Parameters
     ----------
