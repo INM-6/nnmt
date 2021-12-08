@@ -13,6 +13,6 @@ This example reproduces methods used by :cite:t:`senk2020`.
   uses linear stability analysis to predict spatial pattern formation
 
 All Python scripts use the parameter files
-:download:`network_params.yaml <../../examples/mapping_lif_rate_and_spatial_patterns/network_params.yaml>`
+:download:`Senk2020_network_params.yaml <../../examples/mapping_lif_rate_and_spatial_patterns/Senk2020_network_params.yaml>`
 and
-:download:`analysis_params.yaml <../../examples/mapping_lif_rate_and_spatial_patterns/analysis_params.yaml>`.
+:download:`Senk2020_analysis_params.yaml <../../examples/mapping_lif_rate_and_spatial_patterns/Senk2020_analysis_params.yaml>`.

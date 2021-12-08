@@ -5,7 +5,7 @@ Structure of ring network
 This example illustrates the structure of the ring network used by
 :cite:t:`senk2020`.
 Mean-field results of this model are shown in the examples
-:doc:`fit_transfer_function` and :doc:`spatial_patterns`.
+:doc:`mapping_lif_rate` and :doc:`spatial_patterns`.
 
 """
 
@@ -167,8 +167,8 @@ blue = params['colors']['ex_blue']
 red = params['colors']['inh_red']
 
 network = BasicNetwork(
-    network_params='network_params.yaml',
-    analysis_params='analysis_params.yaml')
+    network_params='Senk2020_network_params.yaml',
+    analysis_params='Senk2020_analysis_params.yaml')
 ewidth = network.network_params['width'][0] * \
     params['quantities']['displacement']['scale']
 iwidth = network.network_params['width'][1] * \
@@ -203,7 +203,7 @@ ax.set_title('connection\n probability $p$')
 # Finally, the external network sketch is included and the figure is saved to
 # file.
 
-svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=True))
+svg_mpl = sg.from_mpl(fig, savefig_kw=dict(transparent=False))
 w_svg, h_svg = svg_mpl.get_size()
 svg_mpl.set_size((w_svg + 'pt', h_svg + 'pt'))
 svg_sketch = sg.fromfile(params['sketch_fn']).getroot()

@@ -41,7 +41,8 @@ params = {
     'mean_std_inputs_stability': np.array([10., 10.]) * 1e-3,
 
     # figure width in inch
-    'figwidth_2cols': 180. / 25.4,
+    # (setting the value a bit smaller results in 180 mm width of .eps output)
+    'figwidth_2cols': 7.08, # < 180. / 25.4
 
     # labels and corresponding scaling parameters for plotted quantities
     'quantities': {
@@ -67,16 +68,16 @@ params = {
             'label': 'fit exc. weight\n' + r'$w_\mathrm{E}$',
             'scale': 1.},  # unitless
         'fit_error': {
-            'label': 'fit error\n' + r'$\epsilon$ (%)',
+            'label': 'fit error\n' + r'$\eta$ (%)',
             'scale': 1e2},
         'transfer_function': {
-            'label': r'transfer function $H_\mu$',
+            'label': r'transfer function $N_\mathrm{cn,s}$',
             'scale': 1e-3},
         'transfer_function_amplitude': {
             'label':
-                r'amplitude $|H_\mu|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'},
+                r'amplitude $|N_\mathrm{cn,s}|\quad(\mathrm{s}\cdot\mathrm{mV})^{-1}$'},
         'transfer_function_phase': {
-            'label': r'phase $\angle H\mu\quad(\circ)$', },
+            'label': r'phase $\angle N_\mathrm{cn,s}\quad(\circ)$', },
         'frequencies': {
             'label': r'frequency $\mathrm{Im}[\lambda]/(2\pi)$ (Hz)',
             'scale': 1.}},
@@ -138,8 +139,8 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
 
 
 network = BasicNetwork(
-    network_params='network_params.yaml',
-    analysis_params='analysis_params.yaml')
+    network_params='Senk2020_network_params.yaml',
+    analysis_params='Senk2020_analysis_params.yaml')
 
 ##########################################################################
 # All results will be stored in ``tf_scan_results``.
