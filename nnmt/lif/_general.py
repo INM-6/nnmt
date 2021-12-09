@@ -220,6 +220,8 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Calc mean input for lif neurons in fixed in-degree connectivity network.
 
+    Following Eq. 3.4 in :cite:t:`fourcaud2002`.
+
     Parameters
     ----------
     nu : np.array
@@ -254,6 +256,8 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Calc std of input for lif neurons in fixed in-degree connectivity network.
+
+    Following Eq. 3.4 in :cite:t:`fourcaud2002`.
 
     Parameters
     ----------

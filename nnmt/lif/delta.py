@@ -46,6 +46,8 @@ def firing_rates(network, **kwargs):
     """
     Calculates stationary firing rates for delta shaped PSCs.
 
+    See :func:`nnmt.lif.delta._firing_rates` for full documentation.
+
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
@@ -86,6 +88,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
                   **kwargs):
     """
     Calculation of firing rates for delta PSCs.
+
+    See :func:`nnmt.lif._general._firing_rate_integration` for integration
+    procedure.
+
+    Uses :func:`nnmt.lif.delta._firing_rates_for_given_input`.
 
     Parameters
     ----------
@@ -132,14 +139,18 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         }
 
     return _general._firing_rate_integration(_firing_rates_for_given_input,
-                                            firing_rate_params,
-                                            input_params, **kwargs)
+                                             firing_rate_params,
+                                             input_params, **kwargs)
 
 
 @_check_positive_params
 def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
     """
     Calculates stationary firing rate for delta shaped PSCs.
+
+    Implementation of formula by Siegert for the mean-first-passage time
+    :cite:p:`siegert1951`, found for example in Appendix A, Eq. A7 of
+    :cite:t:`amit1997`.
 
     Parameters
     ----------
@@ -272,6 +283,8 @@ def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
 
+    See :func:`nnmt.lif._general._mean_input` for full documentation.
+
     Parameters
     ----------
     network : Network object
@@ -301,6 +314,8 @@ def mean_input(network):
 def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Calc mean input for lif neurons in fixed in-degree connectivity network.
+
+    See :func:`nnmt.lif._general._mean_input` for full documentation.
 
     Parameters
     ----------
@@ -332,6 +347,8 @@ def std_input(network):
     '''
     Calculates standard deviation of inputs to populations.
 
+    See :func:`nnmt.lif._general._std_input` for full documentation.
+
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
@@ -361,6 +378,8 @@ def std_input(network):
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of standard deviation of neuronal input.
+
+    See :func:`nnmt.lif._general._std_input` for full documentation.
 
     Parameters
     ----------
@@ -392,6 +411,8 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
                                                tau_m, tau_r):
     """
     Derivative of the stationary firing rate with respect to the mean input.
+
+    See Appendix B in :cite:t:`schuecker2014`.
 
     Parameters
     ----------

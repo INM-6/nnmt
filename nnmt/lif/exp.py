@@ -81,7 +81,12 @@ _prefix = 'lif.exp.'
 
 def working_point(network, method='shift', **kwargs):
     """
-    Calculates working point for exp PSCs.
+    Calculates working point (rates, mean, and std input) for exp PSCs.
+
+    Calculates the firing rates using :func:`nnmt.lif.exp.firing_rates`,
+    the mean input using :func:`nnmt.lif.exp.mean_input`,
+    and the standard deviation of the input using
+    :func:`nnmt.lif.exp.std_input`.
 
     Parameters
     ----------
@@ -401,7 +406,7 @@ def mean_input(network):
     '''
     Calc mean inputs to populations as function of firing rates of populations.
 
-    Following :cite:t:`fourcaud2002`.
+    See :func:`nnmt.lif._general._mean_input` for full documentation.
 
     Parameters
     ----------
@@ -453,6 +458,8 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Calc mean input for lif neurons in fixed in-degree connectivity network.
 
+    See :func:`nnmt.lif._general._mean_input` for full documentation.
+
     Parameters
     ----------
     nu : np.array
@@ -483,7 +490,7 @@ def std_input(network):
     '''
     Calculates standard deviation of inputs to populations.
 
-    Following :cite:t:`fourcaud2002`.
+    See :func:`nnmt.lif._general._std_input` for full documentation.
 
     Parameters
     ----------
@@ -514,6 +521,8 @@ def std_input(network):
 def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     Plain calculation of standard deviation of neuronal input.
+
+    See :func:`nnmt.lif._general._std_input` for full documentation.
 
     Parameters
     ----------
@@ -1057,6 +1066,8 @@ def _derivative_of_firing_rates_wrt_input_rate(
     """
     Derivative of the stationary firing rates with respect to input rate.
 
+    See Eq. A.3 in Appendix A of :cite:t:`helias2013`.
+
     Parameters
     ----------
     mu : [float | np.ndarray]
@@ -1214,8 +1225,7 @@ def propagator(network):
     Parameters
     ----------
     network: nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
+        Network with the network parameters and previously calculated results.
 
     Network results
     ---------------
@@ -1388,21 +1398,17 @@ def sensitivity_measure(network, frequency,
                         resorted_eigenvalues_mask='None',
                         eigenvalue_index='None'):
     """
-    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
+    Calculates sensitivity measure as in Eq. 7 in :cite:t:`bos2016`.
 
-    Evaluates the sensitivity measure at a given frequency. By default,
-    the effective connectivity is diagonalized and the eigenmode corresponding
-    to the eigenvalue that is closest to the complex(1, 0) is chosen.
+    Requires the computation of :func:`nnmt.lif.exp.effective_connectivity`
+    first.
 
-    Another eigenmode can be specified by the parameter eigenvalue_index.
-    The order of the eigenvalues can be specified by the
-    resorted_eigenvalues_mask.
+    See :func:`nnmt.lif.exp._sensitivity_measure` for full documentation.
 
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
+        Network with the network parameters and previously calculated results.
     frequency : np.float
         Frequency at which the sensitivity is evaluated in Hz.
     resorted_eigenvalues_mask : np.ndarray
@@ -1412,16 +1418,6 @@ def sensitivity_measure(network, frequency,
     eigenvalue_index : int
         Index specifying the eigenvalue and corresponding eigenmode for which
         the sensitivity measure is evaluated.
-
-    Analysis Parameters
-    -------------------
-    omegas : float or np.ndarray
-        Input frequencies to population in Hz.
-
-    Network results
-    ---------------
-    effective_connectivity : np.ndarray
-        Effective connectivity matrix.
 
     Returns
     -------
@@ -1472,7 +1468,15 @@ def _sensitivity_measure(effective_connectivity, frequency,
                          analysis_frequencies, resorted_eigenvalues_mask,
                          eigenvalue_index):
     """
-    Calculates sensitivity measure as in Eq. 7 in Bos et al. (2015).
+    Calculates sensitivity measure as in Eq. 7 in :cite:t:`bos2016`.
+
+    Evaluates the sensitivity measure at a given frequency. By default,
+    the effective connectivity is diagonalized and the eigenmode corresponding
+    to the eigenvalue that is closest to the complex(1, 0) is chosen.
+
+    Another eigenmode can be specified by the parameter ``eigenvalue_index``.
+    The order of the eigenvalues can be specified by the
+    ``resorted_eigenvalues_mask``.
 
     Parameters
     ----------
@@ -1595,8 +1599,7 @@ def sensitivity_measure_all_eigenmodes(network, margin=1e-5):
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
+        Network with the network parameters and previously calculated results.
     margin : float
         Maximal allowed distance between the eigenvalues of the effective
         connectivity matrix at two subsequent frequencies.
@@ -1638,7 +1641,6 @@ def _sensitivity_measure_all_eigenmodes(effective_connectivity,
     ----------
     effective_connectivity : np.ndarray
         Effective connectivity matrix.
-        Shape : ()
     analysis_frequencies : np.ndarray
         Analysis frequencies in Hz.
     margin : float
@@ -1678,32 +1680,17 @@ def power_spectra(network):
     """
     Calcs vector of power spectra for all populations at given frequencies.
 
-    See: Eq. 18 in Bos et al. (2016)
-    Shape of output: (len(omegas), len(populations))
+    See: Eq. 18 in :cite:t:`bos2016`.
+
+    Requires computation of :func:`nnmt.lif.exp.working_point` and
+    :func:`nnmt.lif.exp.effective_connectivity` first.
+
+    See :func:`nnmt.lif.exp._power_spectra` for full documentation.
 
     Parameters
     ----------
-    network: nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
-
-    Network results
-    ---------------
-    nu : Quantity(np.array, 'hertz')
-        Firing rates of populations in Hz.
-    effective_connectivity : np.ndarray
-        Effective connectivity matrix.
-
-    Network parameters
-    ------------------
-    J : np.ndarray
-        Weight matrix in V.
-    K : np.ndarray
-        Indegree matrix.
-    N : np.ndarray
-        Number of neurons in each population.
-    tau_m : [float | np.narray]
-        Membrane time constant in s.
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results.
 
     Returns
     -------
@@ -1737,8 +1724,7 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
     """
     Calcs vector of power spectra for all populations at given frequencies.
 
-    See: Eq. 18 in Bos et al. (2016)
-    Shape of output: (len(omegas), len(populations))
+    See: Eq. 18 in :cite:t:`bos2016`.
 
     Parameters
     ----------
@@ -1773,18 +1759,13 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
     """
     Calculate external rates needed to get fixed mean and std input.
 
-    Uses least square method to find best fitting solution for external rates
-    such that the mean and standard deviation of the input to the neuronal
-    populations is as close as possible to ``mu_set`` and ``sigma_set``.
-
-    Generalization of equation E1 of :cite:t:`helias2013` and the corrected
-    version in appendix F of :cite:t:`senk2020`.
+    See :func:`nnmt.lif.exp._external_rates_for_fixed_input` for full
+    documentation.
 
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
-        Network with the network parameters and previously calculated results
-        listed in the following.
+        Network with the network parameters and previously calculated results.
     mu_set : [float | np.array]
         Mean neuron activity in V.
     sigma_set : [float | np.array]
@@ -1792,27 +1773,6 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
     method : str
         Method used to calculate the target rates. Options: 'shift', 'taylor'.
         Default is 'shift'.
-
-    Network parameters
-    ------------------
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
-    V_0_rel : [float | np.array]
-        Relative reset potential in V.
-    tau_m : [float | 1d array]
-        Membrane time constant in s.
-    tau_r : [float | 1d array]
-        Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
 
     Returns
     -------
@@ -1848,11 +1808,14 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
                                     J_ext, K_ext,
                                     method='shift'):
     """
-    Calculate additional external excitatory and inhibitory Poisson input
-    rates such that the input fixed by the mean and standard deviation
-    is attained.
-    Correction of equation E1 of :cite:t:`helias2013`. See appendix F of
-    :cite:t:`senk2020`.
+    Calculate external rates needed to get fixed mean and std input.
+
+    Uses least square method to find best fitting solution for external rates
+    such that the mean and standard deviation of the input to the neuronal
+    populations is as close as possible to ``mu_set`` and ``sigma_set``.
+
+    Generalization of equation E1 of :cite:t:`helias2013` and the corrected
+    version in appendix F of :cite:t:`senk2020`.
 
     Parameters
     ----------
