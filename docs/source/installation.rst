@@ -1,10 +1,16 @@
 Installation
 ============
 
-If you cloned the `NNMT repository <https://github.com/INM-6/nnmt>`_, you can
-install NNMT by changing your working directory to your local copy of the
-repository and running the command:
+You can install NNMT using ``pip``
 
+.. code:: bash
+
+    pip install nnmt
+
+To get the very latest version, you can clone the
+`NNMT repository <https://github.com/INM-6/nnmt>`_, and install NNMT by
+changing your working directory to your local copy of the repository and
+running the command:
 
 .. code:: bash
 
