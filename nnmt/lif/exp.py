@@ -1535,13 +1535,13 @@ def _sensitivity_measure(effective_connectivity, frequency,
             and resorted_eigenvalues_mask == 'None'):
         resorted_eigenvalues_mask = 'None'
 
-    if resorted_eigenvalues_mask is not 'None':
+    if resorted_eigenvalues_mask != 'None':
         # apply the resorting
         e = e[resorted_eigenvalues_mask[frequency_index, :]]
         U_l = U_l[:, resorted_eigenvalues_mask[frequency_index, :]]
         U_r = U_r[:, resorted_eigenvalues_mask[frequency_index, :]]
 
-    if eigenvalue_index is 'None':
+    if eigenvalue_index == 'None':
         # find eigenvalue closest to one
         eigenvalue_index = np.argmin(np.abs(e - 1))
 
