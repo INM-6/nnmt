@@ -6,6 +6,7 @@ from ...checks import (
 
 from numpy.testing import (
     assert_array_equal,
+    assert_allclose,
     )
 
 import nnmt.lif._general as general
@@ -20,8 +21,7 @@ class Test_mean_input:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        print(output)
-        assert_array_equal(self.func(**params), output)
+        assert_allclose(self.func(**params), output)
 
 
 class Test_std_input:
@@ -32,9 +32,7 @@ class Test_std_input:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        print(output)
-
-        assert_array_equal(self.func(**params), output)
+        assert_allclose(self.func(**params), output)
 
 
 class Test_input_function_wrapper:

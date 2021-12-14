@@ -164,20 +164,20 @@ def check_quantity_dicts_are_equal(dict1, dict2):
             else:
                 assert_array_equal(dict1[key], dict2[key])
                 assert_units_equal(dict1[key], dict2[key])
-                
-                
+
+
 def check_quantity_dicts_are_allclose(dict1, dict2, rtol=1e-7):
     keys = sorted(dict1.keys())
     for key in keys:
         assert key in dict2
-        try:
-            assert dict1[key] == dict2[key]
-        except ValueError:
-            if isinstance(dict1[key], dict):
-                check_quantity_dicts_are_allclose(dict1[key], dict2[key], rtol)
-            else:
+        if isinstance(dict1[key], dict):
+            check_quantity_dicts_are_allclose(dict1[key], dict2[key], rtol)
+        else:
+            try:
                 assert_allclose(dict1[key], dict2[key], rtol=rtol)
                 assert_units_equal(dict1[key], dict2[key])
+            except TypeError:
+                assert dict1[key] == dict2[key]
 
 
 def check_quantity_dicts_are_almost_equal(dict1, dict2, rtol=1e-14):

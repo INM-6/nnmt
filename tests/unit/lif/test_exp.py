@@ -115,7 +115,6 @@ class Test_firing_rate_shift:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        print(output)
         assert_allclose(self.func(**params), output)
 
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
@@ -176,7 +175,6 @@ class Test_firing_rate_taylor:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        print(output)
         assert_allclose(self.func(**params), output)
 
     def test_get_same_results_vectorized(self, unit_fixtures_fully_vectorized):
@@ -628,10 +626,10 @@ class Test_sensitivity_measure:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         output_func = self.func(**params)
-        
+
         check_quantity_dicts_are_allclose(output, output_func)
-    
-    
+
+
 class Test_sensitivity_measure_all_eigenmodes:
 
     func = staticmethod(exp._sensitivity_measure_all_eigenmodes)
@@ -641,10 +639,10 @@ class Test_sensitivity_measure_all_eigenmodes:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         output_func = self.func(**params)
-        
-        check_quantity_dicts_are_allclose(output, output_func)    
-        
-        
+
+        check_quantity_dicts_are_allclose(output, output_func)
+
+
 class Test_match_eigenvalues_across_frequencies:
 
     func = staticmethod(exp._match_eigenvalues_across_frequencies)
@@ -653,7 +651,7 @@ class Test_match_eigenvalues_across_frequencies:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        
+
         assert_allclose(self.func(**params), output)
 
 
@@ -694,5 +692,4 @@ class Test_external_rates_for_fixed_input:
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
-        print(output)
         assert_allclose(self.func(**params), output)
