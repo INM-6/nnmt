@@ -88,7 +88,7 @@ Design principles
 The best description of the ideas behind the design of the toolbox can be found
 in our paper:
 
-`NNMT: A mean-field toolbox for spiking neuronal network model analysis <add missing link>`_.
+`A mean-field toolbox for spiking neuronal network model analysis <https://www.biorxiv.org/content/10.1101/2021.12.14.472584v1>`_
 
 Here we collect some principles that should be followed when writing new code
 for the toolbox:

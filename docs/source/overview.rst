@@ -4,6 +4,11 @@
 Overview
 ========
 
+A detailed description of the ideas behind the design of the toolbox can be
+found in our paper:
+
+`A mean-field toolbox for spiking neuronal network model analysis <https://www.biorxiv.org/content/10.1101/2021.12.14.472584v1>`_
+
 NNMT can be used in two different ways: the basic workflow or the model
 workflow.
 
