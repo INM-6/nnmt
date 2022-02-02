@@ -1,6 +1,3 @@
----
-label: microcircuit
-
 populations:
   - 23E
   - 23I
@@ -206,5 +203,3 @@ w_ext:
 tau_m_ext:
   val: 10.0
   unit: ms
-
-...
