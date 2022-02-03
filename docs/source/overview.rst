@@ -54,9 +54,10 @@ Models basically are containers for network parameters, analysis parameters,
 and results, with methods for changing parameters, saving, and loading results.
 On instantiation they read in network and analysis parameters from dictionaries
 or ``yaml`` files, calculate further depenend parameters from those, and
-convert all parameters to SI units. *Network parameters* are all parameters
-that describe properties of the network itself, like for example the number of
-neurons in each population or the membrane time constants. *Analysis*
+convert all parameters to SI units using the functionality of
+`Pint <https://pint.readthedocs.io/en/stable/>`_. *Network parameters* are all
+parameters that describe properties of the network itself, like for example the
+number of neurons in each population or the membrane time constants. *Analysis*
 *parameters* are all parameters that do not describe properties of the network
 but need to be defined in order to calculate quantities of interest. For
 example, one needs to define the frequencies for which to calculate a frequency
