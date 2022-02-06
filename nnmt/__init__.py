@@ -6,5 +6,6 @@ from . import input_output
 from . import network_properties
 from . import models
 from . import lif
+from . import binary
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
