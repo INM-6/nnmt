@@ -8,6 +8,9 @@ Network Functions
     :toctree: _toctree/lif/
 
     firing_rates
+    mean_input
+    std_input
+    working_point
     balanced_threshold
 
 Parameter Functions
@@ -31,61 +34,6 @@ from .utils import _cache
 
 
 _prefix = 'binary.'
-
-
-def _mean_input(m, J, K, J_ext=0, K_ext=0, m_ext=0):
-    """
-    Calculates the mean inputs in a network of binary neurons.
-
-    Parameters
-    ----------
-    m : array
-        Mean activity of each population.
-    J : array
-        Weight matrix.
-    K : array
-        Connectivity matrix.
-    J_ext : array
-        Weight matrix of external inputs.
-    K_ext : array
-        Connectivity matrix of external inputs.
-    m_ext : float
-        External input.
-
-    Returns
-    -------
-    array
-        Mean input of each population.
-    """
-    return np.dot(K * J, m) + np.dot(K_ext * J_ext, m_ext)
-
-
-def _std_input(m, J, K, J_ext=0, K_ext=0, m_ext=0):
-    """
-    Calcs the standard deviation of the inputs in a network of binary neurons.
-
-    Parameters
-    ----------
-    m : array
-        Mean activity of each population.
-    J : array
-        Weight matrix.
-    K : array
-        Connectivity matrix.
-    J_ext : array
-        Weight matrix of external inputs.
-    K_ext : array
-        Connectivity matrix of external inputs.
-    m_ext : float
-        External input.
-
-    Returns
-    -------
-    array
-        Standard deviations of input.
-    """
-    return np.sqrt(np.dot(K * J**2, m * (1 - m))
-                   + np.dot(K_ext * J_ext**2, m_ext * (1 - m_ext)))
 
 
 def _firing_rates_for_given_input(mu, sigma, theta):
@@ -187,6 +135,163 @@ def _firing_rates(J, K, theta, **kwargs):
                                              input_funcs,
                                              input_params,
                                              **kwargs)
+
+
+def mean_input(network):
+    '''
+    Calc mean inputs to populations as function of firing rates of populations.
+
+    See :func:`nnmt.binary._mean_input` for full documentation.
+
+    Parameters
+    ----------
+    network : Network object
+        Model with the network parameters and previously calculated results
+        listed in :func:`nnmt.binary._mean_input`.
+
+    Returns
+    -------
+    array
+        Array of mean inputs to each population.
+    '''
+    required_params = ['J', 'K']
+    optional_params = ['J_ext', 'K_ext', 'm_ext']
+
+    try:
+        params = {key: network.network_params[key] for key in required_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    try:
+        params = {key: network.network_params[key] for key in optional_params}
+    except KeyError as param:
+        pass
+
+    try:
+        params['m'] = network.results[_prefix + 'firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+    return _cache(network, _mean_input, params, _prefix + 'mean_input')
+
+
+def _mean_input(m, J, K, J_ext=0, K_ext=0, m_ext=0):
+    """
+    Calculates the mean inputs in a network of binary neurons.
+
+    Parameters
+    ----------
+    m : array
+        Mean activity of each population.
+    J : array
+        Weight matrix.
+    K : array
+        Connectivity matrix.
+    J_ext : array
+        Weight matrix of external inputs.
+    K_ext : array
+        Connectivity matrix of external inputs.
+    m_ext : float
+        External input.
+
+    Returns
+    -------
+    array
+        Mean input of each population.
+    """
+    return np.dot(K * J, m) + np.dot(K_ext * J_ext, m_ext)
+
+
+def std_input(network):
+    '''
+    Calcs the standard deviation of the inputs in a network of binary neurons.
+
+    See :func:`nnmt.binary._std_input` for full documentation.
+
+    Parameters
+    ----------
+    network : Network object
+        Model with the network parameters and previously calculated results
+        listed in :func:`nnmt.binary._std_input`.
+
+    Returns
+    -------
+    array
+        Array of standard deviations of inputs to each population.
+    '''
+    required_params = ['J', 'K']
+    optional_params = ['J_ext', 'K_ext', 'm_ext']
+
+    try:
+        params = {key: network.network_params[key] for key in required_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    try:
+        params = {key: network.network_params[key] for key in optional_params}
+    except KeyError as param:
+        pass
+
+    try:
+        params['m'] = network.results[_prefix + 'firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+    return _cache(network, _std_input, params, _prefix + 'std_input')
+
+
+def _std_input(m, J, K, J_ext=0, K_ext=0, m_ext=0):
+    """
+    Calcs the standard deviation of the inputs in a network of binary neurons.
+
+    Parameters
+    ----------
+    m : array
+        Mean activity of each population.
+    J : array
+        Weight matrix.
+    K : array
+        Connectivity matrix.
+    J_ext : array
+        Weight matrix of external inputs.
+    K_ext : array
+        Connectivity matrix of external inputs.
+    m_ext : float
+        External input.
+
+    Returns
+    -------
+    array
+        Standard deviations of input.
+    """
+    return np.sqrt(np.dot(K * J**2, m * (1 - m))
+                   + np.dot(K_ext * J_ext**2, m_ext * (1 - m_ext)))
+
+
+def working_point(network, **kwargs):
+    """
+    Calculates working point (rates, mean, and std input) for binary network.
+
+    Calculates the firing rates using :func:`nnmt.binary.firing_rates`,
+    the mean input using :func:`nnmt.binary.mean_input`,
+    and the standard deviation of the input using
+    :func:`nnmt.binary.std_input`.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters listed in
+        :func:`nnmt.binary._firing_rates`.
+    kwargs
+        For additional kwargs regarding the fixpoint iteration procedure see
+        :func:`nnmt._solvers._firing_rate_integration`.
+
+    Returns
+    -------
+    dict
+        Dictionary containing firing rates, mean input and std input.
+    """
+    return {'firing_rates': firing_rates(network, **kwargs),
+            'mean_input': mean_input(network),
+            'std_input': std_input(network)}
 
 
 def balanced_threshold(network, m_exp):
