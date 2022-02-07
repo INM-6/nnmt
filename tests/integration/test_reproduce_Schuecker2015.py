@@ -58,8 +58,8 @@ def frequencies(network_params):
         network_params['f_end_exponent'],
         network_params['n_freqs'])
     return frequencies
-    
-    
+
+
 @pytest.fixture(scope='class')
 def omegas(frequencies):
     omegas = 2 * np.pi * frequencies
@@ -78,29 +78,29 @@ def pre_results(si_network_params, omegas):
     for i, index in enumerate(indices):
         # Stationary firing rates for delta shaped PSCs.
         nu_0 = nnmt.lif.delta._firing_rates_for_given_input(
-            si_network_params['V_reset'],
-            si_network_params['theta'],
             si_network_params[f'mean_input_{index}'],
             si_network_params[f'sigma_{index}'],
+            si_network_params['V_reset'],
+            si_network_params['theta'],
             si_network_params['tau_m'],
             si_network_params['tau_r'])
 
         # Stationary firing rates for filtered synapses (via shift)
         nu0_fb = nnmt.lif.exp._firing_rate_shift(
-            si_network_params['V_reset'],
-            si_network_params['theta'],
             si_network_params[f'mean_input_{index}'],
             si_network_params[f'sigma_{index}'],
+            si_network_params['V_reset'],
+            si_network_params['theta'],
             si_network_params['tau_m'],
             si_network_params['tau_r'],
             si_network_params['tau_s'])
 
         # Stationary firing rates for exp PSCs. (via Taylor)
         nu0_fb433 = nnmt.lif.exp._firing_rate_taylor(
-            si_network_params['V_reset'],
-            si_network_params['theta'],
             si_network_params[f'mean_input_{index}'],
             si_network_params[f'sigma_{index}'],
+            si_network_params['V_reset'],
+            si_network_params['theta'],
             si_network_params['tau_m'],
             si_network_params['tau_r'],
             si_network_params['tau_s'])
@@ -108,14 +108,14 @@ def pre_results(si_network_params, omegas):
         # colored noise zero-frequency limit of transfer function
         transfer_function_zero_freq = (
             nnmt.lif.exp._derivative_of_firing_rates_wrt_mean_input(
-                si_network_params['V_reset'],
-                si_network_params['theta'],
                 si_network_params[f'mean_input_{index}'],
                 si_network_params[f'sigma_{index}'],
+                si_network_params['V_reset'],
+                si_network_params['theta'],
                 si_network_params['tau_m'],
                 si_network_params['tau_r'],
                 si_network_params['tau_s'])) / 1000
-        
+
         transfer_function = nnmt.lif.exp._transfer_function_shift(
             si_network_params[f'mean_input_{index}'],
             si_network_params[f'sigma_{index}'],
@@ -126,13 +126,13 @@ def pre_results(si_network_params, omegas):
             si_network_params['V_reset'],
             omegas,
             synaptic_filter=False) / 1000
-        
+
         # calculate properties plotted in Schuecker 2015
         absolute_value = np.abs(transfer_function)
         phase = (np.angle(transfer_function)
                  / 2 / np.pi * 360)
         zero_freq = transfer_function_zero_freq
-        
+
         # collect all results
         absolute_values.append(absolute_value)
         phases.append(phase)
@@ -140,7 +140,7 @@ def pre_results(si_network_params, omegas):
         nu_0s.append(nu_0)
         nu0_fbs.append(nu0_fb)
         nu0_fb433s.append(nu0_fb433)
-        
+
     pre_results = dict(
         absolute_values=absolute_values,
         phases=phases,
@@ -149,7 +149,7 @@ def pre_results(si_network_params, omegas):
         nu0_fbs=nu0_fbs,
         nu0_fb433s=nu0_fb433s)
     return pre_results
-    
+
 
 @pytest.fixture
 def test_result(pre_results, network_params):
@@ -175,7 +175,7 @@ def test_result(pre_results, network_params):
 
 
 class Test_lif_meanfield_toolbox_vs_Schuecker_2015:
-    
+
     @pytest.mark.parametrize('index', indices)
     def test_frequencies_used_for_comparison_are_equal(self, index,
                                                        network_params,

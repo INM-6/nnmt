@@ -35,6 +35,7 @@ from scipy.special import (
 from scipy.integrate import quad as _quad
 
 from . import _general
+from .. import _solvers
 from ..utils import (_cache,
                      _check_positive_params)
 
@@ -55,7 +56,7 @@ def firing_rates(network, **kwargs):
         :func:`nnmt.lif.delta._firing_rates`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._general._firing_rate_integration`.
+        :func:`nnmt._solvers._firing_rate_integration`.
 
     Returns
     -------
@@ -89,7 +90,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
     """
     Calculation of firing rates for delta PSCs.
 
-    See :func:`nnmt.lif._general._firing_rate_integration` for integration
+    See :func:`nnmt._solvers._firing_rate_integration` for integration
     procedure.
 
     Uses :func:`nnmt.lif.delta._firing_rates_for_given_input`.
@@ -116,7 +117,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         Firing rates of external populations in Hz.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._general._firing_rate_integration`.
+        :func:`nnmt._solvers._firing_rate_integration`.
 
     Returns
     -------
@@ -138,13 +139,16 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         'nu_ext': nu_ext,
         }
 
-    return _general._firing_rate_integration(_firing_rates_for_given_input,
+    input_funcs = [_general._mean_input, _general._std_input]
+
+    return _solvers._firing_rate_integration(_firing_rates_for_given_input,
                                              firing_rate_params,
+                                             input_funcs,
                                              input_params, **kwargs)
 
 
 @_check_positive_params
-def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
+def _firing_rates_for_given_input(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r):
     """
     Calculates stationary firing rate for delta shaped PSCs.
 
@@ -154,14 +158,14 @@ def _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
 
     Parameters
     ----------
-    V_0_rel : [float | 1d array]
-        Relative reset potential in V.
-    V_th_rel : [float | 1d array]
-        Relative threshold potential in V.
     mu : [float | 1d array]
         Mean input to population of neurons.
     sigma : [float | 1d array]
         Standard deviation of input to population of neurons.
+    V_0_rel : [float | 1d array]
+        Relative reset potential in V.
+    V_th_rel : [float | 1d array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant in s.
     tau_r : [float | 1d array]
@@ -340,7 +344,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of mean inputs to each population in V.
     """
     return _general._mean_input(nu, J, K, tau_m,
-                               J_ext, K_ext, nu_ext)
+                                J_ext, K_ext, nu_ext)
 
 
 def std_input(network):
@@ -404,10 +408,10 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of mean inputs to each population in V.
     """
     return _general._std_input(nu, J, K, tau_m,
-                              J_ext, K_ext, nu_ext)
+                               J_ext, K_ext, nu_ext)
 
 
-def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
+def _derivative_of_firing_rates_wrt_mean_input(mu, sigma, V_0_rel, V_th_rel,
                                                tau_m, tau_r):
     """
     Derivative of the stationary firing rate with respect to the mean input.
@@ -416,14 +420,14 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
 
     Parameters
     ----------
-    V_0_rel : float
-        Relative reset potential in V.
-    V_th_rel : float
-        Relative threshold potential in V.
     mu : float
         Mean neuron activity in V.
     sigma : float
         Standard deviation of neuron activity in V.
+    V_0_rel : float
+        Relative reset potential in V.
+    V_th_rel : float
+        Relative threshold potential in V.
     tau_m : float
         Membrane time constant in s.
     tau_r : float
@@ -439,7 +443,7 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
 
     y_th = (V_th_rel - mu) / sigma
     y_r = (V_0_rel - mu) / sigma
-    nu0 = _firing_rates_for_given_input(V_0_rel, V_th_rel, mu, sigma, tau_m,
+    nu0 = _firing_rates_for_given_input(mu, sigma, V_0_rel, V_th_rel, tau_m,
                                         tau_r)
     return (np.sqrt(np.pi) * tau_m * np.power(nu0, 2) / sigma
             * (np.exp(y_th**2) * (1 + _erf(y_th)) - np.exp(y_r**2)

@@ -24,7 +24,7 @@ class Test_Network_functions_give_correct_results:
 
     def test_firing_rates_shift_ODE(self, network, std_results):
         firing_rates = nnmt.lif.exp.firing_rates(network, method='shift',
-                                                fixpoint_method='ODE')
+                                                 fixpoint_method='ODE')
         print(firing_rates)
         assert_allclose(
             firing_rates, std_results[self.prefix + 'firing_rates'])
