@@ -1,8 +1,28 @@
-# ToDo
-# - transfer code to NNMT:
-# - generalize network model
-# - abstract solver
+"""
+Collection of functions for binarys neurons.
 
+Network Functions
+*****************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+
+    firing_rates
+    balanced_threshold
+
+Parameter Functions
+*******************
+
+.. autosummary::
+    :toctree: _toctree/lif/
+
+    _firing_rates
+    _firing_rates_for_given_input
+    _mean_input
+    _std_input
+    _balanced_threshold
+
+"""
 import numpy as np
 from scipy.special import erfc as _erfc
 
@@ -13,82 +33,83 @@ from .utils import _cache
 _prefix = 'binary.'
 
 
-def _mean_input(m, NE, NI, K, w, g):
+def _mean_input(m, J, K, J_ext=0, K_ext=0, m_ext=0):
     """
-    Calculates the mean input in a network of binary neurons.
+    Calculates the mean inputs in a network of binary neurons.
 
     Parameters
     ----------
-    m : float
-        Mean activity / magnetization.
-    NE : int
-        Number of excitatory neurons.
-    NI : int
-        Number of inhibitory neurons.
-    K : int
-        Number of inputs.
-    w : float
-        Synaptic weight.
-    g : float
-        Ratio of inhibitory to excitatory weights.
+    m : array
+        Mean activity of each population.
+    J : array
+        Weight matrix.
+    K : array
+        Connectivity matrix.
+    J_ext : array
+        Weight matrix of external inputs.
+    K_ext : array
+        Connectivity matrix of external inputs.
+    m_ext : float
+        External input.
 
     Returns
     -------
-    float
-        Mean input.
+    array
+        Mean input of each population.
     """
-    return K * w * (1 - g * NI/NE) * m
+    return np.dot(K * J, m) + np.dot(K_ext * J_ext, m_ext)
 
 
-def _std_input(m, NE, NI, K, w, g):
+def _std_input(m, J, K, J_ext=0, K_ext=0, m_ext=0):
     """
-    Calcs the standard deviation of the input in a network of binary neurons.
+    Calcs the standard deviation of the inputs in a network of binary neurons.
 
     Parameters
     ----------
-    m : float
-        Mean activity / magnetization.
-    NE : int
-        Number of excitatory neurons.
-    NI : int
-        Number of inhibitory neurons.
-    K : int
-        Number of inputs.
-    w : float
-        Synaptic weight.
-    g : float
-        Ratio of inhibitory to excitatory weights.
+    m : array
+        Mean activity of each population.
+    J : array
+        Weight matrix.
+    K : array
+        Connectivity matrix.
+    J_ext : array
+        Weight matrix of external inputs.
+    K_ext : array
+        Connectivity matrix of external inputs.
+    m_ext : float
+        External input.
 
     Returns
     -------
-    float
-        Mean input.
+    array
+        Standard deviations of input.
     """
-    return np.sqrt(K * w**2 * (1 + g**2 * NI/NE) * m * (1 - m))
+    return np.sqrt(np.dot(K * J**2, m * (1 - m))
+                   + np.dot(K_ext * J_ext**2, m_ext * (1 - m_ext)))
 
 
-def _firing_rate_for_given_input(mu, sigma, theta):
+def _firing_rates_for_given_input(mu, sigma, theta):
     """
-    Calcs the firing rate of binary neurons for given input statistics.
+    Calcs the firing rates of binary neurons for given input statistics.
 
     Parameters
     ----------
-    mu : float
-        Mean input.
-    sigma : float
-        Standard deviation of input.
-    theta : float
-        Firing threshold.
+    mu : array
+        Mean inputs for each population.
+    sigma : array
+        Standard deviation of inputs of each population.
+    theta : [array | float]
+        Firing thresholds for each population.
 
     Returns
     -------
-    float
-        Mean firing rate.
+    array
+        Mean firing rates for each population.
     """
     return 0.5 * _erfc(-(mu - theta) / (np.sqrt(2) * sigma))
 
 
-def firing_rate(network, **kwargs):
+def firing_rates(network, **kwargs):
     """
     Calculates stationary firing rates for a network of binary neurons.
 
@@ -105,43 +126,60 @@ def firing_rate(network, **kwargs):
 
     Returns
     -------
-    float
-        Mean firing rate of binary neurons.
+    array
+        Mean firing rates for each population.
     """
-    list_of_params = ['NE', 'NI', 'K', 'w', 'g', 'theta']
+    required_params = ['J', 'K', 'theta']
+    optional_params = ['J_ext', 'K_ext', 'm_ext']
 
     try:
-        params = {key: network.network_params[key] for key in list_of_params}
+        params = {key: network.network_params[key] for key in required_params}
     except KeyError as param:
         raise RuntimeError(
             f"You are missing {param} for calculating the firing rate!\n"
             "Have a look into the documentation for more details on 'binary' "
             "parameters.")
 
+    try:
+        params = {key: network.network_params[key] for key in optional_params}
+    except KeyError as param:
+        pass
+
     params.update(kwargs)
 
     return _cache(network, _firing_rate, params, _prefix + 'firing_rates')
 
 
-def _firing_rate(NE, NI, K, w, g, theta, **kwargs):
+def _firing_rates(J, K, theta, **kwargs):
     """
-    Calculation of firing rates for a network of binary neurons.
+    Calcs firing rates for each population in a network of binary neurons.
 
     See :func:`nnmt._solvers._firing_rate_integration` for integration
     procedure.
 
-    Uses :func:`nnmt.binary._firing_rate_for_given_input`.
+    Uses :func:`nnmt.binary._firing_rates_for_given_input`.
+
+    Parameters
+    ----------
+    J : array
+        Weight matrix.
+    K : array
+        Connectivity matrix.
+    theta : [array | float]
+        Firing threshold.
+
+    Returns
+    -------
+    array
+        Mean firing rates for each population.
     """
     firing_rate_params = {
         'theta': theta
     }
     input_funcs = [_mean_input, _std_input]
     input_params = {
-        'NE': NE,
-        'NI': NI,
+        'J': J,
         'K': K,
-        'w': w,
-        'g': g,
     }
 
     return _solvers._firing_rate_integration(_firing_rate_for_given_input,
@@ -149,3 +187,59 @@ def _firing_rate(NE, NI, K, w, g, theta, **kwargs):
                                              input_funcs,
                                              input_params,
                                              **kwargs)
+
+
+def balanced_threshold(network, m_exp):
+    """
+    Calculate threshold equal to input given expected mean activity (balance).
+
+    See :func:`nnmt.binary._balanced_threshold` for full documentation.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters listed in the docstring of
+        :func:`nnmt.binary._balanced_threshold`.
+    m_exp : array
+        Expected mean activity for each population.
+
+    Returns
+    -------
+    array
+        Balanced threshold for each population.
+    """
+    list_of_params = ['J', 'K']
+
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(
+            f"You are missing {param} for calculating the balanced "
+            "threshold!\nHave a look into the documentation for more details "
+            "on 'binary' parameters.")
+
+    params['m_exp'] = m_exp
+
+    return _cache(network, _balanced_threshold, params,
+                  _prefix + 'balanced_threshold')
+
+
+def _balanced_threshold(m_exp, J, K):
+    """
+    Calculate threshold equal to input given expected mean activity (balance).
+
+    Parameters
+    ----------
+    m_exp : array
+        Expected mean activity for each population.
+    J : array
+        Weight matrix.
+    K : array
+        Connectivity matrix.
+
+    Returns
+    -------
+    array
+        Balanced threshold for each population.
+    """
+    return np.dot(K * J, m_exp)
