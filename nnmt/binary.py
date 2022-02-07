@@ -147,7 +147,7 @@ def firing_rates(network, **kwargs):
 
     params.update(kwargs)
 
-    return _cache(network, _firing_rate, params, _prefix + 'firing_rates')
+    return _cache(network, _firing_rates, params, _prefix + 'firing_rates')
 
 
 def _firing_rates(J, K, theta, **kwargs):
@@ -182,7 +182,7 @@ def _firing_rates(J, K, theta, **kwargs):
         'K': K,
     }
 
-    return _solvers._firing_rate_integration(_firing_rate_for_given_input,
+    return _solvers._firing_rate_integration(_firing_rates_for_given_input,
                                              firing_rate_params,
                                              input_funcs,
                                              input_params,
