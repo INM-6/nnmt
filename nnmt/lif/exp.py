@@ -668,7 +668,7 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     """
     Calcs value of transfer func for one population at given frequency omega.
 
-    Calculates transfer function according to :math:`\tilde{n}` in
+    Calculates transfer function according to :math:`\\tilde{n}` in
     :cite:t:`schuecker2015`. The expression is to first order equivalent to
     :func:`nnmt.lif.exp._transfer_function_taylor`. Since the underlying theory
     is correct to first order, the two expressions are exchangeable.
