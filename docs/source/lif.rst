@@ -64,3 +64,64 @@ given by
     = -I_\mathrm{syn}(t)
     + \sum_{i=1}^{N_\mathrm{s}} J_i \sum_k \delta(t-t_i^k) \tau_\mathrm{m} \quad .
 
+*********
+Variables
+*********
+
+Here you find how variables of LIF neurons are named in NNMT:
+
+.. list-table::
+   :widths: 50 25 25
+   :header-rows: 1
+
+   * - Quantity
+     - Symbol
+     - Variable name
+   * - Synaptic delay matrix
+     - :math:`\boldsymbol{D}`
+     - ``D``
+   * - Synaptic weight matrix
+     - :math:`\boldsymbol{J}`
+     - ``J``
+   * - External synaptic weight matrix
+     - :math:`\boldsymbol{J}_\mathrm{ext}`
+     - ``J_ext``
+   * - Indegree matrix
+     - :math:`\boldsymbol{K}`
+     - ``K``
+   * - External indegree matrix
+     - :math:`\boldsymbol{K}_\mathrm{ext}`
+     - ``K_ext``
+   * - Number of neurons
+     - :math:`\boldsymbol{N}`
+     - ``N``
+   * - Reset voltage
+     - :math:`V_0`
+     - ``V_0``
+   * - Threshold voltage
+     - :math:`V_\Theta`
+     - ``V_th``
+   * - Mean of synaptic input
+     - :math:`\boldsymbol{\mu}`
+     - ``mu``
+   * - Population rates
+     - :math:`\boldsymbol{\nu}`
+     - ``nu``
+   * - External population rates
+     - :math:`\boldsymbol{\nu}_\mathrm{ext}`
+     - ``nu_ext``
+   * - Angular frequencies
+     - :math:`\omega`
+     - ``omegas``
+   * - Standard deviation of synaptic input
+     - :math:`\boldsymbol{\sigma}`
+     - ``sigma``
+   * - Membrane time constant
+     - :math:`\tau_\mathrm{m}`
+     - ``tau_m``
+   * - Refractory time
+     - :math:`\tau_\mathrm{r}`
+     - ``tau_r``
+   * - Synaptic time constant
+     - :math:`\tau_\mathrm{s}`
+     - ``tau_s``
