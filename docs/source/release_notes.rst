@@ -12,6 +12,8 @@ NNMT 1.0.1
 dictionary items can change unwantedly if netork parameters are changed.
 - Fix typos in docstrings.
 - Add approximations and assumptions to docstrings.
+- Add explanation of approximations to docs.
+- Add table of LIF parameters and NNMT variables to docs.
 
 **********
 NNMT 1.0.0
