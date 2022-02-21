@@ -23,13 +23,21 @@ These examples reproduce results by :cite:t:`bos2016`.
   :width: 400
   :alt: Eigenvalue Trajectories (Fig. 4 in :cite:t:`bos2016`)
 
-- :doc:`sensitivity_measure.py <auto_examples/bos2016/sensitivity_measure>`:
+- :doc:`sensitivity_measure_high_gamma.py <auto_examples/bos2016/sensitivity_measure_high_gamma>`:
   computes the sensitivity measure for each eigenmode to reveal the anatomical origin
   of peaks in the power spectra (Fig. 6 in :cite:t:`bos2016`)
 
 .. image:: ../../examples/bos2016/figures/sensitivity_measure_high_gamma_Bos2016.png
   :width: 400
   :alt: Sensitivity Measure - High-$\gamma$ frequencies (Fig. 6 in :cite:t:`bos2016`)
+
+- :doc:`sensitivity_measure_low_gamma.py <auto_examples/bos2016/sensitivity_measure_low_gamma>`:
+  computes the sensitivity measure and changes connectivity to reduce peak 
+  in power spectra accordingly (parts of Fig. 5 and Fig .8 in :cite:t:`bos2016`)
+
+.. image:: ../../examples/bos2016/figures/sensitivity_measure_low_gamma_Bos2016.png
+  :width: 400
+  :alt: Sensitivity Measure - Low-$\gamma$ frequencies (parts of Fig. 5 and Fig.8 in :cite:t:`bos2016`)
 
 - :doc:`power_spectra_of_subcircuits.py <auto_examples/bos2016/power_spectra_of_subcircuits>`:
   confirms the results of the sensitivity measure for the low-$\gamma$ oscillations by
