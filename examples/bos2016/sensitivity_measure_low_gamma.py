@@ -147,7 +147,7 @@ for k, v in sensitivity_dict.items():
 # %%
 # two column figure, 180 mm wide
 width = 180. / 25.4 
-height = 80. / 25.4
+height = 60. / 25.4
 
 fig = plt.figure(figsize=(width, height),
                  constrained_layout=True)
@@ -178,7 +178,7 @@ gs = gridspec.GridSpecFromSubplotSpec(1,3,
 
 ev = '5'
 ax = fig.add_subplot(gs[0])
-label_prms = dict(x=-0.3, y=1.2, fontsize=10, fontweight='bold',
+label_prms = dict(x=-0.3, y=1.27, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 
 ax.text(s='(A)', transform=ax.transAxes, **label_prms)
@@ -258,43 +258,27 @@ colorbar(heatmap, cax=colorbar_ax)
 
 
 ax = fig.add_subplot(grid_specification[1])
-label_prms = dict(x=-0.2, y=1.0, fontsize=10, fontweight='bold',
+label_prms = dict(x=-0.2, y=1.2, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 ax.text(s='(B)', transform=ax.transAxes, **label_prms)
 j = 3
 ax.plot(microcircuit.analysis_params['omegas']/(2*np.pi),
-            power_spectra[:, j],
-            color='k', zorder=2,
-            label=str(
-                r'$ K_{\mathrm{4I}\rightarrow\mathrm{4I}}$ = ' +
-                f"{int(np.round(microcircuit.network_params['K'][3][3],0))}" +
-                r'$, K_{\mathrm{ext}\rightarrow\mathrm{4I}}$ = ' +
-                f"{np.round(microcircuit.network_params['K_ext'][3],0)}"
-                )
-            )
+        power_spectra[:, j],
+        color='#4055C8', zorder=2,
+        label='original'
+        )
                 
-
 ax.plot(microcircuit_5_percent.analysis_params['omegas']/(2*np.pi),
-            power_spectra_5_percent[:, j],
-            color='k', alpha=0.5, zorder=2, ls='dashed',
-            label=str(
-                r'$ K_{\mathrm{4I}\rightarrow\mathrm{4I}}$ = ' +
-                f"{int(np.round(microcircuit_5_percent.network_params['K'][3][3],0))}" +
-                r'$, K_{\mathrm{ext}\rightarrow\mathrm{4I}}$ = ' +
-                f"{np.round(microcircuit_5_percent.network_params['K_ext'][3],0)}"
-                )
-            )
+        power_spectra_5_percent[:, j],
+        color='#6072D5', zorder=2, ls='dashed',
+        label='5% increase'
+        )
 
 ax.plot(microcircuit_10_percent.analysis_params['omegas']/(2*np.pi),
-    power_spectra_10_percent[:, j],
-    color='k', alpha=0.2, zorder=2, ls='dotted',
-            label=str(
-                r'$ K_{\mathrm{4I}\rightarrow\mathrm{4I}}$ = ' +
-                f"{int(np.round(microcircuit_10_percent.network_params['K'][3][3],0))}" +
-                r'$, K_{\mathrm{ext}\rightarrow\mathrm{4I}}$ = ' +
-                f"{np.round(microcircuit_10_percent.network_params['K_ext'][3],0)}"
-                )
-            )
+        power_spectra_10_percent[:, j],
+        color='#8A98E5', zorder=2, ls='dotted',
+        label='10% increase'
+        )
 
 ax.set_xlim([0.0, 100.0])
 ax.set_ylim([1e-6, 1e0])
@@ -311,9 +295,9 @@ ax.yaxis.set_minor_locator(y_minor)
 ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 ax.set_yticks([])
 ax.set_yticks([1e-5,1e-3,1e-1])
-ax.set_ylabel(r'power spectrum $P(\omega_{\mathrm{4I}})\quad(1/\mathrm{s}^2)$')
+ax.set_ylabel(r'power spectrum $P_{\mathrm{4I}}(\omega)\quad(1/\mathrm{s}^2)$')
 ax.legend(loc='lower right')
 
-# plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.eps')
+plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.eps')
 
 # %%
