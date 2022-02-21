@@ -158,7 +158,7 @@ for count, (ev, subpanel, panel_label) in enumerate(
     
     rounded_frequency = str(int(np.round(frequency,0)))
 
-    plot_title = r'$\mathbf{Z}_{j=%s}^{\mathrm{amp}}(' % ev + \
+    plot_title = r'$\mathbf{Z}_{j=%s}^{\mathrm{freq}}(' % ev + \
         f'{rounded_frequency}' + r'\,\mathrm{Hz})$'
     ax.set_title(plot_title)
     
