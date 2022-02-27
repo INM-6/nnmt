@@ -189,7 +189,7 @@ projection_of_sensitivity_measure = sensitivity_dict[ev][
 
 rounded_frequency = str(int(np.round(frequency,0)))
 
-plot_title = r'$\mathbf{Z}_{j=%s}^{\mathrm{amp}}(' % ev + \
+plot_title = r'$\mathbf{Z}_{b=%s}^{\mathrm{amp}}(' % ev + \
     f'{rounded_frequency}' + r'\,\mathrm{Hz})$'
 ax.set_title(plot_title)
 
@@ -225,7 +225,7 @@ projection_of_sensitivity_measure = sensitivity_dict[ev][
 
 rounded_frequency = str(int(np.round(frequency,0)))
 
-plot_title = r'$\mathbf{Z}_{j=%s}^{\mathrm{freq}}(' % ev + \
+plot_title = r'$\mathbf{Z}_{b=%s}^{\mathrm{freq}}(' % ev + \
     f'{rounded_frequency}' + r'\,\mathrm{Hz})$'
 ax.set_title(plot_title)
 
