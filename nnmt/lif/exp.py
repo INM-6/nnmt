@@ -1053,6 +1053,11 @@ def _Phi(s):
 def _Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
+    
+    The mpmath.pcfu() is equivalent to Eq. 19.12.3 in:cite:t:`Abramowitz74`
+    with U(a,-x). The arguments (a, z) of mpmath.pcfu() used in the 
+    documentation https://mpmath.org/doc/current/functions/bessel.html?highlight=pcfu#mpmath.pcfu
+    are renamed to (z, x) here.
     """
     parabolic_cylinder_fn = pcfu_vec(z, -x).astype(complex)
     return np.exp(0.25 * x**2) * parabolic_cylinder_fn
