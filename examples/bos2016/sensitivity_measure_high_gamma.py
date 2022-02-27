@@ -236,5 +236,5 @@ if labels is not None:
 ax.set_xlabel('sources')
 ax.set_ylabel('targets')
 
-plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.png', 
+plt.savefig('figures/sensitivity_measure_0Hz_Bos2016.png', 
             bbox_inches='tight')
