@@ -183,8 +183,8 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -257,8 +257,8 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
 
     Returns
     -------
@@ -305,8 +305,8 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
 
     Returns
     -------
@@ -638,8 +638,8 @@ def _transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
         Membrane time constant in s.
-    tau_s : [float | np.array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.array]
         Refractory time in s.
     V_th_rel : [float | np.array]
@@ -704,8 +704,8 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
         Membrane time constant in s.
-    tau_s : [float | np.array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.array]
         Refractory time in s.
     V_th_rel : [float | np.array]
@@ -796,8 +796,8 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
         Membrane time constant in s.
-    tau_s : [float | np.array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.array]
         Refractory time in s.
     V_th_rel : [float | np.array]
@@ -920,7 +920,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     Fits the transfer function (tf) of a low-pass filter to the passed tf.
 
     For details of the fitting procedure see
-    :func:`nnmt._general._fit_transfer_function`.
+    :func:`nnmt.lif._general._fit_transfer_function`.
 
     For details of the theory refer to
     :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
@@ -1005,8 +1005,8 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
     ----------
     tau_m : [float | np.ndarray]
         Membrane time constant in s.
-    tau_s : [float | np.ndarray]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
         Refractory time in s.
     V_th_rel : [float | np.ndarray]
@@ -1112,8 +1112,8 @@ def _derivative_of_firing_rates_wrt_input_rate(
         Standard deviation of neuron activity in V.
     tau_m : [float | np.ndarray]
         Membrane time constant in s.
-    tau_s : [float | np.ndarray]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
         Refractory time in s.
     V_th_rel : [float | np.ndarray]
@@ -1871,8 +1871,8 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array

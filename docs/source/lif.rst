@@ -122,6 +122,6 @@ Here you find how variables of LIF neurons are named in NNMT:
    * - Refractory time
      - :math:`\tau_\mathrm{r}`
      - ``tau_r``
-   * - Synaptic time constant
+   * - Pre-synaptic time constant
      - :math:`\tau_\mathrm{s}`
      - ``tau_s``
