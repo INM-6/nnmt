@@ -120,7 +120,7 @@ for layer in [0, 1, 2, 3]:
             ax.set_yticks([1e-5,1e-3,1e-1])
             
         if j == 0:
-            ax.set_ylabel(r'power spectrum $|C(\omega)|\quad(1/\mathrm{s}^2)$')
+            ax.set_ylabel(r'power spectrum $P(\omega)\quad(1/\mathrm{s}^2)$')
             ax.legend()
     
 plt.savefig('figures/power_spectra_Bos2016.png')

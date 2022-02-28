@@ -38,7 +38,7 @@ microcircuit = nnmt.models.Microcircuit(
 # %%
 # The frequency resolution used in the original publication was quite high.
 # Here, we reduce the frequency resolution for faster execution.
-reduce_frequency_resolution = True
+reduce_frequency_resolution = False
 
 if reduce_frequency_resolution:
     microcircuit.change_parameters(changed_analysis_params={'df': 1},
@@ -192,7 +192,7 @@ for count, (ev, subpanel, panel_label) in enumerate(
 fig.set_constrained_layout_pads(w_pad=0, h_pad=0,
                                 hspace=0.1, wspace=0.1)    
     
-plt.savefig('figures/sensitivity_measure_high_gamma_Bos2016.png')
+plt.savefig('figures/sensitivity_measure_high_gamma_Bos2016.eps')
 
 # %%
 # Plotting: Sensitivity Measure corresponding to low frequencies (Fig. 7)
@@ -236,5 +236,5 @@ if labels is not None:
 ax.set_xlabel('sources')
 ax.set_ylabel('targets')
 
-plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.png', 
+plt.savefig('figures/sensitivity_measure_0Hz_Bos2016.png', 
             bbox_inches='tight')

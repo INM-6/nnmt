@@ -18,8 +18,8 @@ mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
                      'axes.titlepad': 0.0})
 
 # %%
-# The parameters used for calculation of the transfer functions 
-# in :cite:t:`schuecker2015` were gathered in a .yaml-File and are loaded here. 
+# The parameters used for calculation of the transfer functions
+# in :cite:t:`schuecker2015` were gathered in a .yaml-File and are loaded here.
 
 params = nnmt.input_output.load_val_unit_dict_from_yaml(
         '../../tests/fixtures/integration/config/'
@@ -60,8 +60,8 @@ for i, index in enumerate(indices):
         si_network_params['tau_m'],
         si_network_params['tau_r'],
         si_network_params['tau_s'])
-    
-    transfer_function = nnmt.lif.exp._transfer_function_shift(
+
+    transfer_function = nnmt.lif.exp._transfer_function(
         si_network_params[f'mean_input_{index}'],
         si_network_params[f'sigma_{index}'],
         si_network_params['tau_m'],
@@ -70,29 +70,30 @@ for i, index in enumerate(indices):
         si_network_params['theta'],
         si_network_params['V_reset'],
         omegas,
+        method='shift',
         synaptic_filter=False)
-    
+
     # the result is returned in SI-units (1/(s*V))
     # the original figure in the paper is in (1/(s*mV))
     transfer_function /= 1000
-    
+
     # calculate properties plotted in Schuecker 2015
     absolute_value = np.abs(transfer_function)
     phase = (np.angle(transfer_function)
                 / 2 / np.pi * 360)
-    
+
     # collect all results
     absolute_values.append(absolute_value)
     phases.append(phase)
     nu0_fbs.append(nu0_fb)
 
-# %% 
+# %%
 # Prepare data for plotting by parsing into a dictionary.
 pre_results = dict(
     absolute_values=absolute_values,
     phases=phases,
     nu0_fbs=nu0_fbs)
-    
+
 test_results = defaultdict(str)
 test_results['sigma'] = defaultdict(dict)
 for i, index in enumerate(indices):
@@ -104,10 +105,10 @@ for i, index in enumerate(indices):
                 'absolute_value': pre_results['absolute_values'][i][:, j],
                 'phase': pre_results['phases'][i][:, j],
                 'nu0_fb': pre_results['nu0_fbs'][i][j]}
-        
+
 # %%
 # Plotting
-width = 180. / 25.4 
+width = 180. / 25.4
 height = 75. / 25.4
 
 fig = plt.figure(figsize=(width, height))
@@ -119,15 +120,15 @@ axB = ax = fig.add_subplot(grid_specification[1])
 
 for sigma in test_results['sigma'].keys():
     for i, mu in enumerate(test_results['sigma'][sigma]['mu'].keys()):
-      
+
         print(sigma)
         colors = ['black', 'grey']
         lw = 1
         markersize_cross = 4
-        
+
         # shift the zero frequency to be plotted on log-scale
         zero_freq = 0.06
-        
+
         if sigma == 4.0:
             ls = '-'
         else:
@@ -175,8 +176,8 @@ axB.text(s='(B)', transform=axB.transAxes, **label_prms)
 
 
 x_minor = matplotlib.ticker.LogLocator(
-    base = 10.0, 
-    subs = np.arange(1.0, 10.0) * 0.1, 
+    base = 10.0,
+    subs = np.arange(1.0, 10.0) * 0.1,
     numticks = 10)
 axA.xaxis.set_minor_locator(x_minor)
 axA.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())

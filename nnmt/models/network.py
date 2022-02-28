@@ -94,7 +94,7 @@ class Network():
                 self.network_params = io.load_val_unit_dict_from_yaml(
                     network_params)
             elif isinstance(network_params, dict):
-                self.network_params = network_params
+                self.network_params = copy.deepcopy(network_params)
             else:
                 raise ValueError('Invalid value for `network_params`.')
 
@@ -107,7 +107,7 @@ class Network():
                 self.analysis_params = io.load_val_unit_dict_from_yaml(
                     analysis_params)
             elif isinstance(analysis_params, dict):
-                self.analysis_params = analysis_params
+                self.analysis_params = copy.deepcopy(analysis_params)
             else:
                 raise ValueError('Invalid value for `network_params`.')
 
