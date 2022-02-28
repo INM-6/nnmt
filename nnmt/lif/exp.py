@@ -1471,6 +1471,10 @@ def sensitivity_measure(network, frequency,
             Index of critical_frequency in all analysis frequencies.
         critical_eigenvalue : np.complex
             Critical eigenvalue.
+        left_eigenvector : np.ndarray
+            Left eigenvector corresponding to the critical eigenvalue.
+        right_eigenvector : np.ndarray
+            Right eigenvector corresponding to the critical eigenvalue.
         k : np.complex
             Vector point from critical eigenvalue to complex(1,0).
         k_per : np.complex
@@ -1546,6 +1550,10 @@ def _sensitivity_measure(effective_connectivity, frequency,
             Index of critical_frequency in all analysis frequencies.
         critical_eigenvalue : np.complex
             Critical eigenvalue.
+        left_eigenvector : np.ndarray
+            Left eigenvector corresponding to the critical eigenvalue.
+        right_eigenvector : np.ndarray
+            Right eigenvector corresponding to the critical eigenvalue.
         k : np.complex
             Vector point from critical eigenvalue to complex(1,0).
         k_per : np.complex
