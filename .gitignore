@@ -128,5 +128,5 @@ examples/bos2016/figures/eigenvalue_trajectories_Bos2016.png
 examples/bos2016/figures/sensitivity_measure_low_gamma_Bos2016.png
 examples/bos2016/figures/sensitivity_measure_high_gamma_Bos2016.png
 examples/bos2016/power_spectra_of_subcircuits_Bos2016.png
-examples/schuecker2015/transfer_functions_Schuecker2015.png
+examples/schuecker2015/*.eps
 docs/source/auto_examples
