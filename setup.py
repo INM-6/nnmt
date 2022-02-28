@@ -21,5 +21,7 @@ setup(name='nnmt',
         'pyyaml',
         'requests',
         'mpmath',
-        'decorator'],
+        'decorator',
+        'pytest>=5.4',
+        'pytest-mock>=3.1'],
       python_requires='>=3')
