@@ -1,9 +1,12 @@
 """
-Sensitivity Measure (Bos 2016)
-==============================
+Adjusting the low-gamma peak of microcircuit model
+==================================================
 
-Here we calculate the sensitivity measure of the :cite:t:`potjans2014` 
-microcircuit model including modifications made in :cite:t:`bos2016`.
+Here we calculate the sensitivity measure of the :cite:t:`potjans2014`
+microcircuit model including modifications made in :cite:t:`bos2016` to study
+the low-:math:`\gamma` peak around :math:`64\,\mathrm{Hz}` in the power
+spectrum of the network. We subsequently adjust the network connectivity to
+modify the peak.
 
 This example reproduces parts of Fig. 5 and 8 in :cite:t:`bos2016`.
 """
@@ -29,8 +32,11 @@ def colorbar(mappable, cax=None):
 plt.style.use('frontiers.mplstyle')
 mpl.rcParams.update({'legend.fontsize': 'medium',  # old: 5.0 was too small
                      'axes.titlepad': 0.0})
-# %% 
-# First, create an instance of the network model class `Microcircuit`.
+# %%
+# First, we create an instance of the network model class `Microcircuit` using
+# the parameters from :cite:t:`bos2016`
+# (:download:`Bos2016_network_params.yaml <../../../../tests/fixtures/integration/config/Bos2016_network_params.yaml>`,
+# :download:`Bos2016_analysis_params.yaml <../../../../tests/fixtures/integration/config/Bos2016_analysis_params.yaml>`).
 microcircuit = nnmt.models.Microcircuit(
     network_params=
     '../../tests/fixtures/integration/config/Bos2016_network_params.yaml',
@@ -51,8 +57,8 @@ if reduce_frequency_resolution:
 
 frequencies = microcircuit.analysis_params['omegas']/(2.*np.pi)
 # %%
-# Calculate all necessary quantities and finally the sensitivity 
-# measure for all eigenmodes.
+# We calculate all required dynamical properties, the power spectra, and
+# finally the sensitivity measure for all eigenmodes.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit, method='taylor')
@@ -62,24 +68,29 @@ nnmt.lif.exp.transfer_function(microcircuit, method='taylor')
 nnmt.network_properties.delay_dist_matrix(microcircuit)
 # calculate the effective connectivity matrix
 nnmt.lif.exp.effective_connectivity(microcircuit)
+
 # calculate the power spectra
 power_spectra = nnmt.lif.exp.power_spectra(microcircuit)
 
+# calculate sensitivity measure
 sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
     microcircuit)
 
 # %%
+# The sensitivity measure tell us that the low-:math:`\gamma` peak in the power
+# spectra can be modifying by altering the connection from population 4I to
+# itself. Here we change this connection by 5 percent. In order to keep the
+# network's working point constant when changing the connection, we modify the
+# connections from the external input to the target population as well (use Eq.
+# 2 in :cite:t:`bos2016` for this).
+
+percentage_of_change = 0.05
+
 g =  microcircuit.network_params['g']
 population_rate = microcircuit.results['lif.exp.firing_rates'][3]
 external_input_rate = microcircuit.network_params['nu_ext']
 connections_4I_4I = microcircuit.network_params['K'][3,3]
 connection_external_4I = microcircuit.network_params['K_ext'][3]
-# %%
-# in order to keep the working point constant when changing one connection,
-# we modify the connections from the external input to the target population
-# (use Eq. 2 in Bos manuscript for this)
-
-percentage_of_change = 0.05
 
 external_connections_to_add = (
     abs(g) * connections_4I_4I * percentage_of_change * population_rate
@@ -88,13 +99,15 @@ external_connections_to_add = (
 K_5_percent = microcircuit.network_params['K'].copy()
 K_5_percent_ext = microcircuit.network_params['K_ext'].copy()
 K_5_percent[3,3] = K_5_percent[3,3]*(1+percentage_of_change)
-K_5_percent_ext[3] = K_5_percent_ext[3] + external_connections_to_add 
+K_5_percent_ext[3] = K_5_percent_ext[3] + external_connections_to_add
 
 microcircuit_5_percent = microcircuit.change_parameters(
     {'K': K_5_percent,
      'K_ext': K_5_percent_ext})
 
-# Calculate all necessary quantities and finally the power spectra.
+# %%
+# After changing the network connectivity, we calculate the power spectra
+# again.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit_5_percent, method='taylor')
@@ -108,9 +121,7 @@ nnmt.lif.exp.effective_connectivity(microcircuit_5_percent)
 power_spectra_5_percent = nnmt.lif.exp.power_spectra(microcircuit_5_percent)
 
 # %%
-# in order to keep the working point constant when changing one connection,
-# we modify the connections from the external input to the target population
-# (use Eq. 2 in Bos manuscript for this)
+# Here we change the connectivity by 10 percent, similar to above.
 
 percentage_of_change = 0.10
 
@@ -121,13 +132,15 @@ external_connections_to_add = (
 K_10_percent = microcircuit.network_params['K'].copy()
 K_10_percent_ext = microcircuit.network_params['K_ext'].copy()
 K_10_percent[3,3] = K_10_percent[3,3]*(1+percentage_of_change)
-K_10_percent_ext[3] = K_10_percent_ext[3] + external_connections_to_add 
+K_10_percent_ext[3] = K_10_percent_ext[3] + external_connections_to_add
 
 microcircuit_10_percent = microcircuit.change_parameters(
     {'K': K_10_percent,
      'K_ext': K_10_percent_ext})
 
-# Calculate all necessary quantities and finally the power spectra.
+# %%
+# After changing the network connectivity, we calculate the power spectra
+# again.
 
 # calculate working point for exponentially shape post synaptic currents
 nnmt.lif.exp.working_point(microcircuit_10_percent, method='taylor')
@@ -140,13 +153,15 @@ nnmt.lif.exp.effective_connectivity(microcircuit_10_percent)
 # calculate the power spectra
 power_spectra_10_percent = nnmt.lif.exp.power_spectra(microcircuit_10_percent)
 # %%
+# Then we print the critical frequencies for each eigenmode
 
 # Look at the critical frequencies per eigenmode
 for k, v in sensitivity_dict.items():
     print(k, v['critical_frequency'])
 # %%
-# two column figure, 180 mm wide
-width = 180. / 25.4 
+# and we plot the results.
+
+width = 180. / 25.4
 height = 60. / 25.4
 
 fig = plt.figure(figsize=(width, height),
@@ -163,18 +178,16 @@ z = 1
 # .eps can't handle transparency
 colormap.set_bad('w',1.)
 
-
 fig = plt.figure(figsize=(width, height),
                  constrained_layout=True)
-grid_specification = gridspec.GridSpec(1, 2, 
+grid_specification = gridspec.GridSpec(1, 2,
                                        height_ratios=[1],
                                        width_ratios=[2.2, 1], figure=fig)
 
-gs = gridspec.GridSpecFromSubplotSpec(1,3, 
+gs = gridspec.GridSpecFromSubplotSpec(1,3,
                                         height_ratios=[1],
-                            width_ratios=[1, 1, 0.2], 
+                            width_ratios=[1, 1, 0.2],
                             subplot_spec=grid_specification[0])
-
 
 ev = '5'
 ax = fig.add_subplot(gs[0])
@@ -235,7 +248,7 @@ data = np.ma.masked_where(projection_of_sensitivity_measure == 0,
 heatmap = ax.pcolormesh(np.flipud(data),
                     vmin=-z,
                     vmax=z,
-                    cmap=colormap,    
+                    cmap=colormap,
                     edgecolors='k',
                     linewidth=0.6)
 
@@ -248,14 +261,13 @@ if labels is not None:
     ax.set_yticklabels([])
 
 ax.set_xlabel('sources')
-    
+
 colorbar_ax = fig.add_subplot(gs[2])
 
 colorbar_width = 0.1
-ip = InsetPosition(ax, [1.05,0,colorbar_width,1]) 
+ip = InsetPosition(ax, [1.05,0,colorbar_width,1])
 colorbar_ax.set_axes_locator(ip)
 colorbar(heatmap, cax=colorbar_ax)
-
 
 ax = fig.add_subplot(grid_specification[1])
 label_prms = dict(x=-0.2, y=1.2, fontsize=10, fontweight='bold',
@@ -267,7 +279,7 @@ ax.plot(microcircuit.analysis_params['omegas']/(2*np.pi),
         color='#4055C8', zorder=2,
         label='original'
         )
-                
+
 ax.plot(microcircuit_5_percent.analysis_params['omegas']/(2*np.pi),
         power_spectra_5_percent[:, j],
         color='#6072D5', zorder=2, ls='dashed',
@@ -288,8 +300,8 @@ ax.set_xticks([20, 40, 60, 80])
 ax.set_xlabel(r'frequency $\omega/2\pi\quad(1/\mathrm{s})$')
 
 y_minor = matplotlib.ticker.LogLocator(
-    base = 10.0, 
-    subs = np.arange(1.0, 10.0) * 0.1, 
+    base = 10.0,
+    subs = np.arange(1.0, 10.0) * 0.1,
     numticks = 10)
 ax.yaxis.set_minor_locator(y_minor)
 ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
@@ -299,5 +311,3 @@ ax.set_ylabel(r'power spectrum $P_{\mathrm{4I}}(\omega)\quad(1/\mathrm{s}^2)$')
 ax.legend(loc='lower right')
 
 plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.eps')
-
-# %%
