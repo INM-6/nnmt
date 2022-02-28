@@ -4,7 +4,7 @@ Adjusting the low-gamma peak of microcircuit model
 
 Here we calculate the sensitivity measure of the :cite:t:`potjans2014`
 microcircuit model including modifications made in :cite:t:`bos2016` to study
-the low-:math:`\gamma` peak around :math:`64\,\mathrm{Hz}` in the power
+the low-:math:`\gamma` peak around :math:`63\,\mathrm{Hz}` in the power
 spectrum of the network. We subsequently adjust the network connectivity to
 modify the peak.
 
@@ -77,7 +77,7 @@ sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
     microcircuit)
 
 # %%
-# The sensitivity measure tells us that the low-:math:`\gamma` peak in the 
+# The sensitivity measure tells us that the low-:math:`\gamma` peak in the
 # power spectra can be modified by altering the connection from population 4I
 # to itself. Here we change this connection by 5 percent. In order to keep the
 # network's working point constant when changing the connection, we modify the
