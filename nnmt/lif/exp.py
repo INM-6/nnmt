@@ -164,10 +164,10 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
     deviation sigma based on :cite:t:`fourcaud2002`, using either a shift of
-    the integration boundaries in the white noise Siegert formula, as derived
-    in :cite:t:`schuecker2015` (default), or a Taylor expansion around
+    the integration boundaries in the white noise Siegert formula, calling
+    :func:`nnmt.lif.exp._firing_rate_shift`, or a Taylor expansion around
     :math:`k = \sqrt{\\tau_\mathrm{s}/\\tau_\mathrm{m}}` of Eq. 4.33 in
-    :cite:t:`fourcaud2002`.
+    :cite:t:`fourcaud2002`, calling :func:`nnmt.lif.exp._firing_rate_taylor`.
 
     Parameters
     ----------
@@ -183,8 +183,8 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -233,10 +233,15 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
 @_check_k_in_fast_synaptic_regime
 def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     """
-    Calculates stationary firing rates including synaptic filtering.
+    Calculates stationary mean firing rates including synaptic filtering.
 
-    Based on :cite:t:`fourcaud2002`, using shift of the integration boundaries
-    in the white noise Siegert formula, as derived in :cite:t:`schuecker2015`.
+    Based on the equation after Eq. 4.33 in :cite:t:`fourcaud2002`, using shift
+    of the integration boundaries in the white noise Siegert formula.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
 
     Parameters
     ----------
@@ -252,8 +257,8 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
 
     Returns
     -------
@@ -274,12 +279,17 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
 @_check_k_in_fast_synaptic_regime
 def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     """
-    Calcs stationary firing rates for exp PSCs using a Taylor expansion.
+    Calcs stationary mean firing rates including synaptic filtering.
 
     Calculates the stationary firing rate of a neuron with synaptic filter of
     time constant tau_s driven by Gaussian noise with mean mu and standard
     deviation sigma, using Eq. 4.33 in :cite:t:`fourcaud2002` with Taylor
     expansion around :math:`k = \sqrt{\\tau_\mathrm{s}/\\tau_\mathrm{m}}`.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
 
     Parameters
     ----------
@@ -295,8 +305,8 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
 
     Returns
     -------
@@ -628,8 +638,8 @@ def _transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
         Membrane time constant in s.
-    tau_s : [float | np.array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.array]
         Refractory time in s.
     V_th_rel : [float | np.array]
@@ -668,15 +678,23 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     """
     Calcs value of transfer func for one population at given frequency omega.
 
-    Calculates transfer function according to :math:`\tilde{n}` in
-    :cite:t:`schuecker2015`. The expression is to first order equivalent to
-    :func:`nnmt.lif.exp._transfer_function_taylor`. Since the underlying theory
-    is correct to first order, the two expressions are exchangeable.
+    Calculates transfer function based on :math:`\\tilde{n}` in
+    :cite:t:`schuecker2015`. The expression is to first order in
+    :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}}` equivalent to
+    :func:`nnmt.lif.exp._transfer_function_taylor`.
 
-    The difference here is that the linear response of the system is considered
-    with respect to a perturbation of the input to the current I, leading to an
-    additional low pass filtering 1/(1+i omega tau_s). Compare with the second
-    equation of Eq. 18 and the text below Eq. 29.
+    The difference to the equation in :cite:t:`schuecker2015` is that the
+    linear response of the system is considered with respect to a perturbation
+    of the input to the current I, leading to an additional synaptic low pass
+    filter 1/(1+i omega tau_s). Compare with the second equation of Eq. 18 and
+    the text below Eq. 29.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Linear response theory
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+    - Low frequencies: :math:`\omega\sqrt{\\tau_\mathrm{m} \\tau_\mathrm{s}} \ll 1`
 
     Parameters
     ----------
@@ -686,8 +704,8 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
         Membrane time constant in s.
-    tau_s : [float | np.array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.array]
         Refractory time in s.
     V_th_rel : [float | np.array]
@@ -759,8 +777,16 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
 
     The difference here is that the linear response of the system is considered
     with respect to a perturbation of the input to the current I, leading to an
-    additional low pass filtering 1/(1+i omega tau_s).
-    Compare with the second equation of Eq. 18 and the text below Eq. 29.
+    additional synaptic low pass filter 1/(1+i omega tau_s). Compare with the
+    second equation of Eq. 18 and the text below Eq. 29.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Linear response theory
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+    - Low frequencies: :math:`\omega\sqrt{\\tau_\mathrm{m} \\tau_\mathrm{s}}
+      \ll 1`
 
     Parameters
     ----------
@@ -770,8 +796,8 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
         Membrane time constant in s.
-    tau_s : [float | np.array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.array]
         Refractory time in s.
     V_th_rel : [float | np.array]
@@ -894,7 +920,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     Fits the transfer function (tf) of a low-pass filter to the passed tf.
 
     For details of the fitting procedure see
-    :func:`nnmt._general._fit_transfer_function`.
+    :func:`nnmt.lif._general._fit_transfer_function`.
 
     For details of the theory refer to
     :cite:t:`senk2020`, Sec. F 'Comparison of neural-field and spiking models'.
@@ -970,12 +996,17 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
 
     See Appendix B in :cite:t:`schuecker2014`.
 
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+
     Parameters
     ----------
     tau_m : [float | np.ndarray]
         Membrane time constant in s.
-    tau_s : [float | np.ndarray]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
         Refractory time in s.
     V_th_rel : [float | np.ndarray]
@@ -1022,6 +1053,11 @@ def _Phi(s):
 def _Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
+    
+    The mpmath.pcfu() is equivalent to Eq. 19.12.3 in:cite:t:`Abramowitz74`
+    with U(a,-x). The arguments (a, z) of mpmath.pcfu() used in the 
+    documentation https://mpmath.org/doc/current/functions/bessel.html?highlight=pcfu#mpmath.pcfu
+    are renamed to (z, x) here.
     """
     parabolic_cylinder_fn = pcfu_vec(z, -x).astype(complex)
     return np.exp(0.25 * x**2) * parabolic_cylinder_fn
@@ -1068,6 +1104,11 @@ def _derivative_of_firing_rates_wrt_input_rate(
 
     See Eq. A.3 in Appendix A of :cite:t:`helias2013`.
 
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+
     Parameters
     ----------
     mu : [float | np.ndarray]
@@ -1076,8 +1117,8 @@ def _derivative_of_firing_rates_wrt_input_rate(
         Standard deviation of neuron activity in V.
     tau_m : [float | np.ndarray]
         Membrane time constant in s.
-    tau_s : [float | np.ndarray]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
         Refractory time in s.
     V_th_rel : [float | np.ndarray]
@@ -1837,8 +1878,8 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
         Membrane time constant in s.
     tau_r : [float | 1d array]
         Refractory time in s.
-    tau_s : [float | 1d array]
-        Synaptic time constant in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
