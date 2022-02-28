@@ -15,6 +15,7 @@ dictionary items can change unwantedly if netork parameters are changed.
 - Add table of LIF parameters and NNMT variables to docs.
 - Fix description in docstrings for ``tau_s``.
 - Fix typos in docstrings.
+- Add new example of adjusting the low-gamma peak in the microcircuit model.
 
 **********
 NNMT 1.0.0
