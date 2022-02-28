@@ -77,9 +77,9 @@ sensitivity_dict = nnmt.lif.exp.sensitivity_measure_all_eigenmodes(
     microcircuit)
 
 # %%
-# The sensitivity measure tell us that the low-:math:`\gamma` peak in the power
-# spectra can be modifying by altering the connection from population 4I to
-# itself. Here we change this connection by 5 percent. In order to keep the
+# The sensitivity measure tells us that the low-:math:`\gamma` peak in the 
+# power spectra can be modified by altering the connection from population 4I
+# to itself. Here we change this connection by 5 percent. In order to keep the
 # network's working point constant when changing the connection, we modify the
 # connections from the external input to the target population as well (use Eq.
 # 2 in :cite:t:`bos2016` for this).
