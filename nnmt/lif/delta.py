@@ -340,7 +340,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of mean inputs to each population in V.
     """
     return _general._mean_input(nu, J, K, tau_m,
-                               J_ext, K_ext, nu_ext)
+                                J_ext, K_ext, nu_ext)
 
 
 def std_input(network):
@@ -404,7 +404,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of mean inputs to each population in V.
     """
     return _general._std_input(nu, J, K, tau_m,
-                              J_ext, K_ext, nu_ext)
+                               J_ext, K_ext, nu_ext)
 
 
 def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
