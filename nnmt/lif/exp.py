@@ -560,6 +560,80 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
                                J_ext, K_ext, nu_ext)
 
 
+def effective_tau_syn(network):
+    '''
+    Calculates an effective synaptic time constant.
+
+    See :func:`nnmt.lif.exp._effective_tau_syn` for full documentation.
+
+    Parameters
+    ----------
+    network: nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in :func:`nnmt.lif.exp._effective_tau_syn`.
+
+    Returns
+    -------
+    np.array
+        Array of effective synaptic time constants for each population in s.
+    '''
+    list_of_params = ['tau_s', 'tau_s_ext', 'J', 'K', 'tau_m',
+                      'J_ext', 'K_ext', 'nu_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+
+    try:
+        params['nu'] = network.results['lif.exp.firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+    return _cache(network, _effective_tau_syn, params,
+                  _prefix + 'effective_tau_syn', 'seconds')
+
+
+@_check_positive_params
+def _effective_tau_syn(nu, tau_s, tau_s_ext, J, K, tau_m,
+                       J_ext, K_ext, nu_ext):
+    """
+    Calculates and effective synaptic time constant if the input is mediated
+    by synapses with different time constants, e.g., AMPA or GABA receptors.
+
+    Following Eq. 5.49 in :cite:t:`fourcaud2002`.
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    tau_s : np.array
+        Pre-synaptic time constant in s.
+    tau_s_ext : np.array
+        Pre-synaptic time constant of external input in s.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        In-degree matrix.
+    tau_m : [float | 1d array]
+        Membrane time constant in s.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+
+    Returns
+    -------
+    np.array
+        Array of effective synaptic time constants for each population in s.
+    """
+    var = _general._std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext)**2
+    var_scaled = _general._std_input(nu, J, K/tau_s, tau_m, J_ext,
+                                     K_ext/tau_s_ext, nu_ext)**2
+    return var / var_scaled
+
+
 def transfer_function(network, freqs=None, method='shift',
                       synaptic_filter=True):
     """
@@ -1053,9 +1127,9 @@ def _Phi(s):
 def _Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
-    
+
     The mpmath.pcfu() is equivalent to Eq. 19.12.3 in:cite:t:`Abramowitz74`
-    with U(a,-x). The arguments (a, z) of mpmath.pcfu() used in the 
+    with U(a,-x). The arguments (a, z) of mpmath.pcfu() used in the
     documentation https://mpmath.org/doc/current/functions/bessel.html?highlight=pcfu#mpmath.pcfu
     are renamed to (z, x) here.
     """
