@@ -7,4 +7,4 @@ from . import network_properties
 from . import models
 from . import lif
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
