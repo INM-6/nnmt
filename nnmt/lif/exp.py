@@ -180,7 +180,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     V_th_rel : [float | 1d array]
         Relative threshold potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -254,7 +254,7 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -302,7 +302,7 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -436,7 +436,7 @@ def mean_input(network):
     K : np.array
         Indegree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -479,7 +479,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -543,7 +543,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -637,7 +637,7 @@ def _transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     sigma : [float | np.array]
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.array]
@@ -703,7 +703,7 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     sigma : [float | np.array]
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.array]
@@ -795,7 +795,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     sigma : [float | np.array]
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.array]
@@ -933,7 +933,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     omegas : [float | np.ndarray]
         Input frequencies to population in Hz.
     tau_m : float
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J : np.array
         Weight matrix in V.
     K : np.array
@@ -1004,7 +1004,7 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
     Parameters
     ----------
     tau_m : [float | np.ndarray]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
@@ -1053,9 +1053,9 @@ def _Phi(s):
 def _Psi(z, x):
     """
     Calcs Psi(z,x)=exp(x**2/4)*U(z,x), with U(z,x) the parabolic cylinder func.
-    
+
     The mpmath.pcfu() is equivalent to Eq. 19.12.3 in:cite:t:`Abramowitz74`
-    with U(a,-x). The arguments (a, z) of mpmath.pcfu() used in the 
+    with U(a,-x). The arguments (a, z) of mpmath.pcfu() used in the
     documentation https://mpmath.org/doc/current/functions/bessel.html?highlight=pcfu#mpmath.pcfu
     are renamed to (z, x) here.
     """
@@ -1116,7 +1116,7 @@ def _derivative_of_firing_rates_wrt_input_rate(
     sigma :
         Standard deviation of neuron activity in V.
     tau_m : [float | np.ndarray]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
@@ -1232,7 +1232,7 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     K : np.ndarray
         Indegree matrix.
     tau_m : float
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
 
     Returns
     -------
@@ -1790,7 +1790,7 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
     N : np.ndarray
         Number of neurons in each population.
     tau_m : [float | np.narray]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
 
     Returns
     -------
@@ -1883,7 +1883,7 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     V_0_rel : [float | np.array]
         Relative reset potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float

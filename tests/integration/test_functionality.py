@@ -18,13 +18,13 @@ def save_and_load(network, tmpdir):
         network.load(file='test.h5')
 
 
-class Test_Network_functions_give_correct_results:
+class Test_lif_exp_functions_give_correct_results:
 
     prefix = 'lif.exp.'
 
     def test_firing_rates_shift_ODE(self, network, std_results):
         firing_rates = nnmt.lif.exp.firing_rates(network, method='shift',
-                                                fixpoint_method='ODE')
+                                                 fixpoint_method='ODE')
         print(firing_rates)
         assert_allclose(
             firing_rates, std_results[self.prefix + 'firing_rates'])
@@ -32,8 +32,8 @@ class Test_Network_functions_give_correct_results:
     def test_firing_rates_shift_LSTSQ(self, network, std_results):
         nu_0 = [1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 1.0, 7.0]
         firing_rates = nnmt.lif.exp.firing_rates(network, method='shift',
-                                                fixpoint_method='LSTSQ',
-                                                nu_0=nu_0)
+                                                 fixpoint_method='LSTSQ',
+                                                 nu_0=nu_0)
         assert_allclose(
             firing_rates, std_results[self.prefix + 'firing_rates'])
 
@@ -41,6 +41,16 @@ class Test_Network_functions_give_correct_results:
         firing_rates = nnmt.lif.exp.firing_rates(network, method='taylor')
         assert_allclose(
             firing_rates, std_results[self.prefix + 'firing_rates_taylor'])
+
+    def test_firing_rates_fully_vectorized(self):
+        network = nnmt.models.Network(
+            file=('tests/fixtures/integration/data/lif_exp/'
+                  'firing_rates_fully_vectorized.h5'))
+        old_results = network.results['lif.exp.firing_rates']
+        network.clear_results()
+        new_results = nnmt.lif.exp.firing_rates(network)
+        assert_allclose(
+            old_results, new_results)
 
     def test_mean_input(self, network, std_results):
         nnmt.lif.exp.firing_rates(network)
