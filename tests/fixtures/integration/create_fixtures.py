@@ -14,7 +14,9 @@ If you still want to run this script type: python create_fixtures.py -f
 Usage: create_fixtures.py [options]
 
 Options:
+    --all                create all integration fixtures
     -f, --force        force code to run
+    --firing_rates_fully_vectorized
     -h, --help         show this information
 '''
 
@@ -29,23 +31,23 @@ if __name__ == '__main__':
     # always show help message if not invoked with -f option
     if len(sys.argv) == 1:
         sys.argv.append('-h')
-        
+
     args = docopt.docopt(__doc__)
 
-    # only run code if users are sure they want to do it
-    if '--force' in args.keys():
+    fixture_path = 'integration/data/'
+    config_path = 'integration/config/'
 
-        fixture_path = 'integration/data/'
-        config_path = 'integration/config/'
+    # only run code if users are sure they want to do it
+    if args['--force']:
 
         network = nnmt.models.Microcircuit(
             config_path + 'network_params.yaml',
             config_path + 'analysis_params.yaml')
-        
+
         omega = network.analysis_params['omega']
         frequency = omega/(2*np.pi)
         margin = network.analysis_params['margin']
-        
+
         mean_input_set = network.network_params['mean_input_set']
         std_input_set = network.network_params['std_input_set']
         network.results[
@@ -68,3 +70,10 @@ if __name__ == '__main__':
         # nnmt.lif.exp.additional_rates_for_fixed_input(
         #     network, mean_input_set, std_input_set)
         network.save(file=fixture_path + 'std_results.h5')
+
+    if args['--firing_rates_fully_vectorized']:
+
+        name = 'lif_exp/firing_rates_fully_vectorized'
+        network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
+        firing_rates = nnmt.lif.exp.firing_rates(network)
+        network.save(f'{fixture_path + name}.h5')
