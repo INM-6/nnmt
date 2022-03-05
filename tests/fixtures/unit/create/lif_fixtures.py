@@ -82,7 +82,7 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
 
     # only run code if users are sure they want to do it
-    if '--force' in args.keys():
+    if args['--force']:
 
         fixture_path = 'unit/data/'
 
