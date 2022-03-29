@@ -30,7 +30,7 @@ microcircuit = nnmt.models.Microcircuit(
 # %%
 # The frequency resolution used in the original publication was quite high.
 # Here, we reduce the frequency resolution for faster execution.
-reduce_frequency_resolution = True
+reduce_frequency_resolution = False
 
 if reduce_frequency_resolution:
     microcircuit.change_parameters(changed_analysis_params={'df': 5},
@@ -123,4 +123,4 @@ for layer in [0, 1, 2, 3]:
             ax.set_ylabel(r'power spectrum $P(\omega)\quad(1/\mathrm{s}^2)$')
             ax.legend()
     
-plt.savefig('figures/power_spectra_Bos2016.png')
+plt.savefig('figures/power_spectra_Bos2016.eps')
