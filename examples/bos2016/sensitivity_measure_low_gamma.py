@@ -191,10 +191,10 @@ gs = gridspec.GridSpecFromSubplotSpec(1,3,
 
 ev = '5'
 ax = fig.add_subplot(gs[0])
-label_prms = dict(x=-0.3, y=1.27, fontsize=10, fontweight='bold',
+label_prms = dict(x=-0.3, y=1.2, fontsize=10, fontweight='bold',
                   va='top', ha='right')
 
-ax.text(s='(A)', transform=ax.transAxes, **label_prms)
+ax.text(s='A', transform=ax.transAxes, **label_prms)
 
 frequency = sensitivity_dict[ev]['critical_frequency']
 projection_of_sensitivity_measure = sensitivity_dict[ev][
@@ -272,7 +272,7 @@ colorbar(heatmap, cax=colorbar_ax)
 ax = fig.add_subplot(grid_specification[1])
 label_prms = dict(x=-0.2, y=1.2, fontsize=10, fontweight='bold',
                   va='top', ha='right')
-ax.text(s='(B)', transform=ax.transAxes, **label_prms)
+ax.text(s='B', transform=ax.transAxes, **label_prms)
 j = 3
 ax.plot(microcircuit.analysis_params['omegas']/(2*np.pi),
         power_spectra[:, j],
