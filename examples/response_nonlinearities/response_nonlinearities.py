@@ -174,34 +174,34 @@ colors = ['#4c72b0', '#c44e52']
 ax_sketch = fig.add_subplot(gs[0, 0])
 ax_sketch.axis('off')
 ax_sketch.set_title('network\nsketch')
-ax_sketch.text(s='(A)', transform=ax_sketch.transAxes, **label_prms)
+ax_sketch.text(s='A', transform=ax_sketch.transAxes, **label_prms)
 # Saturation-driven nonlinearity
 plot_rates(fig.add_subplot(gs[0, 1]), [nu_ext_sdn], [nu_sdn], 100, 500,
            '', r'rate $\nu$ (1/s)', 'saturation-driven\nnonlinearity',
-           colors, '(B)', label_prms)
+           colors, 'B', label_prms)
 # Saturation-driven multisolution
 plot_rates(fig.add_subplot(gs[0, 2]),
            [nu_ext_sdm_a, nu_ext_sdm_b, nu_ext_sdm_c, nu_ext_sdm_d],
            [nu_sdm_a, nu_sdm_b, nu_sdm_c, nu_sdm_d], 100, 500,
            '', '', 'saturation-driven\nmulti-solution',
-           colors, '(C)', label_prms)
+           colors, 'C', label_prms)
 # Response-onset supersaturation
 plot_rates(fig.add_subplot(gs[1, 0]), [nu_ext_ros_a, nu_ext_ros_b],
            [nu_ros_a, nu_ros_b], 50, 5,
            r'external rate $\nu_X$ (1/s)', r'rate $\nu$ (1/s)',
-           'response-onset\nsupersaturation', colors, '(D)', label_prms)
+           'response-onset\nsupersaturation', colors, 'D', label_prms)
 # Mean-driven multisolution
 plot_rates(fig.add_subplot(gs[1, 1]),
            [nu_ext_mdm_a, nu_ext_mdm_b, nu_ext_mdm_c],
            [nu_mdm_a, nu_mdm_b, nu_mdm_c], 10, 50,
            r'external rate $\nu_X$ (1/s)', '', 'mean-driven\nmulti-solution',
-           colors, '(E)', label_prms)
+           colors, 'E', label_prms)
 # Noise-driven multisolution
 plot_rates(fig.add_subplot(gs[1, 2]),
            [nu_ext_ndm_a, nu_ext_ndm_b, nu_ext_ndm_c, nu_ext_ndm_d],
            [nu_ndm_a, nu_ndm_b, nu_ndm_c, nu_ndm_d], 5, 10,
            r'external rate $\nu_X$ (1/s)', '', 'noise-driven\nmulti-solution',
-           colors, '(F)', label_prms)
+           colors, 'F', label_prms)
 
 # insert sketch using svgutil, try saving as pdf using inkscape
 if insert_sketch:
