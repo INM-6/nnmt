@@ -171,8 +171,8 @@ axB.set_yticks([-60, -30, 0])
 
 label_prms = dict(x=-0.05, y=1.1, fontsize=10, fontweight='bold',
                   va='top', ha='right')
-axA.text(s='(A)', transform=axA.transAxes, **label_prms)
-axB.text(s='(B)', transform=axB.transAxes, **label_prms)
+axA.text(s='A', transform=axA.transAxes, **label_prms)
+axB.text(s='B', transform=axB.transAxes, **label_prms)
 
 
 x_minor = matplotlib.ticker.LogLocator(
