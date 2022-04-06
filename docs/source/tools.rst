@@ -57,6 +57,15 @@ Leaky integrate-and-fire neurons
 
    lif
 
+**************
+Binary neurons
+**************
+
+.. toctree::
+   :maxdepth: 1
+
+   binary
+
 *****************************
 Spatially structured networks
 *****************************

@@ -63,6 +63,7 @@ from ..utils import (_check_positive_params,
                      _cache)
 
 from . import _general
+from .. import _solvers
 
 from .delta import (
     _firing_rates_for_given_input as _delta_firing_rate,
@@ -98,7 +99,7 @@ def working_point(network, method='shift', **kwargs):
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._general._firing_rate_integration`.
+        :func:`nnmt._solvers._firing_rate_integration`.
 
     Returns
     -------
@@ -126,7 +127,7 @@ def firing_rates(network, method='shift', **kwargs):
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._general._firing_rate_integration`.
+        :func:`nnmt._solvers._firing_rate_integration`.
 
     Returns
     -------
@@ -180,7 +181,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     V_th_rel : [float | 1d array]
         Relative threshold potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -196,7 +197,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'shift'.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
-        :func:`nnmt.lif._general._firing_rate_integration`.
+        :func:`nnmt._solvers._firing_rate_integration`.
 
     Returns
     -------
@@ -219,19 +220,23 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'nu_ext': nu_ext,
         }
 
+    input_funcs = [_general._mean_input, _general._std_input]
+
     if method == 'shift':
-        return _general._firing_rate_integration(_firing_rate_shift,
+        return _solvers._firing_rate_integration(_firing_rate_shift,
                                                  firing_rate_params,
+                                                 input_funcs,
                                                  input_params, **kwargs)
     elif method == 'taylor':
-        return _general._firing_rate_integration(_firing_rate_taylor,
+        return _solvers._firing_rate_integration(_firing_rate_taylor,
                                                  firing_rate_params,
+                                                 input_funcs,
                                                  input_params, **kwargs)
 
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
-def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
+def _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
     """
     Calculates stationary mean firing rates including synaptic filtering.
 
@@ -245,16 +250,16 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
 
     Parameters
     ----------
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
-    V_0_rel : [float | np.array]
-        Relative reset potential in V.
     mu : [float | np.array]
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -272,12 +277,12 @@ def _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     # effective reset
     V_01 = V_0_rel + sigma * alpha / 2. * np.sqrt(tau_s / tau_m)
     # use standard Siegert with modified threshold and reset
-    return _delta_firing_rate(V_01, V_th1, mu, sigma, tau_m, tau_r)
+    return _delta_firing_rate(mu, sigma, V_01, V_th1, tau_m, tau_r)
 
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
-def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
+def _firing_rate_taylor(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
     """
     Calcs stationary mean firing rates including synaptic filtering.
 
@@ -293,16 +298,16 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
 
     Parameters
     ----------
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
-    V_0_rel : [float | np.array]
-        Relative reset potential in V.
     mu : [float | np.array]
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -315,8 +320,8 @@ def _firing_rate_taylor(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s):
     """
     alpha = __alpha_voltage_shift()
 
-    nu0 = _delta_firing_rate(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
-    nu0_dPhi = _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
+    nu0 = _delta_firing_rate(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r)
+    nu0_dPhi = _nu0_dPhi(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r)
     result = nu0 * (1 - np.sqrt(tau_s * tau_m / 2) * alpha * nu0_dPhi)
     if np.any(result < 0):
         warnings.warn("Negative firing rates detected. You might be in an "
@@ -339,7 +344,7 @@ def __alpha_voltage_shift():
     return np.sqrt(2) * abs(_zetac(0.5) + 1)
 
 
-def _nu0_dPhi(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r):
+def _nu0_dPhi(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r):
     """Calculate nu0 * ( Phi(sqrt(2)*y_th) - Psi(sqrt(2)*y_r) ) safely."""
     # bring into appropriate shape
     V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r = _equalize_shape(
@@ -436,7 +441,7 @@ def mean_input(network):
     K : np.array
         Indegree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -479,7 +484,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -543,7 +548,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -711,7 +716,7 @@ def _transfer_function(mu, sigma, tau_m, tau_s, tau_r, V_th_rel, V_0_rel,
     sigma : [float | np.array]
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.array]
@@ -777,7 +782,7 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     sigma : [float | np.array]
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.array]
@@ -817,10 +822,10 @@ def _transfer_function_shift(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     if np.any(zero_omega_mask):
         result[zero_omega_mask] = (
             _derivative_of_delta_firing_rates_wrt_mean_input(
-                V_0_shifted, V_th_shifted, mu, sigma, tau_m, tau_r))
+                mu, sigma, V_0_shifted, V_th_shifted, tau_m, tau_r))
 
     if np.any(regular_mask):
-        nu = _delta_firing_rate(V_0_shifted, V_th_shifted, mu, sigma, tau_m,
+        nu = _delta_firing_rate(mu, sigma, V_0_shifted, V_th_shifted, tau_m,
                                 tau_r)
         nu = np.atleast_1d(nu)[np.newaxis]
         x_t = np.sqrt(2.) * (V_th_shifted - mu) / sigma
@@ -869,7 +874,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     sigma : [float | np.array]
         Standard deviation of neuron activity of one population in V.
     tau_m : [float | np.array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.array]
@@ -904,15 +909,15 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
     if np.any(zero_omega_mask):
         result[zero_omega_mask] = (
             _derivative_of_firing_rates_wrt_mean_input(
-                V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
+                mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s)
             )
 
     if np.any(regular_mask):
         delta_rates = _delta_firing_rate(
-            V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
+            mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r)
         delta_rates = np.atleast_1d(delta_rates)[np.newaxis]
         exp_rates = _firing_rate_taylor(
-            V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
+            mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s)
         exp_rates = np.atleast_1d(exp_rates)[np.newaxis]
 
         # effective threshold and reset
@@ -1007,7 +1012,7 @@ def _fit_transfer_function(transfer_function, omegas, tau_m, J, K):
     omegas : [float | np.ndarray]
         Input frequencies to population in Hz.
     tau_m : float
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J : np.array
         Weight matrix in V.
     K : np.array
@@ -1063,7 +1068,7 @@ def _similar_array(x, array):
 
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
-def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
+def _derivative_of_firing_rates_wrt_mean_input(mu, sigma, V_0_rel, V_th_rel,
                                                tau_m, tau_r, tau_s):
     """
     Derivative of the stationary firing rates with respect to the mean input.
@@ -1077,20 +1082,20 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
 
     Parameters
     ----------
-    tau_m : [float | np.ndarray]
-        Membrane time constant in s.
-    tau_s : float
-        Pre-synaptic time constant in s.
-    tau_r : [float | np.ndarray]
-        Refractory time in s.
-    V_th_rel : [float | np.ndarray]
-        Relative threshold potential in V.
-    V_0_rel : [float | np.ndarray]
-        Relative reset potential in V.
     mu : [float | np.ndarray]
         Mean neuron activity in V.
     sigma : [float | np.ndarray]
         Standard deviation of neuron activity in V.
+    V_th_rel : [float | np.ndarray]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.ndarray]
+        Relative reset potential in V.
+    tau_m : [float | np.ndarray]
+        Membrane time constant of post-synatic neuron in s.
+    tau_r : [float | np.ndarray]
+        Refractory time in s.
+    tau_s : [float | np.ndarray]
+        Pre-synaptic time constant in s.
 
     Returns
     -------
@@ -1104,10 +1109,10 @@ def _derivative_of_firing_rates_wrt_mean_input(V_0_rel, V_th_rel, mu, sigma,
     x_th = np.sqrt(2) * (V_th_rel - mu) / sigma
     x_r = np.sqrt(2) * (V_0_rel - mu) / sigma
     integral = 1 / tau_m / _delta_firing_rate(
-        V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
+        mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r)
     prefactor = np.sqrt(tau_s / tau_m) * alpha / (tau_m * np.sqrt(2))
     dnudmu = _derivative_of_delta_firing_rates_wrt_mean_input(
-        V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r)
+        mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r)
     dPhi_prime = _Phi_prime_mu(x_th, sigma) - _Phi_prime_mu(x_r, sigma)
     dPhi = _Phi(x_th) - _Phi(x_r)
     phi = dPhi_prime * integral + (2 * np.sqrt(2) / sigma) * dPhi**2
@@ -1190,7 +1195,7 @@ def _derivative_of_firing_rates_wrt_input_rate(
     sigma :
         Standard deviation of neuron activity in V.
     tau_m : [float | np.ndarray]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_s : float
         Pre-synaptic time constant in s.
     tau_r : [float | np.ndarray]
@@ -1223,7 +1228,7 @@ def _derivative_of_firing_rates_wrt_input_rate(
     y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
     y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
 
-    nu0 = _firing_rate_shift(V_0_rel, V_th_rel, mu, sigma, tau_m, tau_r, tau_s)
+    nu0 = _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s)
 
     # linear contribution
     lin = (np.sqrt(np.pi) * (tau_m * nu0)**2 * j / sigma
@@ -1306,7 +1311,7 @@ def _effective_connectivity(transfer_function, D, J, K, tau_m):
     K : np.ndarray
         Indegree matrix.
     tau_m : float
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
 
     Returns
     -------
@@ -1864,7 +1869,7 @@ def _power_spectra(nu, effective_connectivity, J, K, N, tau_m):
     N : np.ndarray
         Number of neurons in each population.
     tau_m : [float | np.narray]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
 
     Returns
     -------
@@ -1957,7 +1962,7 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     V_0_rel : [float | np.array]
         Relative reset potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     tau_s : float
@@ -1977,12 +1982,12 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
     """
     # target rates for set mean and standard deviation of input
     if method == 'shift':
-        target_rates = _firing_rate_shift(V_0_rel, V_th_rel,
-                                          mu_set, sigma_set,
+        target_rates = _firing_rate_shift(mu_set, sigma_set,
+                                          V_0_rel, V_th_rel,
                                           tau_m, tau_r, tau_s)
     elif method == 'taylor':
-        target_rates = _firing_rate_taylor(V_0_rel, V_th_rel,
-                                           mu_set, sigma_set,
+        target_rates = _firing_rate_taylor(mu_set, sigma_set,
+                                           V_0_rel, V_th_rel,
                                            tau_m, tau_r, tau_s)
     else:
         raise ValueError('Chosen method not implemented')

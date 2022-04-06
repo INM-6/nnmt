@@ -116,7 +116,7 @@ Here you find how variables of LIF neurons are named in NNMT:
    * - Standard deviation of synaptic input
      - :math:`\boldsymbol{\sigma}`
      - ``sigma``
-   * - Membrane time constant
+   * - Post-synaptic membrane time constant
      - :math:`\tau_\mathrm{m}`
      - ``tau_m``
    * - Refractory time

@@ -74,6 +74,8 @@ class Network():
         Change parameters and return network with specified parameters.
     copy
         Returns a deep copy of the network.
+    clear_results
+        Remove calculated results or specified ones from internal dicts.
     """
 
     def __init__(self, network_params=None, analysis_params=None, file=None):
@@ -312,7 +314,8 @@ class Network():
         Parameters
         ----------
         results : [None | list]
-            List of results to be removed. Default is None.
+            List of result keys to be removed. Default is None, which removes
+            all results.
         """
         if results is not None:
             results = np.atleast_1d(results).tolist()
