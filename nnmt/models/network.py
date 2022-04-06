@@ -74,6 +74,8 @@ class Network():
         Change parameters and return network with specified parameters.
     copy
         Returns a deep copy of the network.
+    clear_results
+        Remove calculated results or specified ones from internal dicts.
     """
 
     def __init__(self, network_params=None, analysis_params=None, file=None):
@@ -94,7 +96,7 @@ class Network():
                 self.network_params = io.load_val_unit_dict_from_yaml(
                     network_params)
             elif isinstance(network_params, dict):
-                self.network_params = network_params
+                self.network_params = copy.deepcopy(network_params)
             else:
                 raise ValueError('Invalid value for `network_params`.')
 
@@ -107,7 +109,7 @@ class Network():
                 self.analysis_params = io.load_val_unit_dict_from_yaml(
                     analysis_params)
             elif isinstance(analysis_params, dict):
-                self.analysis_params = analysis_params
+                self.analysis_params = copy.deepcopy(analysis_params)
             else:
                 raise ValueError('Invalid value for `network_params`.')
 
@@ -312,7 +314,8 @@ class Network():
         Parameters
         ----------
         results : [None | list]
-            List of results to be removed. Default is None.
+            List of result keys to be removed. Default is None, which removes
+            all results.
         """
         if results is not None:
             results = np.atleast_1d(results).tolist()

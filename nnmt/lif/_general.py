@@ -124,7 +124,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -138,7 +138,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of mean inputs to each population in V.
     """
     # contribution from within the network
-    m0 = np.dot(K * J, tau_m * nu)
+    m0 = tau_m * np.dot(K * J, nu)
     # contribution from external sources
     m_ext = tau_m * np.dot(K_ext * J_ext, nu_ext)
     # add them up
@@ -161,7 +161,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -175,7 +175,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of standard deviation of inputs to each population in V.
     """
     # contribution from within the network to variance
-    var0 = np.dot(K * J**2, tau_m * nu)
+    var0 = tau_m * np.dot(K * J**2, nu)
     # contribution from external sources to variance
     var_ext = tau_m * np.dot(K_ext * J_ext**2, nu_ext)
     # add them up

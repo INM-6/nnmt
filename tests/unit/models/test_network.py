@@ -41,6 +41,23 @@ class Test_initialization:
         assert len(network.analysis_params.items()) != 0
         assert 'lif.exp.firing_rates' in network.results.keys()
 
+    def test_network_param_dict_is_deepcopied(self):
+        network_params = {'a': 1, 'b': [1, 2, 3]}
+        network = nnmt.models.Network(network_params)
+        network.network_params['a'] = 0
+        network.network_params['b'][0] = 0
+
+        assert network_params['a'] == 1
+        assert network_params['b'][0] == 1
+
+    def test_analysis_param_dict_is_deepcopied(self):
+        analysis_params = {'a': 1, 'b': [1, 2, 3]}
+        network = nnmt.models.Network(analysis_params=analysis_params)
+        network.analysis_params['a'] = 0
+        network.analysis_params['b'][0] = 0
+
+        assert analysis_params['a'] == 1
+        assert analysis_params['b'][0] == 1
 
 class Test_unit_stripping:
 

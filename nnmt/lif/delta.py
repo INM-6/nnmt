@@ -106,7 +106,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
     V_th_rel : [float | 1d array]
         Relative threshold potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
     J_ext : np.array
@@ -167,7 +167,7 @@ def _firing_rates_for_given_input(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r):
     V_th_rel : [float | 1d array]
         Relative threshold potential in V.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
         Refractory time in s.
 
@@ -330,7 +330,7 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -394,7 +394,7 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     K : np.array
         In-degree matrix.
     tau_m : [float | 1d array]
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     J_ext : np.array
         External weight matrix in V.
     K_ext : np.array
@@ -429,7 +429,7 @@ def _derivative_of_firing_rates_wrt_mean_input(mu, sigma, V_0_rel, V_th_rel,
     V_th_rel : float
         Relative threshold potential in V.
     tau_m : float
-        Membrane time constant in s.
+        Membrane time constant of post-synatic neuron in s.
     tau_r : float
         Refractory time in s.
 

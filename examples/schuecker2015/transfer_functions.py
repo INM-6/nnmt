@@ -61,7 +61,7 @@ for i, index in enumerate(indices):
         si_network_params['tau_r'],
         si_network_params['tau_s'])
 
-    transfer_function = nnmt.lif.exp._transfer_function_shift(
+    transfer_function = nnmt.lif.exp._transfer_function(
         si_network_params[f'mean_input_{index}'],
         si_network_params[f'sigma_{index}'],
         si_network_params['tau_m'],
@@ -70,6 +70,7 @@ for i, index in enumerate(indices):
         si_network_params['theta'],
         si_network_params['V_reset'],
         omegas,
+        method='shift',
         synaptic_filter=False)
 
     # the result is returned in SI-units (1/(s*V))
@@ -170,8 +171,8 @@ axB.set_yticks([-60, -30, 0])
 
 label_prms = dict(x=-0.05, y=1.1, fontsize=10, fontweight='bold',
                   va='top', ha='right')
-axA.text(s='(A)', transform=axA.transAxes, **label_prms)
-axB.text(s='(B)', transform=axB.transAxes, **label_prms)
+axA.text(s='A', transform=axA.transAxes, **label_prms)
+axB.text(s='B', transform=axB.transAxes, **label_prms)
 
 
 x_minor = matplotlib.ticker.LogLocator(
