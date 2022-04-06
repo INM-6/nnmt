@@ -53,10 +53,10 @@ nu0_fbs = []
 for i, index in enumerate(indices):
     # Stationary firing rates for filtered synapses (via shift)
     nu0_fb = nnmt.lif.exp._firing_rate_shift(
-        si_network_params['V_reset'],
-        si_network_params['theta'],
         si_network_params[f'mean_input_{index}'],
         si_network_params[f'sigma_{index}'],
+        si_network_params['V_reset'],
+        si_network_params['theta'],
         si_network_params['tau_m'],
         si_network_params['tau_r'],
         si_network_params['tau_s'])
