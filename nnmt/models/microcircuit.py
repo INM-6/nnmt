@@ -53,8 +53,12 @@ class Microcircuit(Network):
             Ratio of inhibitory to excitatory synaptic weights.
         - `populations` : list of strings
             Names of different populations.
-        - `tau_s` : float
-            Synaptic time constant in ms.
+        - `tau_s` : [float | array]
+            Post-synaptic time constant in ms.
+        - `tau_s_ext` : [float | array], optional
+            Post-synaptic time constant of external input in ms. If this is not
+            given, the network is assumed to have only a single synaptic time
+            constant given by `tau_s`.
         - `w` : float
             Amplitude of excitatory post synaptic current in pA.
         - `w_ext`: float
@@ -86,17 +90,17 @@ class Microcircuit(Network):
     def __init__(self, network_params=None, analysis_params=None, file=None):
 
         super().__init__(network_params, analysis_params, file)
+        if file is None:
+            self.network_params['label'] = 'microcircuit'
+            derived_network_params = (
+                self._calculate_dependent_network_parameters())
+            self.network_params.update(derived_network_params)
 
-        self.network_params['label'] = 'microcircuit'
-        derived_network_params = (
-            self._calculate_dependent_network_parameters())
-        self.network_params.update(derived_network_params)
-
-        # calculate dependend analysis parameters
-        if analysis_params is not None:
-            derived_analysis_params = (
-                self._calculate_dependent_analysis_parameters())
-            self.analysis_params.update(derived_analysis_params)
+            # calculate dependend analysis parameters
+            if analysis_params is not None:
+                derived_analysis_params = (
+                    self._calculate_dependent_analysis_parameters())
+                self.analysis_params.update(derived_analysis_params)
 
         self._convert_param_dicts_to_base_units_and_strip_units()
 
@@ -168,6 +172,20 @@ class Microcircuit(Network):
         derived_params['J_ext'] = (
             tau_s_div_C * np.ones(self.network_params['K_ext'].shape)
             * self.network_params['w_ext'])
+
+        try:
+            derived_params['J_ext'] = (
+                self.network_params['tau_s_ext']
+                / self.network_params['C']
+                * np.ones(self.network_params['K_ext'].shape)
+                * self.network_params['w_ext'])
+        except KeyError:
+            derived_params['J_ext'] = (
+                self.network_params['tau_s']
+                / self.network_params['C']
+                * np.ones(self.network_params['K_ext'].shape)
+                * self.network_params['w_ext'])
+
         try:
             derived_params['J_ext'].ito(ureg.mV)
         except AttributeError:
