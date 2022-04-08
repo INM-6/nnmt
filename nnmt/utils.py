@@ -150,14 +150,15 @@ def _cache(network, func, params, result_keys, units=None):
 def check_if_positive(parameters, parameter_names):
     """Check that will raise an error if parameters are negative."""
     for parameter, parameter_name in zip(parameters, parameter_names):
-        try:
-            if np.any(np.atleast_1d(parameter) < 0):
-                raise ValueError('{} should be larger than zero!'.format(
-                    parameter_name))
-        except TypeError:
-            if parameter < 0:
-                raise ValueError('{} should be larger than zero!'.format(
-                    parameter_name))
+        if parameter is not None:
+            try:
+                if np.any(np.atleast_1d(parameter) < 0):
+                    raise ValueError('{} should be larger than zero!'.format(
+                        parameter_name))
+            except TypeError:
+                if parameter < 0:
+                    raise ValueError('{} should be larger than zero!'.format(
+                        parameter_name))
 
 
 def _check_positive_params(func):
@@ -178,7 +179,9 @@ def _check_positive_params(func):
                       'nu_i_ext',
                       'sigma',
                       'tau_m',
+                      'tau_m_ext',
                       'tau_s',
+                      'tau_s_ext',
                       'tau_r',
                       'nu_ext',
                       ]
