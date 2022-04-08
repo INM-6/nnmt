@@ -182,6 +182,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     :math:`k = \sqrt{\\tau_\mathrm{s}/\\tau_\mathrm{m}}` of Eq. 4.33 in
     :cite:t:`fourcaud2002`, calling :func:`nnmt.lif.exp._firing_rate_taylor`.
 
+    The equations in the sources mentioned above assume a single synaptic time
+    constant in the entire network. However, if there are multiple synaptic
+    time constants, the effective synaptic time constant approach of Eq. 5.49
+    in :cite:t:`fourcaud2002` is used.
+
     Parameters
     ----------
     J : np.array
@@ -204,8 +209,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    tau_s_ext : np.array
-        Pre-synaptic time constant of external input in s.
+    tau_s_ext : np.array, optional
+        Pre-synaptic time constant of external input in s. If `tau_s_ext` is
+        not given, a single synaptic time constant is assumed for the entire
+        network and `tau_s_ext` is set to `tau_s`. However, if `tau_s` is an
+        array, `tau_s_ext` needs to be passed explicitely.
     method : {'shift', 'taylor'}, optional
         Method used to integrate the adapted Siegert function. Default is
         'shift'.
@@ -248,7 +256,8 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
             assert not hasattr(tau_s, "__len__")
             tau_s_ext = tau_s
         except AssertionError:
-            print('`tau_s_ext` needs to be specified if `tau_s` is array.')
+            raise ValueError('`tau_s_ext` needs to be specified if '
+                             '`tau_s` is array.')
 
     # check whether effective synaptic time constant needs to be computed
     if ((not hasattr(tau_s, "__len__"))
@@ -642,7 +651,7 @@ def effective_tau_syn(network):
 def _effective_tau_syn(nu, J, K, tau_m, tau_s,
                        J_ext, K_ext, tau_s_ext, nu_ext):
     """
-    Calculates and effective synaptic time constant if the input is mediated
+    Calculates and effective synaptic time constants if the input is mediated
     by synapses with different time constants, e.g., AMPA or GABA receptors.
 
     Following Eq. 5.49 in :cite:t:`fourcaud2002`.
