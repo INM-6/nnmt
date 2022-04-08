@@ -14,4 +14,5 @@ Examples
    auto_examples/schuecker2015/transfer_functions
    bos_2016_index.rst
    mapping_lif_rate_and_spatial_patterns_index.rst
+   auto_examples/multiple_synaptic_time_constants/multi_syn_time_constants
    auto_examples/binary_rate_simulation/binary_sim_vs_thy.rst

@@ -117,7 +117,16 @@ class Basic(Network):
         except AttributeError:
             pass
 
-        derived_params['J_ext'] = tau_s_div_C * self.network_params['W_ext']
+        try:
+            derived_params['J_ext'] = (
+                self.network_params['tau_s_ext']
+                / self.network_params['C']
+                * self.network_params['W_ext'])
+        except KeyError:
+            derived_params['J_ext'] = (
+                self.network_params['tau_s']
+                / self.network_params['C']
+                * self.network_params['W_ext'])
 
         try:
             derived_params['J_ext'].ito(ureg.mV)

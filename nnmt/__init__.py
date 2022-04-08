@@ -1,5 +1,6 @@
 import pint as _pint
 ureg = _pint.UnitRegistry()
+units = ureg
 
 from . import utils
 from . import input_output
