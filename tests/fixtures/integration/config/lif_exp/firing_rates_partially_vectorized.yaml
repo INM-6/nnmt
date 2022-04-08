@@ -82,15 +82,7 @@ V_th_abs:
 ### synapses
 # synaptic time constant
 tau_s:
-  val:
-    - 0.5
-    - 0.6
-    - 0.7
-    - 0.8
-    - 0.9
-    - 1.0
-    - 1.1
-    - 1.2
+  val: 0.5
   unit: ms
 
 # delay of excitatory connections
@@ -233,16 +225,4 @@ tau_m_ext:
   - 10.5
   - 10.6
   - 10.7
-  unit: ms
-
-tau_s_ext:
-  val:
-  - 0.1
-  - 0.2
-  - 0.3
-  - 0.4
-  - 0.5
-  - 0.6
-  - 0.7
-  - 0.8
   unit: ms

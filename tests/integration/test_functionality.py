@@ -42,6 +42,16 @@ class Test_lif_exp_functions_give_correct_results:
         assert_allclose(
             firing_rates, std_results[self.prefix + 'firing_rates_taylor'])
 
+    def test_firing_rates_partially_vectorized(self):
+        network = nnmt.models.Network(
+            file=('tests/fixtures/integration/data/lif_exp/'
+                  'firing_rates_partially_vectorized.h5'))
+        old_results = network.results['lif.exp.firing_rates']
+        network.clear_results()
+        new_results = nnmt.lif.exp.firing_rates(network)
+        assert_allclose(
+            old_results, new_results)
+
     def test_firing_rates_fully_vectorized(self):
         network = nnmt.models.Network(
             file=('tests/fixtures/integration/data/lif_exp/'
@@ -51,6 +61,22 @@ class Test_lif_exp_functions_give_correct_results:
         new_results = nnmt.lif.exp.firing_rates(network)
         assert_allclose(
             old_results, new_results)
+
+    def test_firing_rates_compatible_for_matching_single_and_multiple_tau_s(
+            self):
+        network = nnmt.models.Network(
+            file=('tests/fixtures/integration/data/lif_exp/'
+                  'firing_rates_partially_vectorized.h5'))
+        N = network.network_params['N']
+        tau_s = 0.0005
+        network_single_tau_s = network.change_parameters(
+            {'tau_s': tau_s})
+        network_multiple_tau_s = network.change_parameters(
+            {'tau_s': np.ones(len(N)) * tau_s,
+             'tau_s_ext': tau_s})
+        results_single = nnmt.lif.exp.firing_rates(network_single_tau_s)
+        results_multiple = nnmt.lif.exp.firing_rates(network_multiple_tau_s)
+        assert_allclose(results_single, results_multiple)
 
     def test_mean_input(self, network, std_results):
         nnmt.lif.exp.firing_rates(network)

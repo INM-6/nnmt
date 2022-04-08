@@ -17,6 +17,7 @@ Options:
     --all                create all integration fixtures
     -f, --force        force code to run
     --firing_rates_fully_vectorized
+    --firing_rates_partially_vectorized
     -h, --help         show this information
 '''
 
@@ -70,6 +71,13 @@ if __name__ == '__main__':
         # nnmt.lif.exp.additional_rates_for_fixed_input(
         #     network, mean_input_set, std_input_set)
         network.save(file=fixture_path + 'std_results.h5')
+
+    if args['--firing_rates_partially_vectorized']:
+
+        name = 'lif_exp/firing_rates_partially_vectorized'
+        network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
+        firing_rates = nnmt.lif.exp.firing_rates(network)
+        network.save(f'{fixture_path + name}.h5')
 
     if args['--firing_rates_fully_vectorized']:
 
