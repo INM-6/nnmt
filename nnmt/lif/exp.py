@@ -249,13 +249,13 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
                'params': input_params},
         )
 
-    # set tau_s_ext default
+    # set external synaptic time constant if only single tau_s is defined
     if tau_s_ext is None:
-        try:
-            # assume single synaptic time constant if tau_s is scalar
-            assert not hasattr(tau_s, "__len__")
+        if not hasattr(tau_s, "__len__"):
             tau_s_ext = tau_s
-        except AssertionError:
+        elif hasattr(tau_s, "__len__") and (len(set(tau_s)) == 1):
+            tau_s_ext = tau_s
+        else:
             raise ValueError('`tau_s_ext` needs to be specified if '
                              '`tau_s` is array.')
 
@@ -263,6 +263,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     if ((not hasattr(tau_s, "__len__"))
         and (not hasattr(tau_s_ext, "__len__"))
         and (tau_s == tau_s_ext)):
+        pass
+    elif (hasattr(tau_s, "__len__")
+          and (not hasattr(tau_s_ext, "__len__"))
+          and (len(set(tau_s)) == 1)
+          and (tau_s[0] == tau_s_ext)):
         pass
     else:
         eff_tau_s_params = copy.deepcopy(input_params)
