@@ -219,19 +219,25 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
         }
+    input_dict = dict(
+        mu={'func': _general._mean_input,
+            'params': input_params},
+        sigma={'func': _general._std_input,
+               'params': input_params},
+        )
 
     input_funcs = [_general._mean_input, _general._std_input]
 
     if method == 'shift':
         return _solvers._firing_rate_integration(_firing_rate_shift,
                                                  firing_rate_params,
-                                                 input_funcs,
-                                                 input_params, **kwargs)
+                                                 input_dict,
+                                                 **kwargs)
     elif method == 'taylor':
         return _solvers._firing_rate_integration(_firing_rate_taylor,
                                                  firing_rate_params,
-                                                 input_funcs,
-                                                 input_params, **kwargs)
+                                                 input_dict,
+                                                 **kwargs)
 
 
 @_check_positive_params
