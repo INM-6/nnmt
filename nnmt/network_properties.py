@@ -12,10 +12,9 @@ Functions
     _delay_dist_matrix
 
 '''
-
-
 import numpy as np
 from scipy.special import erf as _erf
+import scipy.integrate as sint
 from .utils import _cache
 
 import nnmt
@@ -65,7 +64,8 @@ def delay_dist_matrix(network, freqs=None):
 
 
 @nnmt.utils._check_positive_params
-def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
+def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas, 
+                       integration_times=np.arange(1e-8, 1.0, 0.001)):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.
 
@@ -82,6 +82,15 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
         String specifying delay distribution.
     omegas : array_like, optional
        The considered angular frequencies in 2*pi*Hz.
+    integration_times : array_like, optional
+        Integration times used for numerical integration of the 
+        Fourier-transform for distributions, for which no analytical solution 
+        is available. 
+        
+        Default is np.arange(1e-8, 1.0, 0.001).
+        
+        The logarithmic pdf decays to zero for large delays. A delay of zero
+        is not possible due to the logarithm.
 
     Returns
     -------
@@ -105,3 +114,56 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
         b0 = np.exp(-0.5 * np.power(Delay_sd * omegas, 2))
         b1 = np.exp(- 1j * omegas * Delay)
         return b0 * b1
+
+    elif delay_dist == 'lognormal':
+        mu = mu_underlying_gaussian(Delay, Delay_sd)
+        sigma = sigma_underlying_gaussian(Delay, Delay_sd)
+        return lognormal_distribution_fourier(omegas,
+                                              mu,
+                                              sigma,
+                                              integration_times)
+        
+
+def mu_underlying_gaussian(Delay, Delay_sd):
+    return np.log(Delay**2 / np.sqrt(Delay**2 + Delay_sd**2))
+
+def sigma_underlying_gaussian(Delay, Delay_sd):
+    return np.sqrt(np.log(1 + Delay**2/Delay_sd**2))
+
+def integrand_real(x, omega, mu_log, sigma_log):
+    a1 = np.cos(np.outer(omega, x))
+    a2 = 1 / (x * sigma_log * np.sqrt(2 * np.pi))
+    a3 = np.exp(-1 * (np.log(x) - mu_log)**2 / (2 * sigma_log**2))
+    return a1 * a2 * a3
+
+def integrand_imag(x, omega, mu_log, sigma_log):
+    a1 = np.sin(np.outer(omega, x))
+    a2 = 1 / (x * sigma_log * np.sqrt(2 * np.pi))
+    a3 = np.exp(-1 * (np.log(x) - mu_log)**2 / (2 * sigma_log**2))
+    return a1 * a2 * a3
+
+def lognormal_distribution_fourier(omega, mu, sigma, integration_times):
+    y = np.zeros([omega.shape[0], *mu.shape], dtype=complex)
+    # excitatory
+    i, j = 0, 0
+    y1 = integrand_real(integration_times, omega[:, i, j], mu[i, j], sigma[i, j])
+    y1 = sint.simps(y1, integration_times)
+    y2 = integrand_imag(integration_times, omega[:, i, j], mu[i, j], sigma[i, j])
+    y2 = sint.simps(y2, integration_times)
+    for i in range(mu.shape[0]):
+        for j in range(0, mu.shape[1], 2):
+            y[:, i, j] = y1-1j*y2 # e^*(-i wx)
+    
+    
+    # inhibitory
+    i, j = 1, 1
+    y1 = integrand_real(integration_times, omega[:, i, j], mu[i, j], sigma[i, j])
+    y1 = sint.simps(y1, integration_times)
+    y2 = integrand_imag(integration_times, omega[:, i, j], mu[i, j], sigma[i, j])
+    y2 = sint.simps(y2, integration_times)
+    for i in range(mu.shape[0]):
+        for j in range(1, mu.shape[1], 2):
+            y[:, i, j] = y1-1j*y2
+        
+    
+    return y
