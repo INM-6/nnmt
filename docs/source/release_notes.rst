@@ -14,7 +14,7 @@ NNMT 1.1.0
 - Add methods for binary neurons:
   - mean input
   - std input
-  - firing rates
+  - mean activity
   - balanced threshold
 - Add example comparing binary firing rates with simulation.
 - Fix bug of fixture creation for lif neurons, which wouldn't create all
