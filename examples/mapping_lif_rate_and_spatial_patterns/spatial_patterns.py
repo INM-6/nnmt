@@ -353,7 +353,7 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
         Scale factor for font size.
     """
     label_pos = [0., 1.]
-    ax.text(label_pos[0] + xshift, label_pos[1] + yshift, '(' + label + ')',
+    ax.text(label_pos[0] + xshift, label_pos[1] + yshift, label,
             ha='left', va='bottom',
             transform=ax.transAxes, fontweight='bold',
             fontsize=mpl.rcParams['font.size'] * scale_fs)
@@ -491,7 +491,7 @@ print('Plotting.')
 
 fig = plt.figure(figsize=(params['figwidth_1col'], params['figwidth_1col']))
 gs = gridspec.GridSpec(1, 2, figure=fig)
-plt.subplots_adjust(bottom=0.19, top=0.95, left=0.15, right=0.93, wspace=1.2)
+plt.subplots_adjust(bottom=0.19, top=0.95, left=0.15, right=0.9, wspace=1.2)
 
 ##########################################################################
 # To panel A, we plot eigenvalues from the rate model vs. wavenumbers.

@@ -123,7 +123,7 @@ def _add_label(ax, label, xshift=0., yshift=0., scale_fs=1.):
         Scale factor for font size.
     """
     label_pos = [0., 1.]
-    ax.text(label_pos[0] + xshift, label_pos[1] + yshift, '(' + label + ')',
+    ax.text(label_pos[0] + xshift, label_pos[1] + yshift, label,
             ha='left', va='bottom',
             transform=ax.transAxes, fontweight='bold',
             fontsize=mpl.rcParams['font.size'] * scale_fs)

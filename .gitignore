@@ -130,3 +130,5 @@ examples/bos2016/figures/sensitivity_measure_high_gamma_Bos2016.png
 examples/bos2016/power_spectra_of_subcircuits_Bos2016.png
 examples/schuecker2015/*.eps
 docs/source/auto_examples
+examples/binary_rate_simulation/*.png
+

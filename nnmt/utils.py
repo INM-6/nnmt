@@ -214,16 +214,12 @@ def _check_k_in_fast_synaptic_regime(func):
     @wraps(func)
     def decorator_check(*args, **kwargs):
         signature = inspect.signature(func)
-        if len(args) != 0:
-            tau_m = [args[i] for i, param in enumerate(signature.parameters)
-                     if param == 'tau_m'][0]
-            tau_s = [args[i] for i, param in enumerate(signature.parameters)
-                     if param == 'tau_s'][0]
-        else:
-            tau_m = kwargs['tau_m']
-            tau_s = kwargs['tau_s']
+        args = build_full_arg_list(signature, args, kwargs)
+        kwargs = dict(zip(signature.parameters, args))
+        tau_m = kwargs['tau_m']
+        tau_s = kwargs['tau_s']
         check_for_valid_k_in_fast_synaptic_regime(tau_m, tau_s)
-        return func(*args, **kwargs)
+        return func(**kwargs)
     return decorator_check
 
 

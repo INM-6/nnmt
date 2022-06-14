@@ -22,6 +22,9 @@ except ImportError:
 # use matplotlib style file
 plt.style.use('frontiers.mplstyle')
 
+# decide output format (either pdf or eps)
+ext = 'pdf'
+
 ###############################################################################
 # First we create a network model of the microcircuit, passing the parameter
 # yaml file.
@@ -54,8 +57,7 @@ print(f'Mean simulated rates: {simulated_rates}')
 width = 0.03937007874 * 85
 height = width * 1.3
 
-fig = plt.figure(figsize=(width, height),
-                 tight_layout=True)
+fig = plt.figure(figsize=(width, height))
 
 sim_colors = ['#4c72b0', '#c44e52']
 thy_color = '#ff8f2fff'
@@ -66,7 +68,7 @@ ax1 = plt.subplot2grid((5, 1), (3, 0), rowspan=2, colspan=1)
 
 # add labels to panels
 axs = [ax0, ax1]
-label = ['(A)', '(B)']
+label = ['A', 'B']
 y_pos = [1.25, 1.1]
 for n, ax in enumerate(axs):
     ax.text(-0.1, y_pos[n], label[n], transform=ax.transAxes,
@@ -102,11 +104,18 @@ if insert_sketch:
     svg_sketch.moveto(x=30, y=10, scale_x=0.61, scale_y=0.61)
     svg_mpl.append(svg_sketch)
     svg_mpl.save(f'{plot_fn}.svg')
-    os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
+    if ext == 'pdf':
+        os_return = os.system(f'inkscape --export-pdf={plot_fn}.pdf {plot_fn}.svg')
+    elif ext == 'eps':
+        os_return = os.system(f'inkscape {plot_fn}.svg -E {plot_fn}.eps --export-ps-level=3')
+    else:
+        print(f'Unknown output file extention `{ext}`. '
+              'Please choose either `pdf` or `eps`.')
+        os_return = -1
     if os_return == 0:
         os.remove(f'{plot_fn}.svg')
     else:
-        print('Conversion to pdf using inkscape failed, keeping svg...')
+        print('Conversion to pdf or eps using inkscape failed, keeping svg...')
 
 ax0.annotate('(sketch)', xy=(0.35, 0.6))
 plt.show()
