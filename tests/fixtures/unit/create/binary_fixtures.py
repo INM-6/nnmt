@@ -47,13 +47,13 @@ if __name__ == '__main__':
 
         run_calc = False
 
-        if (module == 'firing_rates') or (module == 'all'):
+        if (module == 'mean_activity') or (module == 'all'):
             config_path = config_path_prefix + 'working_point/'
             regime_params, regimes = load_params_and_regimes(config_path)
             create_and_save_fixtures(
-                nnmt.binary._firing_rates_for_given_input,
+                nnmt.binary._mean_activity_for_given_input,
                 regime_params, regimes,
-                fixture_path + neuron_prefix + 'firing_rates.h5')
+                fixture_path + neuron_prefix + 'mean_activity.h5')
 
             run_calc = True
 
