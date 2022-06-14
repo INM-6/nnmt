@@ -212,7 +212,7 @@ network.network_params['theta'] = theta
 
 ###############################################################################
 # We calculate the mean-field estimate of the rates
-rates_thy = nnmt.binary.firing_rates(network)
+rates_thy = nnmt.binary.mean_activity(network)
 
 ###############################################################################
 # Simulation

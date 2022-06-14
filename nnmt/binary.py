@@ -7,7 +7,7 @@ Network Functions
 .. autosummary::
     :toctree: _toctree/lif/
 
-    firing_rates
+    mean_activity
     mean_input
     std_input
     working_point
@@ -19,8 +19,8 @@ Parameter Functions
 .. autosummary::
     :toctree: _toctree/lif/
 
-    _firing_rates
-    _firing_rates_for_given_input
+    _mean_activity
+    _mean_activity_for_given_input
     _mean_input
     _std_input
     _balanced_threshold
@@ -36,7 +36,7 @@ from .utils import _cache
 _prefix = 'binary.'
 
 
-def _firing_rates_for_given_input(mu, sigma, theta):
+def _mean_activity_for_given_input(mu, sigma, theta):
     """
     Calcs the firing rates of binary neurons for given input statistics.
 
@@ -57,17 +57,17 @@ def _firing_rates_for_given_input(mu, sigma, theta):
     return 0.5 * _erfc(-(mu - theta) / (np.sqrt(2) * sigma))
 
 
-def firing_rates(network, **kwargs):
+def mean_activity(network, **kwargs):
     """
     Calculates stationary firing rates for a network of binary neurons.
 
-    See :func:`nnmt.binary._firing_rates` for full documentation.
+    See :func:`nnmt.binary._mean_activity` for full documentation.
 
     Parameters
     ----------
     network : nnmt.models.Network or child class instance.
         Network with the network parameters listed in the docstring of
-        :func:`nnmt.binary._firing_rates`.
+        :func:`nnmt.binary._mean_activity`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
         :func:`nnmt._solvers._firing_rate_integration`.
@@ -95,17 +95,17 @@ def firing_rates(network, **kwargs):
 
     params.update(kwargs)
 
-    return _cache(network, _firing_rates, params, _prefix + 'firing_rates')
+    return _cache(network, _mean_activity, params, _prefix + 'mean_activity')
 
 
-def _firing_rates(J, K, theta, **kwargs):
+def _mean_activity(J, K, theta, **kwargs):
     """
     Calcs firing rates for each population in a network of binary neurons.
 
     See :func:`nnmt._solvers._firing_rate_integration` for integration
     procedure.
 
-    Uses :func:`nnmt.binary._firing_rates_for_given_input`.
+    Uses :func:`nnmt.binary._mean_activity_for_given_input`.
 
     Parameters
     ----------
@@ -130,7 +130,7 @@ def _firing_rates(J, K, theta, **kwargs):
         'K': K,
     }
 
-    return _solvers._firing_rate_integration(_firing_rates_for_given_input,
+    return _solvers._firing_rate_integration(_mean_activity_for_given_input,
                                              firing_rate_params,
                                              input_funcs,
                                              input_params,
@@ -167,7 +167,7 @@ def mean_input(network):
         pass
 
     try:
-        params['m'] = network.results[_prefix + 'firing_rates']
+        params['m'] = network.results[_prefix + 'mean_activity']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
@@ -231,7 +231,7 @@ def std_input(network):
         pass
 
     try:
-        params['m'] = network.results[_prefix + 'firing_rates']
+        params['m'] = network.results[_prefix + 'mean_activity']
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
@@ -270,7 +270,7 @@ def working_point(network, **kwargs):
     """
     Calculates working point (rates, mean, and std input) for binary network.
 
-    Calculates the firing rates using :func:`nnmt.binary.firing_rates`,
+    Calculates the firing rates using :func:`nnmt.binary.mean_activity`,
     the mean input using :func:`nnmt.binary.mean_input`,
     and the standard deviation of the input using
     :func:`nnmt.binary.std_input`.
@@ -279,7 +279,7 @@ def working_point(network, **kwargs):
     ----------
     network : nnmt.models.Network or child class instance.
         Network with the network parameters listed in
-        :func:`nnmt.binary._firing_rates`.
+        :func:`nnmt.binary._mean_activity`.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
         :func:`nnmt._solvers._firing_rate_integration`.
@@ -289,7 +289,7 @@ def working_point(network, **kwargs):
     dict
         Dictionary containing firing rates, mean input and std input.
     """
-    return {'firing_rates': firing_rates(network, **kwargs),
+    return {'mean_activity': mean_activity(network, **kwargs),
             'mean_input': mean_input(network),
             'std_input': std_input(network)}
 
