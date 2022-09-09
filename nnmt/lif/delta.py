@@ -156,6 +156,11 @@ def _firing_rates_for_given_input(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r):
     :cite:p:`siegert1951`, found for example in Appendix A, Eq. A7 of
     :cite:t:`amit1997`.
 
+    The implementation is explained in :cite:t:`layer2022`, Appendix A.1.
+
+    And alternative but less stable way of implementing the Siegert function
+    can be found in :cite:t:`hahne2017`, Appendix A.1.
+
     Parameters
     ----------
     mu : [float | 1d array]
