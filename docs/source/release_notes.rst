@@ -5,6 +5,12 @@ Release notes
 =============
 
 **********
+NNMT 1.1.1
+**********
+
+- Add Hahne et al. 2017 and Layer et al. 2022 to delta firing rate references.
+
+**********
 NNMT 1.1.0
 **********
 
