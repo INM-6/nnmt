@@ -49,6 +49,7 @@ Parameter Functions
 
 import warnings
 from collections import defaultdict
+import copy
 import numpy as np
 import mpmath
 import scipy.linalg as slinalg
@@ -150,15 +151,26 @@ def firing_rates(network, method='shift', **kwargs):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
 
+    optional_params_list = [
+        'tau_s_ext'
+    ]
+
+    optional_params = {}
+    try:
+        optional_params = {key: network.network_params[key]
+                           for key in optional_params_list}
+    except KeyError as param:
+        pass
+    params.update(optional_params)
+
     params['method'] = method
     params.update(kwargs)
-
     return _cache(network,
                   _firing_rates, params, _prefix + 'firing_rates', 'hertz')
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
-                  nu_ext, method='shift', **kwargs):
+                  nu_ext, tau_s_ext=None, method='shift', **kwargs):
     """
     Calculates stationary firing rates for exp PSCs.
 
@@ -169,6 +181,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     :func:`nnmt.lif.exp._firing_rate_shift`, or a Taylor expansion around
     :math:`k = \sqrt{\\tau_\mathrm{s}/\\tau_\mathrm{m}}` of Eq. 4.33 in
     :cite:t:`fourcaud2002`, calling :func:`nnmt.lif.exp._firing_rate_taylor`.
+
+    The equations in the sources mentioned above assume a single synaptic time
+    constant in the entire network. However, if there are multiple synaptic
+    time constants, the effective synaptic time constant approach of Eq. 5.49
+    in :cite:t:`fourcaud2002` is used.
 
     Parameters
     ----------
@@ -192,6 +209,11 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
+    tau_s_ext : np.array, optional
+        Pre-synaptic time constant of external input in s. If `tau_s_ext` is
+        not given, a single synaptic time constant is assumed for the entire
+        network and `tau_s_ext` is set to `tau_s`. However, if `tau_s` is an
+        array, `tau_s_ext` needs to be passed explicitely.
     method : {'shift', 'taylor'}, optional
         Method used to integrate the adapted Siegert function. Default is
         'shift'.
@@ -204,6 +226,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
     np.array
         Array of firing rates of each population in Hz.
     """
+
     firing_rate_params = {
         'V_0_rel': V_0_rel,
         'V_th_rel': V_th_rel,
@@ -219,19 +242,50 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
         }
+    input_dict = dict(
+        mu={'func': _general._mean_input,
+            'params': input_params},
+        sigma={'func': _general._std_input,
+               'params': input_params},
+        )
 
-    input_funcs = [_general._mean_input, _general._std_input]
+    # set external synaptic time constant if only single tau_s is defined
+    if tau_s_ext is None:
+        if not hasattr(tau_s, "__len__"):
+            tau_s_ext = tau_s
+        elif hasattr(tau_s, "__len__") and (len(set(tau_s)) == 1):
+            tau_s_ext = tau_s
+        else:
+            raise ValueError('`tau_s_ext` needs to be specified if '
+                             '`tau_s` is array.')
+
+    # check whether effective synaptic time constant needs to be computed
+    if ((not hasattr(tau_s, "__len__"))
+        and (not hasattr(tau_s_ext, "__len__"))
+        and (tau_s == tau_s_ext)):
+        pass
+    elif (hasattr(tau_s, "__len__")
+          and (not hasattr(tau_s_ext, "__len__"))
+          and (len(set(tau_s)) == 1)
+          and (tau_s[0] == tau_s_ext)):
+        pass
+    else:
+        eff_tau_s_params = copy.deepcopy(input_params)
+        eff_tau_s_params.update({'tau_s': tau_s,
+                                 'tau_s_ext': tau_s_ext})
+        input_dict['tau_s'] = {'func': _effective_tau_syn,
+                               'params': eff_tau_s_params}
 
     if method == 'shift':
         return _solvers._firing_rate_integration(_firing_rate_shift,
                                                  firing_rate_params,
-                                                 input_funcs,
-                                                 input_params, **kwargs)
+                                                 input_dict,
+                                                 **kwargs)
     elif method == 'taylor':
         return _solvers._firing_rate_integration(_firing_rate_taylor,
                                                  firing_rate_params,
-                                                 input_funcs,
-                                                 input_params, **kwargs)
+                                                 input_dict,
+                                                 **kwargs)
 
 
 @_check_positive_params
@@ -563,6 +617,80 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
     """
     return _general._std_input(nu, J, K, tau_m,
                                J_ext, K_ext, nu_ext)
+
+
+def effective_tau_syn(network):
+    '''
+    Calculates an effective synaptic time constant.
+
+    See :func:`nnmt.lif.exp._effective_tau_syn` for full documentation.
+
+    Parameters
+    ----------
+    network: nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results
+        listed in :func:`nnmt.lif.exp._effective_tau_syn`.
+
+    Returns
+    -------
+    np.array
+        Array of effective synaptic time constants for each population in s.
+    '''
+    list_of_params = ['tau_s', 'tau_s_ext', 'J', 'K', 'tau_m',
+                      'J_ext', 'K_ext', 'nu_ext']
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+
+    try:
+        params['nu'] = network.results['lif.exp.firing_rates']
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+
+    return _cache(network, _effective_tau_syn, params,
+                  _prefix + 'effective_tau_syn', 'seconds')
+
+
+@_check_positive_params
+def _effective_tau_syn(nu, J, K, tau_m, tau_s,
+                       J_ext, K_ext, tau_s_ext, nu_ext):
+    """
+    Calculates and effective synaptic time constants if the input is mediated
+    by synapses with different time constants, e.g., AMPA or GABA receptors.
+
+    Following Eq. 5.49 in :cite:t:`fourcaud2002`.
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    J_ext : np.array
+        External weight matrix in V.
+    K_ext : np.array
+        Numbers of external input neurons to each population.
+    tau_m : [float | 1d array]
+        Membrane time constant of post-synatic neuron in s.
+    tau_s : np.array
+        Pre-synaptic time constant in s.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        In-degree matrix.
+    tau_s_ext : np.array
+        Pre-synaptic time constant of external input in s.
+    nu_ext : 1d array
+        Firing rates of external populations in Hz.
+
+    Returns
+    -------
+    np.array
+        Array of effective synaptic time constants for each population in s.
+    """
+    var = _general._std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext)**2
+    var_scaled = _general._std_input(nu, J, K/tau_s, tau_m, J_ext,
+                                     K_ext/tau_s_ext, nu_ext)**2
+    return var / var_scaled
 
 
 def transfer_function(network, freqs=None, method='shift',

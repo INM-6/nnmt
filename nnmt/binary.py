@@ -124,16 +124,20 @@ def _mean_activity(J, K, theta, **kwargs):
     firing_rate_params = {
         'theta': theta
     }
-    input_funcs = [_mean_input, _std_input]
     input_params = {
         'J': J,
         'K': K,
     }
+    input_dict = dict(
+        mu={'func': _mean_input,
+            'params': input_params},
+        sigma={'func': _std_input,
+               'params': input_params},
+    )
 
     return _solvers._firing_rate_integration(_mean_activity_for_given_input,
                                              firing_rate_params,
-                                             input_funcs,
-                                             input_params,
+                                             input_dict,
                                              **kwargs)
 
 

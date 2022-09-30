@@ -15,11 +15,11 @@ import scipy.optimize as sopt
 
 
 def _firing_rate_integration(firing_rate_func, firing_rate_params,
-                             input_funcs, input_params, nu_0=None,
+                             input_dict, nu_0=None,
                              fixpoint_method='ODE', eps_tol=1e-7,
                              t_max_ODE=1000, maxiter_ODE=1000):
     """
-    Solves the self-consistent eqs for firing rates, mean, and std of input.
+    Solves the self-consistent equations for firing rates.
 
     Parameters
     ----------
@@ -27,13 +27,17 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         Function to be integrated.
     firing_rates_params : dict
         Parameters passed to firing_rates_func
-    input_funcs : list
-        List of functions needed to be run to calculate input to
-        firing_rate_func. They need to be in the order they are passed to the
-        firing_rate_func, and they need to be the first arguments of
-        firing_rate_func.
-    input_params : dict
-        Parameters passed to functions calculating mean and std of input.
+    input_dict : dict
+        Dictionary specifying the functions that need to be computed in each
+        iteration step to get the input for the firing rate function. It should
+        specify the names of the respective `firing_rate_func` arguments as
+        keys and provide a dictionary for each input including the function
+        using the key 'func' and the parameters using the key 'params':
+
+        ``{'arg1': {'func': func1, 'params': params_dict1}, ...}``
+
+        All input functions are assumed to take the firing rate as their first
+        argument.
     nu_0 : [None | np.ndarray]
         Initial guess for fixed point integration. If `None` the initial guess
         is 0 for all populations. Default is `None`.
@@ -73,25 +77,26 @@ def _firing_rate_integration(firing_rate_func, firing_rate_params,
         problem for the method `ODE`. Default is 1000.
     """
 
-    dimension = input_params['K'].shape[0]
-
     def get_rate_difference(_, nu, rate_func):
         """
         Calculate difference between new iteration step and previous one.
         """
         # new inputs
-        inputs = []
-        for func in input_funcs:
-            inputs.append(func(nu, **input_params))
+        inputs = {}
+
+        for key, input in input_dict.items():
+            inputs[key] = input['func'](nu, **input['params'])
 
         # new rate
-        new_nu = rate_func(*inputs, **firing_rate_params)
+        new_nu = rate_func(**{**firing_rate_params, **inputs})
 
         return -nu + new_nu
 
     get_rate_difference = partial(get_rate_difference,
                                   rate_func=firing_rate_func)
 
+    # TODO improve the following way of finding the dimension
+    dimension = input_dict['mu']['params']['K'].shape[0]
     if nu_0 is None:
         nu_0 = np.zeros(int(dimension))
 
