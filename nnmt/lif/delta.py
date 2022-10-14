@@ -68,35 +68,9 @@ def firing_rates(network, **kwargs):
     np.array
         Array of firing rates of each population in Hz.
     """
-    list_of_params = [
-        'J', 'K',
-        'V_0_rel', 'V_th_rel',
-        'tau_m', 'tau_r',
-        'K_ext', 'J_ext',
-        'nu_ext',
-        ]
-
-    try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(
-            f"You are missing {param} for calculating the firing rate!\n"
-            "Have a look into the documentation for more details on 'lif' "
-            "parameters.")
-
-    list_of_optional_input_params = ['I_ext', 'C']
-    try:
-        optional_params = {key: network.network_params[key] for key in
-                           list_of_optional_input_params}
-    except KeyError as param:
-        if optional_params:
-            raise RuntimeError(
-                f'You are missing {param} for this calculation.')
-
-    params.update(optional_params)
-
+    params = get_required_network_params(network, _firing_rates)
+    params.update(get_optional_network_params(network, _firing_rates))
     params.update(kwargs)
-
     return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
                   'hertz')
 
