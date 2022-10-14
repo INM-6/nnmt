@@ -109,7 +109,9 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
     See :func:`nnmt._solvers._firing_rate_integration` for integration
     procedure.
 
-    Uses :func:`nnmt.lif.delta._firing_rates_for_given_input`.
+    Uses :func:`nnmt.lif.delta._firing_rates_for_given_input`,
+    :func:`nnmt.lif._general._mean_input`, and
+    :func:`nnmt.lif._general._std_input`.
 
     Parameters
     ----------
@@ -131,6 +133,10 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
+    I_ext : [float | np.array], optional
+        External d.c. input in A, requires membrane capacitance as well.
+    C : [float | np.array], optional
+        Membrane capacitance in F, required if external input is given.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
         :func:`nnmt._solvers._firing_rate_integration`.
@@ -146,6 +152,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         'tau_m': tau_m,
         'tau_r': tau_r,
         }
+
     input_params = {
         'J': J,
         'K': K,
@@ -153,16 +160,23 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         'J_ext': J_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
-        'I_ext': I_ext,
-        'C': C
-        }
+    }
 
-    input_funcs = [_general._mean_input, _general._std_input]
+    mu_input_params = input_params.copy()
+    mu_input_params['I_ext'] = I_ext
+    mu_input_params['C'] = C
+
+    input_dict = dict(
+        mu={'func': _general._mean_input,
+            'params': mu_input_params},
+        sigma={'func': _general._std_input,
+               'params': input_params},
+    )
 
     return _solvers._firing_rate_integration(_firing_rates_for_given_input,
                                              firing_rate_params,
-                                             input_funcs,
-                                             input_params, **kwargs)
+                                             input_dict, **kwargs)
+
 
 
 @_check_positive_params
