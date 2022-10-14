@@ -361,3 +361,46 @@ def build_full_arg_list(signature, args, kwargs):
             full_list.append(default)
 
     return full_list
+
+
+def get_list_of_required_parameters(func):
+    sig = inspect.signature(func)
+    return [name for name, param in sig.parameters.items()
+            if param.default is param.empty]
+
+
+def get_list_of_optional_parameters(func):
+    sig = inspect.signature(func)
+    return [name for name, param in sig.parameters.items()
+            if not param.default is param.empty]
+
+
+def get_required_network_params(network, func, exclude=None):
+    list_of_params = get_list_of_required_parameters(func)
+    if exclude:
+        for key in exclude:
+            list_of_params.remove(key)
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    return params
+
+
+def get_required_results(network, keys, results):
+    try:
+        results = {key: network.results[result]
+                   for key, result in zip(keys, results)}
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    return results
+
+
+def get_optional_network_params(network, func):
+    list_of_params = get_list_of_optional_parameters(func)
+    try:
+        optional_params = {key: network.network_params[key]
+                           for key in list_of_params}
+    except KeyError:
+        optional_params = {}
+    return optional_params

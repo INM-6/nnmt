@@ -22,62 +22,6 @@ import scipy.optimize as sopt
 from .. import ureg
 
 
-def mean_input(network, prefix):
-    '''
-    Calcs mean input for `network` and stores results using `prefix`.
-
-    See :func:`nnmt.lif._general._mean_input` for full documentation.
-
-    Parameters
-    ----------
-    network : Network object
-        The network model for which the mean input is to be calculated. Needs
-        to contain the parameters defined in
-        :func:`nnmt.lif._general._mean_input`.
-    prefix : str
-        The prefix used to store the result (e.g. 'lif.delta.').
-
-    Returns
-    -------
-    np.array
-        Array of mean inputs to each population in V.
-
-    See Also
-    --------
-    nnmt.lif._general._mean_input : For full documentation of network
-                                    parameters.
-    '''
-    return _input_calc(network, prefix, _mean_input)
-
-
-def std_input(network, prefix):
-    '''
-    Calcs std of input for `network` and stores results using `prefix`.
-
-    See :func:`nnmt.lif._general._std_input` for full documentation.
-
-    Parameters
-    ----------
-    network : Network object
-        The network model for which the mean input is to be calculated. Needs
-        to contain the parameters defined in
-        :func:`nnmt.lif._general._std_input`.
-    prefix : str
-        The prefix used to store the result (e.g. 'lif.delta.').
-
-    Returns
-    -------
-    np.array
-        Array of standard deviation of inputs to each population in V.
-
-    See Also
-    --------
-    nnmt.lif._general._std_input : For full documentation of network
-                                   parameters.
-    '''
-    return _input_calc(network, prefix, _std_input)
-
-
 def _input_calc(network, prefix, input_func):
     '''
     Helper function for input related calculations.
@@ -109,7 +53,7 @@ def _input_calc(network, prefix, input_func):
     return input_func(rates, **params) * ureg.V
 
 
-def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
+def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, I_ext=None, C=None):
     """
     Calc mean input for lif neurons in fixed in-degree connectivity network.
 
@@ -131,6 +75,10 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
+    I_ext : [float | np.array], optional
+        External d.c. input in A.
+    C : [float | np.array], optional
+        Membrane capacitance in F.
 
     Returns
     -------
@@ -138,11 +86,13 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of mean inputs to each population in V.
     """
     # contribution from within the network
-    m0 = tau_m * np.dot(K * J, nu)
+    m = np.dot(K * J, nu)
     # contribution from external sources
-    m_ext = tau_m * np.dot(K_ext * J_ext, nu_ext)
-    # add them up
-    m = m0 + m_ext
+    m += np.dot(K_ext * J_ext, nu_ext)
+    # contribution of external input current
+    if I_ext and C:
+        m += I_ext / C
+    m *= tau_m
     return m
 
 
@@ -175,11 +125,9 @@ def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
         Array of standard deviation of inputs to each population in V.
     """
     # contribution from within the network to variance
-    var0 = tau_m * np.dot(K * J**2, nu)
+    var = tau_m * np.dot(K * J**2, nu)
     # contribution from external sources to variance
-    var_ext = tau_m * np.dot(K_ext * J_ext**2, nu_ext)
-    # add them up
-    var = var0 + var_ext
+    var += tau_m * np.dot(K_ext * J_ext**2, nu_ext)
     # standard deviation is square root of variance
     return np.sqrt(var)
 

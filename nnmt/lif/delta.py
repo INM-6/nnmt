@@ -37,7 +37,12 @@ from scipy.integrate import quad as _quad
 from . import _general
 from .. import _solvers
 from ..utils import (_cache,
-                     _check_positive_params)
+                     _check_positive_params,
+                     get_list_of_optional_parameters,
+                     get_list_of_required_parameters,
+                     get_optional_network_params,
+                     get_required_network_params,
+                     get_required_results)
 
 
 _prefix = 'lif.delta.'
@@ -79,6 +84,17 @@ def firing_rates(network, **kwargs):
             "Have a look into the documentation for more details on 'lif' "
             "parameters.")
 
+    list_of_optional_input_params = ['I_ext', 'C']
+    try:
+        optional_params = {key: network.network_params[key] for key in
+                           list_of_optional_input_params}
+    except KeyError as param:
+        if optional_params:
+            raise RuntimeError(
+                f'You are missing {param} for this calculation.')
+
+    params.update(optional_params)
+
     params.update(kwargs)
 
     return _cache(network, _firing_rates, params, _prefix + 'firing_rates',
@@ -86,7 +102,7 @@ def firing_rates(network, **kwargs):
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
-                  **kwargs):
+                  I_ext=None, C=None, **kwargs):
     """
     Calculation of firing rates for delta PSCs.
 
@@ -137,6 +153,8 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         'J_ext': J_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
+        'I_ext': I_ext,
+        'C': C
         }
 
     input_funcs = [_general._mean_input, _general._std_input]
@@ -298,58 +316,28 @@ def mean_input(network):
     ----------
     network : Network object
         Model with the network parameters and previously calculated results
-        listed in :func:`nnmt.lif.delta._mean_input`.
+        listed in :func:`nnmt.lif._general._mean_input`.
 
     Returns
     -------
     np.array
         Array of mean inputs to each population in V.
     '''
-    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
-    try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(f'You are missing {param} for this calculation.')
-
-    try:
-        params['nu'] = network.results[_prefix + 'firing_rates']
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-
+    params = get_required_network_params(
+        network, _general._mean_input, exclude=['nu'])
+    params.update(
+        get_required_results(network, ['nu'], [_prefix + 'firing_rates']))
+    params.update(get_optional_network_params(network, _general._mean_input))
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
-@_check_positive_params
-def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
+def _mean_input(*args, **kwargs):
     """
     Calc mean input for lif neurons in fixed in-degree connectivity network.
 
     See :func:`nnmt.lif._general._mean_input` for full documentation.
-
-    Parameters
-    ----------
-    nu : np.array
-        Firing rates of populations in Hz.
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        In-degree matrix.
-    tau_m : [float | 1d array]
-        Membrane time constant of post-synatic neuron in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
-
-    Returns
-    -------
-    np.array
-        Array of mean inputs to each population in V.
     """
-    return _general._mean_input(nu, J, K, tau_m,
-                                J_ext, K_ext, nu_ext)
+    return _general._mean_input(*args, **kwargs)
 
 
 def std_input(network):
@@ -362,58 +350,28 @@ def std_input(network):
     ----------
     network : nnmt.models.Network or child class instance.
         Network with the network parameters and previously calculated results
-        listed in :func:`nnmt.lif.delta._std_input`.
+        listed in :func:`nnmt.lif._general._std_input`.
 
     Returns
     -------
     np.array
         Array of mean inputs to each population in V.
     '''
-    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
-    try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(f'You are missing {param} for this calculation.')
-
-    try:
-        params['nu'] = network.results[_prefix + 'firing_rates']
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-
+    params = get_required_network_params(
+        network, _general._std_input, exclude=['nu'])
+    params.update(
+        get_required_results(network, ['nu'], [_prefix + 'firing_rates']))
+    params.update(get_optional_network_params(network, _general._std_input))
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
-@_check_positive_params
-def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
+def _std_input(*args, **kwargs):
     """
     Plain calculation of standard deviation of neuronal input.
 
     See :func:`nnmt.lif._general._std_input` for full documentation.
-
-    Parameters
-    ----------
-    nu : np.array
-        Firing rates of populations in Hz.
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        In-degree matrix.
-    tau_m : [float | 1d array]
-        Membrane time constant of post-synatic neuron in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
-
-    Returns
-    -------
-    np.array
-        Array of mean inputs to each population in V.
     """
-    return _general._std_input(nu, J, K, tau_m,
-                               J_ext, K_ext, nu_ext)
+    return _general._std_input(*args, **kwargs)
 
 
 def _derivative_of_firing_rates_wrt_mean_input(mu, sigma, V_0_rel, V_th_rel,
