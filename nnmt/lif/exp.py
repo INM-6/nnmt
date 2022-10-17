@@ -233,6 +233,55 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
                                                  **kwargs)
 
 
+def _firing_rates_for_given_input(
+        mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, method='shift'):
+    """
+    Calculates stationary mean firing rates including synaptic filtering.
+
+    Based on the equation after Eq. 4.33 in :cite:t:`fourcaud2002`, using shift
+    of the integration boundaries in the white noise Siegert formula.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+
+    Parameters
+    ----------
+    mu : [float | np.array]
+        Mean neuron activity in V.
+    sigma : [float | np.array]
+        Standard deviation of neuron activity in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
+    tau_m : [float | 1d array]
+        Membrane time constant of post-synatic neuron in s.
+    tau_r : [float | 1d array]
+        Refractory time in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
+    method : {'shift', 'taylor'}, default is 'shift'
+        Method used for calculating firing rates. Either
+        :func:`nnmt.lif.exp._firing_rate_shift` or
+        :func:`nnmt.lif.exp._firing_rate_taylor` is used.
+
+    Returns
+    -------
+    [float | np.array]
+        Stationary firing rate in Hz.
+    """
+    if method == 'shift':
+        return _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r,
+                                  tau_s)
+    elif method == 'taylor':
+        return _firing_rate_taylor(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r,
+                                   tau_s)
+    else:
+        raise RuntimeError(f'{method} is not a valid method.')
+
+
 @_check_positive_params
 @_check_k_in_fast_synaptic_regime
 def _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
