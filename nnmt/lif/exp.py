@@ -29,6 +29,7 @@ Parameter Functions
     _firing_rates
     _firing_rate_shift
     _firing_rate_taylor
+    _firing_rates_for_given_input
     _mean_input
     _std_input
     _transfer_function
@@ -182,6 +183,10 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
+    I_ext : float, optional
+        External d.c. input in A, requires membrane capacitance as well.
+    C : float, optional
+        Membrane capacitance in F, required if external input is given.
     method : {'shift', 'taylor'}, optional
         Method used to integrate the adapted Siegert function. Default is
         'shift'.

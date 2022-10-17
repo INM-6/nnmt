@@ -8,9 +8,7 @@ Static Quantities
     :toctree: _toctree/lif/
 
     _input_calc
-    mean_input
     _mean_input
-    std_input
     _std_input
     _fit_transfer_function
 

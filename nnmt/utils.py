@@ -43,6 +43,11 @@ Miscellaneous
     :toctree: _toctree/utils/
 
     build_full_arg_list
+    get_list_of_required_parameters
+    get_list_of_optional_parameters
+    get_required_network_params
+    get_optional_network_params
+    get_required_results
 
 """
 
@@ -414,8 +419,8 @@ def get_required_results(network, keys, results_keys):
     """
     Extracts dict with results from `network.results`.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     network : Network object or child class instance.
         The network whose dicts are used for storing the results.
     keys : list
