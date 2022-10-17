@@ -29,6 +29,7 @@ Parameter Functions
     _firing_rates
     _firing_rate_shift
     _firing_rate_taylor
+    _firing_rates_for_given_input
     _mean_input
     _std_input
     _transfer_function
@@ -56,11 +57,15 @@ from scipy.special import (
     erf as _erf,
     zetac as _zetac,
     erfcx as _erfcx,
-    )
+)
 
 from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
-                     _cache)
+                     _cache,
+                     get_optional_network_params,
+                     get_required_network_params,
+                     get_required_results
+                     )
 
 from . import _general
 from .. import _solvers
@@ -73,7 +78,7 @@ from .delta import (
     _siegert_exc,
     _siegert_inh,
     _siegert_interm,
-    )
+)
 
 pcfu_vec = np.frompyfunc(mpmath.pcfu, 2, 1)
 
@@ -134,31 +139,17 @@ def firing_rates(network, method='shift', **kwargs):
     np.array
         Array of firing rates of each population in Hz.
     """
-    list_of_params = [
-        'J', 'K',
-        'V_0_rel', 'V_th_rel',
-        'tau_m', 'tau_s', 'tau_r',
-        'K_ext', 'J_ext',
-        'nu_ext',
-        ]
-
-    try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(
-            f"You are missing {param} for calculating the firing rate!\n"
-            "Have a look into the documentation for more details on 'lif' "
-            "parameters.")
-
+    params = get_required_network_params(network, _firing_rates)
+    params.update(get_optional_network_params(network, _firing_rates))
+    params.update(kwargs)
     params['method'] = method
     params.update(kwargs)
-
     return _cache(network,
                   _firing_rates, params, _prefix + 'firing_rates', 'hertz')
 
 
 def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
-                  nu_ext, method='shift', **kwargs):
+                  nu_ext, I_ext=None, C=None, method='shift', **kwargs):
     """
     Calculates stationary firing rates for exp PSCs.
 
@@ -192,6 +183,10 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
+    I_ext : float, optional
+        External d.c. input in A, requires membrane capacitance as well.
+    C : float, optional
+        Membrane capacitance in F, required if external input is given.
     method : {'shift', 'taylor'}, optional
         Method used to integrate the adapted Siegert function. Default is
         'shift'.
@@ -210,7 +205,7 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'tau_m': tau_m,
         'tau_r': tau_r,
         'tau_s': tau_s,
-        }
+    }
     input_params = {
         'J': J,
         'K': K,
@@ -218,20 +213,78 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, J_ext, K_ext,
         'J_ext': J_ext,
         'K_ext': K_ext,
         'nu_ext': nu_ext,
-        }
+    }
 
-    input_funcs = [_general._mean_input, _general._std_input]
+    mu_input_params = input_params.copy()
+    mu_input_params['I_ext'] = I_ext
+    mu_input_params['C'] = C
+
+    input_dict = dict(
+        mu={'func': _general._mean_input,
+            'params': mu_input_params},
+        sigma={'func': _general._std_input,
+               'params': input_params},
+    )
 
     if method == 'shift':
         return _solvers._firing_rate_integration(_firing_rate_shift,
                                                  firing_rate_params,
-                                                 input_funcs,
-                                                 input_params, **kwargs)
+                                                 input_dict,
+                                                 **kwargs)
     elif method == 'taylor':
         return _solvers._firing_rate_integration(_firing_rate_taylor,
                                                  firing_rate_params,
-                                                 input_funcs,
-                                                 input_params, **kwargs)
+                                                 input_dict,
+                                                 **kwargs)
+
+
+def _firing_rates_for_given_input(
+        mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s, method='shift'):
+    """
+    Calculates stationary mean firing rates including synaptic filtering.
+
+    Based on the equation after Eq. 4.33 in :cite:t:`fourcaud2002`, using shift
+    of the integration boundaries in the white noise Siegert formula.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+
+    Parameters
+    ----------
+    mu : [float | np.array]
+        Mean neuron activity in V.
+    sigma : [float | np.array]
+        Standard deviation of neuron activity in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
+    tau_m : [float | 1d array]
+        Membrane time constant of post-synatic neuron in s.
+    tau_r : [float | 1d array]
+        Refractory time in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
+    method : {'shift', 'taylor'}, default is 'shift'
+        Method used for calculating firing rates. Either
+        :func:`nnmt.lif.exp._firing_rate_shift` or
+        :func:`nnmt.lif.exp._firing_rate_taylor` is used.
+
+    Returns
+    -------
+    [float | np.array]
+        Stationary firing rate in Hz.
+    """
+    if method == 'shift':
+        return _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r,
+                                  tau_s)
+    elif method == 'taylor':
+        return _firing_rate_taylor(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r,
+                                   tau_s)
+    else:
+        raise RuntimeError(f'{method} is not a valid method.')
 
 
 @_check_positive_params
@@ -448,57 +501,32 @@ def mean_input(network):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
+    I_ext : [float | np.array], optional
+        External d.c. input in A.
+    C : [float | np.array], optional
+        Membrane capacitance in F.
 
     Returns
     -------
     np.array
         Array of mean inputs to each population in V.
     '''
-    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
-    try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(f'You are missing {param} for this calculation.')
-
-    try:
-        params['nu'] = network.results['lif.exp.firing_rates']
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-
+    params = get_required_network_params(
+        network, _general._mean_input, exclude=['nu'])
+    params.update(
+        get_required_results(network, ['nu'], [_prefix + 'firing_rates']))
+    params.update(get_optional_network_params(network, _general._mean_input))
     return _cache(network, _mean_input, params, _prefix + 'mean_input', 'volt')
 
 
 @_check_positive_params
-def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
+def _mean_input(*args, **kwargs):
     """
     Calc mean input for lif neurons in fixed in-degree connectivity network.
 
     See :func:`nnmt.lif._general._mean_input` for full documentation.
-
-    Parameters
-    ----------
-    nu : np.array
-        Firing rates of populations in Hz.
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        In-degree matrix.
-    tau_m : [float | 1d array]
-        Membrane time constant of post-synatic neuron in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
-
-    Returns
-    -------
-    np.array
-        Array of mean inputs to each population in V.
     """
-    return _general._mean_input(nu, J, K, tau_m,
-                                J_ext, K_ext, nu_ext)
+    return _general._mean_input(*args, **kwargs)
 
 
 def std_input(network):
@@ -518,51 +546,22 @@ def std_input(network):
     np.array
         Array of mean inputs to each population in V.
     '''
-    list_of_params = ['J', 'K', 'tau_m', 'J_ext', 'K_ext', 'nu_ext']
-    try:
-        params = {key: network.network_params[key] for key in list_of_params}
-    except KeyError as param:
-        raise RuntimeError(f'You are missing {param} for this calculation.')
-
-    try:
-        params['nu'] = network.results['lif.exp.firing_rates']
-    except KeyError as quantity:
-        raise RuntimeError(f'You first need to calculate the {quantity}.')
-
+    params = get_required_network_params(
+        network, _general._std_input, exclude=['nu'])
+    params.update(
+        get_required_results(network, ['nu'], [_prefix + 'firing_rates']))
+    params.update(get_optional_network_params(network, _general._std_input))
     return _cache(network, _std_input, params, _prefix + 'std_input', 'volt')
 
 
 @_check_positive_params
-def _std_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext):
+def _std_input(*args, **kwargs):
     """
     Plain calculation of standard deviation of neuronal input.
 
     See :func:`nnmt.lif._general._std_input` for full documentation.
-
-    Parameters
-    ----------
-    nu : np.array
-        Firing rates of populations in Hz.
-    J : np.array
-        Weight matrix in V.
-    K : np.array
-        In-degree matrix.
-    tau_m : [float | 1d array]
-        Membrane time constant of post-synatic neuron in s.
-    J_ext : np.array
-        External weight matrix in V.
-    K_ext : np.array
-        Numbers of external input neurons to each population.
-    nu_ext : 1d array
-        Firing rates of external populations in Hz.
-
-    Returns
-    -------
-    np.array
-        Array of mean inputs to each population in V.
     """
-    return _general._std_input(nu, J, K, tau_m,
-                               J_ext, K_ext, nu_ext)
+    return _general._std_input(*args, **kwargs)
 
 
 def transfer_function(network, freqs=None, method='shift',
@@ -836,7 +835,7 @@ def _transfer_function_taylor(mu, sigma, tau_m, tau_s, tau_r, V_th_rel,
         result[zero_omega_mask] = (
             _derivative_of_firing_rates_wrt_mean_input(
                 mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s)
-            )
+        )
 
     if np.any(regular_mask):
         delta_rates = _delta_firing_rate(
@@ -1576,7 +1575,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
             Shape : (num analysis freqs, num populations, num populations)
     """
     frequency_index = np.argmin(
-            abs(analysis_frequencies-frequency))
+        abs(analysis_frequencies-frequency))
 
     eff_conn_of_omega = effective_connectivity[frequency_index, :, :]
 
@@ -1631,17 +1630,17 @@ def _sensitivity_measure(effective_connectivity, frequency,
     sensitivity_freq = T.real*k_per[0] + T.imag*k_per[1]
 
     sensitivity_measure = {
-            'eigenvalue_index': eigenvalue_index,
-            'critical_frequency': frequency,
-            'critical_frequency_index': frequency_index,
-            'critical_eigenvalue': critical_eigenvalue,
-            'left_eigenvector': U_l[:, eigenvalue_index],
-            'right_eigenvector': U_r[:, eigenvalue_index],
-            'k': k,
-            'k_per': k_per,
-            'sensitivity': T,
-            'sensitivity_amp': sensitivity_amp,
-            'sensitivity_freq': sensitivity_freq}
+        'eigenvalue_index': eigenvalue_index,
+        'critical_frequency': frequency,
+        'critical_frequency_index': frequency_index,
+        'critical_eigenvalue': critical_eigenvalue,
+        'left_eigenvector': U_l[:, eigenvalue_index],
+        'right_eigenvector': U_r[:, eigenvalue_index],
+        'k': k,
+        'k_per': k_per,
+        'sensitivity': T,
+        'sensitivity_amp': sensitivity_amp,
+        'sensitivity_freq': sensitivity_freq}
 
     return sensitivity_measure
 
@@ -1861,7 +1860,7 @@ def external_rates_for_fixed_input(network, mu_set, sigma_set, method='shift'):
 def _external_rates_for_fixed_input(mu_set, sigma_set,
                                     J, K, V_0_rel, V_th_rel,
                                     tau_m, tau_r, tau_s,
-                                    J_ext, K_ext,
+                                    J_ext, K_ext, I_ext=None, C=None,
                                     method='shift'):
     """
     Calculate external rates needed to get fixed mean and std input.
@@ -1926,6 +1925,8 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
 
     # external working point that is to be achieved
     mu_ext = mu_set - mu_loc
+    if I_ext and C:
+        mu_ext -= tau_m * I_ext / C
     var_ext = sigma_set**2 - sigma_loc**2
 
     # the linear set of equations that needs to be solved

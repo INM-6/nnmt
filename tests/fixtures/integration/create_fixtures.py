@@ -17,6 +17,7 @@ Options:
     --all                create all integration fixtures
     -f, --force        force code to run
     --firing_rates_fully_vectorized
+    --firing_rates_with_external_dc_current
     -h, --help         show this information
 '''
 
@@ -76,4 +77,13 @@ if __name__ == '__main__':
         name = 'lif_exp/firing_rates_fully_vectorized'
         network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
         firing_rates = nnmt.lif.exp.firing_rates(network)
+        print(firing_rates)
+        network.save(f'{fixture_path + name}.h5')
+
+    if args['--firing_rates_with_external_dc_current']:
+
+        name = 'lif_exp/firing_rates_with_external_dc_current'
+        network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
+        firing_rates = nnmt.lif.exp.firing_rates(network)
+        print(firing_rates)
         network.save(f'{fixture_path + name}.h5')

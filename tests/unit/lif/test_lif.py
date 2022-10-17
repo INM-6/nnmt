@@ -1,9 +1,6 @@
 import pytest
 import numpy as np
 
-from ...checks import (
-    check_pos_params_neg_raise_exception)
-
 from numpy.testing import (
     assert_array_equal,
     assert_allclose,
