@@ -283,11 +283,17 @@ class Test_get_optional_network_params:
         params = nnmt.utils.get_optional_network_params(my_network, my_func)
         assert params == expected_params
 
-    def test_returns_empty_dict_if_param_is_missing(self, my_network):
+    def test_returns_empty_dict_if_all_params_are_missing(self, my_network):
         my_network.network_params.pop('c')
         params= nnmt.utils.get_optional_network_params(
             my_network, func_some_required)
         assert params == {}
+
+    def test_returns_partial_dict_if_some_params_are_missing(self, my_network):
+        my_network.network_params.pop('c')
+        params= nnmt.utils.get_optional_network_params(
+            my_network, func_none_required)
+        assert params == {'a': 0, 'b': 1}
 
 
 class Test_get_required_results:
