@@ -242,6 +242,12 @@ class Test_get_list_of_required_parameters:
         required_args = nnmt.utils.get_list_of_required_parameters(my_func)
         assert required_args == expected_args
 
+    def test_deal_correctly_with_args_and_kwargs(self):
+        def my_func(a, b=1, *args, **kwargs):
+            pass
+        required_args = nnmt.utils.get_list_of_required_parameters(my_func)
+        assert required_args == ['a']
+
 
 class Test_get_list_of_optional_parameters:
 

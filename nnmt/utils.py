@@ -366,8 +366,13 @@ def build_full_arg_list(signature, args, kwargs):
 def get_list_of_required_parameters(func):
     """Returns list of arguments required by `func`."""
     sig = inspect.signature(func)
-    return [name for name, param in sig.parameters.items()
-            if param.default is param.empty]
+    required_params = [name for name, param in sig.parameters.items()
+                       if param.default is param.empty]
+    if 'args' in required_params:
+        required_params.remove('args')
+    if 'kwargs' in required_params:
+        required_params.remove('kwargs')
+    return required_params
 
 
 def get_list_of_optional_parameters(func):
