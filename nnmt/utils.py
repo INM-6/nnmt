@@ -162,8 +162,7 @@ def check_if_positive(parameters, parameter_names):
 
 def _check_positive_params(func):
     """Decorator that checks that a fixed list of parameters is positive."""
-    all_pos_params = ['C',
-                      'K',
+    all_pos_params = ['K',
                       'K_ext',
                       'N',
                       'd_e',
