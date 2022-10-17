@@ -75,9 +75,9 @@ def _mean_input(nu, J, K, tau_m, J_ext, K_ext, nu_ext, I_ext=None, C=None):
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    I_ext : [float | np.array], optional
+    I_ext : float, optional
         External d.c. input in A, requires membrane capacitance as well.
-    C : [float | np.array], optional
+    C : float, optional
         Membrane capacitance in F, required if external input is given.
 
     Returns

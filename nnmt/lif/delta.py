@@ -107,9 +107,9 @@ def _firing_rates(J, K, V_0_rel, V_th_rel, tau_m, tau_r, J_ext, K_ext, nu_ext,
         Numbers of external input neurons to each population.
     nu_ext : 1d array
         Firing rates of external populations in Hz.
-    I_ext : [float | np.array], optional
+    I_ext : float, optional
         External d.c. input in A, requires membrane capacitance as well.
-    C : [float | np.array], optional
+    C : float, optional
         Membrane capacitance in F, required if external input is given.
     kwargs
         For additional kwargs regarding the fixpoint iteration procedure see
