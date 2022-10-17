@@ -52,6 +52,16 @@ class Test_lif_exp_functions_give_correct_results:
         assert_allclose(
             old_results, new_results)
 
+    def test_firing_rates_with_external_dc_current(self):
+        network = nnmt.models.Network(
+            file=('tests/fixtures/integration/data/lif_exp/'
+                  'firing_rates_with_external_dc_current.h5'))
+        old_results = network.results['lif.exp.firing_rates']
+        network.clear_results()
+        new_results = nnmt.lif.exp.firing_rates(network)
+        assert_allclose(
+            old_results, new_results)
+
     def test_mean_input(self, network, std_results):
         nnmt.lif.exp.firing_rates(network)
         mean_input = nnmt.lif.exp.mean_input(network)
