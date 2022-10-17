@@ -5,6 +5,27 @@ Release notes
 =============
 
 **********
+NNMT 1.2.0
+**********
+
+- Generalize firing rate integration: It is now possible to specify functions
+  that have to be iterated with the firing rates in a dictionary including
+  their input arguments. This allows a much more general usage of the function.
+- Generalize input functions in lif.delta and lif.exp: They now simply pass on
+  given arguments, such that future changes of functions in lif._general only
+  affect the function in lif._general. Therefore, we introduced new utility
+  functions that allow automatic extraction of required and optional parameters
+  from network parameters and the functions to be executed.
+- Allow usage of external input currents in calculation of mean_input and
+  firing rates for lif neurons
+
+**********
+NNMT 1.1.1
+**********
+
+- Add Hahne et al. 2017 and Layer et al. 2022 to delta firing rate references.
+
+**********
 NNMT 1.1.0
 **********
 
