@@ -430,8 +430,8 @@ def get_required_results(network, keys, results_keys):
         The dictionary with the requested results using the given `keys`.
     """
     try:
-        results = {key: network.results[result]
-                   for key, result in zip(keys, results)}
+        results = {key: network.results[rkey]
+                   for key, rkey in zip(keys, results_keys)}
     except KeyError as quantity:
         raise RuntimeError(f'You first need to calculate the {quantity}.')
     return results
