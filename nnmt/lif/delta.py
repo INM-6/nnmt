@@ -38,8 +38,6 @@ from . import _general
 from .. import _solvers
 from ..utils import (_cache,
                      _check_positive_params,
-                     get_list_of_optional_parameters,
-                     get_list_of_required_parameters,
                      get_optional_network_params,
                      get_required_network_params,
                      get_required_results)
