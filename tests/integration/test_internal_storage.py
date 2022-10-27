@@ -9,6 +9,14 @@ def test_rates_not_calculated_twice_with_same_parameters(network, mocker):
         spec=True,
         return_value=1
         )
+    mocker.patch(
+        'nnmt.lif.exp.get_required_network_params',
+        return_value={}
+        )
+    mocker.patch(
+        'nnmt.lif.exp.get_optional_network_params',
+        return_value={}
+        )
     nnmt.lif.exp.firing_rates(network)
     nnmt.lif.exp.firing_rates(network)
     mocked.assert_called_once()
@@ -19,6 +27,16 @@ def test_rates_calculated_again_after_parameters_are_changed(network, mocker):
         'nnmt.lif.exp._firing_rates',
         spec=True,
         return_value=1
+        )
+    def mock_get_required_params(network, func):
+        return {'tau_m': network.network_params['tau_m']}
+    mocker.patch(
+        'nnmt.lif.exp.get_required_network_params',
+        new=mock_get_required_params
+        )
+    mocker.patch(
+        'nnmt.lif.exp.get_optional_network_params',
+        return_value={}
         )
     nnmt.lif.exp.firing_rates(network)
     network.network_params['tau_m'] *= 2

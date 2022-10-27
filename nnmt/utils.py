@@ -43,6 +43,11 @@ Miscellaneous
     :toctree: _toctree/utils/
 
     build_full_arg_list
+    get_list_of_required_parameters
+    get_list_of_optional_parameters
+    get_required_network_params
+    get_optional_network_params
+    get_required_results
 
 """
 
@@ -162,8 +167,7 @@ def check_if_positive(parameters, parameter_names):
 
 def _check_positive_params(func):
     """Decorator that checks that a fixed list of parameters is positive."""
-    all_pos_params = ['C',
-                      'K',
+    all_pos_params = ['K',
                       'K_ext',
                       'N',
                       'd_e',
@@ -361,3 +365,79 @@ def build_full_arg_list(signature, args, kwargs):
             full_list.append(default)
 
     return full_list
+
+
+def get_list_of_required_parameters(func):
+    """Returns list of arguments required by `func`."""
+    sig = inspect.signature(func)
+    required_params = [name for name, param in sig.parameters.items()
+                       if param.default is param.empty]
+    if 'args' in required_params:
+        required_params.remove('args')
+    if 'kwargs' in required_params:
+        required_params.remove('kwargs')
+    return required_params
+
+
+def get_list_of_optional_parameters(func):
+    """Returns list of optional arguments of `func`."""
+    sig = inspect.signature(func)
+    return [name for name, param in sig.parameters.items()
+            if not param.default is param.empty]
+
+
+def get_required_network_params(network, func, exclude=None):
+    """
+    Extracts dict with required args for `func` from `network.network_params`.
+    """
+    list_of_params = get_list_of_required_parameters(func)
+    if exclude:
+        for key in exclude:
+            list_of_params.remove(key)
+    try:
+        params = {key: network.network_params[key] for key in list_of_params}
+    except KeyError as param:
+        raise RuntimeError(f'You are missing {param} for this calculation.')
+    return params
+
+
+def get_optional_network_params(network, func):
+    """
+    Extracts dict with optional args for `func` from `network.network_params`.
+
+    Returns empty dict if any of the optional params is not found.
+    """
+    list_of_params = get_list_of_optional_parameters(func)
+    list_of_params = (
+        set(list_of_params).intersection(set(network.network_params.keys())))
+    optional_params = {key: network.network_params[key]
+                       for key in list_of_params}
+    return optional_params
+
+
+def get_required_results(network, keys, results_keys):
+    """
+    Extracts dict with results from `network.results`.
+
+    Parameters
+    ----------
+    network : Network object or child class instance.
+        The network whose dicts are used for storing the results.
+    keys : list
+        The keys used in the returned dictionary.
+    results_keys : list
+        The corresponding keys used in `network.results`.
+
+    Returns
+    -------
+    dict
+        The dictionary with the requested results using the given `keys`.
+    """
+    try:
+        results = {key: network.results[rkey]
+                   for key, rkey in zip(keys, results_keys)}
+    except KeyError as quantity:
+        raise RuntimeError(f'You first need to calculate the {quantity}.')
+    return results
+
+

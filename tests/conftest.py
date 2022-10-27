@@ -35,8 +35,7 @@ unit_fix_path = 'tests/fixtures/unit/data/'
 integration_fix_path = 'tests/fixtures/integration/data/'
 
 # list of all always positive arguments
-all_pos_keys = ['C',
-                'K',
+all_pos_keys = ['K',
                 'K_ext',
                 'N',
                 'd_e',

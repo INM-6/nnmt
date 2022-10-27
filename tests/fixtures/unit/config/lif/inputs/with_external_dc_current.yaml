@@ -1,0 +1,55 @@
+tau_m:
+  val:
+    - 10.0
+    - 15.0
+  unit: ms
+
+nu:
+  val:
+    - 10
+    - 12
+  unit: Hz
+
+J:
+  val:
+    - 0.2
+    - -0.8
+  unit: mV
+
+K:
+  val:
+    - - 8765
+      - 2345
+    - - 8987
+      - 2123
+
+nu_ext:
+  val:
+    - 1
+    - 2
+    - 3
+  unit: Hz
+
+J_ext:
+  val:
+    - 0.1
+    - 0.15
+    - 0.05
+  unit: mV
+
+K_ext:
+  val:
+    - - 123
+      - 213
+      - 312
+    - - 432
+      - 324
+      - 234
+
+I_ext:
+  val: 1
+  unit: pA
+
+C:
+  val: 1
+  unit: pF
