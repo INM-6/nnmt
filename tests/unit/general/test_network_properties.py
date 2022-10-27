@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from numpy.testing import (
     assert_allclose,
     )
@@ -22,3 +23,19 @@ class Test_delay_dist_matrix:
         output = output_test_fixtures['output'][key]
         output = output.magnitude
         assert_allclose(self.func(**params), output)
+
+
+class Test_lognormal_characteristic_function:
+
+    def test_integration_procedure(self):
+        mu = 1
+        sigma = 1
+        w = np.pi
+        N = 10000000
+        X = np.random.lognormal(mu, sigma, size=N)
+        cf_w_est = np.exp(1j * w * X).mean()
+        cf_w_nnmt = (
+            nnmt.network_properties._lognormal_characteristic_function(
+                w, mu, sigma))
+        np.testing.assert_allclose([cf_w_nnmt], [cf_w_est])
+
