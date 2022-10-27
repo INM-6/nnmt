@@ -181,3 +181,64 @@ def lognormal_distribution_beaulieu(omega, mu, sigma, x):
                     y[k, i, j] = y1-1j*y2
 
     return y
+
+
+def _lognormal_characteristic_function(omega, mu, sigma):
+    # Integration from Beaulieu 2008 Eq. 6a & 6b
+
+    # exp(mu) used to include the mean of the underlying Gaussian
+    # based on Beaulieu et al 2012 Eq.(3)
+    omega *= np.exp(mu)
+
+    # Real part
+    y1_0 = partial(_lognormal_integrand_real_A, omega=omega, sigma=sigma)
+    y1_1 = partial(_lognormal_integrand_real_B, omega=omega, sigma=sigma)
+    y1 = sint.quad(y1_0, 0, omega)[0] + sint.quad(y1_1, 0, 1/omega)[0]
+
+    # Imaginary part
+    y2_0 = partial(_lognormal_integrand_imag_A, omega=omega, sigma=sigma)
+    y2_1 = partial(_lognormal_integrand_imag_B, omega=omega, sigma=sigma)
+    y2 = sint.quad(y2_0, 0, omega)[0] + sint.quad(y2_1, 0, 1/omega)[0]
+
+    return y1 - 1j * y2
+
+
+def _lognormal_integrand_real_A(y, omega, sigma):
+    """
+    part : ['real' or 'imag']
+        determines whether the real or imaginary part is computed
+
+    Integrated from 0 to omega
+    """
+    return np.cos(1 / y) * _partial_integrand_A(y, omega, sigma)
+
+def _lognormal_integrand_imag_A(y, omega, sigma):
+    """
+    part : ['real' or 'imag']
+        determines whether the real or imaginary part is computed
+
+    Integrated from 0 to omega
+    """
+    return np.sin(1 / y) * _partial_integrand_A(y, omega, sigma)
+
+
+def _partial_integrand_A(y, omega, sigma):
+    a = 1 / (y * sigma * np.sqrt(2 * np.pi))
+    b = np.exp(-1 * np.log(y/omega)**2 / (2 * sigma**2))
+    return a * b
+
+
+def _lognormal_integrand_real_B(y, omega, sigma):
+    """Integrated from 0 to 1/omega"""
+    return np.cos(1 / y) * _partial_integrand_B(y, omega, sigma)
+
+
+def _lognormal_integrand_imag_B(y, omega, sigma):
+    """Integrated from 0 to 1/omega"""
+    return np.sin(1 / y) * _partial_integrand_B(y, omega, sigma)
+
+
+def _partial_integrand_B(y, omega, sigma):
+    a = 1 / (y * sigma * np.sqrt(2 * np.pi))
+    b = np.exp(-1 * np.log(y*omega)**2 / (2 * sigma**2))
+    return a * b
