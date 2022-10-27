@@ -27,10 +27,15 @@ class Test_delay_dist_matrix:
 
 class Test_lognormal_characteristic_function:
 
-    def test_integration_procedure(self):
-        mu = 1
-        sigma = 1
-        w = np.pi
+    @pytest.mark.parametrize('mu, sigma, w', [[1, 1, 1 * np.pi],
+                                              [10, 1, 1 * np.pi],
+                                              [0.1, 1, 1 * np.pi],
+                                              [1, 10, 1 * np.pi],
+                                              [1, 0.1, 1 * np.pi],
+                                              [1, 1, 10 * np.pi],
+                                              [1, 1, 0.1 * np.pi],
+                                             ])
+    def test_integration_procedure(self, mu, sigma, w):
         N = 10000000
         rtol=0.01
         X = np.random.lognormal(mu, sigma, size=N)
