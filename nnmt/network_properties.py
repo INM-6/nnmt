@@ -200,7 +200,7 @@ def _lognormal_characteristic_function(omega, mu, sigma):
     y2_1 = partial(_lognormal_integrand_imag_B, omega=omega, sigma=sigma)
     y2 = sint.quad(y2_0, 0, omega)[0] + sint.quad(y2_1, 0, 1/omega)[0]
 
-    return y1 - 1j * y2
+    return y1 + 1j * y2
 
 
 def _lognormal_integrand_real_A(y, omega, sigma):
@@ -210,7 +210,7 @@ def _lognormal_integrand_real_A(y, omega, sigma):
 
     Integrated from 0 to omega
     """
-    return np.cos(1 / y) * _partial_integrand_A(y, omega, sigma)
+    return np.cos(y) * _partial_integrand_A(y, omega, sigma)
 
 def _lognormal_integrand_imag_A(y, omega, sigma):
     """
@@ -219,12 +219,12 @@ def _lognormal_integrand_imag_A(y, omega, sigma):
 
     Integrated from 0 to omega
     """
-    return np.sin(1 / y) * _partial_integrand_A(y, omega, sigma)
+    return np.sin(y) * _partial_integrand_A(y, omega, sigma)
 
 
 def _partial_integrand_A(y, omega, sigma):
     a = 1 / (y * sigma * np.sqrt(2 * np.pi))
-    b = np.exp(-1 * np.log(y/omega)**2 / (2 * sigma**2))
+    b = np.exp(-np.log(y/omega)**2 / (2 * sigma**2))
     return a * b
 
 
