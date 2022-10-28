@@ -125,11 +125,14 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas,
                                               sigma,
                                               integration_x)
 
-def mu_underlying_gaussian(Delay, Delay_sd):
-    return np.log(Delay**2 / np.sqrt(Delay**2 + Delay_sd**2))
 
-def sigma_underlying_gaussian(Delay, Delay_sd):
-    return np.sqrt(np.log(1 + Delay**2/Delay_sd**2))
+def mu_underlying_gaussian(mu, sigma):
+    return np.log(mu**2 / np.sqrt(mu**2 + sigma**2))
+
+
+def sigma_underlying_gaussian(mu, sigma):
+    return np.sqrt(np.log(1 + sigma**2 / mu**2))
+
 
 def lognormal_integrand_0(y, omega, sigma_log, part='real'):
     """
