@@ -65,8 +65,7 @@ def delay_dist_matrix(network, freqs=None):
 
 
 @nnmt.utils._check_positive_params
-def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas,
-                       integration_x=np.arange(1e-8, 1.0, 0.001)):
+def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     '''
     Calcs matrix of delay distribution specific pre-factors at given freqs.
 
@@ -76,9 +75,9 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas,
     Parameters
     ----------
     Delay : array_like
-        Delay matrix in seconds
+        Delay matrix (num_pop, num_pop) in seconds
     Delay_sd : array_like
-        Delay standard deviation matrix in seconds.
+        Delay standard deviation matrix (num_pop, num_pop) in seconds.
     delay_dist : {'none', 'truncated_gaussian', 'gaussian', 'lognormal'}
         String specifying delay distribution.
         `Note`: For the lognormal distribution no closed form characteristic
@@ -87,43 +86,63 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas,
         characteristic functions. IEEE Transactions on communications, 56, 3
     omegas : array_like, optional
        The considered angular frequencies in 2*pi*Hz.
-    # integration_x : array_like, optional
-    #     Integration times used for numerical integration of the
-    #     lognormal distribution, for which no analytical solution
-    #     is available.
-
-    #     Default is np.arange(1e-8, 1.0, 0.001).
 
     Returns
     -------
     np.ndarray
-        Matrix of delay distribution specific pre-factors at frequency omegas.
+        Matrix of delay distribution specific pre-factors at frequency omegas
+        with shape (len(omegas), num_pop, num_pop).
     '''
-    omegas = np.array([np.ones(Delay.shape) * omega for omega in omegas])
+    Omegas = np.array([np.ones(Delay.shape) * omega for omega in omegas])
 
     if delay_dist == 'none':
-        return np.exp(- 1j * omegas * Delay)
+        return np.exp(- 1j * Omegas * Delay)
 
     elif delay_dist == 'truncated_gaussian':
-        a0 = 0.5 * (1 + _erf((-Delay / Delay_sd + 1j * omegas * Delay_sd)
+        a0 = 0.5 * (1 + _erf((-Delay / Delay_sd + 1j * Omegas * Delay_sd)
                              / np.sqrt(2)))
         a1 = 0.5 * (1 + _erf((-Delay / Delay_sd) / np.sqrt(2)))
-        b0 = np.exp(-0.5 * np.power(Delay_sd * omegas, 2))
-        b1 = np.exp(- 1j * omegas * Delay)
+        b0 = np.exp(-0.5 * np.power(Delay_sd * Omegas, 2))
+        b1 = np.exp(- 1j * Omegas * Delay)
         return (1.0 - a0) / (1.0 - a1) * b0 * b1
 
     elif delay_dist == 'gaussian':
-        b0 = np.exp(-0.5 * np.power(Delay_sd * omegas, 2))
-        b1 = np.exp(- 1j * omegas * Delay)
+        b0 = np.exp(-0.5 * np.power(Delay_sd * Omegas, 2))
+        b1 = np.exp(- 1j * Omegas * Delay)
         return b0 * b1
 
     elif delay_dist == 'lognormal':
-        # TODO check that delay mean cannot be negative
-        mu = mu_underlying_gaussian(Delay, Delay_sd)
-        sigma = sigma_underlying_gaussian(Delay, Delay_sd)
-        return lognormal_distribution_beaulieu(omegas, mu,
-                                              sigma,
-                                              integration_x)
+        # convert required mu and sigma to mean and var of underlying Gaussian
+        Mu = mu_underlying_gaussian(Delay, Delay_sd)
+        Sigma = sigma_underlying_gaussian(Delay, Delay_sd)
+
+        # since integration for lognormal characteristic function is costly,
+        # only integrate for unique combinations of mu, sigma, and omega
+
+        # combination of mu and sigma
+        combs = np.vstack([Mu.flatten(), Sigma.flatten()]).T
+        unique_combs = np.unique(combs, axis=0)
+
+        # create combinations of mu, sigma, and omega
+        combs_list = []
+        for omega in omegas:
+            combs_list.append(
+                np.hstack([unique_combs,
+                           omega * np.ones((len(unique_combs), 1))]
+                         )
+            )
+        unique_combs = np.vstack(combs_list)
+
+        omega_ids = {omega: i for i, omega in enumerate(omegas)}
+
+        # calculate lognormal characteristic function for unique combinations
+        results = np.ones(Omegas.shape, dtype='complex')
+        for mu, sigma, omega in unique_combs:
+            mask = np.where((Mu == mu) & (Sigma == sigma))
+            results[omega_ids[omega]][mask] = (
+                _lognormal_characteristic_function(omega, mu, sigma))
+
+        return results
 
 
 def mu_underlying_gaussian(mu, sigma):
