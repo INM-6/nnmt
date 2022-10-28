@@ -65,3 +65,51 @@ class Test_lognormal_characteristic_function:
         mu_est = X.mean()
         sigma_est = X.std()
         np.testing.assert_allclose([mu_est, sigma_est], [mu, sigma], rtol=rtol)
+
+
+    def test_only_integrates_as_often_as_required(self, mocker):
+        D = np.array([[0.0015, 0.00075],
+                      [0.0015, 0.00075]])
+        D_sd = np.array([[0.0015, 0.001],
+                         [0.0015, 0.001]])
+        omegas = np.array([1, 2, 3]) * 2 * np.pi
+
+
+        mock_integration = mocker.patch(
+            'nnmt.network_properties._lognormal_characteristic_function',
+            return_value=1
+            )
+
+        nnmt.network_properties._delay_dist_matrix(
+            D, D_sd, 'lognormal', omegas)
+
+        assert mock_integration.call_count == 6
+
+
+    def test_returns_correct_results(self):
+        D = np.array([[0.0015, 0.00075],
+                      [0.0015, 0.00075]])
+        D_sd = np.array([[0.0015, 0.001],
+                         [0.0015, 0.001]])
+        omegas = np.array([1, 2, 3])
+
+        output = nnmt.network_properties._delay_dist_matrix(
+            D, D_sd, 'lognormal', omegas)
+
+        mu = nnmt.network_properties.mu_underlying_gaussian(0.00075, 0.001)
+        sigma = nnmt.network_properties.sigma_underlying_gaussian(
+            0.00075, 0.001)
+        output_exp_001 = (
+            nnmt.network_properties._lognormal_characteristic_function(
+                1, mu, sigma))
+        mu = nnmt.network_properties.mu_underlying_gaussian(0.0015, 0.0015)
+        sigma = nnmt.network_properties.sigma_underlying_gaussian(
+            0.0015, 0.0015)
+        output_exp_210 = (
+            nnmt.network_properties._lognormal_characteristic_function(
+                3, mu, sigma))
+        output = nnmt.network_properties._delay_dist_matrix(
+            D, D_sd, 'lognormal', omegas)
+
+        assert output[0, 0, 1] == output_exp_001
+        assert output[2, 1, 0] == output_exp_210
