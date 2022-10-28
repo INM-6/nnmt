@@ -53,3 +53,17 @@ class Test_lognormal_characteristic_function:
                 w, mu, sigma))
         np.testing.assert_allclose([cf_w_nnmt], [cf_w_est], rtol=rtol)
 
+
+    @pytest.mark.parametrize('mu, sigma', [[0.00075, 0.001],
+                                           [0.0015, 0.0015],
+                                           [10, 1]])
+    def test_calc_of_underlying_gaussian_params(self, mu, sigma):
+        N = 10000000
+        rtol = 0.01
+        mu_gauss = nnmt.network_properties.mu_underlying_gaussian(mu, sigma)
+        sigma_gauss = nnmt.network_properties.sigma_underlying_gaussian(
+            mu, sigma)
+        X = np.random.lognormal(mu_gauss, sigma_gauss, N)
+        mu_est = X.mean()
+        sigma_est = X.std()
+        np.testing.assert_allclose([mu_est, sigma_est], [mu, sigma], rtol=rtol)
