@@ -5,6 +5,16 @@ Release notes
 =============
 
 **********
+NNMT 1.3.0
+**********
+
+- The option to use a lognormal delay distribution has been added to the
+  calcultion of the delay distribution matrix in ``nnmt.network_properties``.
+  As the characteristic function of a lognormal distribution has no closed
+  analytic form, the numerical integration proposed in :cite:t:`beaulieu2008`
+  has been implemented.
+
+**********
 NNMT 1.2.0
 **********
 
