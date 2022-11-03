@@ -10,6 +10,9 @@ Functions
 
     delay_dist_matrix
     _delay_dist_matrix
+    _lognormal_characteristic_function
+    _mu_underlying_gaussian
+    _sigma_underlying_gaussian
 
 '''
 import numpy as np
@@ -79,11 +82,9 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
     Delay_sd : array_like
         Delay standard deviation matrix (num_pop, num_pop) in seconds.
     delay_dist : {'none', 'truncated_gaussian', 'gaussian', 'lognormal'}
-        String specifying delay distribution.
-        `Note`: For the lognormal distribution no closed form characteristic
-        function is known. We therefore use the numeric approximation from
-        Beaulieu 2008. Fast convenient numerical computation of lognormal
-        characteristic functions. IEEE Transactions on communications, 56, 3
+        String specifying delay distribution. For the lognormal distribution no
+        closed form of the characteristic function is known. We therefore use
+        the numeric approximation from :cite:t:`beaulieu2008`.
     omegas : array_like, optional
        The considered angular frequencies in 2*pi*Hz.
 
@@ -113,103 +114,101 @@ def _delay_dist_matrix(Delay, Delay_sd, delay_dist, omegas):
 
     elif delay_dist == 'lognormal':
         # convert required mu and sigma to mean and var of underlying Gaussian
-        Mu = mu_underlying_gaussian(Delay, Delay_sd)
-        Sigma = sigma_underlying_gaussian(Delay, Delay_sd)
+        Mu = _mu_underlying_gaussian(Delay, Delay_sd)
+        Sigma = _sigma_underlying_gaussian(Delay, Delay_sd)
 
         # since integration for lognormal characteristic function is costly,
         # only integrate for unique combinations of mu, sigma, and omega
 
-        # combination of mu and sigma
+        # get unique combination of mu and sigma
         combs = np.vstack([Mu.flatten(), Sigma.flatten()]).T
         unique_combs = np.unique(combs, axis=0)
 
-        # create combinations of mu, sigma, and omega
+        # create unique combinations of mu, sigma, and omega
         combs_list = []
         for omega in omegas:
             combs_list.append(
                 np.hstack([unique_combs,
                            omega * np.ones((len(unique_combs), 1))]
-                         )
+                          )
             )
         unique_combs = np.vstack(combs_list)
 
         omega_ids = {omega: i for i, omega in enumerate(omegas)}
 
         # calculate lognormal characteristic function for unique combinations
-        results = np.ones(Omegas.shape, dtype='complex')
+        # and put the results into the right places of the delay matrix
+        D = np.ones(Omegas.shape, dtype='complex')
         for mu, sigma, omega in unique_combs:
             mask = np.where((Mu == mu) & (Sigma == sigma))
-            results[omega_ids[omega]][mask] = (
+            D[omega_ids[omega]][mask] = (
                 _lognormal_characteristic_function(omega, mu, sigma))
 
-        return results
+        return D
 
 
-def mu_underlying_gaussian(mu, sigma):
+def _mu_underlying_gaussian(mu, sigma):
+    """
+    Computes the mean of the underlying Gaussian of a lognormal distribution.
+
+    Parameters
+    ----------
+    mu : float or np.array
+        Real mean of lognormal distribution.
+    sigma : float or np.array
+        Real standard deviation of lognormal distribution.
+
+    Returns
+    -------
+    float of np.array
+        Mean of underlying Gaussian.
+    """
     return np.log(mu**2 / np.sqrt(mu**2 + sigma**2))
 
 
-def sigma_underlying_gaussian(mu, sigma):
+def _sigma_underlying_gaussian(mu, sigma):
+    """
+    Computes the std of the underlying Gaussian of a lognormal distribution.
+
+    Parameters
+    ----------
+    mu : float or np.array
+        Real mean of lognormal distribution.
+    sigma : float or np.array
+        Real standard deviation of lognormal distribution.
+
+    Returns
+    -------
+    float of np.array
+        Standard deviation of underlying Gaussian.
+    """
     return np.sqrt(np.log(1 + sigma**2 / mu**2))
 
 
-def lognormal_integrand_0(y, omega, sigma_log, part='real'):
-    """
-    part : ['real' or 'imag']
-        determines whether the real or imaginary part is computed
-
-    Integrated from 0 to omega
-    """
-    if part == 'real': a1 = np.cos(1 / y)
-    elif part == 'imag': a1 = np.sin(1 / y)
-    a2 = 1 / (y * sigma_log * np.sqrt(2 * np.pi))
-    a3 = np.exp(-1 * np.log(y/omega)**2 / (2 * sigma_log**2))
-    return a1 * a2 * a3
-
-def lognormal_integrand_1(y, omega, sigma_log, part='real'):
-    """Integrated from 0 to 1/omega"""
-    if part == 'real': a1 = np.cos(1 / y)
-    elif part == 'imag': a1 = np.sin(1 / y)
-    a2 = 1 / (y * sigma_log * np.sqrt(2 * np.pi))
-    a3 = np.exp(-1 * np.log(y*omega)**2 / (2 * sigma_log**2))
-    return a1 * a2 * a3
-
-def lognormal_distribution_beaulieu(omega, mu, sigma, x):
-    y = np.zeros([omega.shape[0], *mu.shape], dtype=complex)
-
-    # Excitatory (i=0, j=0) and Inhibitory (i=1, j=1)
-    for i, j in zip([0, 1], [0, 1]):
-        # exp(mu) used to include the mean of the underlying Gaussian
-        # based on Beaulieu et al 2012 Eq.(3)
-        w_vector = omega[:, i, j] * np.exp(mu[i, j])
-        s = sigma[i, j]
-
-        for k, w in enumerate(w_vector):
-            # Integration from Beaulieu 2008 Eq. 6a & 6b
-
-            # Real part
-            y1_0 = partial(lognormal_integrand_0, omega=w, sigma_log=s, part='real')
-            y1_1 = partial(lognormal_integrand_1, omega=w, sigma_log=s, part='real')
-            y1 = sint.quad(y1_0, 0, w)[0] + sint.quad(y1_1, 0, 1/w)[0]
-
-            # Imaginary part
-            y2_0 = partial(lognormal_integrand_0, omega=w, sigma_log=s, part='imag')
-            y2_1 = partial(lognormal_integrand_1, omega=w, sigma_log=s, part='imag')
-            y2 = sint.quad(y2_0, 0, w)[0] + sint.quad(y2_1, 0, 1/w)[0]
-
-            # Final result
-            for i in range(mu.shape[0]):
-                for j in range(0, mu.shape[1], 2):
-                    y[k, i, j] = y1-1j*y2
-
-    return y
-
-
 def _lognormal_characteristic_function(omega, mu, sigma):
-    # Integration from Beaulieu 2008 Eq. 6a & 6b
+    """
+    Lognormal characteristic function
 
-    # exp(mu) used to include the mean of the underlying Gaussian
-    # based on Beaulieu et al 2012 Eq.(3)
+    Integration implementing :cite:t:`beaulieu2008` Eq. (6a) & (6b).
+
+    Parameters
+    ----------
+    omega : float
+        Frequency at which characteristic function is to be computed.
+    mu : float
+        Mean of underlying Gaussian.
+    sigma : float
+        Standard deviation of underlying Gaussian.
+
+    Returns
+    -------
+    complex
+        Characteristic function of specified lognormal distribution at omega.
+    """
+    # exp(mu) is used to include the non-zero mean of the underlying Gaussian
+    # based on  Eq.(3) in Saberali, S. A., & Beaulieu, N. C. (2012, December).
+    # New approximations to the lognormal characteristic function. In 2012 IEEE
+    # Global Communications Conference (GLOBECOM) (pp. 2168-2172). IEEE.
     omega *= np.exp(mu)
 
     # Real part
@@ -227,19 +226,14 @@ def _lognormal_characteristic_function(omega, mu, sigma):
 
 def _lognormal_integrand_real_A(y, omega, sigma):
     """
-    part : ['real' or 'imag']
-        determines whether the real or imaginary part is computed
-
-    Integrated from 0 to omega
+    First part of :cite:t:`beaulieu2008` Eq. (6a) integrated from 0 to omega.
     """
     return np.cos(y) * _partial_integrand_A(y, omega, sigma)
 
+
 def _lognormal_integrand_imag_A(y, omega, sigma):
     """
-    part : ['real' or 'imag']
-        determines whether the real or imaginary part is computed
-
-    Integrated from 0 to omega
+    First part of :cite:t:`beaulieu2008` Eq. (6b) integrated from 0 to omega.
     """
     return np.sin(y) * _partial_integrand_A(y, omega, sigma)
 
@@ -251,12 +245,16 @@ def _partial_integrand_A(y, omega, sigma):
 
 
 def _lognormal_integrand_real_B(y, omega, sigma):
-    """Integrated from 0 to 1/omega"""
+    """
+    Second part of :cite:t:`beaulieu2008` Eq. (6a) int from 0 to 1/omega.
+    """
     return np.cos(1 / y) * _partial_integrand_B(y, omega, sigma)
 
 
 def _lognormal_integrand_imag_B(y, omega, sigma):
-    """Integrated from 0 to 1/omega"""
+    """
+    Second part of :cite:t:`beaulieu2008` Eq. (6b) int from 0 to 1/omega.
+    """
     return np.sin(1 / y) * _partial_integrand_B(y, omega, sigma)
 
 

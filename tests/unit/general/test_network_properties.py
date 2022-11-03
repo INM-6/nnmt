@@ -58,8 +58,8 @@ class Test_lognormal_characteristic_function:
     def test_calc_of_underlying_gaussian_params(self, mu, sigma):
         N = 10000000
         rtol = 0.01
-        mu_gauss = nnmt.network_properties.mu_underlying_gaussian(mu, sigma)
-        sigma_gauss = nnmt.network_properties.sigma_underlying_gaussian(
+        mu_gauss = nnmt.network_properties._mu_underlying_gaussian(mu, sigma)
+        sigma_gauss = nnmt.network_properties._sigma_underlying_gaussian(
             mu, sigma)
         X = np.random.lognormal(mu_gauss, sigma_gauss, N)
         mu_est = X.mean()
@@ -96,14 +96,14 @@ class Test_lognormal_characteristic_function:
         output = nnmt.network_properties._delay_dist_matrix(
             D, D_sd, 'lognormal', omegas)
 
-        mu = nnmt.network_properties.mu_underlying_gaussian(0.00075, 0.001)
-        sigma = nnmt.network_properties.sigma_underlying_gaussian(
+        mu = nnmt.network_properties._mu_underlying_gaussian(0.00075, 0.001)
+        sigma = nnmt.network_properties._sigma_underlying_gaussian(
             0.00075, 0.001)
         output_exp_001 = (
             nnmt.network_properties._lognormal_characteristic_function(
                 1, mu, sigma))
-        mu = nnmt.network_properties.mu_underlying_gaussian(0.0015, 0.0015)
-        sigma = nnmt.network_properties.sigma_underlying_gaussian(
+        mu = nnmt.network_properties._mu_underlying_gaussian(0.0015, 0.0015)
+        sigma = nnmt.network_properties._sigma_underlying_gaussian(
             0.0015, 0.0015)
         output_exp_210 = (
             nnmt.network_properties._lognormal_characteristic_function(
