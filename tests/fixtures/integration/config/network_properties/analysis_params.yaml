@@ -1,0 +1,31 @@
+# frequencies
+f_min:
+  val: 0.1
+  unit: Hz
+
+f_max:
+  val: 300.
+  unit: Hz
+
+df:
+  # 100/(2*pi)
+  val: 15.92
+  # val: 1.0
+  unit: Hz
+
+# k wavenumbers
+k_min:
+  val: 1.0
+  unit: 1/mm
+
+k_max:
+  val: 100.5
+  unit: 1/mm
+
+dk:
+  val: 0.5
+  unit: 1/mm
+
+
+# number of modes used when fast response time constants are calculated
+num_modes: 1

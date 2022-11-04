@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import copy
 from numpy.testing import (
     assert_allclose
     )
@@ -93,10 +94,6 @@ class Test_lif_exp_functions_give_correct_results:
         check_quantity_dicts_are_allclose(working_point,
                                           expected_working_point)
 
-    def test_delay_dist_matrix(self, network, std_results):
-        ddm = nnmt.network_properties.delay_dist_matrix(network)
-        assert_allclose(ddm, std_results['delay_dist_matrix'])
-
     def test_transfer_function_taylor(self, network, std_results):
         nnmt.lif.exp.working_point(network)
         transfer_fn = nnmt.lif.exp.transfer_function(network, method='taylor')
@@ -155,6 +152,31 @@ class Test_lif_exp_functions_give_correct_results:
             mean_input_set, std_input_set)
         assert_allclose(nu_e_ext, std_results[self.prefix + 'nu_e_ext'])
         assert_allclose(nu_i_ext, std_results[self.prefix + 'nu_i_ext'])
+
+
+class Test_network_properties:
+
+    @pytest.mark.parametrize(
+        'fixtures',
+        ['tests/fixtures/integration/data/network_properties/delay_none.h5',
+         'tests/fixtures/integration/data/network_properties/delay_truncated_gaussian.h5',
+         'tests/fixtures/integration/data/network_properties/delay_gaussian.h5',
+         'tests/fixtures/integration/data/network_properties/delay_lognormal.h5',
+         ])
+    def test_delay_dist_matrix(self, fixtures):
+        # ddm = nnmt.network_properties.delay_dist_matrix(network)
+        # assert_allclose(ddm, std_results['delay_dist_matrix'])
+        # load old results
+        network = nnmt.models.Network(file=fixtures)
+        old_results = network.results['D']
+        # create new empty network with same params and calc results
+        network_params = copy.deepcopy(network.network_params)
+        analysis_params = copy.deepcopy(network.analysis_params)
+        new_network = nnmt.models.Network(network_params, analysis_params)
+        new_results = nnmt.network_properties.delay_dist_matrix(new_network)
+
+        assert_allclose(
+            old_results, new_results)
 
 
 class Test_saving_and_loading:
