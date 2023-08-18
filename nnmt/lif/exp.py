@@ -257,10 +257,10 @@ def _firing_rates_for_given_input(
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
@@ -307,10 +307,10 @@ def _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
@@ -355,10 +355,10 @@ def _firing_rate_taylor(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
@@ -1011,10 +1011,10 @@ def _derivative_of_firing_rates_wrt_mean_input(mu, sigma, V_0_rel, V_th_rel,
         Mean neuron activity in V.
     sigma : [float | np.ndarray]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.ndarray]
-        Relative threshold potential in V.
     V_0_rel : [float | np.ndarray]
         Relative reset potential in V.
+    V_th_rel : [float | np.ndarray]
+        Relative threshold potential in V.
     tau_m : [float | np.ndarray]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | np.ndarray]
