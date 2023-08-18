@@ -170,5 +170,16 @@ if __name__ == '__main__':
 
             run_calc = True
 
+        if (module == 'cvs') or (module == 'all'):
+            config_path = config_path_prefix + 'firing_rates/'
+            regime_params, regimes = load_params_and_regimes(config_path)
+            create_and_save_fixtures(
+                nnmt.lif.exp._cvs,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_cvs.h5')
+
+            run_calc = True
+
         if not run_calc:
             print('No such module')
