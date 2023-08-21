@@ -5,6 +5,13 @@ Release notes
 =============
 
 **********
+NNMT 1.3.0
+**********
+
+- Add functions for computing the cvs of lif neurons: :func:`nnmt.lif.exp.cvs`,
+  :func:`nnmt.lif.exp._cvs`, and :func:`nnmt.lif.exp._cvs_single_population`.
+
+**********
 NNMT 1.2.0
 **********
 
