@@ -1968,7 +1968,7 @@ def cvs(network):
     params.update(
         get_required_results(
             network, required_results, result_keys))
-    params.update(get_optional_network_params( network, func))
+    params.update(get_optional_network_params(network, _cvs))
     return _cache(network, _cvs, params, _prefix + 'cvs')
 
 
