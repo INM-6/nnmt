@@ -19,6 +19,7 @@ Network Functions
     sensitivity_measure_all_eigenmodes
     power_spectra
     external_rates_for_fixed_input
+    cvs
 
 Parameter Functions
 *******************
@@ -45,6 +46,8 @@ Parameter Functions
     _sensitivity_measure_all_eigenmodes
     _power_spectra
     _external_rates_for_fixed_input
+    _cvs
+    _cvs_single_population
 
 """
 
