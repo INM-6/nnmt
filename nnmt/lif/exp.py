@@ -58,6 +58,7 @@ from scipy.special import (
     zetac as _zetac,
     erfcx as _erfcx,
 )
+from scipy.integrate import quad as _quad
 
 from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
@@ -1960,8 +1961,8 @@ def cvs(network):
     """
     required_results = ['nu', 'mu', 'sigma']
     result_keys = [_prefix + 'firing_rates',
-                    _prefix + 'mean_input',
-                    _prefix + 'std_input']
+                   _prefix + 'mean_input',
+                   _prefix + 'std_input']
     params = get_required_network_params(
         network, _cvs, exclude=required_results)
     params.update(
@@ -1999,10 +2000,12 @@ def _cvs(nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s):
     [float | np.array]
         Estimate of coefficients of variation.
     """
+    nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s = _equalize_shape(
+        nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s)
     cvs = np.zeros(len(nu))
-    for i, (n, m, s) in enumerate(zip(nu, mu, sigma)):
-        cvs[i] = _cvs_single_population(
-            n, m, s, tau_m, tau_s, V_th_rel, V_0_rel)
+    for i, (n, m, s, v0, vt, tm, ts) in enumerate(
+        zip(nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s)):
+        cvs[i] = _cvs_single_population(n, m, s, v0, vt, tm, ts)
     return cvs
 
 
