@@ -156,6 +156,11 @@ class Test_lif_exp_functions_give_correct_results:
         assert_allclose(nu_e_ext, std_results[self.prefix + 'nu_e_ext'])
         assert_allclose(nu_i_ext, std_results[self.prefix + 'nu_i_ext'])
 
+    def test_cvs(self, network, std_results):
+        nnmt.lif.exp.working_point(network)
+        cvs = nnmt.lif.exp.cvs(network)
+        assert_allclose(cvs, std_results[self.prefix + 'cvs'])
+
 
 class Test_saving_and_loading:
 
