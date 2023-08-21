@@ -25,6 +25,7 @@ mu:
     - 30.0
     - 40.0
   unit: mV
+
 sigma:
   val:
     - 0.5
