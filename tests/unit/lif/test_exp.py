@@ -704,3 +704,33 @@ class Test_cvs:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
+
+
+class Test_pairwise_effective_connectivity:
+
+    func = staticmethod(exp._pairwise_effective_connectivity)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+class Test_spectral_bound:
+
+    func = staticmethod(exp._spectral_bound)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+class Test_pairwise_covariances:
+
+    func = staticmethod(exp._pairwise_covariances)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
