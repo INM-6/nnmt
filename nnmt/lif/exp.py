@@ -1115,6 +1115,7 @@ def _derivative_of_firing_rates_wrt_input_rate(
     **Assumptions and approximations**:
 
     - Diffusion approximation
+    - Linear response approximation
     - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
 
     Parameters
@@ -2065,3 +2066,102 @@ def _cvs_single_population(nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s):
         s_up *= 2
         err = integrand_outer(s_up)
     return np.sqrt(2.0 * (nu*tau_m)**2 * _quad(integrand_outer, 0.0, s_up)[0])
+
+
+def pairwise_effective_connectivity(network):
+    """
+    Calcs the pairwise effective connectivity matrix in linear response theory.
+
+    See :func:`nnmt.lif.exp._pairwise_effective_connectivity` for full
+    documentation.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results.
+
+    Returns
+    -------
+    np.ndarray
+        Pairwise effective connectivity matrix.
+    """
+
+    required_results = ['nu', 'mu', 'sigma']
+    result_keys = [_prefix + 'firing_rates',
+                    _prefix + 'mean_input',
+                    _prefix + 'std_input']
+    params = get_required_network_params(
+        network, _pairwise_effective_connectivity, exclude=required_results)
+    params.update(
+        get_required_results(network, required_results, result_keys))
+    params.update(
+        get_optional_network_params(network, _pairwise_effective_connectivity))
+    return _cache(network, _pairwise_effective_connectivity, params,
+                  _prefix + 'J_eff')
+
+
+def _pairwise_effective_connectivity(
+        nu, mu, sigma, J, K, V_0_rel, V_th_rel, tau_m, tau_s):
+    """
+    Calcs the pairwise effective connectivity matrix in linear response theory.
+
+    Basically, this is the matrix version of
+    :func:`_derivative_of_firing_rates_wrt_input_rate`.
+
+    See Eq. A.3 in Appendix A of :cite:t:`helias2013`.
+
+    **Assumptions and approximations**:
+
+    - Diffusion approximation
+    - Linear response approximation
+    - Fast synapses: :math:`\sqrt{\\tau_\mathrm{s} / \\tau_\mathrm{m}} \ll 1`
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    mu : [float | np.array]
+        Mean neuron activity in V.
+    sigma : [float | np.array]
+        Standard deviation of neuron activity in V.
+    J : np.array
+        Weight matrix in V.
+    K : np.array
+        Indegree matrix.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    tau_m : [float | 1d array]
+        Membrane time constant of post-synatic neuron in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
+
+    Returns
+    -------
+    [float | np.array]
+        Pairwise effective connectivity matrix.
+    """
+
+    alpha = __alpha_voltage_shift()
+
+    y_th = (V_th_rel - mu) / sigma
+    y_r = (V_0_rel - mu) / sigma
+
+    y_th_fb = y_th + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r_fb = y_r + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    # derivative of rate wrt mean input
+    d_nu_d_mu = (np.sqrt(np.pi) * (tau_m * nu)**2 / sigma
+                 * (np.exp(y_th_fb**2) * (1 + _erf(y_th_fb))
+                    - np.exp(y_r_fb**2) * (1 + _erf(y_r_fb))))
+
+    # derivative of rate wrt variance of input
+    d_nu_d_var = (np.sqrt(np.pi) * (tau_m * nu)**2 * 1 / sigma ** 2 / 2
+                  * (np.exp(y_th_fb**2) * (1 + _erf(y_th_fb)) * y_th
+                     - np.exp(y_r_fb**2) * (1 + _erf(y_r_fb)) * y_r))
+
+    # multiply W row-wise with vectors (this is how it works in numpy style)
+    J_eff = ((K * J).T * d_nu_d_mu + ((K * J)**2).T * d_nu_d_var).T
+
+    return J_eff
