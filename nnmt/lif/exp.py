@@ -2097,11 +2097,11 @@ def pairwise_effective_connectivity(network):
     params.update(
         get_optional_network_params(network, _pairwise_effective_connectivity))
     return _cache(network, _pairwise_effective_connectivity, params,
-                  _prefix + 'J_eff')
+                  _prefix + 'pairwise_effective_connectivity')
 
 
 def _pairwise_effective_connectivity(
-        nu, mu, sigma, J, K, V_0_rel, V_th_rel, tau_m, tau_s):
+        nu, mu, sigma, J, V_0_rel, V_th_rel, tau_m, tau_s):
     """
     Calcs the pairwise effective connectivity matrix in linear response theory.
 
@@ -2125,9 +2125,7 @@ def _pairwise_effective_connectivity(
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
     J : np.array
-        Weight matrix in V.
-    K : np.array
-        Indegree matrix.
+        Pairwise connectivity matrix in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
     V_th_rel : [float | np.array]
@@ -2162,6 +2160,75 @@ def _pairwise_effective_connectivity(
                      - np.exp(y_r_fb**2) * (1 + _erf(y_r_fb)) * y_r))
 
     # multiply W row-wise with vectors (this is how it works in numpy style)
-    J_eff = ((K * J).T * d_nu_d_mu + ((K * J)**2).T * d_nu_d_var).T
+    J_eff = (J.T * d_nu_d_mu + (J**2).T * d_nu_d_var).T
 
     return J_eff
+
+
+# def _pairwise_covariances(J_eff, rates, cvs=None, test=None, params=None,
+#                           return_noise_strength=False):
+
+#     if test == 'pop_values':
+#         cvs_pop = params['cvs_pop']
+#         rates_pop = params['rates_pop']
+#         N_E = params['N_E']
+#         N_I = params['N_I']
+#         R = params['R']
+
+#         rates = np.zeros(N_E + N_I)
+#         rates[:N_E] = rates_pop[0]
+#         rates[N_E:] = rates_pop[1]
+#         cvs = np.zeros(N_E + N_I)
+#         cvs[:N_E] = cvs_pop[0]
+#         cvs[N_E:] = cvs_pop[1]
+
+#         if params['restrict_to_active']:
+#             rates = rates[params['mask']]
+#             cvs = cvs[params['mask']]
+
+#     if cvs is None:
+#         autocorr = rates
+#     else:
+#         autocorr = cvs**2 * rates
+
+#     ones = np.identity(J_eff.shape[0])
+#     A = np.linalg.inv(ones - J_eff)
+#     D = _noise_strength(autocorr, A)
+
+#     if test == 'mean_D':
+#         N_E = params['N_E']
+#         N_I = params['N_I']
+#         D_mean = np.ones(D.size)
+#         D_mean[:N_E] = D[:N_E].mean()
+#         D_mean[N_E:] = D[N_E:].mean()
+#         D = D_mean
+#     elif test == 'spectral_radius':
+#         R = params['R']
+#         D = cvs**2 * rates * (1 - R**2)
+#     elif test == 'pop_values':
+#         D = cvs**2 * rates / (1 - R**2)
+
+#     C = A @ np.diag(D) @ A.T
+
+#     if return_noise_strength:
+#         return C, D
+#     else:
+#         return C
+
+
+# def _noise_strength(autocorr, A):
+#     """A is the inverse of (np.identity - W_eff)"""
+#     B = A**2
+#     D = np.dot(np.linalg.inv(B), autocorr)
+#     return D
+
+
+# def spectral_bound(network, _prefix):
+#     params = nnmt.utils.get_required_results(
+#         network, ['J_eff'], [_prefix + 'J_eff'])
+#     return _cache(network, _spectral_bound, params,
+#                   _prefix + 'spectral_bound')
+
+
+# def _spectral_bound(J_eff):
+#     return np.linalg.eigvals(J_eff).real.max()
