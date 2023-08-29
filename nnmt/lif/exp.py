@@ -2165,6 +2165,47 @@ def _pairwise_effective_connectivity(
     return J_eff
 
 
+def spectral_bound(network):
+    """
+    Calcs upper bound of eval spectrum of pairwise effective connectivity.
+
+    See :func:`nnmt.lif.exp._spectral_bound` for full documentation.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results.
+
+    Returns
+    -------
+    float
+        Upper spectral bound of effective connectivity matrix.
+    """
+
+    required_results = ['J_eff']
+    result_keys = [_prefix + 'pairwise_effective_connectivity']
+    params = get_required_results(network, required_results, result_keys)
+    return _cache(network, _spectral_bound, params, _prefix + 'spectral_bound')
+
+
+def _spectral_bound(J_eff):
+    """
+    Calcs upper bound of eval spectrum of pairwise effective connectivity.
+
+    Parameters
+    ----------
+    J_eff : np.array
+        Pairwise effective connectivity matrix in V.
+
+    Returns
+    -------
+    float
+        Upper spectral bound of effective connectivity matrix.
+    """
+
+    return np.abs(np.linalg.eigvals(J_eff).real.max())
+
+
 # def _pairwise_covariances(J_eff, rates, cvs=None, test=None, params=None,
 #                           return_noise_strength=False):
 
@@ -2222,13 +2263,3 @@ def _pairwise_effective_connectivity(
 #     D = np.dot(np.linalg.inv(B), autocorr)
 #     return D
 
-
-# def spectral_bound(network, _prefix):
-#     params = nnmt.utils.get_required_results(
-#         network, ['J_eff'], [_prefix + 'J_eff'])
-#     return _cache(network, _spectral_bound, params,
-#                   _prefix + 'spectral_bound')
-
-
-# def _spectral_bound(J_eff):
-#     return np.linalg.eigvals(J_eff).real.max()

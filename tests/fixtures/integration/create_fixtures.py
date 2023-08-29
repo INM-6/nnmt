@@ -107,6 +107,6 @@ if __name__ == '__main__':
         nnmt.lif.exp.working_point(network)
         nnmt.lif.exp.cvs(network)
         nnmt.lif.exp.pairwise_effective_connectivity(network)
-        # nnmt.lif.exp.spectral_bound(network)
+        nnmt.lif.exp.spectral_bound(network)
         # nnmt.lif.exp.pairwise_covariances(network)
         network.save(f'{fixture_path + name}.h5')

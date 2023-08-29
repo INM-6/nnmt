@@ -717,14 +717,15 @@ class Test_pairwise_effective_connectivity:
         assert_allclose(self.func(**params), output)
 
 
-# class Test_spectral_bound:
+class Test_spectral_bound:
 
-#     func = staticmethod(exp._spectral_bound)
+    func = staticmethod(exp._spectral_bound)
+    fixtures = 'lif_exp_spectral_bound.h5'
 
-#     def test_correct_output(self, unit_fixtures):
-#         params = unit_fixtures.pop('params')
-#         output = unit_fixtures.pop('output')
-#         assert_allclose(self.func(**params), output)
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
 
 
 # class Test_pairwise_covariances:
