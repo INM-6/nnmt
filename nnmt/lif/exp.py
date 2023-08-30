@@ -2206,60 +2206,59 @@ def _spectral_bound(J_eff):
     return np.abs(np.linalg.eigvals(J_eff).real.max())
 
 
-# def _pairwise_covariances(J_eff, rates, cvs=None, test=None, params=None,
-#                           return_noise_strength=False):
+def _pairwise_covariances(J_eff, rates, cvs=None, test=None, params=None,
+                          return_noise_strength=False):
 
-#     if test == 'pop_values':
-#         cvs_pop = params['cvs_pop']
-#         rates_pop = params['rates_pop']
-#         N_E = params['N_E']
-#         N_I = params['N_I']
-#         R = params['R']
+    if test == 'pop_values':
+        cvs_pop = params['cvs_pop']
+        rates_pop = params['rates_pop']
+        N_E = params['N_E']
+        N_I = params['N_I']
+        R = params['R']
 
-#         rates = np.zeros(N_E + N_I)
-#         rates[:N_E] = rates_pop[0]
-#         rates[N_E:] = rates_pop[1]
-#         cvs = np.zeros(N_E + N_I)
-#         cvs[:N_E] = cvs_pop[0]
-#         cvs[N_E:] = cvs_pop[1]
+        rates = np.zeros(N_E + N_I)
+        rates[:N_E] = rates_pop[0]
+        rates[N_E:] = rates_pop[1]
+        cvs = np.zeros(N_E + N_I)
+        cvs[:N_E] = cvs_pop[0]
+        cvs[N_E:] = cvs_pop[1]
 
-#         if params['restrict_to_active']:
-#             rates = rates[params['mask']]
-#             cvs = cvs[params['mask']]
+        if params['restrict_to_active']:
+            rates = rates[params['mask']]
+            cvs = cvs[params['mask']]
 
-#     if cvs is None:
-#         autocorr = rates
-#     else:
-#         autocorr = cvs**2 * rates
+    if cvs is None:
+        autocorr = rates
+    else:
+        autocorr = cvs**2 * rates
 
-#     ones = np.identity(J_eff.shape[0])
-#     A = np.linalg.inv(ones - J_eff)
-#     D = _noise_strength(autocorr, A)
+    ones = np.identity(J_eff.shape[0])
+    A = np.linalg.inv(ones - J_eff)
+    D = _noise_strength(autocorr, A)
 
-#     if test == 'mean_D':
-#         N_E = params['N_E']
-#         N_I = params['N_I']
-#         D_mean = np.ones(D.size)
-#         D_mean[:N_E] = D[:N_E].mean()
-#         D_mean[N_E:] = D[N_E:].mean()
-#         D = D_mean
-#     elif test == 'spectral_radius':
-#         R = params['R']
-#         D = cvs**2 * rates * (1 - R**2)
-#     elif test == 'pop_values':
-#         D = cvs**2 * rates / (1 - R**2)
+    if test == 'mean_D':
+        N_E = params['N_E']
+        N_I = params['N_I']
+        D_mean = np.ones(D.size)
+        D_mean[:N_E] = D[:N_E].mean()
+        D_mean[N_E:] = D[N_E:].mean()
+        D = D_mean
+    elif test == 'spectral_radius':
+        R = params['R']
+        D = cvs**2 * rates * (1 - R**2)
+    elif test == 'pop_values':
+        D = cvs**2 * rates / (1 - R**2)
 
-#     C = A @ np.diag(D) @ A.T
+    C = A @ np.diag(D) @ A.T
 
-#     if return_noise_strength:
-#         return C, D
-#     else:
-#         return C
+    if return_noise_strength:
+        return C, D
+    else:
+        return C
 
 
-# def _noise_strength(autocorr, A):
-#     """A is the inverse of (np.identity - W_eff)"""
-#     B = A**2
-#     D = np.dot(np.linalg.inv(B), autocorr)
-#     return D
-
+def _noise_strength(autocorr, A):
+    """A is the inverse of (np.identity - W_eff)"""
+    B = A**2
+    D = np.dot(np.linalg.inv(B), autocorr)
+    return D
