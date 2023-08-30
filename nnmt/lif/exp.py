@@ -20,6 +20,9 @@ Network Functions
     power_spectra
     external_rates_for_fixed_input
     cvs
+    pairwise_effective_connectivity
+    spectral_bound
+    pairwise_covariances
 
 Parameter Functions
 *******************
@@ -48,6 +51,9 @@ Parameter Functions
     _external_rates_for_fixed_input
     _cvs
     _cvs_single_population
+    _pairwise_effective_connectivity
+    _spectral_bound
+    _pairwise_covariances
 
 """
 
