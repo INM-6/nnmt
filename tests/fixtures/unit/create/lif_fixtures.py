@@ -194,11 +194,11 @@ if __name__ == '__main__':
                 regime_params, regimes,
                 fixture_path
                 + 'lif_exp_spectral_bound.h5')
-            # create_and_save_fixtures(
-            #     nnmt.lif.exp._pairwise_covariances,
-            #     regime_params, regimes,
-            #     fixture_path
-            #     + 'lif_exp_pairwise_covariances.h5')
+            create_and_save_fixtures(
+                nnmt.lif.exp._pairwise_covariances,
+                regime_params, regimes,
+                fixture_path
+                + 'lif_exp_pairwise_covariances.h5')
 
             run_calc = True
 

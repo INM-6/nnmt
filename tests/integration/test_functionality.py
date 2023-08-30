@@ -161,13 +161,14 @@ class Test_lif_exp_functions_give_correct_results:
         cvs = nnmt.lif.exp.cvs(network)
         assert_allclose(cvs, std_results[self.prefix + 'cvs'])
 
-    def test_spectral_bound_and_pairwise_covariances(self):
+    def test_pairwise_effective_connectivity_and_spectral_bound_and_pairwise_covariances(self):
 
         network = nnmt.models.Plain(
             file=('tests/fixtures/integration/data/lif_exp/'
                   'spectral_bound_and_pairwise_covariances.h5'))
         W_old = network.results['lif.exp.pairwise_effective_connectivity']
         r_old = network.results['lif.exp.spectral_bound']
+        covs_old = network.results['lif.exp.pairwise_covariances']
         network.clear_results()
         nnmt.lif.exp.working_point(network)
         nnmt.lif.exp.cvs(network)
@@ -175,9 +176,8 @@ class Test_lif_exp_functions_give_correct_results:
         assert_allclose(W_old, W)
         r = nnmt.lif.exp.spectral_bound(network)
         assert_allclose(r_old, r)
-        # pairwise_covariances = nnmt.lif.exp.pairwise_covariances(network)
-        # assert_allclose(pairwise_covariances, std_results[
-        #     self.prefix + 'pairwise_covariances'])
+        covs = nnmt.lif.exp.pairwise_covariances(network)
+        assert_allclose(covs_old, covs)
 
 
 class Test_saving_and_loading:

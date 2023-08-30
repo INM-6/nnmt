@@ -2120,9 +2120,9 @@ def _pairwise_effective_connectivity(
     ----------
     nu : np.array
         Firing rates of populations in Hz.
-    mu : [float | np.array]
+    mu : np.array
         Mean neuron activity in V.
-    sigma : [float | np.array]
+    sigma : np.array
         Standard deviation of neuron activity in V.
     J : np.array
         Pairwise connectivity matrix in V.
@@ -2206,59 +2206,76 @@ def _spectral_bound(J_eff):
     return np.abs(np.linalg.eigvals(J_eff).real.max())
 
 
-def _pairwise_covariances(J_eff, rates, cvs=None, test=None, params=None,
+def pairwise_covariances(network):
+    """
+    Calculates the pairwise covariances in linear response theory.
+
+    See :func:`nnmt.lif.exp._pairwise_covariances` for full documentation.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results.
+
+    Returns
+    -------
+    np.array
+        Pairwise effective covariance matrix.
+    """
+
+    required_results = ['J_eff', 'nu', 'cvs']
+    result_keys = [_prefix + 'pairwise_effective_connectivity',
+                   _prefix + 'firing_rates',
+                   _prefix + 'cvs']
+    params = get_required_results(network, required_results, result_keys)
+    return _cache(network, _pairwise_covariances, params,
+                  _prefix + 'pairwise_covariances')
+
+
+def _pairwise_covariances(J_eff, nu, cvs,
                           return_noise_strength=False):
+    """
+    Calculates the pairwise covariances in linear response theory.
 
-    if test == 'pop_values':
-        cvs_pop = params['cvs_pop']
-        rates_pop = params['rates_pop']
-        N_E = params['N_E']
-        N_I = params['N_I']
-        R = params['R']
+    We make use of Eq. 9 together with Eq. 11 from :cite:t:`layer2023`.
 
-        rates = np.zeros(N_E + N_I)
-        rates[:N_E] = rates_pop[0]
-        rates[N_E:] = rates_pop[1]
-        cvs = np.zeros(N_E + N_I)
-        cvs[:N_E] = cvs_pop[0]
-        cvs[N_E:] = cvs_pop[1]
+    **Assumptions and approximations**:
 
-        if params['restrict_to_active']:
-            rates = rates[params['mask']]
-            cvs = cvs[params['mask']]
+    - Linear response approximation
+    - Spiketrains well described by renewal process
 
-    if cvs is None:
-        autocorr = rates
-    else:
-        autocorr = cvs**2 * rates
+    Parameters
+    ----------
+    J_eff : np.array
+        Pairwise effective connectivity matrix in V.
+    nu : np.array
+        Firing rates of populations in Hz.
+    cvs : np.array
+        Coefficients of variation.
+    return_noise_strength : [False|True]
+        Whether the external noise strength matrix (Eq. 11) should be returned.
+        Default is `False`.
 
+    Returns
+    -------
+    np.array
+        Pairwise effective covariance matrix by default. If
+        `return_noise_strength` is `True` the covariance matrix is returned
+        together with the effective noise strength matrix.
+    """
+
+    # autocorrelations assuming renewal process
+    autocorr = cvs**2 * nu
+
+    # computation of external noise strength
     ones = np.identity(J_eff.shape[0])
     A = np.linalg.inv(ones - J_eff)
-    D = _noise_strength(autocorr, A)
+    D = np.dot(np.linalg.inv(A**2), autocorr)
 
-    if test == 'mean_D':
-        N_E = params['N_E']
-        N_I = params['N_I']
-        D_mean = np.ones(D.size)
-        D_mean[:N_E] = D[:N_E].mean()
-        D_mean[N_E:] = D[N_E:].mean()
-        D = D_mean
-    elif test == 'spectral_radius':
-        R = params['R']
-        D = cvs**2 * rates * (1 - R**2)
-    elif test == 'pop_values':
-        D = cvs**2 * rates / (1 - R**2)
-
+    # computation of pairwise covariances
     C = A @ np.diag(D) @ A.T
 
     if return_noise_strength:
         return C, D
     else:
         return C
-
-
-def _noise_strength(autocorr, A):
-    """A is the inverse of (np.identity - W_eff)"""
-    B = A**2
-    D = np.dot(np.linalg.inv(B), autocorr)
-    return D

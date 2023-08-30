@@ -728,11 +728,12 @@ class Test_spectral_bound:
         assert_allclose(self.func(**params), output)
 
 
-# class Test_pairwise_covariances:
+class Test_pairwise_covariances:
 
-#     func = staticmethod(exp._pairwise_covariances)
+    func = staticmethod(exp._pairwise_covariances)
+    fixtures = 'lif_exp_pairwise_covariances.h5'
 
-#     def test_correct_output(self, unit_fixtures):
-#         params = unit_fixtures.pop('params')
-#         output = unit_fixtures.pop('output')
-#         assert_allclose(self.func(**params), output)
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
