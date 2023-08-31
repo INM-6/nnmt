@@ -13,6 +13,8 @@ NNMT 1.3.0
   As the characteristic function of a lognormal distribution has no closed
   analytic form, the numerical integration proposed in :cite:t:`beaulieu2008`
   has been implemented.
+- Add functions for computing the cvs of lif neurons: :func:`nnmt.lif.exp.cvs`,
+  :func:`nnmt.lif.exp._cvs`, and :func:`nnmt.lif.exp._cvs_single_population`.
 
 **********
 NNMT 1.2.0

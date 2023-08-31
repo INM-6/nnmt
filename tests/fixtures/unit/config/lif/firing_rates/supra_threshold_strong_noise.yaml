@@ -1,23 +1,23 @@
 tau_m:
   val: 10.0
   unit: ms
-  
+
 tau_r:
   val: 2.0
   unit: ms
-  
+
 tau_s:
   val: 1
   unit: ms
-  
+
 V_th_rel:
   val: 20.0
   unit: mV
-  
+
 V_0_rel:
   val: 0.0
   unit: mV
-  
+
 mu:
   val:
     - 22.0
@@ -25,6 +25,7 @@ mu:
     - 30.0
     - 40.0
   unit: mV
+
 sigma:
   val:
     - 30.0

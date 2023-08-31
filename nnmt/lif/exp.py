@@ -19,6 +19,7 @@ Network Functions
     sensitivity_measure_all_eigenmodes
     power_spectra
     external_rates_for_fixed_input
+    cvs
 
 Parameter Functions
 *******************
@@ -45,6 +46,8 @@ Parameter Functions
     _sensitivity_measure_all_eigenmodes
     _power_spectra
     _external_rates_for_fixed_input
+    _cvs
+    _cvs_single_population
 
 """
 
@@ -58,6 +61,7 @@ from scipy.special import (
     zetac as _zetac,
     erfcx as _erfcx,
 )
+from scipy.integrate import quad as _quad
 
 from ..utils import (_check_positive_params,
                      _check_k_in_fast_synaptic_regime,
@@ -257,10 +261,10 @@ def _firing_rates_for_given_input(
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
@@ -307,10 +311,10 @@ def _firing_rate_shift(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
@@ -355,10 +359,10 @@ def _firing_rate_taylor(mu, sigma, V_0_rel, V_th_rel, tau_m, tau_r, tau_s):
         Mean neuron activity in V.
     sigma : [float | np.array]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.array]
-        Relative threshold potential in V.
     V_0_rel : [float | np.array]
         Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
     tau_m : [float | 1d array]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | 1d array]
@@ -1011,10 +1015,10 @@ def _derivative_of_firing_rates_wrt_mean_input(mu, sigma, V_0_rel, V_th_rel,
         Mean neuron activity in V.
     sigma : [float | np.ndarray]
         Standard deviation of neuron activity in V.
-    V_th_rel : [float | np.ndarray]
-        Relative threshold potential in V.
     V_0_rel : [float | np.ndarray]
         Relative reset potential in V.
+    V_th_rel : [float | np.ndarray]
+        Relative threshold potential in V.
     tau_m : [float | np.ndarray]
         Membrane time constant of post-synatic neuron in s.
     tau_r : [float | np.ndarray]
@@ -1940,3 +1944,124 @@ def _external_rates_for_fixed_input(mu_set, sigma_set,
         raise RuntimeError(f'Negative rate detected: {nu_ext}')
 
     return nu_ext
+
+
+def cvs(network):
+    """
+    Coefficient of variation of interspike intervals for multiple populations.
+
+    See :func:`nnmt.lif.exp._cvs_single_population` for full documentation.
+
+    Parameters
+    ----------
+    network : nnmt.models.Network or child class instance.
+        Network with the network parameters and previously calculated results.
+
+    Returns
+    -------
+    np.ndarray
+        CVs of different populations.
+    """
+    required_results = ['nu', 'mu', 'sigma']
+    result_keys = [_prefix + 'firing_rates',
+                   _prefix + 'mean_input',
+                   _prefix + 'std_input']
+    params = get_required_network_params(
+        network, _cvs, exclude=required_results)
+    params.update(
+        get_required_results(
+            network, required_results, result_keys))
+    params.update(get_optional_network_params(network, _cvs))
+    return _cache(network, _cvs, params, _prefix + 'cvs')
+
+
+def _cvs(nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s):
+    """
+    Coefficient of variation of interspike intervals for multiple populations.
+
+    Wrapper of :func:`nnmt.lif.exp._cvs_single_population`.
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    mu : [float | np.array]
+        Mean neuron activity in V.
+    sigma : [float | np.array]
+        Standard deviation of neuron activity in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    tau_m : [float | 1d array]
+        Membrane time constant of post-synatic neuron in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
+
+    Returns
+    -------
+    [float | np.array]
+        Estimate of coefficients of variation.
+    """
+    nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s = _equalize_shape(
+        nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s)
+    cvs = np.zeros(len(nu))
+    for i, (n, m, s, v0, vt, tm, ts) in enumerate(
+        zip(nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s)):
+        cvs[i] = _cvs_single_population(n, m, s, v0, vt, tm, ts)
+    return cvs
+
+
+def _cvs_single_population(nu, mu, sigma, V_0_rel, V_th_rel, tau_m, tau_s):
+    """
+    Coefficient of variation of interspike intervals for single population.
+
+    The original formula is taken from :cite:t:`brunel2000` Appendix A.1.
+    However, implementing this formula naively is a numerically unstable
+    approach. We first need to rewrite the integral. You find the integrals
+    used here in :cite:t:`layer2023`.
+
+    Parameters
+    ----------
+    nu : np.array
+        Firing rates of populations in Hz.
+    mu : [float | np.array]
+        Mean neuron activity in V.
+    sigma : [float | np.array]
+        Standard deviation of neuron activity in V.
+    V_0_rel : [float | np.array]
+        Relative reset potential in V.
+    V_th_rel : [float | np.array]
+        Relative threshold potential in V.
+    tau_m : [float | 1d array]
+        Membrane time constant of post-synatic neuron in s.
+    tau_s : float
+        Pre-synaptic time constant in s.
+
+    Returns
+    -------
+    [float | np.array]
+        Estimate of coefficients of variation.
+    """
+    alpha = __alpha_voltage_shift()
+
+    y_th = (V_th_rel - mu) / sigma + alpha / 2. * np.sqrt(tau_s / tau_m)
+    y_r = (V_0_rel - mu) / sigma + alpha / 2. * np.sqrt(tau_s / tau_m)
+
+    def integrand_outer(s):
+
+        def integrand_inner(t):
+            if t > 0.0:
+                return 1.0/t * (np.exp(-s**2 - 2*t**2 + 2*s*t) - np.exp(-s**2))
+            else:
+                return 2*s
+
+        return (1.0/s * (np.exp(2*y_th*s) - np.exp(2*y_r*s))
+                * _quad(integrand_inner, 0.0, s)[0])
+
+    s_up = 1.0
+    err = 1.0
+    while err > 1e-12:
+        s_up *= 2
+        err = integrand_outer(s_up)
+    return np.sqrt(2.0 * (nu*tau_m)**2 * _quad(integrand_outer, 0.0, s_up)[0])

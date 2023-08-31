@@ -7,11 +7,19 @@ tau_m:
   unit: ms
 
 tau_r:
-  val: 2.0
+  val:
+    - 2.0
+    - 3.0
+    - 1.5
+    - 1.0
   unit: ms
 
 tau_s:
-  val: 1
+  val:
+    - 1.0
+    - 2.0
+    - 3.0
+    - 0.5
   unit: ms
 
 V_th_rel:
@@ -23,7 +31,11 @@ V_th_rel:
   unit: mV
 
 V_0_rel:
-  val: 0.0
+  val:
+    - 0.0
+    - 0.1
+    - 0.2
+    - 0.3
   unit: mV
 
 mu:
@@ -41,3 +53,11 @@ sigma:
     - 40.0
     - 50.0
   unit: mV
+
+nu:
+  val:
+    - 32.3098618
+    - 15.91988666
+    - 43.79717697
+    - 103.6593416
+  unit: Hz

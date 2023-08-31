@@ -693,3 +693,14 @@ class Test_external_rates_for_fixed_input:
         params = unit_fixtures.pop('params')
         output = unit_fixtures.pop('output')
         assert_allclose(self.func(**params), output)
+
+
+class Test_cvs:
+
+    func = staticmethod(exp._cvs)
+    fixtures = 'lif_exp_cvs.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
