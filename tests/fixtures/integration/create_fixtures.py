@@ -71,6 +71,7 @@ if __name__ == '__main__':
         nnmt.lif.exp.power_spectra(network)
         # nnmt.lif.exp.additional_rates_for_fixed_input(
         #     network, mean_input_set, std_input_set)
+        nnmt.lif.exp.cvs(network)
         network.save(file=fixture_path + 'std_results.h5')
 
     if args['--firing_rates_fully_vectorized']:
