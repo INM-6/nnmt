@@ -19,6 +19,8 @@ Options:
     --firing_rates_fully_vectorized
     --firing_rates_with_external_dc_current
     --delay_dist_matrix
+    --spectral_bound_and_pairwise_covariances
+
     -h, --help         show this information
 '''
 
@@ -79,7 +81,6 @@ if __name__ == '__main__':
         name = 'lif_exp/firing_rates_fully_vectorized'
         network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
         firing_rates = nnmt.lif.exp.firing_rates(network)
-        print(firing_rates)
         network.save(f'{fixture_path + name}.h5')
 
     if args['--firing_rates_with_external_dc_current']:
@@ -87,7 +88,6 @@ if __name__ == '__main__':
         name = 'lif_exp/firing_rates_with_external_dc_current'
         network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
         firing_rates = nnmt.lif.exp.firing_rates(network)
-        print(firing_rates)
         network.save(f'{fixture_path + name}.h5')
 
     if args['--delay_dist_matrix']:
@@ -104,3 +104,26 @@ if __name__ == '__main__':
                 )
             D = nnmt.network_properties.delay_dist_matrix(network)
             network.save(fixture_path + fixdir + name + '.h5')
+
+    if args['--spectral_bound_and_pairwise_covariances']:
+
+        name = 'lif_exp/spectral_bound_and_pairwise_covariances'
+        network = nnmt.models.Plain(f'{config_path + name}.yaml')
+        j_E = network.network_params['j']
+        j_I = -network.network_params['g'] * j_E
+        J = network.network_params['J']
+        K = np.ones(J.shape)
+        K[J==0] = 0
+        J_ext = np.ones((J.shape[0], 2))
+        J_ext[:, 0] = j_E
+        J_ext[:, 1] = j_I
+        K_ext = np.ones(J_ext.shape)
+        network.network_params['K'] = K
+        network.network_params['K_ext'] = K_ext
+        network.network_params['J_ext'] = J_ext
+        nnmt.lif.exp.working_point(network)
+        nnmt.lif.exp.cvs(network)
+        nnmt.lif.exp.pairwise_effective_connectivity(network)
+        nnmt.lif.exp.spectral_bound(network)
+        nnmt.lif.exp.pairwise_covariances(network)
+        network.save(f'{fixture_path + name}.h5')

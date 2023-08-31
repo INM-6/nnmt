@@ -15,6 +15,15 @@ NNMT 1.3.0
   has been implemented.
 - Add functions for computing the cvs of lif neurons: :func:`nnmt.lif.exp.cvs`,
   :func:`nnmt.lif.exp._cvs`, and :func:`nnmt.lif.exp._cvs_single_population`.
+- Add functions for computing pairwise_effective_connectivity in linear
+  response approximation: :func:`nnmt.lif.exp.pairwise_effective_connectivity`,
+  :func:`nnmt.lif.exp._pairwise_effective_connectivity`.
+- Add functions for computing the spectral bound of the pairwise effective
+  connectivity matrix: :func:`nnmt.lif.exp.spectral_bound`,
+  :func:`nnmt.lif.exp._spectral_bound`.
+- Add functions for computing the pairwise covariances in linear response
+  approximation: :func:`nnmt.lif.exp.pairwise_covariances`,
+  :func:`nnmt.lif.exp._pairwise_covariances`.
 
 **********
 NNMT 1.2.0
