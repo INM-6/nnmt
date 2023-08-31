@@ -18,7 +18,9 @@ Options:
     -f, --force        force code to run
     --firing_rates_fully_vectorized
     --firing_rates_with_external_dc_current
+    --delay_dist_matrix
     --spectral_bound_and_pairwise_covariances
+
     -h, --help         show this information
 '''
 
@@ -87,6 +89,21 @@ if __name__ == '__main__':
         network = nnmt.models.Microcircuit(f'{config_path + name}.yaml')
         firing_rates = nnmt.lif.exp.firing_rates(network)
         network.save(f'{fixture_path + name}.h5')
+
+    if args['--delay_dist_matrix']:
+
+        fixdir = 'network_properties/'
+        names = ['delay_none',
+                 'delay_truncated_gaussian',
+                 'delay_gaussian',
+                 'delay_lognormal']
+        for name in names:
+            network = nnmt.models.Microcircuit(
+                config_path + fixdir + name + '_network_params'+ '.yaml',
+                config_path + fixdir + 'analysis_params.yaml'
+                )
+            D = nnmt.network_properties.delay_dist_matrix(network)
+            network.save(fixture_path + fixdir + name + '.h5')
 
     if args['--spectral_bound_and_pairwise_covariances']:
 

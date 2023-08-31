@@ -8,6 +8,11 @@ Release notes
 NNMT 1.3.0
 **********
 
+- The option to use a lognormal delay distribution has been added to the
+  calcultion of the delay distribution matrix in ``nnmt.network_properties``.
+  As the characteristic function of a lognormal distribution has no closed
+  analytic form, the numerical integration proposed in :cite:t:`beaulieu2008`
+  has been implemented.
 - Add functions for computing the cvs of lif neurons: :func:`nnmt.lif.exp.cvs`,
   :func:`nnmt.lif.exp._cvs`, and :func:`nnmt.lif.exp._cvs_single_population`.
 - Add functions for computing pairwise_effective_connectivity in linear
