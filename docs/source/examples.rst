@@ -15,3 +15,4 @@ Examples
    bos_2016_index.rst
    mapping_lif_rate_and_spatial_patterns_index.rst
    auto_examples/binary_rate_simulation/binary_sim_vs_thy.rst
+   auto_examples/prediction_of_simulation_results/prediction_and_simulation_EI_network.rst

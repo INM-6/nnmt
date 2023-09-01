@@ -1,0 +1,11 @@
+---
+# Time for network initialization in ms
+T_init:
+  val: 1000.0
+  unit: ms
+
+# Binwidth for binning spiketrains in ms
+binwidth:
+  val: 1000.0
+  unit: ms
+...
