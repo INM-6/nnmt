@@ -17,13 +17,15 @@ we compute the correlation coefficient between prediction and simulation
 results and plot the data.
 
 Note that NEST uses non SI units as standards, while NNMT uses SI units.
+
+Note that the simulated network is very small. It most likely contains
+correlations that are not accounted for in mean-field theory.
 """
 
 
 ###############################################################################
 # Imports
 # -------
-
 
 import string
 import matplotlib.pyplot as plt
@@ -51,7 +53,7 @@ network_id = 'ei_network'
 
 sample_size = 10000
 
-run = False
+run = True
 
 ###############################################################################
 # Helper functions
@@ -213,6 +215,7 @@ def calc_autocorr(x):
     result = np.correlate(x, x, mode='full')
     return result[int(result.size/2):]
 
+
 def scatter_plot(ax, data1, data2, s=0.5, diag=True, set_aspect=True,
                  **kwargs):
     ax.scatter(data1, data2, s=s, **kwargs)
@@ -236,26 +239,8 @@ def plot_diagonal(ax, lower, upper, color='black', zorder=-100, **kwargs):
     ax.plot(diagonal, diagonal, color=color, zorder=zorder, **kwargs)
 
 
-def cosine_similarity(a, b):
-    return a.T @ b / np.sqrt(a.T @ a) / np.sqrt(b.T @ b)
-
-
 def add_corrcoef(ax, cc, x=0.7, y=0.05):
     ax.text(x, y, f'$\\rho={cc:.2g}$', transform=ax.transAxes)
-
-
-def add_cosine_similarity(ax, cs, x=0.7, y=0.12):
-    ax.text(x, y, f'$cs={cs:.2g}$', transform=ax.transAxes)
-
-
-def add_nrmse(ax, nrmse, x=0.7, y=0.19):
-    ax.text(x, y, f'$nrmse={nrmse:.2g}$', transform=ax.transAxes)
-
-
-def nrmse(a, b):
-    rmse = np.sqrt(((a - b)**2).sum() / len(a))
-    std = a.std()
-    return rmse / std
 
 
 def plot_rates_scatter_plot(ax_rates, rates_sim, rates_thy, cc_rate, N_E):
@@ -277,7 +262,6 @@ def plot_corrs_scatter_plot(ax_corrs,
     lower, upper = get_extrema([corrs_sim_EE, corrs_thy_EE,
                                 corrs_sim_EI, corrs_thy_EI,
                                 corrs_sim_II, corrs_thy_II])
-    # lower, upper = -1, 1
     plot_diagonal(ax_corrs, lower, upper, color='lightgray')
     scatter_plot(ax_corrs, corrs_sim_EE, corrs_thy_EE, diag=False,
                  color=blue, alpha=alpha, label='EE', rasterized=True, zorder=3)
@@ -305,10 +289,6 @@ def raster_plot(ax, spiketrains, samples=[20, 5], t_min=1, t_max=5,
             else:
                 raise RuntimeError(f'Marker {marker} unknown.')
     ax.set_ylim([slices[-1]+1, -1])
-    x0, x1 = ax.get_xlim()
-    y0, y1 = ax.get_ylim()
-    # ax.set_aspect(np.abs((x1-x0)/(y1-y0)))
-
 
 
 if run:
@@ -491,9 +471,6 @@ if run:
 
     # Load yaml file to SI units
     network = nnmt.models.Plain(network_param_file)
-    # network_params = nnmt.input_output.load_val_unit_dict_from_yaml(
-    #     network_param_file)
-    # nnmt.utils._convert_to_si_and_strip_units(network_params)
 
     # Add newly calculated parameters to network parameter dictionary
     new_network_params = dict(
@@ -504,97 +481,9 @@ if run:
     )
     network.network_params.update(new_network_params)
 
-    # network_param_dict = dict(
-    #     tau_m=tau_m,
-    #     tau_r=tau_r,
-    #     C=C,
-    #     V_th=V_th,
-    #     V_r=V_r,
-    #     J_ex=J_ex,
-    #     J_in=J_in,
-    #     delay=delay,
-    #     p=p,
-    #     K_E=K_E,
-    #     K_I=K_I,
-    #     N_E=N_E,
-    #     N_I=N_I,
-    #     K_ext=np.vstack([np.ones(N), np.ones(N)]).T,
-    #     J_ext=np.vstack([np.ones(N) * J_ex, np.ones(N) * J_in]).T,
-    # )
-
-    # if neuron_type == 'iaf_psc_delta':
-    #     network_param_dict['tau_s'] = 0.0
-    # elif neuron_type == 'iaf_psc_exp':
-    #     network_param_dict['tau_s'] = tau_s
-
-
-    # network_param_dict['W'] = W
-
     # only needed for population values
     network_params['K_E'] = K_E
     network_params['K_I'] = K_I
-
-    ###########################################################################
-
-    # # load parameters from simulation
-    # print('Load parameters from simulation')
-    # # load yaml file
-    # network_params = nnmt.input_output.load_val_unit_dict_from_yaml(
-    #     network_param_file)
-    # nnmt.utils._convert_to_si_and_strip_units(network_params)
-
-    # simulation_params = nnmt.input_output.load_val_unit_dict_from_yaml(
-    #     sim_param_file)
-    # nnmt.utils._convert_to_si_and_strip_units(simulation_params)
-
-    # N = network_params['N'].sum()
-    # p = network_params['p']
-    # j = network_params['j'] * 1000
-    # connection_rule = network_params['connection_rule']
-    # T = simulation_params['simtime'] * 1000
-
-    # # # load and integrate parameters saved in simulation
-    # # input_dict = np.load(params_from_sim, allow_pickle=True)
-    # # temp = network_params
-    # # network_params = input_dict['network_params'].tolist()
-    # # network_params.update(temp)
-
-    # network_params.pop('V_th')
-    # network_params.pop('V_r')
-    # network_params.pop('delay')
-    # network_params.pop('J_ex')
-    # network_params.pop('J_in')
-    # # convert mV used by NEST simulation to V used by NNMT
-    # network_params['W'] /= 1000
-    # network_params['J_ext'] /= 1000
-    # W = network_params['W']
-    # N_E = network_params['N_E']
-    # N_I = network_params['N_I']
-    # K_E = network_params['K_E']
-    # K_I = network_params['K_I']
-    # tau_r = network_params['tau_r']
-    # V_th = network_params['V_th_rel']
-    # V_r = network_params['V_0_rel']
-    # nu_ext = network_params['nu_ext']
-    # J_ex = network_params['j']
-    # J_in = - network_params['j'] * network_params['g']
-    # tau_m = network_params['tau_m']
-    # neuron_type = network_params['neuron_type']
-    # if neuron_type == 'iaf_psc_delta':
-    #     _prefix = 'lif.delta.'
-    #     tau_s = 0.0
-    # elif neuron_type == 'iaf_psc_exp':
-    #     _prefix = 'lif.exp.'
-    #     tau_s = network_params['tau_s']
-    # else:
-    #     raise RuntimeError(f'Unkown neuron type: {neuron_type}')
-    # C = network_params['C']
-    # K_ext = network_params['K_ext']
-    # # convert mV used by NEST simulation to V used by NNMT
-    # J_ext = network_params['J_ext']
-    # I_ext = network_params['I_ext']
-    # # assume no multapses allowed!
-    # K = np.where(W != 0, 1, 0)
 
     ###########################################################################
 
@@ -728,18 +617,6 @@ if run:
     id_max = N
     spiketrains = get_spike_trains(senders, times, id_min, id_max)
 
-    ###############################################################################
-    # Save results
-
-    # print('Saving')
-    # results_dict = dict(
-    #     spiketrains=spiketrains,
-    # )
-
-    # np.savez(
-    #     simulation_data_path + '_spiketrains.npz',
-    #     results=results_dict)
-
 
     ###############################################################################
     # Analyzing the simulation results
@@ -760,81 +637,6 @@ if run:
     T_init = analysis_params['T_init']
     binwidth = analysis_params['binwidth']
 
-    # ###############################################################################
-    # # load network params
-
-    # network_params = nnmt.input_output.load_val_unit_dict_from_yaml(
-    #     network_param_file)
-    # nnmt.utils._convert_to_si_and_strip_units(network_params)
-
-    # ###############################################################################
-    # # load simulation params
-
-    # simulation_params = nnmt.input_output.load_val_unit_dict_from_yaml(
-    #     sim_param_file)
-    # nnmt.utils._convert_to_si_and_strip_units(simulation_params)
-
-    # ###############################################################################
-    # # load data
-
-    # N = network_params['N'].sum()
-    # p = network_params['p']
-    # j = network_params['j'] * 1000
-    # connection_rule = network_params['connection_rule']
-    # T = simulation_params['simtime'] * 1000
-
-    # input_dict = np.load(
-    #     simulation_data_path + network_id + '_spiketrains.npz',
-    #     allow_pickle=True)
-    # results = input_dict['results'].tolist()
-
-    # ###############################################################################
-    # # update params with parameters obtained through simulation
-
-    # input_dict = np.load(simulation_data_path + network_id + '_params.npz',
-    #                         allow_pickle=True)
-
-    # temp = network_params
-    # network_params = input_dict['network_params'].tolist()
-    # network_params.update(temp)
-
-    # temp = simulation_params
-    # simulation_params = input_dict['simulation_params'].tolist()
-    # simulation_params.update(temp)
-
-    # ###############################################################################
-    # # load parameters
-
-    # network_params.pop('V_th')
-    # network_params.pop('V_r')
-    # network_params.pop('delay')
-    # network_params.pop('J_ex')
-    # network_params.pop('J_in')
-    # network_params['W'] /= 1000
-    # network_params['J_ext'] /= 1000
-
-    # W = network_params['W']
-    # N_E = network_params['N_E']
-    # N_I = network_params['N_I']
-    # tau_r = network_params['tau_r']
-    # V_th = network_params['V_th_rel']
-    # V_r = network_params['V_0_rel']
-    # nu_ext = network_params['nu_ext']
-    # tau_m = network_params['tau_m']
-
-    # neuron_type = network_params['neuron_type']
-    # if neuron_type == 'iaf_psc_delta':
-    #     tau_s = 0.0
-    # else:
-    #     tau_s = network_params['tau_s']
-
-    # C = network_params['C']
-    # K_ext = network_params['K_ext']
-    # J_ext = network_params['J_ext']
-    # I_ext = network_params['I_ext']
-
-    # # assume no multapses allowed!
-    # K = np.where(W != 0, 1, 0)
 
     ###############################################################################
     # analyze simulated data
@@ -870,7 +672,6 @@ if run:
     cross_corrs_sim = corrs_sim[upper_triangle_indices]
     cross_covs_thy = covs_thy[upper_triangle_indices]
     cross_corrs_thy = corrs_thy[upper_triangle_indices]
-
 
 
     ###############################################################################
@@ -990,31 +791,6 @@ plt.rc('ytick', labelsize=labelsize)
 
 grid = (3, 3)
 
-all_axs = []
-
-# input_dict = np.load(plotting_data_path + network_id + '.npz',
-#                         allow_pickle=True)
-# network_params = input_dict['network_params'].tolist()
-# N_E = network_params['N_E']
-
-# results = input_dict['results'].tolist()
-
-# rates_sim = results['rates_sim']
-# corrs_sim_EE = results['corrs_sim_EE']
-# corrs_sim_EI = results['corrs_sim_EI']
-# corrs_sim_II = results['corrs_sim_II']
-# covs_sim_EE = results['covs_sim_EE']
-# covs_sim_EI = results['covs_sim_EI']
-# covs_sim_II = results['covs_sim_II']
-
-# rates_thy = results['rates_thy']
-# corrs_thy_EE = results['corrs_thy_EE']
-# corrs_thy_EI = results['corrs_thy_EI']
-# corrs_thy_II = results['corrs_thy_II']
-# covs_thy_EE = results['covs_thy_EE']
-# covs_thy_EI = results['covs_thy_EI']
-# covs_thy_II = results['covs_thy_II']
-
 cc_rates = np.corrcoef(rates_sim, rates_thy)[0, 1]
 cc_cvs = np.corrcoef(cvs_sim, cvs_thy)[0, 1]
 cc_corrs = np.corrcoef(cross_corrs_sim, cross_corrs_thy)[0, 1]
@@ -1029,7 +805,6 @@ ax_corrs = plt.subplot2grid(grid, (2, 2))
 axs = [ax_spiketrains,
        ax_rates_hist, ax_cvs_hist, ax_corrs_hist,
        ax_rates, ax_cvs, ax_corrs]
-all_axs.extend(axs)
 
 print('Plot spiketrains')
 raster_plot(ax_spiketrains,
@@ -1071,7 +846,6 @@ ax_cvs_hist.set_title('CVs', fontweight='bold')
 ax_cvs_hist.set_xlabel('CVs')
 ax_cvs_hist.set_ylabel('pdf')
 ax_cvs_hist.axvline(cvs_pop.mean(), color='dimgrey', linestyle='--')
-# ax_cvs_hist.set_xlim([0, 1.5])
 
 ax_corrs_hist.hist(sampled_cross_corrs_thy, bins=30, alpha=0.5, density=True,
                    color=neutral)
@@ -1094,31 +868,21 @@ plot_corrs_scatter_plot(ax_corrs,
 ax_corrs.set_xlabel('simulation')
 ax_corrs.set_ylabel('theory')
 
-# all_axs[1].set_title('rates')
-# all_axs[2].set_title('CVs')
-# all_axs[3].set_title('correlation')
-
-# all_axs[5].set_ylabel('theory')
-
-# all_axs[5].set_xlabel('simulation')
-# all_axs[6].set_xlabel('simulation')
-# all_axs[7].set_xlabel('simulation')
-
 ax_rates.legend(markerscale=markerscale)
 leg = ax_corrs.legend(markerscale=markerscale)
 for lh in leg.legendHandles:
     lh.set_alpha(1)
 
 
-labels = list(string.ascii_lowercase[:len(all_axs)])
+labels = list(string.ascii_lowercase[:len(axs)])
 
 x_positions = [-0.1] * len(axs)
 x_positions[0] = -0.03  # Adjust the value as needed
 
-utils.add_panel_labels(all_axs, labels, x_positions=x_positions,
+utils.add_panel_labels(axs, labels, x_positions=x_positions,
                        fontsize=panel_label_fontsize,
                        use_parenthesis=True)
-utils.remove_borders(all_axs)
+utils.remove_borders(axs)
 
 plt.tight_layout()
 plt.savefig(plot_path + network_id + '_thy_vs_sim.pdf', dpi=600)
