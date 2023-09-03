@@ -629,20 +629,51 @@ if run:
 
 
     # ###########################################################################
-    # print('Saving')
+    # Population mean-field theory
+    print('Build NNMT population model')
 
-    # results_dict = dict(
-    #     rates_thy=rates_thy,
-    #     corrs_thy=corrs_thy,
-    #     covs_thy=covs_thy,
-    #     cvs_thy=cvs_thy,
-    #     r=r,
-    # )
+    K_pop = np.array([[K_E, K_I], [K_E, K_I]])
+    J_pop = np.array([[J_ex, J_in],
+                      [J_ex, J_in]])
+    # convert from mV to V
+    J_pop /= 1000
 
-    # np.savez(
-    #     intermediate_results_path + f'{network_id}_thy.npz',
-    #     network_params=network_params,
-    #     results=results_dict)
+    K_ext_pop = np.array([[1, 1],
+                          [1, 1]])
+    J_ext_pop = np.array([[J_ex, J_in],
+                          [J_ex, J_in]])
+    # convert from mV to V
+    J_ext_pop /= 1000
+
+    nu_ext_pop = network_params['nu_ext']
+
+    pop_params = {
+        'K': K_pop,
+        'J': J_pop,
+        'tau_m': tau_m,
+        'tau_s': tau_s,
+        'tau_r': tau_r,
+        'V_th_rel': V_th,
+        'V_0_rel': V_r,
+        'J_ext': J_ext_pop,
+        'K_ext': K_ext_pop,
+        'nu_ext': nu_ext_pop,
+        'I_ext': I_ext,
+        'C': C
+    }
+
+    pop_network = nnmt.models.Plain(network_param_file)
+    pop_network.network_params['K'] = K_pop
+    pop_network.network_params['J'] = J_pop
+    pop_network.network_params['K_ext'] = K_ext_pop
+    pop_network.network_params['J_ext'] = J_ext_pop
+
+    print('Estimate population rates')
+    nnmt.lif.exp.working_point(pop_network)
+    rates_pop = nnmt.lif.exp.firing_rates(pop_network)
+
+    print('Estimate population CVs')
+    cvs_pop = nnmt.lif.exp.cvs(pop_network)
 
 
     ###############################################################################
@@ -853,6 +884,8 @@ if run:
         rates_sim=rates_sim,
         cvs_sim=cvs_sim,
         corrs_sim=corrs_sim,
+        rates_pop=rates_pop,
+        cvs_pop=cvs_pop,
     )
 
     np.savez(f'temp/{network_id}.npz',
@@ -880,6 +913,8 @@ rates_sim = results['rates_sim']
 cvs_sim = results['cvs_sim']
 corrs_sim = results['corrs_sim']
 spiketrains = results['spiketrains']
+rates_pop = results['rates_pop']
+cvs_pop = results['cvs_pop']
 
 
 ###############################################################################
@@ -1005,22 +1040,37 @@ ax_spiketrains.set_xlabel('time')
 
 print('Plot histograms')
 
-ax_rates_hist.hist(rates_thy, bins=30, alpha=0.5, density=True,
-                   label='theory', color=neutral)
-ax_rates_hist.hist(rates_sim, bins=30, alpha=0.5, density=True,
-                   label='simulation', color=darkneutral)
+hist1 = ax_rates_hist.hist(rates_thy, bins=30, alpha=0.5, density=True,
+                   label='thy',
+                   color=neutral)
+hist2 = ax_rates_hist.hist(rates_sim, bins=30, alpha=0.5, density=True,
+                   label='sim',
+                   color=darkneutral)
 ax_rates_hist.set_title('Rates', fontweight='bold')
 ax_rates_hist.set_ylim([0,0.21])
 ax_rates_hist.set_xlabel('rate [Hz]')
 ax_rates_hist.set_ylabel('pdf')
-ax_rates_hist.legend(loc='upper left')
-# ax_rates_hist.set_xlim([0, 200])
+line = ax_rates_hist.axvline(rates_pop.mean(),
+                      label='pop thy',
+                      color='dimgrey',
+                      linestyle='--')
+#get handles and labels
+handles, labels = ax_rates_hist.get_legend_handles_labels()
+
+#specify order of items in legend
+order = [1, 2, 0]
+
+#add legend to plot
+ax_rates_hist.legend(
+    [handles[idx] for idx in order],[labels[idx] for idx in order],
+    ncol=2, framealpha=1, bbox_to_anchor=(1, 1.04), loc='upper right')
 
 ax_cvs_hist.hist(cvs_thy, bins=30, alpha=0.5, density=True, color=neutral)
 ax_cvs_hist.hist(cvs_sim, bins=30, alpha=0.5, density=True, color=darkneutral)
 ax_cvs_hist.set_title('CVs', fontweight='bold')
 ax_cvs_hist.set_xlabel('CVs')
 ax_cvs_hist.set_ylabel('pdf')
+ax_cvs_hist.axvline(cvs_pop.mean(), color='dimgrey', linestyle='--')
 # ax_cvs_hist.set_xlim([0, 1.5])
 
 ax_corrs_hist.hist(sampled_cross_corrs_thy, bins=30, alpha=0.5, density=True,
