@@ -27,7 +27,6 @@ Note that NEST uses non SI units as standards, while NNMT uses SI units.
 
 import string
 import matplotlib.pyplot as plt
-import sys
 import nest
 import random
 import numpy as np
@@ -259,27 +258,6 @@ def nrmse(a, b):
     return rmse / std
 
 
-def plot_row(axs,
-             rates_sim, rates_thy,
-             covs_sim_EE, covs_sim_EI, covs_sim_II,
-             covs_thy_EE, covs_thy_EI, covs_thy_II,
-             corrs_sim_EE, corrs_sim_EI, corrs_sim_II,
-             corrs_thy_EE, corrs_thy_EI, corrs_thy_II,
-             cc_rate, cc_cov, cc_corr,
-             N_E
-             ):
-
-    plot_rates_scatter_plot(axs[0], rates_sim, rates_thy, cc_rate, N_E)
-    plot_covs_scatter_plot(axs[1],
-                           covs_sim_EE, covs_sim_EI, covs_sim_II,
-                           covs_thy_EE, covs_thy_EI, covs_thy_II,
-                           cc_cov)
-    plot_corrs_scatter_plot(axs[2],
-                            corrs_sim_EE, corrs_sim_EI, corrs_sim_II,
-                            corrs_thy_EE, corrs_thy_EI, corrs_thy_II,
-                            cc_corr)
-
-
 def plot_rates_scatter_plot(ax_rates, rates_sim, rates_thy, cc_rate, N_E):
 
     lower, upper = get_extrema([rates_sim, rates_thy])
@@ -289,25 +267,6 @@ def plot_rates_scatter_plot(ax_rates, rates_sim, rates_thy, cc_rate, N_E):
     scatter_plot(ax_rates, rates_sim[N_E:], rates_thy[N_E:], color=red,
                  label='I', diag=False, rasterized=True)
     add_corrcoef(ax_rates, cc_rate)
-
-
-def plot_covs_scatter_plot(ax_covs,
-                           covs_sim_EE, covs_sim_EI, covs_sim_II,
-                           covs_thy_EE, covs_thy_EI, covs_thy_II,
-                           cc_cov,
-                           ):
-
-    lower, upper = get_extrema([covs_sim_EE, covs_thy_EE,
-                                covs_sim_EI, covs_thy_EI,
-                                covs_sim_II, covs_thy_II])
-    plot_diagonal(ax_covs, lower, upper, color='lightgray')
-    scatter_plot(ax_covs, covs_sim_EE, covs_thy_EE, diag=False,
-                 color=blue, alpha=alpha, label='EE', rasterized=True)
-    scatter_plot(ax_covs, covs_sim_EI, covs_thy_EI, diag=False,
-                 color=yellow, alpha=alpha, label='EI', rasterized=True)
-    scatter_plot(ax_covs, covs_sim_II, covs_thy_II, diag=False,
-                 color=red, alpha=alpha, label='II', rasterized=True)
-    add_corrcoef(ax_covs, cc_cov)
 
 
 def plot_corrs_scatter_plot(ax_corrs,
@@ -321,15 +280,15 @@ def plot_corrs_scatter_plot(ax_corrs,
     # lower, upper = -1, 1
     plot_diagonal(ax_corrs, lower, upper, color='lightgray')
     scatter_plot(ax_corrs, corrs_sim_EE, corrs_thy_EE, diag=False,
-                 color=blue, alpha=alpha, label='EE', rasterized=True)
+                 color=blue, alpha=alpha, label='EE', rasterized=True, zorder=3)
     scatter_plot(ax_corrs, corrs_sim_EI, corrs_thy_EI, diag=False,
-                 color=yellow, alpha=alpha, label='EI', rasterized=True)
+                 color=yellow, alpha=alpha, label='EI', rasterized=True, zorder=2)
     scatter_plot(ax_corrs, corrs_sim_II, corrs_thy_II, diag=False,
-                 color=red, alpha=alpha, label='II', rasterized=True)
+                 color=red, alpha=alpha, label='II', rasterized=True, zorder=1)
     add_corrcoef(ax_corrs, cc_corr)
 
 
-def raster_plot(ax, spiketrains, samples=[20, 5], t_min=1, t_max=2,
+def raster_plot(ax, spiketrains, samples=[20, 5], t_min=1, t_max=5,
                 colors=['steelblue', 'red'], marker='ticks', **kwargs):
     slices = np.append([0], np.array(samples)).cumsum()
     for i in range(len(samples)):
@@ -980,6 +939,7 @@ blue = colors['blue']
 red = colors['red']
 yellow = colors['yellow']
 neutral = colors['lightneutral']
+darkneutral = colors['neutral']
 
 alpha = 1
 markerscale = 5
@@ -1040,31 +1000,49 @@ print('Plot spiketrains')
 raster_plot(ax_spiketrains,
             [spiketrains_E, spiketrains_I],
             colors=[blue, red])
-ax_spiketrains.set_title('Spiketrains')
+ax_spiketrains.set_title('Spiketrains', fontweight='bold')
+ax_spiketrains.set_xlabel('time')
 
 print('Plot histograms')
 
-ax_rates_hist.hist(rates_thy, bins=30, alpha=0.5)
-ax_rates_hist.hist(rates_sim, bins=30, alpha=0.5)
-ax_rates_hist.set_title('Rates')
+ax_rates_hist.hist(rates_thy, bins=30, alpha=0.5, density=True,
+                   label='theory', color=neutral)
+ax_rates_hist.hist(rates_sim, bins=30, alpha=0.5, density=True,
+                   label='simulation', color=darkneutral)
+ax_rates_hist.set_title('Rates', fontweight='bold')
+ax_rates_hist.set_ylim([0,0.21])
+ax_rates_hist.set_xlabel('rate [Hz]')
+ax_rates_hist.set_ylabel('pdf')
+ax_rates_hist.legend(loc='upper left')
 # ax_rates_hist.set_xlim([0, 200])
 
-ax_cvs_hist.hist(cvs_thy, bins=30, alpha=0.5)
-ax_cvs_hist.hist(cvs_sim, bins=30, alpha=0.5)
-ax_cvs_hist.set_title('CVs')
+ax_cvs_hist.hist(cvs_thy, bins=30, alpha=0.5, density=True, color=neutral)
+ax_cvs_hist.hist(cvs_sim, bins=30, alpha=0.5, density=True, color=darkneutral)
+ax_cvs_hist.set_title('CVs', fontweight='bold')
+ax_cvs_hist.set_xlabel('CVs')
+ax_cvs_hist.set_ylabel('pdf')
 # ax_cvs_hist.set_xlim([0, 1.5])
 
-ax_corrs_hist.hist(sampled_cross_corrs_thy, bins=30, alpha=0.5)
-ax_corrs_hist.hist(sampled_cross_corrs_sim, bins=30, alpha=0.5)
-ax_corrs_hist.set_title('Correlations')
+ax_corrs_hist.hist(sampled_cross_corrs_thy, bins=30, alpha=0.5, density=True,
+                   color=neutral)
+ax_corrs_hist.hist(sampled_cross_corrs_sim, bins=30, alpha=0.5, density=True,
+                   color=darkneutral)
+ax_corrs_hist.set_title('Correlations', fontweight='bold')
+ax_corrs_hist.set_ylabel('pdf')
 
 print('Plot scatter plots')
 plot_rates_scatter_plot(ax_rates, rates_sim, rates_thy, cc_rates, N_E)
+ax_rates.set_xlabel('simulation')
+ax_rates.set_ylabel('theory')
 plot_rates_scatter_plot(ax_cvs, cvs_sim, cvs_thy, cc_cvs, N_E)
+ax_cvs.set_xlabel('simulation')
+ax_cvs.set_ylabel('theory')
 plot_corrs_scatter_plot(ax_corrs,
                         corrs_sim_EE, corrs_sim_EI, corrs_sim_II,
                         corrs_thy_EE, corrs_thy_EI, corrs_thy_II,
                         cc_corrs)
+ax_corrs.set_xlabel('simulation')
+ax_corrs.set_ylabel('theory')
 
 # all_axs[1].set_title('rates')
 # all_axs[2].set_title('CVs')
@@ -1076,11 +1054,10 @@ plot_corrs_scatter_plot(ax_corrs,
 # all_axs[6].set_xlabel('simulation')
 # all_axs[7].set_xlabel('simulation')
 
-# all_axs[5].legend(markerscale=markerscale)
-# all_axs[6].legend(markerscale=markerscale)
-# leg = all_axs[7].legend(markerscale=markerscale)
-# for lh in leg.legendHandles:
-#     lh.set_alpha(1)
+ax_rates.legend(markerscale=markerscale)
+leg = ax_corrs.legend(markerscale=markerscale)
+for lh in leg.legendHandles:
+    lh.set_alpha(1)
 
 
 labels = list(string.ascii_lowercase[:len(all_axs)])

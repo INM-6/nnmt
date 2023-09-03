@@ -10,10 +10,10 @@ N:
   - 200
 
 # connection probability
-p: 0.1
+p: 0.2
 
 # ratio of inhibitory to excitatory weights
-g: 6.0
+g: 5.0
 
 # connection rule
 connection_rule: fixed_indegree
@@ -79,7 +79,7 @@ delay_dist: none
 
 # PSP amplitude
 j:
-  val: 0.2
+  val: 0.8
   unit: mV
 
 # wether to use Gaussian weights or not
@@ -90,12 +90,12 @@ j_std: 0.2
 
 nu_ext:
   val:
-    - 13335.56
-    - 17262.46
+    - 1017.73
+    - 220.58
   unit: Hz
 
 I_ext:
-  val: 20.0
+  val: 1.0
   unit: pA
 
 ...
