@@ -1,7 +1,7 @@
 ---
 # Simulation time in ms
 simtime:
-  val: 100000.0
+  val: 10000.0
   unit: ms
 
 # Simulation resolution in ms

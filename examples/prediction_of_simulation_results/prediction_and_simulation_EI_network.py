@@ -20,33 +20,31 @@ Mean-field prediction for and simulation of a simple E-I network
 
 Here we show how to use NNMT to predict the results of a simulation of a simple
 E-I network with an excitatory (E) and an inhibitory (I) population of LIF
-neurons. The example has been adapted from the code published with
-:cite:t:`layer2023`, where the NEST simulation has been based on the NEST
-example file ``brunel_exp_multisynapse_nest.py`` from NEST v3.4, which is free
-software under the terms of the GNU General Public License version 3 as
-published by the Free Software Foundation.
+neurons. The example was adapted from the code published with
+:cite:t:`layer2023`, where the NEST simulation was based on the NEST example
+file ``brunel_exp_multisynapse_nest.py`` from NEST v3.4, which is free software
+under the terms of the GNU General Public License version 3.
 
-First a network is created using the simulation platform NEST
-:cite:p:`gewaltig2007`. Then the connectivity matrix is extracted to be used
+First, a network is created using the simulation platform NEST
+:cite:p:`gewaltig2007`. The connectivity matrix is then extracted to be used
 with NNMT. This allows computing the firing rates, CVs, and pairwise
-correlations on a single-neuron resolved level. Additionally, we compute the
+correlations with single-neuron resolved mean-field theory. We also compute the
 predictions of standard population resolved mean-field theory, which does not
-require the explicit realization of the connectivity matrix. Subsequently, we
-run the NEST simulation and compute firing rates, CVs, and pairwise spike count
-correlations from the simulation. In the end, we plot a comparison of all
-results in Fig. 1.
+require the explicit realization of the connectivity matrix. Following that, we
+run the NEST simulation and compute the firing rates, CVs, and pairwise spike
+count correlations. Finally, we plot a comparison of all results in Fig. 1.
 
 The network parameters are defined in ``config/network_params.yaml``, the
 simulation parameters in ``config/simulation_params.yaml``, and the analysis
 parameters in ``config/analysis_params.yaml``.
 
 We can see from Fig.1a that the network is in a asynchronous irregular state
-with slightly bursty neurons. Furthermore, the simulated network is very small
+with somewhat bursty neurons. Furthermore, the simulated network is very small
 (800 excitatory, 200 inhibitory neurons), which introduces correlations due to
-shared inputs between the neurons that mean-field theory cannot account for.
-Taken together, we expect mean-field theory to give reasonable results with
-slight discrepancies to the simulation. Under which conditions mean-field
-theory and simulation coincide is discussed in detail in Appendix D of
+shared inputs between the neurons that mean-field theory does not account for.
+Taken together, we expect mean-field theory to give reasonable predictions with
+slight deviations from the simulation. Under which conditions mean-field theory
+and simulation coincide is discussed in detail in Appendix D of
 :cite:t:`layer2023`.
 
 Note that NEST uses non SI units as standards, while NNMT uses SI units. This
@@ -277,6 +275,13 @@ def calc_cvs(spiketrains):
     return stds / means
 
 
+def sample_corrs(data, sample_ixs):
+    """
+    Sample the correlation data for three different types of connections.
+    """
+    return data[(sample_ixs[0])], data[(sample_ixs[1])], data[(sample_ixs[2])]
+
+
 ###############################################################################
 # Functions for plotting
 # ^^^^^^^^^^^^^^^^^^^^^^
@@ -390,11 +395,11 @@ def raster_plot(ax, spiketrains, samples=[20, 5], t_min=1, t_max=5,
 # Drawing a connectivity matrix with NEST
 # ---------------------------------------
 #
-# First, we need to draw a random connectivity matrix, for which we use NEST.
+# First, we must draw a random connectivity matrix using NEST.
 #
 # We start by loading the parameters from the yaml files in which we used the
-# units that NEST is expecting. Here we load the parameters in these units. For
-# example, time constants like ``tau_m`` are given in ms.
+# units that NEST is expecting. We load the parameters in these units here.
+# Time constants such as ``tau_m``, for example, are given in ms.
 
 network_params = nnmt.input_output.load_val_unit_dict_from_yaml(
     network_param_file)
@@ -406,7 +411,7 @@ nnmt.utils._strip_units(sim_params)
 
 
 ###############################################################################
-# Here we define the parameters for building the network.
+# Next, we define the parameters for building the network.
 
 connection_rule = network_params['connection_rule']
 multapses = network_params['multapses']
@@ -444,7 +449,8 @@ C = network_params['C']  # membrane capacitance in pF
 
 
 ###############################################################################
-# The parameters of the neurons are stored in a dictionary.
+# The parameters of the neurons are stored in a dictionary. If the neuron has
+# exponential synapses, the synaptic time constant is defined as well.
 
 neuron_params = {
     "C_m": C,
@@ -463,17 +469,18 @@ if neuron_type == 'iaf_psc_exp':
 
 
 ###############################################################################
-# Configuration of the NEST simulation kernel.
-#
-# As we want to simulate the network later, we need to set these properties
-# here. They cannot be changed, after NEST nodes have been created.
+# Then we configure the NEST simulation kernel. We need to set these properties
+# here, since we want to simulate the network afterwards. They cannot be
+# modified after NEST nodes have been created, which we need to do in order to
+# draw the connectivity matrix.
+
 nest.ResetKernel()
 nest.local_num_threads = sim_params['local_num_threads']
 nest.resolution = sim_params['dt']
 
 
 ###############################################################################
-# Creation of the nodes and external noise generators
+# Here we create the NEST nodes.
 
 print("Building network")
 
@@ -487,7 +494,7 @@ neurons = nodes_ex + nodes_in
 
 
 ###############################################################################
-# Definition of a synapses
+# For connecting the network, we need to define the synapse properties.
 
 nest.CopyModel("static_synapse", "excitatory",
                 {"weight": J_ex, "delay": delay})
@@ -499,15 +506,17 @@ syn_params_in = {"synapse_model": "inhibitory"}
 
 
 ###############################################################################
-# Set seeds; put seeding here, because for some reason seed is reset if
-# defined further above
+# Here we seed the random number generators. This might seem like an odd place
+# to do this, but we noticed that if the seed is defined further above, it is
+# reset for some reason we do not understand.
 
 np.random.seed(sim_params['np_seed'])
 nest.rng_seed = sim_params['seed']
 
 
 ###############################################################################
-# Connecting the populations
+# Next, we connect the different nodes using some NEST connection rule. This is
+# the point were the connectivity matrix is drawn.
 
 print("Connecting network")
 
@@ -532,14 +541,19 @@ nest.Connect(nodes_in, nodes_ex + nodes_in, conn_params_in, syn_params_in)
 
 
 ###############################################################################
-# Extract connectivity matrix
+# Then we can extract the connectivity matrix using our custom function.
 
 print("Extracting connectivity matrix")
 W = connectivity(neurons)
 
 
 ###############################################################################
-# Gaussianize connectivity matrix
+# Here, we "Gaussianize" the connectivity matrix. We introduced this because
+# mean-field theory predicts the same values for all firing rates and many
+# other attributes if the synaptic weights of all connections are identical and
+# each neuron receives a set number of inputs (as is the case for the
+# connection rule ``fixed_indegree``). To get around this, we chose to use a
+# richer type of connectivity in our example.
 
 if gaussianize:
     print("Gaussianizing connectivity matrix")
@@ -551,18 +565,25 @@ if gaussianize:
     adjust_weights(neurons, W)
 
 
-
 ###############################################################################
 # Prediction using NNMT
 # ---------------------
 #
-# Next, we want to predict the single-neuron resolved rates, CVs and pairwise
-# correlations given the connectivity matrix.
+# Single-neuron resolved mean-field theory
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# We start by building a NNMT network. Therefore, we load the network
-# parameters again. But this time we convert the units directly to SI.
+# Now that we have the connectivity matrix, we want to predict the
+# single-neuron resolved rates, CVs and pairwise correlations using NNMT.
+#
+# We start by building a NNMT network. This time the parameter units are
+# directly converted to SI units. We add the newly created connectivity matrix
+# ``J``, the respective - and here trivial - indegree matrix ``K``, as well as
+# their external counterparts ``J_ext`` and ``K_ext`` to the network
+# parameters. Here we need to pay attention to convert everything to the right
+# units.
 
-# Load yaml file to SI units
+print('Build NNMT model')
+
 network = nnmt.models.Plain(network_param_file)
 
 # Add newly calculated parameters to network parameter dictionary
@@ -572,20 +593,18 @@ new_network_params = dict(
     K_ext=np.vstack([np.ones(N), np.ones(N)]).T,
     J_ext=np.vstack([np.ones(N) * J_ex, np.ones(N) * J_in]).T / 1000  # mV to V
 )
+
 network.network_params.update(new_network_params)
 
-# only needed for population values
-network_params['K_E'] = K_E
-network_params['K_I'] = K_I
-
-###########################################################################
-
-print('Build NNMT model')
-network_file = (
-    theory_data_path + network_id + '.h5')
-
+# This is just to ensure that the synaptic time constant is set correctly, even
+# if the synaptic time constant is defined in the yaml file.
 if neuron_type == 'iaf_psc_delta':
     network.network_params['tau_s'] = 0.0
+
+
+###############################################################################
+# Computing the rates, CVs, and correlations is just a matter of calling a few
+# functions now.
 
 print('Estimate firing rates')
 working_point = nnmt.lif.exp.working_point(network)
@@ -597,21 +616,21 @@ cvs_thy = nnmt.lif.exp.cvs(network)
 print('Estimate effective connectivity')
 W_eff = nnmt.lif.exp.pairwise_effective_connectivity(network)
 
-print('Estimate spectral bound')
-r = nnmt.lif.exp.spectral_bound(network)
-
 print('Estimate pairwise covarianes and correlations')
 covs_thy = nnmt.lif.exp._pairwise_covariances(W_eff, rates_thy, cvs_thy)
 std_thy = np.sqrt(np.diag(covs_thy))
 corrs_thy = covs_thy / np.outer(std_thy, std_thy)
 
-print(f'rates_thy: {rates_thy.mean()} +- {rates_thy.std()}')
-print(f'cvs_thy: {cvs_thy.mean()} +- {cvs_thy.std()}')
-print(f'r_thy: {r}')
 
+###############################################################################
+# Population resolved mean-field theory
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We also want to compute the standard mean-field predictions for the two
+# populations. Therefore we create another NNMT model, where the connectivity
+# matrix ``J`` now is the synaptic weight matrix. The indegree matrix ``K`` and
+# the external counterparts ``J_ext``, and ``K_ext`` need to be defined again.
 
-# ###########################################################################
-# Population mean-field theory
 print('Build NNMT population model')
 
 K_pop = np.array([[K_E, K_I], [K_E, K_I]])
@@ -627,28 +646,18 @@ J_ext_pop = np.array([[J_ex, J_in],
 # convert from mV to V
 J_ext_pop /= 1000
 
-nu_ext_pop = network_params['nu_ext']
-
-pop_params = {
-    'K': K_pop,
-    'J': J_pop,
-    'tau_m': tau_m,
-    'tau_s': tau_s,
-    'tau_r': tau_r,
-    'V_th_rel': V_th,
-    'V_0_rel': V_r,
-    'J_ext': J_ext_pop,
-    'K_ext': K_ext_pop,
-    'nu_ext': nu_ext_pop,
-    'I_ext': I_ext,
-    'C': C
-}
-
 pop_network = nnmt.models.Plain(network_param_file)
 pop_network.network_params['K'] = K_pop
 pop_network.network_params['J'] = J_pop
 pop_network.network_params['K_ext'] = K_ext_pop
 pop_network.network_params['J_ext'] = J_ext_pop
+
+
+###############################################################################
+# For calculating the rates and CVs we again only need to call a few functions.
+# Note that the pairwise correlations cannot be computed in population resolved
+# mean-field theory, which would only allow to compute mean correlations, but
+# this has not been implemented in NNMT yet.
 
 print('Estimate population rates')
 nnmt.lif.exp.working_point(pop_network)
@@ -661,11 +670,14 @@ cvs_pop = nnmt.lif.exp.cvs(pop_network)
 ###############################################################################
 # Simulating the network
 # ----------------------
-
-print('Finish building NEST network.')
-
-
-###############################################################################
+#
+# Finally, we want to simulate the network using NEST. Therefore, we need to
+# finish preparing NEST.
+#
+# First, we create the missing nodes, namely the recorders and external inputs.
+# We could not create them before extracting the connectivity matrix since our
+# algorithm would have misinterpreted them as neurons, resulting in an
+# incorrect connectivity matrix.
 
 spike_recorder = nest.Create("spike_recorder")
 
@@ -674,32 +686,26 @@ noise_I = nest.Create("poisson_generator", params={"rate": p_rate_I})
 
 
 ###############################################################################
-# Connect devices
+# We connect the missing devices.
 
 print("Connecting devices")
 nest.Connect(nodes_ex + nodes_in, spike_recorder,
             syn_spec="excitatory")
-
-
-###############################################################################
-# Connecting the previously defined poisson generators
 
 nest.Connect(noise_E, nodes_ex + nodes_in, syn_spec=syn_params_ex)
 nest.Connect(noise_I, nodes_ex + nodes_in, syn_spec=syn_params_in)
 
 
 ###############################################################################
-# Simulation of the network
+# And finally, we simulate the network
 
 print("Simulating")
-
 simtime = sim_params['simtime']  # simulation time in ms
-
 nest.Simulate(simtime)
 
 
 ###############################################################################
-# Extract data
+# and extract the spiketrains.
 
 print('Extract spiketrains')
 spiketrains = []
@@ -712,16 +718,15 @@ spiketrains = get_spike_trains(senders, times, id_min, id_max)
 
 
 ###############################################################################
-# Analyzing the simulation results
-# --------------------------------
+# Analyzing the simulation data
+# -----------------------------
 #
 # Here we compute the firing rates, CVs, and pairwise correlations from the
 # simulation data.
+#
+# First, we load the analysis parameters.
 
 print('Analyze simulation results')
-
-###############################################################################
-# load analysis params
 
 analysis_params = nnmt.input_output.load_val_unit_dict_from_yaml(
     analysis_param_file)
@@ -732,39 +737,28 @@ binwidth = analysis_params['binwidth']
 
 
 ###############################################################################
-# analyze simulated data
+# Then, we compute the properties using our custom functions.
 
 # convert units to SI units (from ms to s)
 simtime = sim_params['simtime'] / 1000
 spiketrains = [st / 1000 for st in spiketrains]
 
 # remove initialization time
-clipped_spiketrains = remove_and_shift_init_from_spiketrains(spiketrains,
-                                                                T_init)
+clipped_spiketrains = remove_and_shift_init_from_spiketrains(
+    spiketrains, T_init)
 
 # calculate rates
 print('Calculate simulated rates')
 rates_sim = calc_rates(spiketrains, simtime, T_init)
 
-# calculate covs
+# calculate cvs
 print('Calculate simulated CVs')
 cvs_sim = calc_cvs(clipped_spiketrains)
 
-del clipped_spiketrains
-
-print('Calculate simulated covariances and correlations')
+print('Calculate simulated correlations')
 binned_spiketrains = bin_spiketrains(
     spiketrains, T_init, simtime, binwidth)
-covs_sim = np.cov(binned_spiketrains) / binwidth
 corrs_sim = np.corrcoef(binned_spiketrains)
-
-# del binned_spiketrains
-
-upper_triangle_indices = np.triu_indices_from(covs_sim, k=1)
-cross_covs_sim = covs_sim[upper_triangle_indices]
-cross_corrs_sim = corrs_sim[upper_triangle_indices]
-cross_covs_thy = covs_thy[upper_triangle_indices]
-cross_corrs_thy = corrs_thy[upper_triangle_indices]
 
 
 ###############################################################################
@@ -812,22 +806,24 @@ cvs_pop = results['cvs_pop']
 
 
 ###############################################################################
-# Separate results into differnet populations
-# -------------------------------------------
+# Separating results into differnet populations and subsampling
+# -------------------------------------------------------------
+#
+# In order to plot the data, we need to divide the into the different
+# populations (E, I), and the different types of connections (EE, EI, II).
+# Furthermore, we pick a subset of the spiketrains and the pair-wise
+# correlations for plotting since otherwise there would be too many data
+# points.
 
 print('Separate population results')
 
-def sample_corrs(data, sample_ixs):
-    return data[(sample_ixs[0])], data[(sample_ixs[1])], data[(sample_ixs[2])]
+# separate spiketrains into E and I
 
 random.seed(42)
-
-# Separate spiketrains
-
 spiketrains_E = random.choices(spiketrains[:N_E], k=75)
 spiketrains_I = random.choices(spiketrains[N_E:], k=25)
 
-# Separate and subsample correlations
+# separate and subsample correlations
 
 ix = np.triu_indices_from(corrs_thy, k=1)
 
@@ -853,15 +849,14 @@ corrs_sim_EE, corrs_sim_EI, corrs_sim_II = sample_corrs(corrs_sim, sample_ixs)
 sampled_cross_corrs_thy = np.append(corrs_thy_EE, [corrs_thy_EI, corrs_thy_II])
 sampled_cross_corrs_sim = np.append(corrs_sim_EE, [corrs_sim_EI, corrs_sim_II])
 
+
 ###############################################################################
 # Plotting of results
 # -------------------
 #
-# Here we plot the firing rates, CVs, and pairwise covariances
-
-
-###############################################################################
-# options
+# Finally, we plot Fig. 1.
+#
+# Here we define some of the plotting options.
 
 print('Start plotting')
 blue = colors['blue']
@@ -870,11 +865,14 @@ yellow = colors['yellow']
 neutral = colors['lightneutral']
 darkneutral = colors['neutral']
 
-alpha = 1
 markerscale = 5
 
 width = mm2inch(180)
 height = mm2inch(180)
+
+
+###############################################################################
+# Then, we plot everything and save the figure.
 
 fig = plt.figure(figsize=[width, height])
 
@@ -899,6 +897,7 @@ axs = [ax_spiketrains,
        ax_rates_hist, ax_cvs_hist, ax_corrs_hist,
        ax_rates, ax_cvs, ax_corrs]
 
+
 print('Plot spiketrains')
 raster_plot(ax_spiketrains,
             [spiketrains_E, spiketrains_I],
@@ -906,8 +905,8 @@ raster_plot(ax_spiketrains,
 ax_spiketrains.set_title('Spiketrains', fontweight='bold')
 ax_spiketrains.set_xlabel('time')
 
-print('Plot histograms')
 
+print('Plot histograms')
 hist1 = ax_rates_hist.hist(rates_thy, bins=30, alpha=0.5, density=True,
                    label='thy',
                    color=neutral)
@@ -947,6 +946,7 @@ ax_corrs_hist.hist(sampled_cross_corrs_sim, bins=30, alpha=0.5, density=True,
 ax_corrs_hist.set_title('Correlations', fontweight='bold')
 ax_corrs_hist.set_ylabel('pdf')
 
+
 print('Plot scatter plots')
 plot_rates_scatter_plot(ax_rates, rates_sim, rates_thy, cc_rates, N_E)
 ax_rates.set_xlabel('simulation')
@@ -966,11 +966,11 @@ leg = ax_corrs.legend(markerscale=markerscale)
 for lh in leg.legendHandles:
     lh.set_alpha(1)
 
-
+print('Formatting of figure')
 labels = list(string.ascii_lowercase[:len(axs)])
 
 x_positions = [-0.1] * len(axs)
-x_positions[0] = -0.03  # Adjust the value as needed
+x_positions[0] = -0.03
 
 add_panel_labels(axs, labels, x_positions=x_positions,
                  fontsize=panel_label_fontsize,
