@@ -34,9 +34,12 @@ require the explicit realization of the connectivity matrix. Following that, we
 run the NEST simulation and compute the firing rates, CVs, and pairwise spike
 count correlations. Finally, we plot a comparison of all results in Fig. 1.
 
-The network parameters are defined in ``config/network_params.yaml``, the
-simulation parameters in ``config/simulation_params.yaml``, and the analysis
-parameters in ``config/analysis_params.yaml``.
+The network parameters are defined in
+:download:`network_params.yaml <../../../../examples/prediction_of_simulation_results/config/network_params.yaml>`,
+the simulation parameters in
+:download:`simulation_params.yaml <../../../../examples/prediction_of_simulation_results/config/simulation_params.yaml>`,
+and the analysis parameters in
+:download:`analysis_params.yaml <../../../../examples/prediction_of_simulation_results/config/analysis_params.yaml>`.
 
 We can see from Fig.1a that the network is in a asynchronous irregular state
 with somewhat bursty neurons. Furthermore, the simulated network is very small
