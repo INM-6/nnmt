@@ -66,45 +66,34 @@ import nnmt
 
 
 ###############################################################################
-# Definition of paths, constants, and plotting options
-# ----------------------------------------------------
-
-config_path = 'config/'
-simulation_data_path = 'data/'
-config_path = 'config/'
-theory_data_path = 'data/'
-intermediate_results_path = 'data/'
-plotting_data_path = 'data/'
-plot_path = 'plots/'
+# Definition of config files, constants, and plotting options
+# -----------------------------------------------------------
 
 network_param_file = 'config/network_params.yaml'
 sim_param_file = 'config/simulation_params.yaml'
-analysis_param_file = config_path + 'analysis_params.yaml'
+analysis_param_file = 'config/analysis_params.yaml'
 
 network_id = 'ei_network'
 
+# sample size for pair-wise correlations
 sample_size = 10000
 
-
+# plotting options
 fontsize = 8
 panel_label_fontsize = 11
 labelsize = 8
+markerscale = 5
 
-colors = dict(
-    blue = '#5493C0',
-    lightblue='#ACD2ED',
-    darkblue='#1B6497',
-    red = '#FF6565',
-    lightred = '#FFB4B4',
-    darkred = '#EB1D1D',
-    yellow = '#FFBC65',
-    lightyellow = '#FFDFB4',
-    darkyellow='#EB921D',
-    green = '#57DC57',
-    lightgreen = '#ADF5AD',
-    neutral = 'dimgray',
-    lightneutral = 'darkgray'
-)
+# width and height of plot in mm
+width = 180
+height = 180
+
+# colors used in plots
+blue = '#5493C0'
+red = '#FF6565'
+yellow = '#FFBC65'
+neutral = 'darkgray'
+darkneutral = 'dimgray'
 
 
 ###############################################################################
@@ -361,13 +350,13 @@ def plot_corrs_scatter_plot(ax_corrs,
                                 corrs_sim_II, corrs_thy_II])
     plot_diagonal(ax_corrs, lower, upper, color='lightgray')
     scatter_plot(ax_corrs, corrs_sim_EE, corrs_thy_EE, diag=False,
-                 color=blue, alpha=alpha, label='EE', rasterized=True,
+                 color=blue, label='EE', rasterized=True,
                  zorder=3)
     scatter_plot(ax_corrs, corrs_sim_EI, corrs_thy_EI, diag=False,
-                 color=yellow, alpha=alpha, label='EI', rasterized=True,
+                 color=yellow, label='EI', rasterized=True,
                  zorder=2)
     scatter_plot(ax_corrs, corrs_sim_II, corrs_thy_II, diag=False,
-                 color=red, alpha=alpha, label='II', rasterized=True,
+                 color=red, label='II', rasterized=True,
                  zorder=1)
     add_corrcoef(ax_corrs, cc_corr)
 
@@ -449,7 +438,7 @@ C = network_params['C']  # membrane capacitance in pF
 
 
 ###############################################################################
-# The parameters of the neurons are stored in a dictionary. If the neuron has
+# The parameters of the neurons are stored in a dictionary. If the neurons have
 # exponential synapses, the synaptic time constant is defined as well.
 
 neuron_params = {
@@ -469,7 +458,7 @@ if neuron_type == 'iaf_psc_exp':
 
 
 ###############################################################################
-# Then we configure the NEST simulation kernel. We need to set these properties
+# Then, we configure the NEST simulation kernel. We need to set these properties
 # here, since we want to simulate the network afterwards. They cannot be
 # modified after NEST nodes have been created, which we need to do in order to
 # draw the connectivity matrix.
@@ -480,7 +469,7 @@ nest.resolution = sim_params['dt']
 
 
 ###############################################################################
-# Here we create the NEST nodes.
+# Here, we create the NEST nodes.
 
 print("Building network")
 
@@ -497,16 +486,16 @@ neurons = nodes_ex + nodes_in
 # For connecting the network, we need to define the synapse properties.
 
 nest.CopyModel("static_synapse", "excitatory",
-                {"weight": J_ex, "delay": delay})
+               {"weight": J_ex, "delay": delay})
 nest.CopyModel("static_synapse", "inhibitory",
-                {"weight": J_in, "delay": delay})
+               {"weight": J_in, "delay": delay})
 
 syn_params_ex = {"synapse_model": "excitatory"}
 syn_params_in = {"synapse_model": "inhibitory"}
 
 
 ###############################################################################
-# Here we seed the random number generators. This might seem like an odd place
+# Here, we seed the random number generators. This might seem like an odd place
 # to do this, but we noticed that if the seed is defined further above, it is
 # reset for some reason we do not understand.
 
@@ -541,7 +530,7 @@ nest.Connect(nodes_in, nodes_ex + nodes_in, conn_params_in, syn_params_in)
 
 
 ###############################################################################
-# Then we can extract the connectivity matrix using our custom function.
+# Then, we can extract the connectivity matrix using our custom function.
 
 print("Extracting connectivity matrix")
 W = connectivity(neurons)
@@ -579,7 +568,7 @@ if gaussianize:
 # directly converted to SI units. We add the newly created connectivity matrix
 # ``J``, the respective - and here trivial - indegree matrix ``K``, as well as
 # their external counterparts ``J_ext`` and ``K_ext`` to the network
-# parameters. Here we need to pay attention to convert everything to the right
+# parameters. Here, we need to pay attention to convert everything to the right
 # units.
 
 print('Build NNMT model')
@@ -629,7 +618,7 @@ corrs_thy = covs_thy / np.outer(std_thy, std_thy)
 # We also want to compute the standard mean-field predictions for the two
 # populations. Therefore we create another NNMT model, where the connectivity
 # matrix ``J`` now is the synaptic weight matrix. The indegree matrix ``K`` and
-# the external counterparts ``J_ext``, and ``K_ext`` need to be defined again.
+# the external counterparts ``J_ext`` and ``K_ext`` need to be defined again.
 
 print('Build NNMT population model')
 
@@ -699,9 +688,10 @@ nest.Connect(noise_I, nodes_ex + nodes_in, syn_spec=syn_params_in)
 ###############################################################################
 # And finally, we simulate the network
 
-print("Simulating")
+print("\nStart simulation")
 simtime = sim_params['simtime']  # simulation time in ms
 nest.Simulate(simtime)
+print("\nSimulation finished")
 
 
 ###############################################################################
@@ -721,7 +711,7 @@ spiketrains = get_spike_trains(senders, times, id_min, id_max)
 # Analyzing the simulation data
 # -----------------------------
 #
-# Here we compute the firing rates, CVs, and pairwise correlations from the
+# Here, we compute the firing rates, CVs, and pairwise correlations from the
 # simulation data.
 #
 # First, we load the analysis parameters.
@@ -762,54 +752,10 @@ corrs_sim = np.corrcoef(binned_spiketrains)
 
 
 ###############################################################################
-# Saving of results
-
-results = dict(
-    spiketrains=spiketrains,
-    rates_thy=rates_thy,
-    cvs_thy=cvs_thy,
-    corrs_thy=corrs_thy,
-    rates_sim=rates_sim,
-    cvs_sim=cvs_sim,
-    corrs_sim=corrs_sim,
-    rates_pop=rates_pop,
-    cvs_pop=cvs_pop,
-)
-
-np.savez(f'temp/{network_id}.npz',
-        results=results,
-        network_params=network_params,
-        sim_params=sim_params,
-        analysis_params=analysis_params,
-        allow_pickle=True)
-
-
-###############################################################################
-# loading of results
-
-print('Load data')
-input_dict = np.load(f'temp/{network_id}.npz', allow_pickle=True)
-network_params = input_dict['network_params'].tolist()
-N_E = network_params['N'][0]
-
-results = input_dict['results'].tolist()
-
-rates_thy = results['rates_thy']
-cvs_thy = results['cvs_thy']
-corrs_thy = results['corrs_thy']
-rates_sim = results['rates_sim']
-cvs_sim = results['cvs_sim']
-corrs_sim = results['corrs_sim']
-spiketrains = results['spiketrains']
-rates_pop = results['rates_pop']
-cvs_pop = results['cvs_pop']
-
-
-###############################################################################
-# Separating results into differnet populations and subsampling
+# Separating results into different populations and subsampling
 # -------------------------------------------------------------
 #
-# In order to plot the data, we need to divide the into the different
+# In order to plot the data, we need to divide them into the different
 # populations (E, I), and the different types of connections (EE, EI, II).
 # Furthermore, we pick a subset of the spiketrains and the pair-wise
 # correlations for plotting since otherwise there would be too many data
@@ -855,24 +801,11 @@ sampled_cross_corrs_sim = np.append(corrs_sim_EE, [corrs_sim_EI, corrs_sim_II])
 # -------------------
 #
 # Finally, we plot Fig. 1.
-#
-# Here we define some of the plotting options.
 
 print('Start plotting')
-blue = colors['blue']
-red = colors['red']
-yellow = colors['yellow']
-neutral = colors['lightneutral']
-darkneutral = colors['neutral']
 
-markerscale = 5
-
-width = mm2inch(180)
-height = mm2inch(180)
-
-
-###############################################################################
-# Then, we plot everything and save the figure.
+width = mm2inch(width)
+height = mm2inch(height)
 
 fig = plt.figure(figsize=[width, height])
 
