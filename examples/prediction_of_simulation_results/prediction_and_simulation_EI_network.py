@@ -356,11 +356,14 @@ def plot_corrs_scatter_plot(ax_corrs,
                                 corrs_sim_II, corrs_thy_II])
     plot_diagonal(ax_corrs, lower, upper, color='lightgray')
     scatter_plot(ax_corrs, corrs_sim_EE, corrs_thy_EE, diag=False,
-                 color=blue, alpha=alpha, label='EE', rasterized=True, zorder=3)
+                 color=blue, alpha=alpha, label='EE', rasterized=True,
+                 zorder=3)
     scatter_plot(ax_corrs, corrs_sim_EI, corrs_thy_EI, diag=False,
-                 color=yellow, alpha=alpha, label='EI', rasterized=True, zorder=2)
+                 color=yellow, alpha=alpha, label='EI', rasterized=True,
+                 zorder=2)
     scatter_plot(ax_corrs, corrs_sim_II, corrs_thy_II, diag=False,
-                 color=red, alpha=alpha, label='II', rasterized=True, zorder=1)
+                 color=red, alpha=alpha, label='II', rasterized=True,
+                 zorder=1)
     add_corrcoef(ax_corrs, cc_corr)
 
 
@@ -870,8 +873,8 @@ darkneutral = colors['neutral']
 alpha = 1
 markerscale = 5
 
-width = utils.mm2inch(180)
-height = utils.mm2inch(180)
+width = mm2inch(180)
+height = mm2inch(180)
 
 fig = plt.figure(figsize=[width, height])
 
@@ -969,10 +972,10 @@ labels = list(string.ascii_lowercase[:len(axs)])
 x_positions = [-0.1] * len(axs)
 x_positions[0] = -0.03  # Adjust the value as needed
 
-utils.add_panel_labels(axs, labels, x_positions=x_positions,
-                       fontsize=panel_label_fontsize,
-                       use_parenthesis=True)
-utils.remove_borders(axs)
+add_panel_labels(axs, labels, x_positions=x_positions,
+                 fontsize=panel_label_fontsize,
+                 use_parenthesis=True)
+remove_borders(axs)
 
 plt.tight_layout()
 plt.savefig(network_id + '.png', dpi=600)
