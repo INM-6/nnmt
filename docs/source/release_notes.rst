@@ -24,6 +24,9 @@ NNMT 1.3.0
 - Add functions for computing the pairwise covariances in linear response
   approximation: :func:`nnmt.lif.exp.pairwise_covariances`,
   :func:`nnmt.lif.exp._pairwise_covariances`.
+- Add an example on how to use NNMT to predict the firing rates, CVs, and
+  pair-wise covariances of a simple E-I network. The results are then compared
+  to a NEST simulation.
 
 **********
 NNMT 1.2.0
