@@ -1,0 +1,20 @@
+---
+# Simulation time in ms
+simtime:
+  val: 1000000.0
+  unit: ms
+
+# Simulation resolution in ms
+dt:
+  val: 0.1
+  unit: ms
+
+# Local number of threads used for NEST simulation
+local_num_threads: 4
+
+# nest seed
+seed: 42
+
+# numpy seed
+np_seed: 42
+...
