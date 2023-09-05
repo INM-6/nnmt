@@ -596,7 +596,10 @@ if neuron_type == 'iaf_psc_delta':
 
 ###############################################################################
 # Computing the rates, CVs, and correlations is just a matter of calling a few
-# functions now.
+# functions now. Note that we are using functions for LIF neurons with
+# exponential synapses despite using a NEST neuron type with delta synapses.
+# However, this yields correct results if the synaptic time constant is set to
+# zero in the network parameters.
 
 print('Estimate firing rates')
 working_point = nnmt.lif.exp.working_point(network)
