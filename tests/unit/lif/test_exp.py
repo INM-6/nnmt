@@ -27,7 +27,7 @@ from nnmt.utils import (
 
 ureg = nnmt.ureg
 
-fixture_path = 'tests/fixtures/unit/data/'
+fixture_path = 'fixtures/unit/data/'
 
 
 def real_shifted_siegert(tau_m, tau_s, tau_r,

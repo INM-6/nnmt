@@ -17,7 +17,7 @@ import nnmt.lif.delta as delta
 
 ureg = nnmt.ureg
 
-fixture_path = 'tests/fixtures/unit/data/'
+fixture_path = 'fixtures/unit/data/'
 
 
 def integrand(x):

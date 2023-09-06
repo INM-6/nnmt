@@ -21,7 +21,7 @@ from ...checks import (check_file_in_tmpdir,
 
 ureg = nnmt.ureg
 
-path_to_fixtures = 'tests/fixtures/unit/config/'
+path_to_fixtures = 'fixtures/unit/config/'
 
 val_unit_pairs = [
     dict(numerical=1),

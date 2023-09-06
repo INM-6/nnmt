@@ -20,8 +20,8 @@ import nnmt
 ureg = nnmt.ureg
 
 
-config_path = 'tests/fixtures/integration/config/'
-fix_path = 'tests/fixtures/integration/data/'
+config_path = 'fixtures/integration/config/'
+fix_path = 'fixtures/integration/data/'
 
 indices = [1, 2]
 
