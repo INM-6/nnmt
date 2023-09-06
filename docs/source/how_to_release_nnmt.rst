@@ -45,7 +45,7 @@ How to publish a new release of NNMT
 
 9.  Update version numbers to pre-format
 
-    In ``nnmt/__init__.py``, ``nnmt/docs/source/conf.py``, and ``setup.py``.
+    In ``nnmt/__init__.py``, ``docs/source/conf.py``, and ``setup.py``.
 
     **WARNING**: You can upload each file only once to testpypi, even if you delete them on testpypi. Therefore use version names like ``1.0.0a0``.
 
