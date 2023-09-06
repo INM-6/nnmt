@@ -23,8 +23,8 @@ from nnmt import ureg
 import nnmt.input_output as io
 
 
-config_path = 'tests/fixtures/integration/config/'
-fix_path = 'tests/fixtures/integration/data/'
+config_path = 'fixtures/integration/config/'
+fix_path = 'fixtures/integration/data/'
 
 # options for debugging
 save_data = True

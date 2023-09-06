@@ -21,13 +21,14 @@ from ...checks import (check_file_in_tmpdir,
 
 ureg = nnmt.ureg
 
-path_to_fixtures = 'tests/fixtures/unit/config/'
+path_to_fixtures = 'fixtures/unit/config/'
 
 val_unit_pairs = [
     dict(numerical=1),
     dict(quantity={'val': 1, 'unit': 'hertz'}),
     dict(only_val_dict={'val': 1}),
     dict(string='test'),
+    dict(list_of_characters=['E', 'I']),
     dict(list_of_strings=['spam', 'ham']),
     dict(array=np.array([1, 2, 3])),
     dict(quantity_array={'val': np.array([1, 2, 3]), 'unit': 'second'}),
@@ -59,6 +60,7 @@ quantity_dicts = [
     dict(quantity=1 * ureg.Hz),
     dict(only_val_dict=1),
     dict(string='test'),
+    dict(list_of_characters=['E', 'I']),
     dict(list_of_strings=['spam', 'ham']),
     dict(array=np.array([1, 2, 3])),
     dict(quantity_array=np.array([1, 2, 3]) * ureg.s),

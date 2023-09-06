@@ -395,3 +395,9 @@ a :ref:`release note <sec_release_notes>` should be added, and the list of
 :ref:`authors and contributors <sec_authors_and_contributors>`, as well as the
 :ref:`acknowledgements <sec_acknowledgements>` should be updated if required.
 
+****************************
+How to publish a new release
+****************************
+
+Please follow our :ref:`step-by-step guide <sec_how_to_make_a_new_release>` for
+publishing a new release.

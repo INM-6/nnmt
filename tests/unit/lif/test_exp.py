@@ -27,7 +27,7 @@ from nnmt.utils import (
 
 ureg = nnmt.ureg
 
-fixture_path = 'tests/fixtures/unit/data/'
+fixture_path = 'fixtures/unit/data/'
 
 
 def real_shifted_siegert(tau_m, tau_s, tau_r,
@@ -688,6 +688,50 @@ class Test_external_rates_for_fixed_input:
                                    [10, 20, -1]]))
         with pytest.raises(RuntimeError):
             self.func(**params)
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+class Test_cvs:
+
+    func = staticmethod(exp._cvs)
+    fixtures = 'lif_exp_cvs.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+class Test_pairwise_effective_connectivity:
+
+    func = staticmethod(exp._pairwise_effective_connectivity)
+    fixtures = 'lif_exp_pairwise_effective_connectivity.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+class Test_spectral_bound:
+
+    func = staticmethod(exp._spectral_bound)
+    fixtures = 'lif_exp_spectral_bound.h5'
+
+    def test_correct_output(self, unit_fixtures):
+        params = unit_fixtures.pop('params')
+        output = unit_fixtures.pop('output')
+        assert_allclose(self.func(**params), output)
+
+
+class Test_pairwise_covariances:
+
+    func = staticmethod(exp._pairwise_covariances)
+    fixtures = 'lif_exp_pairwise_covariances.h5'
 
     def test_correct_output(self, unit_fixtures):
         params = unit_fixtures.pop('params')

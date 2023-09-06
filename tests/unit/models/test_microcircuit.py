@@ -14,7 +14,7 @@ ureg = nnmt.ureg
 class Test_calculation_of_dependent_network_params:
     """
     Depends strongly on network_params_microcircuit.yaml in
-    tests/fixtures/unit/config/.
+    fixtures/unit/config/.
     """
 
     def test_dimension(self, microcircuit):
@@ -66,7 +66,7 @@ class Test_calculation_of_dependent_network_params:
 
 
 class Test_calculation_of_dependent_analysis_params:
-    """Depends strongly on analysis_params_test.yaml in tests/fixtures."""
+    """Depends strongly on analysis_params_test.yaml in fixtures."""
 
     def test_omegas(self, microcircuit):
         omegas = [6.28318531e-01,
@@ -94,7 +94,7 @@ class Test_calculation_of_dependent_analysis_params:
         run_through = True
         try:
             nnmt.models.Microcircuit(
-                network_params=('tests/fixtures/unit/config/'
+                network_params=('fixtures/unit/config/'
                                 'network_params_microcircuit.yaml'),
                 analysis_params={'df': 0.1, 'f_min': 0, 'f_max': 10}
             )

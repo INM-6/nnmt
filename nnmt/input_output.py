@@ -61,6 +61,7 @@ from collections.abc import Iterable
 from numbers import Number
 import warnings
 import copy
+import re
 
 import numpy as np
 import yaml
@@ -126,7 +127,7 @@ def _store_dict(f, d):
             if isinstance(value, str):
                 dset = f.create_dataset(key, (1,), dtype=h5py.string_dtype())
                 dset[0] = value
-            elif (dtype == str) or (dtype == 'str96'):
+            elif (dtype == str) or (dtype == 'str32') or (dtype == 'str64') or (dtype == 'str96'):
                 dset = f.create_dataset(key, (len(value),),
                                         dtype=h5py.string_dtype())
                 dset[:] = value
@@ -425,7 +426,7 @@ def load_val_unit_dict_from_h5(file):
 
 def load_val_unit_dict(file):
     """
-    Load and convert val unit dict from either h5 or yaml file to dict of 
+    Load and convert val unit dict from either h5 or yaml file to dict of
     quantities.
 
     Parameters

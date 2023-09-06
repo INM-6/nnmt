@@ -12,18 +12,18 @@ environment specified in the provided ``environment.yaml`` file, and running
 
     pytest
 
-from the root directory (the one containing ``tests/`` and ``nnmt/``). If you
-want to be more specific, you can, for example, only run the unit tests:
+from the ``test/`` directory. If you want to be more specific, you can, for
+example, only run the unit tests:
 
 .. code::
 
-    pytest tests/unit/
+    pytest unit/
 
 Or just a single test:
 
 .. code::
 
-    pytest tests/unit/lif/test_exp.py::Test_firing_rate_shift::test_correct_output
+    pytest unit/lif/test_exp.py::Test_firing_rate_shift::test_correct_output
 
 See the `pytest documentation <https://docs.pytest.org/en/6.2.x/#>`_ for all
 available options.

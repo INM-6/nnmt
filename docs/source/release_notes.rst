@@ -5,6 +5,30 @@ Release notes
 =============
 
 **********
+NNMT 1.3.0
+**********
+
+- The option to use a lognormal delay distribution has been added to the
+  calcultion of the delay distribution matrix in ``nnmt.network_properties``.
+  As the characteristic function of a lognormal distribution has no closed
+  analytic form, the numerical integration proposed in :cite:t:`beaulieu2008`
+  has been implemented.
+- Add functions for computing the cvs of lif neurons: :func:`nnmt.lif.exp.cvs`,
+  :func:`nnmt.lif.exp._cvs`, and :func:`nnmt.lif.exp._cvs_single_population`.
+- Add functions for computing pairwise_effective_connectivity in linear
+  response approximation: :func:`nnmt.lif.exp.pairwise_effective_connectivity`,
+  :func:`nnmt.lif.exp._pairwise_effective_connectivity`.
+- Add functions for computing the spectral bound of the pairwise effective
+  connectivity matrix: :func:`nnmt.lif.exp.spectral_bound`,
+  :func:`nnmt.lif.exp._spectral_bound`.
+- Add functions for computing the pairwise covariances in linear response
+  approximation: :func:`nnmt.lif.exp.pairwise_covariances`,
+  :func:`nnmt.lif.exp._pairwise_covariances`.
+- Add an example on how to use NNMT to predict the firing rates, CVs, and
+  pair-wise covariances of a simple E-I network. The results are then compared
+  to a NEST simulation.
+
+**********
 NNMT 1.2.0
 **********
 
