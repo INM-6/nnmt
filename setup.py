@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='nnmt',
-      version='1.2.0',
+      version='1.3.0a',
       description='Neuronal Network Meanfield Toolbox',
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',
