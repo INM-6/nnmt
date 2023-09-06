@@ -32,7 +32,9 @@ How to publish a new release of NNMT
 
     .. code::
 
+        cd tests/
         pytest
+        cd ../
 
 7.  Create a release branch
 
@@ -57,7 +59,9 @@ How to publish a new release of NNMT
         conda activate temp0
         conda install setuptools
         pip install .
+        cd tests/
         pytest
+        cd ../
 
 11. Create sdist and wheel
 
@@ -101,7 +105,9 @@ How to publish a new release of NNMT
         conda activate temp1
         conda install pip
         pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nnmt==<release_number>
+        cd tests/
         pytest
+        cd ../
 
 14. If this fails, fix problems, change version numbers to ``1.0.0b`` and repeat.
 
@@ -156,7 +162,9 @@ How to publish a new release of NNMT
         conda activate temp2
         conda install pip
         pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nnmt==<release_number>
+        cd tests/
         pytest
+        cd ../
 
 20. Upload to pypi
 
@@ -178,7 +186,9 @@ How to publish a new release of NNMT
         conda activate temp3
         conda install pip
         pip install nnmt==<release_number>
+        cd tests/
         pytest
+        cd ../
 
 22. Remove temporary conda environments
 
