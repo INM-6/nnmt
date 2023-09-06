@@ -8,4 +8,4 @@ from . import models
 from . import lif
 from . import binary
 
-__version__ = '1.3.0a'
+__version__ = '1.3.0'
