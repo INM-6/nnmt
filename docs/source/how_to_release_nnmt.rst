@@ -113,13 +113,13 @@ How to publish a new release of NNMT
 
 15. Update version numbers to final format
 
-    In ``nnmt/__init__.py``, ``nnmt/docs/source/conf.py``, and ``setup.py``,
+    In ``nnmt/__init__.py``, ``docs/source/conf.py``, and ``setup.py``,
 
     and commit
 
     .. code::
 
-        git add nnmt/__init__.py nnmt/docs/source/conf.py setup.py
+        git add nnmt/__init__.py docs/source/conf.py setup.py
         git commit -m 'Final update of version numbers'
 
 16. Merge into ``master`` and ``develop`` and delete release branch
