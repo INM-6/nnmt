@@ -17,7 +17,7 @@ from nnmt.aux_calcs import (
 
 ureg = nnmt.ureg
 
-fixture_path = 'tests/fixtures/unit/data/'
+fixture_path = 'fixtures/unit/data/'
 
 
 def strip_units_from_quantity_dict(d):

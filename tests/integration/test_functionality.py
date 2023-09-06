@@ -45,7 +45,7 @@ class Test_lif_exp_functions_give_correct_results:
 
     def test_firing_rates_fully_vectorized(self):
         network = nnmt.models.Network(
-            file=('tests/fixtures/integration/data/lif_exp/'
+            file=('fixtures/integration/data/lif_exp/'
                   'firing_rates_fully_vectorized.h5'))
         old_results = network.results['lif.exp.firing_rates']
         network.clear_results()
@@ -55,7 +55,7 @@ class Test_lif_exp_functions_give_correct_results:
 
     def test_firing_rates_with_external_dc_current(self):
         network = nnmt.models.Network(
-            file=('tests/fixtures/integration/data/lif_exp/'
+            file=('fixtures/integration/data/lif_exp/'
                   'firing_rates_with_external_dc_current.h5'))
         old_results = network.results['lif.exp.firing_rates']
         network.clear_results()
@@ -65,7 +65,7 @@ class Test_lif_exp_functions_give_correct_results:
 
     def test_firing_rates_with_zero_external_dc_current(self):
         network = nnmt.models.Network(
-            file=('tests/fixtures/integration/data/lif_exp/'
+            file=('fixtures/integration/data/lif_exp/'
                   'firing_rates_fully_vectorized.h5'))
         old_results = network.results['lif.exp.firing_rates']
         network.clear_results()
@@ -161,7 +161,7 @@ class Test_lif_exp_functions_give_correct_results:
     def test_pairwise_effective_connectivity_and_spectral_bound_and_pairwise_covariances(self):
 
         network = nnmt.models.Plain(
-            file=('tests/fixtures/integration/data/lif_exp/'
+            file=('fixtures/integration/data/lif_exp/'
                   'spectral_bound_and_pairwise_covariances.h5'))
         W_old = network.results['lif.exp.pairwise_effective_connectivity']
         r_old = network.results['lif.exp.spectral_bound']
@@ -181,10 +181,10 @@ class Test_network_properties:
 
     @pytest.mark.parametrize(
         'fixtures',
-        ['tests/fixtures/integration/data/network_properties/delay_none.h5',
-         'tests/fixtures/integration/data/network_properties/delay_truncated_gaussian.h5',
-         'tests/fixtures/integration/data/network_properties/delay_gaussian.h5',
-         'tests/fixtures/integration/data/network_properties/delay_lognormal.h5',
+        ['fixtures/integration/data/network_properties/delay_none.h5',
+         'fixtures/integration/data/network_properties/delay_truncated_gaussian.h5',
+         'fixtures/integration/data/network_properties/delay_gaussian.h5',
+         'fixtures/integration/data/network_properties/delay_lognormal.h5',
          ])
     def test_delay_dist_matrix(self, fixtures):
         # ddm = nnmt.network_properties.delay_dist_matrix(network)
@@ -478,9 +478,9 @@ class Test_negative_firing_rate_regime:
     """
 
     def test_no_negative_firing_rates(self):
-        negative_rate_params_file = ('tests/fixtures/integration/config/'
+        negative_rate_params_file = ('fixtures/integration/config/'
                                      'minimal_negative.yaml')
-        analysis_params_file = ('tests/fixtures/integration/config/'
+        analysis_params_file = ('fixtures/integration/config/'
                                 'analysis_params.yaml')
         network = nnmt.models.Microcircuit(negative_rate_params_file,
                                           analysis_params_file)
@@ -497,7 +497,7 @@ class Test_ambiguous_match_eigenvalues_across_frequencies:
 
     def test_warning_ambiguous_match_eigenvalues(self):
         ambiguous_eigenvalues_params_file = (
-            'tests/fixtures/integration/config/'
+            'fixtures/integration/config/'
             'minimal_ambiguous_eigenvalues.yaml')
         ambiguous_eigenvalues_params = (
             nnmt.input_output.load_val_unit_dict_from_yaml(

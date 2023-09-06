@@ -1599,7 +1599,7 @@ def _sensitivity_measure(effective_connectivity, frequency,
             and resorted_eigenvalues_mask == 'None'):
         resorted_eigenvalues_mask = 'None'
 
-    if resorted_eigenvalues_mask != 'None':
+    if str(resorted_eigenvalues_mask) != 'None':
         # apply the resorting
         e = e[resorted_eigenvalues_mask[frequency_index, :]]
         U_l = U_l[:, resorted_eigenvalues_mask[frequency_index, :]]

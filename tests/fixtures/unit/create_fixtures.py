@@ -9,7 +9,7 @@ WARNING: Only use this script, if your code is trustworthy! The script runs
          working correctly, a lot of tests will pass despite your code giving
          wrong results.
 
-If you still want to run this script type: python tests/fixtures/create_fixtures.py -f
+If you still want to run this script type: python fixtures/create_fixtures.py -f
 
 Usage: create_fixtures.py [options]
 

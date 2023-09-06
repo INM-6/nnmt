@@ -32,7 +32,9 @@ How to publish a new release of NNMT
 
     .. code::
 
+        cd tests/
         pytest
+        cd ../
 
 7.  Create a release branch
 
@@ -45,7 +47,7 @@ How to publish a new release of NNMT
 
 9.  Update version numbers to pre-format
 
-    In ``nnmt/__init__.py``, ``nnmt/docs/source/conf.py``, and ``setup.py``.
+    In ``nnmt/__init__.py``, ``docs/source/conf.py``, and ``setup.py``.
 
     **WARNING**: You can upload each file only once to testpypi, even if you delete them on testpypi. Therefore use version names like ``1.0.0a0``.
 
@@ -57,7 +59,9 @@ How to publish a new release of NNMT
         conda activate temp0
         conda install setuptools
         pip install .
+        cd tests/
         pytest
+        cd ../
 
 11. Create sdist and wheel
 
@@ -101,19 +105,21 @@ How to publish a new release of NNMT
         conda activate temp1
         conda install pip
         pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nnmt==<release_number>
+        cd tests/
         pytest
+        cd ../
 
 14. If this fails, fix problems, change version numbers to ``1.0.0b`` and repeat.
 
 15. Update version numbers to final format
 
-    In ``nnmt/__init__.py``, ``nnmt/docs/source/conf.py``, and ``setup.py``,
+    In ``nnmt/__init__.py``, ``docs/source/conf.py``, and ``setup.py``,
 
     and commit
 
     .. code::
 
-        git add nnmt/__init__.py nnmt/docs/source/conf.py setup.py
+        git add nnmt/__init__.py docs/source/conf.py setup.py
         git commit -m 'Final update of version numbers'
 
 16. Merge into ``master`` and ``develop`` and delete release branch
@@ -156,7 +162,9 @@ How to publish a new release of NNMT
         conda activate temp2
         conda install pip
         pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nnmt==<release_number>
+        cd tests/
         pytest
+        cd ../
 
 20. Upload to pypi
 
@@ -178,7 +186,9 @@ How to publish a new release of NNMT
         conda activate temp3
         conda install pip
         pip install nnmt==<release_number>
+        cd tests/
         pytest
+        cd ../
 
 22. Remove temporary conda environments
 

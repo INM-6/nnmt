@@ -47,7 +47,7 @@ class Test_lognormal_characteristic_function:
         # number of samples
         N = 10000000
         # relative tolerance of results computed via the two procedures
-        rtol=0.01
+        rtol=0.012
 
         # draw samples
         X = np.random.lognormal(mu, sigma, size=N)

@@ -29,10 +29,10 @@ from nnmt.utils import _strip_units
 
 
 # path to network configuration files and analysis parameters
-config_path = 'tests/fixtures/unit/config/'
+config_path = 'fixtures/unit/config/'
 # path to fixtures
-unit_fix_path = 'tests/fixtures/unit/data/'
-integration_fix_path = 'tests/fixtures/integration/data/'
+unit_fix_path = 'fixtures/unit/data/'
+integration_fix_path = 'fixtures/integration/data/'
 
 # list of all always positive arguments
 all_pos_keys = ['K',
