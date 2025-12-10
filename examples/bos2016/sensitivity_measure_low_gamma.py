@@ -307,7 +307,7 @@ ax.yaxis.set_minor_locator(y_minor)
 ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 ax.set_yticks([])
 ax.set_yticks([1e-5,1e-3,1e-1])
-ax.set_ylabel(r'power spectrum $P_{\mathrm{4I}}(\omega)\quad(1/\mathrm{s}^2)$')
+ax.set_ylabel(r'power spectrum $P_{\mathrm{4I}}(\omega)\quad(1/\mathrm{s})$')
 ax.legend(loc='lower right')
 
 plt.savefig('figures/sensitivity_measure_low_gamma_Bos2016.eps')
