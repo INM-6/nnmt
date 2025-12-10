@@ -1782,7 +1782,7 @@ def power_spectra(network):
         raise RuntimeError(f'You first need to calculate the {quantity}.')
 
     return _cache(network, _power_spectra, params,
-                  _prefix + 'power_spectra', 'hertz ** 2')
+                  _prefix + 'power_spectra', 'hertz')
 
 
 @_check_positive_params
